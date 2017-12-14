@@ -1,0 +1,43 @@
+<% include partials/header %>
+
+<div class="fines-template">
+
+    <% include partials/nav %>
+
+    <div class="col-md-5 col-md-offset-4">
+
+        <fieldset>
+            <legend>Fines & Fees</legend>
+        </fieldset>
+
+        <div class="panel panel-default">
+            <div class="panel-heading"></div>
+            <div class="panel-body">
+
+                <% if (message !== "") { %>
+                <div class="alert alert-danger"><%= message %></div>
+                <% } %>
+
+                <form name="loginForm" action="/login" method="post">
+                    <div class="form-group">
+                        <label class="sr-only" for="duid">DU ID</label>
+
+                        <input type="number" class="form-control" id="duid" name="username" value="<%= username %>"
+                               placeholder="DU ID">
+                    </div>
+                    <div class="form-group">
+                        <label class="sr-only" for="passcode">Passcode</label>
+
+                        <input type="password" class="form-control" id="passcode" name="password" value=""
+                               placeholder="Passcode">
+                    </div>
+                    <button id="auth" type="submit" class="btn btn-default" value=""><i class="fa fa-sign-in"></i>&nbsp;Authenticate</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    fines.disableButton('auth', 'Authenticating...');
+</script>
+<% include partials/footer %>

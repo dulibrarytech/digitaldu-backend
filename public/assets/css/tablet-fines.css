@@ -1,0 +1,50 @@
+.alert {
+    padding-top: 65px;
+    text-align: center;
+}
+
+.stories-template {
+    padding: 65px 10px 10px 10px;
+    font-size: 18px;
+}
+
+.dropdown-menu {
+    width: 300px;
+}
+
+.dropdown-menu li {
+    padding: 10px 10px 5px 75px;
+    font-size: 14px;
+    height: 50px;
+    border: solid 1px #ccc;
+}
+
+.dropdown-menu a {
+    height: 40px;
+}
+
+.navbar-nav {
+    font-size: 15px;
+}
+
+/* enable absolute positioning */
+.inner-addon {
+    position: relative;
+}
+
+/* style icon */
+.inner-addon .glyphicon {
+    position: absolute;
+    padding: 10px;
+    pointer-events: none;
+}
+
+/* align icon */
+.left-addon .glyphicon  { left:  0px;}
+
+/* add padding  */
+.left-addon input  { padding-left:  30px; }
+
+.hide-form {
+    display:none;
+}

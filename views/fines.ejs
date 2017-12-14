@@ -1,0 +1,117 @@
+<% include partials/header %>
+
+<div class="fines-template">
+
+    <% include partials/nav %>
+
+    <div class="container col-md-8 col-md-offset-2">
+
+        <fieldset>
+            <legend>Fines & Fees</legend>
+        </fieldset>
+
+        <div id="message"></div>
+
+        <div class="table-responsive">
+
+            <!-- Nav tabs -->
+            <ul class="nav nav-tabs" role="tablist">
+                <li role="presentation" class="active">
+                    <a href="#finals" aria-controls="finals" role="tab"
+                       data-toggle="tab"><i class="fa fa-user"></i>&nbsp;<%= firstName %>&nbsp;<%= lastName %>&nbsp;(<%= primaryId %>)</a>
+                </li>
+            </ul>
+
+            <!-- Tab panes -->
+            <% if (fines.length !== 0) { %>
+
+            <form method="post" action="/fines?t=<%= token %>&id=<%= id %>">
+            <div class="tab-content">
+                <div role="tabpanel" class="tab-pane active" id="finals">
+                    <br>
+                    <table class="table table-striped table-bordered table-condensed">
+                        <tr>
+                            <th>Pay</th>
+                            <th>Title</th>
+                            <th>Barcode</th>
+                            <th>Type</th>
+                            <th>Date</th>
+                            <th>Amount</th>
+                        </tr>
+                        <% fines.forEach (function (fine) { %>
+                            <tr>
+                                <td align="center">
+                                    <label class="btn btn-default">
+                                        <input id="<%= fine.feeid %>" name="<%= fine.feeid %>" type="checkbox" value="<%= fine.balance %>" checked>
+                                    </label>
+                                </td>
+                                <% if (fine.title !== undefined) { %>
+                                    <td><%= fine.title %></td>
+                                <% } else { %>
+                                    <td>No title</td>
+                                <% } %>
+                                <% if (fine.barcode !== undefined) { %>
+                                    <td><%= fine.barcode %></td>
+                                <% } else { %>
+                                <td>No barcode</td>
+                                <% } %>
+                                <td><%= fine.type %></td>
+                                <td><%= fine.date %></td>
+                                <td style="color: red">$<%= fine.balance %></td>
+                            </tr>
+                        <% }); %>
+
+                        <tr>
+                            <td colspan="4"></td>
+                            <td style="border-bottom: solid 2px dimgrey"><strong>Balance:</strong></td>
+                            <td id="balance" style="color: red; border-bottom: solid 2px dimgrey; font-weight: bold">$<%= fineTotal %></td>
+                            <input id="fineTotal" name="fineTotal" type="hidden" value="<%= fineTotal %>">
+                        </tr>
+                    </table>
+                </div>
+
+                <input name="firstName" type="hidden" value="<%= firstName %>">
+                <input name="lastName" type="hidden" value="<%= lastName %>">
+                <input name="email" type="hidden" value="<%= email %>">
+
+                <div class="form-group">
+                    <button id="payOnline" title="Pay Online" data-toggle="tooltip"
+                       data-placement="right" class="btn btn-default" type="submit"><i class="fa fa-arrow-right"></i>&nbsp;Pay Online</button>
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    <a href="<%= url %>" id="cancel" type="button" class="btn btn-warning"><i class="fa fa-times"></i>&nbsp;Cancel</a>
+                </div>
+            </div>
+            </form>
+
+            <% } else { %>
+
+            <div class="tab-content">
+                <div role="tabpanel" class="tab-pane active" id="finals">
+                    <br>
+                    <div class="alert alert-warning">
+                        <strong>You have no fines or fees to pay.</strong>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                setTimeout(function () {
+                    window.location = '<%= url %>';
+                }, 15000);
+            </script>
+            <% } %>
+
+        </div>
+    </div>
+</div>
+<script>
+    var balance = {
+        total: '<%= fineTotal %>'
+    }
+
+    fines.saveBalance(JSON.stringify(balance));
+    fines.calculateBalance();
+    fines.disableButton('payOnline', 'Loading form...');
+    fines.cancel();
+</script>
+<% include partials/footer %>

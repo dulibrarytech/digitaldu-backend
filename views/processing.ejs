@@ -1,0 +1,25 @@
+<% include partials/header %>
+
+<div class="fines-template">
+
+    <% include partials/nav %>
+
+    <div class="container col-md-8 col-md-offset-2">
+
+        <fieldset>
+            <legend>Fines & Fees</legend>
+        </fieldset>
+
+        <div class="alert alert-info">
+            <i class="fa fa-cog fa-spin fa-3x fa-fw margin-bottom"></i>
+            <strong>Processing payment...</strong>
+        </div>
+
+    </div>
+</div>
+<script>
+    setTimeout(function () {
+        window.location = "https://" + document.domain + "/status" + window.location.search;
+    }, 5000);
+</script>
+<% include partials/footer %>

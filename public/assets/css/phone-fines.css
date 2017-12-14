@@ -1,0 +1,27 @@
+.alert {
+    text-align: center;
+}
+
+.stories-template {
+    padding: 70px 10px 10px 10px;
+    font-size: 15px;
+}
+
+.mobile {
+    padding: 10px;
+    border: solid 1px #DDDDDD;
+}
+
+.odd {
+    background-color: #FFF;
+}
+.even {
+    background-color: #F9F9F9;
+}
+
+.navbar-header {
+    padding-left: 5px;
+}
+.navbar-brand {
+    font-size: 15px;
+}

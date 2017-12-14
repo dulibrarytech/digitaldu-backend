@@ -1,0 +1,29 @@
+'use strict';
+
+var request = require('request'),
+    config = require('../config/config');
+
+exports.authenticate = function (username, password, callback) {
+
+    request.post({
+            url: config.ldap, form: {
+                username: username,
+                password: password
+            }
+        },
+        function (err, headers, response) {
+
+            if (err) {
+                var errorObj = {
+                    status: 500,
+                    success: false,
+                    message: 'An error has occurred.'
+                };
+
+                callback(errorObj);
+            }
+
+            var responseObj = JSON.parse(response);
+            callback(responseObj);
+        });
+};

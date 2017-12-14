@@ -1,0 +1,76 @@
+body {
+    padding-top: 50px;
+}
+
+.alert {
+    text-align: center;
+}
+
+.public-navbar {
+    background-color: #892034;
+}
+
+.fines-template {
+    padding: 10px 5px 10px 10px;
+    font-size: 14px;
+}
+
+#story {
+    height: 375px;
+}
+
+
+.forms {
+    margin: 20px;
+}
+
+.forms input, .forms textarea {
+    padding-right:30px;
+}
+
+input:required, textarea:required, select:required {
+    background: #fff url(../../assets/img/asterisk.png) no-repeat 98% center;
+}
+
+.forms input:focus:invalid, .forms textarea:focus:invalid {
+    background: #fff url(../../assets/img/invalid.png) no-repeat 98% center;
+    box-shadow: 0 0 5px #b03535;
+    border-color: #b03535;
+}
+
+.forms input:required:valid, .forms textarea:required:valid, .forms select:required:valid {
+    background: #fff url(../../assets/img/valid.png) no-repeat 98% center;
+    box-shadow: 0 0 5px #28921f; /* #5cd053 */
+    border-color: #28921f;
+}
+
+.hide-form {
+    display:none;
+}
+
+.required-field {
+    color: #b03535;
+    font-size: 12px;
+}
+
+/* enable absolute positioning */
+.inner-addon {
+    position: relative;
+}
+
+/* style icon */
+.inner-addon .glyphicon {
+    position: absolute;
+    padding: 10px;
+    pointer-events: none;
+}
+
+/* align icon */
+.left-addon .glyphicon  { left:  0px;}
+
+/* add padding  */
+.left-addon input  { padding-left:  30px; }
+
+.strike {
+    text-decoration: none;
+}
