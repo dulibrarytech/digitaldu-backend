@@ -1,1 +1,1 @@
-Fines application allows patrons to pay library fines and fees
+Digital Object / Metadata Repository application
