@@ -19,6 +19,8 @@ var collectionsModule = (function () {
         return decodeURIComponent(results[2].replace(/\+/g, " "));
     };
 
+    var api = configModule.getApi();
+
     var renderCollections = function (data) {
 
         var html = '';
@@ -27,7 +29,7 @@ var collectionsModule = (function () {
             html += '<div class="col-md-55">';
             html += '<div class="thumbnail">';
             html += '<div class="image view view-first">';
-            html += '<img style="width: 100%; display: block;" src="http://localhost:8000/api/collection/tn?collection_id=' + data[i].id + '" alt="image" />';
+            html += '<img style="width: 100%; display: block;" src="' + api + '/api/collection/tn?collection_id=' + data[i].id + '" alt="image" />';
             html += '<div class="mask">';
             html += '<div class="tools tools-bottom">';
             html += '<a href="/dashboard/objects?pid=' + data[i].pid + '" title="View Collection Objects"><i class="fa fa-link"></i></a>';
@@ -47,7 +49,7 @@ var collectionsModule = (function () {
         var community_id = getParameterByName('community_id');
 
         if (community_id !== null) {
-            $.ajax('http://localhost:8000/api/collections?community_id=' + community_id)
+            $.ajax(api + '/api/collections?community_id=' + community_id)
                 .done(function(data) {
                     renderCollections(data);
                 })
@@ -55,7 +57,7 @@ var collectionsModule = (function () {
                     renderError();
                 });
         } else {
-            $.ajax('http://localhost:8000/api/collections')
+            $.ajax(api + '/api/collections')
                 .done(function(data) {
                     console.log(data);
                     renderCollections(data);
@@ -71,7 +73,7 @@ var collectionsModule = (function () {
         var collection_id = getParameterByName('collection_id');
         var pid = getParameterByName('pid');
 
-        $.ajax('http://localhost:8000/api/collection?collection_id=' + collection_id + '&pid=' + pid)
+        $.ajax(api + '/api/collection?collection_id=' + collection_id + '&pid=' + pid)
             .done(function(data) {
 
                 if (data.length === 0) {
@@ -93,7 +95,7 @@ var collectionsModule = (function () {
 
                 var html = '';
                 html += '<a href="tn?id=' + data[0].id + '">'; // TODO...
-                html += '<img height="100" alt="' + data[0].title + '" src="http://localhost:8000/api/collection/tn?collection_id=' + data[0].id + '">';
+                html += '<img height="100" alt="' + data[0].title + '" src="' + api + '/api/collection/tn?collection_id=' + data[0].id + '">';
                 html += '</a>';
 
                 $('#collection-tn').html(html);

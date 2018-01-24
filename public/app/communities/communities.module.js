@@ -19,6 +19,8 @@ var communitiesModule = (function () {
         return decodeURIComponent(results[2].replace(/\+/g, " "));
     };
 
+    var api = configModule.getApi();
+
     /*=========get all communities=========*/
     var renderCommunities = function (data) {
 
@@ -28,7 +30,7 @@ var communitiesModule = (function () {
             html += '<div class="col-md-55">';
             html += '<div class="thumbnail">';
             html += '<div class="image view view-first">';
-            html += '<img style="width: 100%; display: block;" src="http://localhost:8000/api/community/tn?community_id=' + data[i].id + '" alt="image" />';
+            html += '<img style="width: 100%; display: block;" src="' + api + '/api/community/tn?community_id=' + data[i].id + '" alt="image" />';
             html += '<div class="mask">';
             html += '<div class="tools tools-bottom">';
             html += '<a href="/dashboard/collections?community_id=' + data[i].id + '" title="View Collections"><i class="fa fa-link"></i></a>';
@@ -45,7 +47,7 @@ var communitiesModule = (function () {
 
     obj.getCommunities = function () {
         // TODO: create helper/config for global api endpoints
-        $.ajax('http://localhost:8000/api/communities')
+        $.ajax(api + '/api/communities')
             .done(function(data) {
                 renderCommunities(data);
             })
@@ -61,7 +63,7 @@ var communitiesModule = (function () {
 
         var community_id = getParameterByName('community_id');
 
-        $.ajax('http://localhost:8000/api/communities?community_id=' + community_id)
+        $.ajax(api + '/api/communities?community_id=' + community_id)
             .done(function(data) {
 
                 if (data.length === 0) {
@@ -82,7 +84,7 @@ var communitiesModule = (function () {
 
                 var html = '';
                 html += '<a href="tn?id=' + data[0].id + '">'; // TODO...
-                html += '<img height="100" alt="' + data[0].title + '" src="http://localhost:8000/api/community/tn?community_id=' + data[0].id + '">';
+                html += '<img height="100" alt="' + data[0].title + '" src="' + api + '/api/community/tn?community_id=' + data[0].id + '">';
                 html += '</a>';
 
                 $('#community-tn').html(html);
@@ -100,7 +102,6 @@ var communitiesModule = (function () {
     };
 
     obj.init = function () {
-        // TODO: get API URLs from config/helper file
         // getTopLevelCollections();
         $("#community-form").validate({
             submitHandler: function(form) {

@@ -19,6 +19,8 @@ var objectsModule = (function () {
         return decodeURIComponent(results[2].replace(/\+/g, " "));
     };
 
+    var api = configModule.getApi();
+
     var renderObjects = function (data) {
 
         var html = '';
@@ -35,7 +37,7 @@ var objectsModule = (function () {
             html += '<div class="col-md-55">';
             html += '<div class="thumbnail">';
             html += '<div class="image view view-first">';
-            html += '<img style="width: 100%; display: block;" src="http://localhost:8000/api/tn?pid=' + data[i].pid + '" alt="image" />';
+            html += '<img style="width: 100%; display: block;" src="' + api + '/api/tn?pid=' + data[i].pid + '" alt="image" />';
             html += '<div class="mask">';
             html += '<div class="tools tools-bottom">';
             html += '<a href="/dashboard/object?pid=' + data[i].pid + '" title="View Object Details"><i class="fa fa-link"></i></a>';
@@ -61,7 +63,7 @@ var objectsModule = (function () {
         // TODO: split off into helper
         if (data[0].mime_type === 'image/tiff') {
             var img = $("<img />").attr({
-                src: 'http://localhost:8000/api/object/image/jpg?pid=' + pid,
+                src: api + '/api/object/image/jpg?pid=' + pid,
                 height: '400'
             })
                 .on('load', function() {
@@ -75,7 +77,7 @@ var objectsModule = (function () {
 
         if (data[0].mime_type === 'image/tif') {
             var img = $("<img />").attr({
-                src: 'http://localhost:8000/api/object/image/tiff?pid=' + pid,
+                src: api + '/api/object/image/tiff?pid=' + pid,
                 height: '400'
             })
                 .on('load', function() {
@@ -89,7 +91,7 @@ var objectsModule = (function () {
 
         if (data[0].mime_type === 'image/jpeg') {
             var img = $("<img>").attr({
-                src: 'http://localhost:8000/api/object/image/jpg?pid=' + pid,
+                src: api + '/api/object/image/jpg?pid=' + pid,
                 height: '400'
             })
                 .on('load', function() {
@@ -116,21 +118,21 @@ var objectsModule = (function () {
         }
 
         if (data[0].mime_type === 'application/pdf') {
-            var pdf = '<iframe src="http://localhost:8000/api/object/pdf?pid=' + pid + '" style="width:600px; height:500px;" frameborder="0"></iframe>';
+            var pdf = '<iframe src="' + api + '/api/object/pdf?pid=' + pid + '" style="width:600px; height:500px;" frameborder="0"></iframe>';
             $("#object-binary").append(pdf);
         }
 
         if (data[0].mime_type === 'video/mp4') {
             // var video = '<video width="320" height="240"><source type="video/mp4" src="http://localhost:8000/video?pid=' + pid + '" /></video>';
             // $("#object-binary").append(video);
-            var video = '<iframe src="http://localhost:8000/api/object/video/mp4?pid=' + pid + '" style="width:320px; height:240px;" frameborder="0"></iframe>';
+            var video = '<iframe src="' + api + '/api/object/video/mp4?pid=' + pid + '" style="width:320px; height:240px;" frameborder="0"></iframe>';
             $("#object-binary").append(video);
         }
 
         if (data[0].mime_type === 'video/mov') {
             // var video = '<video width="320" height="240"><source type="video/mp4" src="http://localhost:8000/video?pid=' + pid + '" /></video>';
             // $("#object-binary").append(video);
-            var video = '<iframe src="http://localhost:8000/api/object/video/mov?pid=' + pid + '" style="width:320px; height:240px;" frameborder="0"></iframe>';
+            var video = '<iframe src="' + api + '/api/object/video/mov?pid=' + pid + '" style="width:320px; height:240px;" frameborder="0"></iframe>';
             $("#object-binary").append(video);
         }
 
@@ -201,7 +203,7 @@ var objectsModule = (function () {
 
         var pid = getParameterByName('pid');
 
-        $.ajax('http://localhost:8000/api/objects?pid=' + pid)
+        $.ajax(api + '/api/objects?pid=' + pid)
             .done(function(data) {
                 renderObjects(data);
             })
@@ -216,7 +218,7 @@ var objectsModule = (function () {
 
         var pid = getParameterByName('pid');
 
-        $.ajax('http://localhost:8000/api/object/metadata?pid=' + pid)
+        $.ajax(api + '/api/object/metadata?pid=' + pid)
             .done(function(data) {
                 renderObjectDetail(data);
             })
