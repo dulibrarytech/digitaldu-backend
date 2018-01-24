@@ -5,294 +5,505 @@ var fs = require('fs'),
     knex = require('knex')({
         client: 'mysql2',
         connection: {
-            host: Config.host,
+            host: Config.dbHost,
             user: Config.dbUser,
             password: Config.dbPassword,
             database: Config.dbName
         }
     });
 
-// localhost:8000/collections?type=root // gets top level collections
-// localhost:8000/collections?type=child&pid=codu:19716  // gets child collections
-// localhost:8000/object?&type=all&pid=codu:19717  // gets collection objects
-exports.get_collections = function (req, callback) {
+exports.get_communities = function (req, callback) {
 
-    var type = req.query.type,
-        pid = req.query.pid;
+    var community_id = req.query.community_id;
 
-    switch (type) {
-        case 'root':
-            get_root_collections(function (data) {
+    if (community_id !== undefined) {
+
+        knex('tbl_communities')
+            .select('*')
+            .where({
+                id: community_id,
+                is_active: 1,
+                is_published: 1
+            })
+            .then(function (data) {
                 callback({
                     status: 200,
                     content_type: {'Content-Type': 'application/json'},
                     data: data,
-                    message: 'Root level collections'
+                    message: 'Communities'
                 });
+            })
+            .catch(function (error) {
+                // TODO: add error callback
+                console.log(error);
             });
-            break;
-        case 'child':
-            get_child_collections(pid, function (data) {
+
+    } else {
+
+        knex('tbl_communities')
+            .select('id', 'title', 'description')
+            .where({
+                is_active: 1,
+                is_published: 1
+            })
+            .then(function (data) {
                 callback({
                     status: 200,
                     content_type: {'Content-Type': 'application/json'},
                     data: data,
-                    message: 'Child level collections'
+                    message: 'Communities'
                 });
+            })
+            .catch(function (error) {
+                // TODO: add error callback
+                console.log(error);
             });
-            break;
     }
-
 };
 
-// TODO: apply error catching
-var get_root_collections = function (callback) {
+exports.update_community = function (req, callback) {
 
-    knex('tbl_collections')
-        .select('id', 'pid', 'title', 'description')
+    // TODO: change to update query
+    /*
+    knex('tbl_communities')
+        .select('id', 'title', 'description')
         .where({
-            is_root: 1,
             is_active: 1,
             is_published: 1
         })
-        .then(function (collections) {
-            callback(collections);
-        })
-        .catch(function (error) {
-            console.log(error);
-        });
-};
-
-var get_child_collections = function (pid, callback) {
-
-    knex('tbl_collections')
-        .select('id', 'pid', 'title', 'description', 'is_member_of')
-        .where({
-            is_member_of: pid,
-            is_root: 0,
-            is_child: 1,
-            is_active: 1,
-            is_published: 1
-        })
-        .then(function (collections) {
-            callback(collections);
-        })
-        .catch(function (error) {
-            console.log(error);
-        });
-};
-
-// localhost:8000/object?pid=codu:37705&type=video&master=true
-// localhost:8000/object?pid=codu:37705&type=video
-// localhost:8000/object?pid=codu:37705&type=mods
-exports.get_object = function (req, callback) {
-
-    var pid = req.query.pid.replace(/:/g, '_'),
-        type = req.query.type,
-        is_master = false;
-
-    if (req.query.master !== undefined && req.query.master === 'true') {
-        is_master = true;
-    }
-
-    switch (type) {
-        case 'mods':
-            get_mods(pid, function (data) {
-
-                if (data === 'error') {
-                    // TODO: return error
-                }
-
-                callback({
-                    status: 200,
-                    mime_type: {'Content-Type': 'application/xml'},
-                    data: data,
-                    message: 'MODS record'
-                });
-            });
-
-            break;
-        case 'video':
-
-            // TODO: account for .MOV files
-            var obj = {};
-            obj.pid = pid;
-            obj.is_master = is_master;
-            obj.type = 'video';
-            obj.message = 'Video object';
-
-            if (is_master === true) {
-                obj.ds = 'master';
-                obj.ext = 'MP4.mp4';
-                obj.content_type = 'video/mp4';
-            } else {
-                obj.ds = 'access';
-                obj.ext = 'MP4.mp4';
-                obj.content_type = 'video/mp4';
-            }
-
-            get_object(obj, function (data) {
-
-                if (data === 'error') {
-                    // TODO: return error
-                }
-
-                callback(data);
-            });
-
-            break;
-        case 'pdf':
-
-            var obj = {};
-            obj.pid = pid;
-            obj.is_master = is_master;
-            obj.type = 'pdf';
-            obj.ext = 'PDF object';
-            obj.ds = 'master';
-            obj.ext = 'PDF.pdf';
-            obj.content_type = 'application/pdf';
-
-            get_object(obj, function (data) {
-
-                if (data === 'error') {
-                    // TODO: return error
-                }
-
-                callback(data);
-            });
-
-            break;
-        case 'large_image':
-
-            var obj = {};
-            obj.pid = pid;
-            obj.is_master = is_master;
-            obj.type = 'image';
-            obj.message = 'Large image object';
-
-            if (is_master === true) {
-                obj.ds = 'master';
-                obj.ext = 'TIFF.tif';
-                obj.content_type = 'image/tiff';
-            } else {
-                obj.ds = 'access';
-                obj.ext = 'JP2.jp2';
-                obj.content_type = 'image/jp2';
-            }
-
-            get_object(obj, function (data) {
-
-                if (data === 'error') {
-                    // TODO: return error
-                }
-
-                callback(data);
-            });
-
-            break;
-        case 'small_image':
-            /*
-            get_pdf(pid, is_master, function (data) {
-
-                if (data === 'error') {
-                    // TODO: return error
-                }
-
-                callback({
-                    status: 200,
-                    mime_type: {'Content-Type': 'application/pdf'},
-                    data: data,
-                    message: 'PDF object'
-                });
-            });
-            */
-
-            break;
-        case 'tn':
-            get_tn(pid, function (data) {
-
-                if (data === 'error') {
-                    // TODO: return error
-                }
-
-                callback({
-                    status: 200,
-                    mime_type: {'Content-Type': 'image/jpeg'},
-                    data: data,
-                    message: 'TN object'
-                });
-            });
-
-            break;
-        case 'all':
-            get_objects(pid, function (data) {
-
-                if (data === 'error') {
-                    // TODO: return error
-                }
-
-                callback({
-                    status: 200,
-                    mime_type: {'Content-Type': 'application/json'},
-                    data: data,
-                    message: 'Objects'
-                });
-
-            });
-
-            break;
-        default:
+        .then(function (data) {
 
             callback({
-                status: 404,
-                mime_type: {'Content-Type': 'application/json'}
+                status: 200,
+                content_type: {'Content-Type': 'application/json'},
+                data: data,
+                message: 'Communities'
+            });
+        })
+        .catch(function (error) {
+            // TODO: add error callback
+            console.log(error);
+        });
+    */
+};
+
+exports.get_community_tn = function (req, callback) {
+
+    var id = req.query.community_id,
+        data = null;
+
+    try {
+        // TODO: place in config
+        var tn = '/Users/freyes/WebstormProjects/repo/public/app/tn/community-tns/community-tn-';
+        data = fs.readFileSync(tn + id + '.jpg');
+        callback({
+            status: 200,
+            mime_type: {'Content-Type': 'image/jpeg'},
+            data: data,
+            message: 'Community TN object'
+        });
+    } catch(e) {
+        console.log(e);
+        // TODO: return default thumbnail
+        callback({
+            status: 404,
+            mime_type: {'Content-Type': 'application/json'}
+        });
+
+    }
+
+};
+
+exports.get_collections = function (req, callback) {
+
+    var community_id = req.query.community_id;
+
+    if (community_id !== undefined) {
+
+        knex('tbl_collections')
+            .select('id', 'community_id', 'pid', 'title', 'description')
+            .where({
+                community_id: community_id,
+                is_root: 1,
+                is_child: 0,
+                is_active: 1,
+                is_published: 1
+            })
+            .then(function (data) {
+                callback({
+                    status: 200,
+                    content_type: {'Content-Type': 'application/json'},
+                    data: data,
+                    message: 'Collections'
+                });
+            })
+            .catch(function (error) {
+                // TODO: add error callback
+                console.log(error);
             });
 
-            break;
+    } else {
+
+        knex('tbl_collections')
+            .select('id', 'community_id', 'pid', 'title', 'description')
+            .where({
+                is_root: 1,
+                is_child: 0,
+                is_active: 1,
+                is_published: 1
+            })
+            .then(function (data) {
+                callback({
+                    status: 200,
+                    content_type: {'Content-Type': 'application/json'},
+                    data: data,
+                    message: 'Collections'
+                });
+            })
+            .catch(function (error) {
+                // TODO: add error callback
+                console.log(error);
+            });
+    }
+
+
+};
+
+exports.get_collection = function (req, callback) {
+
+    var id = req.query.collection_id;
+    var pid = req.query.pid;
+
+    if (id !== undefined && pid !== undefined) {
+
+        knex('tbl_collections')
+            .select('*')
+            .where({
+                id: id,
+                pid: pid,
+                is_root: 1,
+                is_child: 0,
+                is_active: 1,
+                is_published: 1
+            })
+            .then(function (data) {
+                callback({
+                    status: 200,
+                    content_type: {'Content-Type': 'application/json'},
+                    data: data,
+                    message: 'Collection'
+                });
+            })
+            .catch(function (error) {
+                // TODO: add error callback
+                console.log(error);
+            });
     }
 };
 
-// TODO: move these into a lib
-var get_objects = function (pid, callback) {
+exports.get_collection_tn = function (req, callback) {
+
+    var id = req.query.collection_id,
+        data = null;
+
+    try {
+        // TODO: place in config
+        var tn = '/Users/freyes/WebstormProjects/repo/public/app/tn/collection-tns/collection-tn-';
+        data = fs.readFileSync(tn + id + '.jpg');
+        callback({
+            status: 200,
+            mime_type: {'Content-Type': 'image/jpeg'},
+            data: data,
+            message: 'Collection TN object'
+        });
+    } catch(e) {
+        console.log(e);
+        // TODO: return default thumbnail
+        callback({
+            status: 404,
+            mime_type: {'Content-Type': 'application/json'}
+        });
+
+    }
+
+};
+
+exports.get_objects = function (req, callback) {
+
+    var pid = req.query.pid.replace(/_/g, ':');
 
     knex('tbl_rels')
         .join('tbl_metadata', 'tbl_rels.pid', 'tbl_metadata.pid')
         .join('tbl_object_data', 'tbl_metadata.pid', 'tbl_object_data.pid')
         .select('*')
-        .where('tbl_rels.is_member_of_collection', pid.replace(/_/g, ':'))
+        .where('tbl_rels.is_member_of_collection', pid)
         .then(function (data) {
-            callback(data);
+            callback({
+                status: 200,
+                content_type: {'Content-Type': 'application/json'},
+                data: data,
+                message: 'Objects'
+            });
         })
         .catch(function (error) {
             console.log(error);
         });
 };
 
-var get_tn = function (pid, callback) {
-    var tn = fs.readFileSync(Config.objectPath + pid + '/tn/' + pid + '_TN.jpg');
-    callback(tn);
+exports.get_metadata = function (req, callback) {
+
+    var pid = req.query.pid.replace(/_/g, ':');
+    // TODO: add query to get collection name
+    knex('tbl_rels')
+        .join('tbl_metadata', 'tbl_rels.pid', 'tbl_metadata.pid')
+        .join('tbl_object_data', 'tbl_metadata.pid', 'tbl_object_data.pid')
+        .select('*')
+        .where('tbl_rels.pid', pid)
+        .then(function (data) {
+            callback({
+                status: 200,
+                content_type: {'Content-Type': 'application/json'},
+                data: data,
+                message: 'Objects'
+            });
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
 };
 
-var get_mods = function (pid, callback) {
-    var mods = fs.readFileSync(Config.objectPath + pid + '/metadata/mods/' + pid + '_MODS.xml');
-    callback(mods);
-};
+exports.get_tn = function (req, callback) {
 
-var get_object = function (obj, callback) {
+    var pid = req.query.pid.replace(/:/g, '_'),
+        data = null;
 
     try {
-        var data = fs.readFileSync(Config.objectPath + obj.pid + '/obj/' + obj.type + '/' + obj.ds + '/' + obj.pid + '_' + obj.ext);
+        data = fs.readFileSync(Config.objectPath + pid + '/tn/' + pid + '_TN.jpg');
         callback({
             status: 200,
-            mime_type: {'Content-Type': obj.content_type},
+            mime_type: {'Content-Type': 'image/jpeg'},
             data: data,
-            message: obj.message
+            message: 'TN object'
         });
-    } catch (e) {
+    } catch(e) {
+        console.log(e);
+        // TODO: return default thumbnail
+        callback({
+            status: 404,
+            mime_type: {'Content-Type': 'application/json'}
+        });
+        /*
+        callback({
+            status: 200,
+            mime_type: {'Content-Type': 'image/jpeg'},
+            data: data,
+            message: 'No TN object'
+        });
+        */
+    }
+};
+
+exports.get_mods = function (req, callback) {
+
+    var pid = req.query.pid.replace(/:/g, '_'),
+        data = null;
+
+    try {
+        data = fs.readFileSync(Config.objectPath + pid + '/metadata/mods/' + pid + '_MODS.xml');
+        callback({
+            status: 200,
+            mime_type: {'Content-Type': 'application/xml'},
+            data: data,
+            message: 'MODS record'
+        });
+    } catch(e) {
         console.log(e);
         callback({
             status: 404,
             mime_type: {'Content-Type': 'application/json'}
         });
+    }
+};
+
+exports.get_image_jpg = function (req, callback) {
+
+    var pid = req.query.pid.replace(/:/g, '_'),
+        data = null;
+
+    try {
+        data = fs.readFileSync(Config.objectPath + pid + '/obj/image/access/' + pid + '_JPG.jpg');
+        // data = fs.readFileSync(Config.objectPath + pid + '/tn/' + pid + '_JPG.jpg');
+        callback({
+            status: 200,
+            mime_type: {'Content-Type': 'image/jpeg'},
+            data: data,
+            message: 'Image object'
+        });
+    } catch(e) {
+        console.log(e);
+        // TODO: return default thumbnail
+        callback({
+            status: 404,
+            mime_type: {'Content-Type': 'application/json'}
+        });
+        /*
+         callback({
+         status: 200,
+         mime_type: {'Content-Type': 'image/jpeg'},
+         data: data,
+         message: 'No TN object'
+         });
+         */
+    }
+};
+
+exports.get_image_tiff = function (req, callback) {
+
+    var pid = req.query.pid.replace(/:/g, '_'),
+        data = null;
+
+    try {
+        data = fs.readFileSync(Config.objectPath + pid + '/obj/image/master/' + pid + '_TIFF.tif');
+        callback({
+            status: 200,
+            mime_type: {'Content-Type': 'image/tiff'},
+            data: data,
+            message: 'Image object'
+        });
+    } catch(e) {
+        console.log(e);
+        // TODO: return default thumbnail
+        callback({
+            status: 404,
+            mime_type: {'Content-Type': 'application/json'}
+        });
+        /*
+         callback({
+         status: 200,
+         mime_type: {'Content-Type': 'image/jpeg'},
+         data: data,
+         message: 'No TN object'
+         });
+         */
+    }
+};
+
+exports.get_image_jp2 = function (req, callback) {
+    var pid = req.query.pid.replace(/:/g, '_'),
+        data = null;
+
+    try {
+        data = fs.readFileSync(Config.objectPath + pid + '/obj/image/access/' + pid + '_JP2.jp2');
+        callback({
+            status: 200,
+            mime_type: {'Content-Type': 'image/jp2'},
+            data: data,
+            message: 'Image object'
+        });
+    } catch(e) {
+        console.log(e);
+        // TODO: return default thumbnail
+        callback({
+            status: 404,
+            mime_type: {'Content-Type': 'application/json'}
+        });
+        /*
+         callback({
+         status: 200,
+         mime_type: {'Content-Type': 'image/jpeg'},
+         data: data,
+         message: 'No TN object'
+         });
+         */
+    }
+};
+
+exports.get_pdf = function (req, callback) {
+
+    var pid = req.query.pid.replace(/:/g, '_'),
+        data = null;
+
+    try {
+        data = fs.readFileSync(Config.objectPath + pid + '/obj/pdf/master/' + pid + '_PDF.pdf');
+        callback({
+            status: 200,
+            mime_type: {'Content-Type': 'application/pdf'},
+            data: data,
+            message: 'PDF object'
+        });
+    } catch(e) {
+        console.log(e);
+        callback({
+            status: 404,
+            mime_type: {'Content-Type': 'application/json'}
+        });
+        /*
+         callback({
+         status: 200,
+         mime_type: {'Content-Type': 'image/jpeg'},
+         data: data,
+         message: 'No TN object'
+         });
+         */
+    }
+};
+
+exports.get_video_mp4 = function (req, callback) {
+
+    var pid = req.query.pid.replace(/:/g, '_'),
+        data = null;
+
+    try {
+        data = fs.readFileSync(Config.objectPath + pid + '/obj/video/access/' + pid + '_MP4.mp4');
+        callback({
+            status: 200,
+            mime_type: {'Content-Type': 'video/mp4'},
+            data: data,
+            message: 'Video object'
+        });
+    } catch(e) {
+        console.log(e);
+        callback({
+            status: 404,
+            mime_type: {'Content-Type': 'application/json'}
+        });
+        /*
+         callback({
+         status: 200,
+         mime_type: {'Content-Type': 'image/jpeg'},
+         data: data,
+         message: 'No TN object'
+         });
+         */
+    }
+};
+
+exports.get_video_mov = function (req, callback) {
+
+    var pid = req.query.pid.replace(/:/g, '_'),
+        data = null;
+
+    try {
+        data = fs.readFileSync(Config.objectPath + pid + '/obj/video/access/' + pid + '_MOV.mov');
+        callback({
+            status: 200,
+            mime_type: {'Content-Type': 'video/mov'},
+            data: data,
+            message: 'Video object'
+        });
+    } catch(e) {
+        console.log(e);
+        callback({
+            status: 404,
+            mime_type: {'Content-Type': 'application/json'}
+        });
+        /*
+         callback({
+         status: 200,
+         mime_type: {'Content-Type': 'image/jpeg'},
+         data: data,
+         message: 'No TN object'
+         });
+         */
     }
 };

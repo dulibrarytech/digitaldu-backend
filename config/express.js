@@ -33,7 +33,8 @@ module.exports = function () {
     require('../import/routes.js')(app);
     require('../repository/routes.js')(app);
     require('../indexer/routes.js')(app);
-    require('express-template-cache');
+    require('../dashboard/routes.js')(app);
+    // require('express-template-cache');
 
     return server;
 };

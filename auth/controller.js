@@ -47,10 +47,16 @@ exports.login = function (req, res) {
                 var token = Token.create(username);
                 token = encodeURIComponent(token);
                 var encodedID = new Buffer(username).toString('base64');
-                res.redirect('/fines?t=' + token + '&id=' + encodedID);
+                res.redirect('/dashboard/home?t=' + token + '&id=' + encodedID);
 
             } else if (isAuth.auth === false) {
 
+                res.render('login', {
+                    message: '',
+                    username: ''
+                });
+
+                /*
                 Service.almaAuthenticate(username, password, function (isAuth) {
 
                     if (isAuth.auth === true) {
@@ -58,7 +64,7 @@ exports.login = function (req, res) {
                         var token = Token.create(username);
                         token = encodeURIComponent(token);
                         var encodedID = new Buffer(username).toString('base64');
-                        res.redirect('/fines?t=' + token + '&id=' + encodedID);
+                        res.redirect('/dashboard/home?t=' + token + '&id=' + encodedID);
 
                     } else {
                         res.render('login', {
@@ -67,6 +73,7 @@ exports.login = function (req, res) {
                         });
                     }
                 });
+                */
             }
         });
 
