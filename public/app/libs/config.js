@@ -9,7 +9,7 @@ var configModule = (function () {
         var api = 'http://localhost:8000';
 
         if (document.domain !== 'localhost') {
-            api = 'http://' + document.domain;
+            api = 'http://' + document.domain + ':8080';
         }
 
         return api;
