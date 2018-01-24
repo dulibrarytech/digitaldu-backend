@@ -4,10 +4,6 @@ var configModule = (function () {
 
     var obj = {};
 
-    var renderError = function () {
-        // $('#communities').html('Error: Unable to retrieve communities');
-    };
-
     obj.getApi = function () {
 
         var api = 'http://localhost:8000';

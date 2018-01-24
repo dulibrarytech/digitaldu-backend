@@ -105,7 +105,7 @@ var objectsModule = (function () {
 
         if (data[0].mime_type === 'image/png') {
             var img = $("<img />").attr({
-                src: 'http://localhost:8000/api/image/png?pid=' + pid,
+                src: api + '/api/image/png?pid=' + pid,
                 height: '400'
             })
                 .on('load', function() {

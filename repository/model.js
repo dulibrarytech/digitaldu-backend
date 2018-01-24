@@ -94,7 +94,7 @@ exports.get_community_tn = function (req, callback) {
 
     try {
         // TODO: place in config
-        var tn = '/Users/freyes/WebstormProjects/repo/public/app/tn/community-tns/community-tn-';
+        var tn = '/home/appuser/repo/public/app/tn/community-tns/community-tn-';
         data = fs.readFileSync(tn + id + '.jpg');
         callback({
             status: 200,
@@ -208,7 +208,7 @@ exports.get_collection_tn = function (req, callback) {
 
     try {
         // TODO: place in config
-        var tn = '/Users/freyes/WebstormProjects/repo/public/app/tn/collection-tns/collection-tn-';
+        var tn = '/home/appuser/repo/public/app/tn/community-tns/community-tn-';
         data = fs.readFileSync(tn + id + '.jpg');
         callback({
             status: 200,
