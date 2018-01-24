@@ -208,7 +208,7 @@ exports.get_collection_tn = function (req, callback) {
 
     try {
         // TODO: place in config
-        var tn = '/home/appuser/du-repository/public/app/tn/community-tns/community-tn-';
+        var tn = '/home/appuser/du-repository/public/app/tn/collection-tns/collection-tn-';
         data = fs.readFileSync(tn + id + '.jpg');
         callback({
             status: 200,
