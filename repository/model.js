@@ -250,7 +250,7 @@ exports.get_objects = function (req, callback) {
         });
 };
 
-exports.get_metadata = function (req, callback) {
+exports.get_object_metadata = function (req, callback) {
 
     var pid = req.query.pid.replace(/_/g, ':');
     // TODO: add query to get collection name
@@ -272,7 +272,7 @@ exports.get_metadata = function (req, callback) {
         });
 };
 
-exports.get_tn = function (req, callback) {
+exports.get_object_tn = function (req, callback) {
 
     var pid = req.query.pid.replace(/:/g, '_'),
         data = null;

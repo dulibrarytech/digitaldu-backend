@@ -37,7 +37,7 @@ var objectsModule = (function () {
             html += '<div class="col-md-55">';
             html += '<div class="thumbnail">';
             html += '<div class="image view view-first">';
-            html += '<img style="width: 100%; display: block;" src="' + api + '/api/objects/tn?pid=' + data[i].pid + '" alt="image" />';
+            html += '<img style="width: 100%; display: block;" src="' + api + '/api/object/tn?pid=' + data[i].pid + '" alt="image" />';
             html += '<div class="mask">';
             html += '<div class="tools tools-bottom">';
             html += '<a href="/dashboard/object?pid=' + data[i].pid + '" title="View Object Details"><i class="fa fa-link"></i></a>';

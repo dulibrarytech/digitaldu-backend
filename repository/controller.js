@@ -50,14 +50,14 @@ exports.get_objects = function (req, res) {
     });
 };
 
-exports.get_metadata = function (req, res) {
-    Repo.get_metadata(req, function (data) {
+exports.get_object_metadata = function (req, res) {
+    Repo.get_object_metadata(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
 
-exports.get_tn = function (req, res) {
-    Repo.get_tn(req, function (data) {
+exports.get_object_tn = function (req, res) {
+    Repo.get_object_tn(req, function (data) {
         res.writeHead(data.status, data.mime_type);
         res.end(data.data, 'binary');
     });
@@ -70,12 +70,13 @@ exports.get_mods = function (req, res) {
     });
 };
 
+/*
 exports.get_object = function (req, res) {
-    console.log('meow');
     Repo.get_object_file(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
+*/
 
 exports.get_image_jpg = function (req, res) {
     Repo.get_image_jpg(req, function (data) {

@@ -34,11 +34,11 @@ module.exports = function (app) {
         .get(Repo.get_objects);
 
     app.route('/api/object/metadata')
-        .get(Repo.get_metadata);
+        .get(Repo.get_object_metadata);
 
     // used by discovery layer
     app.route('/api/object/tn')
-        .get(Repo.get_tn);
+        .get(Repo.get_object_tn);
 
     app.route('/api/object/mods')
         .get(Repo.get_mods);
