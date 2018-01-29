@@ -106,8 +106,7 @@ var collectionsModule = (function () {
     };
 
     obj.init = function () {
-        // TODO: get API URLs from config/helper file
-        // getTopLevelCollections();
+        userModule.renderUserName();
     };
 
     return obj;

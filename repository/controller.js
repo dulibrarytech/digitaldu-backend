@@ -70,14 +70,6 @@ exports.get_mods = function (req, res) {
     });
 };
 
-/*
-exports.get_object = function (req, res) {
-    Repo.get_object_file(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-*/
-
 exports.get_image_jpg = function (req, res) {
     Repo.get_image_jpg(req, function (data) {
         res.writeHead(data.status, data.mime_type);

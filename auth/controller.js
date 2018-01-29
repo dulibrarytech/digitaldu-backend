@@ -46,8 +46,9 @@ exports.login = function (req, res) {
 
                 var token = Token.create(username);
                 token = encodeURIComponent(token);
-                var encodedID = new Buffer(username).toString('base64');
-                res.redirect('/dashboard/home?t=' + token + '&id=' + encodedID);
+                // var encodedID = new Buffer(username).toString('base64');
+                var uid = username.trim();
+                res.redirect('/dashboard/home?t=' + token + '&uid=' + uid);
 
             } else if (isAuth.auth === false) {
 
@@ -55,25 +56,6 @@ exports.login = function (req, res) {
                     message: '',
                     username: ''
                 });
-
-                /*
-                Service.almaAuthenticate(username, password, function (isAuth) {
-
-                    if (isAuth.auth === true) {
-
-                        var token = Token.create(username);
-                        token = encodeURIComponent(token);
-                        var encodedID = new Buffer(username).toString('base64');
-                        res.redirect('/dashboard/home?t=' + token + '&id=' + encodedID);
-
-                    } else {
-                        res.render('login', {
-                            message: 'Authentication Failed. Please try again.',
-                            username: req.body.username
-                        });
-                    }
-                });
-                */
             }
         });
 

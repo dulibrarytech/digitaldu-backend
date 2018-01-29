@@ -8,17 +8,6 @@ var communitiesModule = (function () {
         $('#communities').html('Error: Unable to retrieve communities');
     };
 
-    // TODO: move to lib...
-    var getParameterByName = function (name, url) {
-        if (!url) url = window.location.href;
-        name = name.replace(/[\[\]]/g, "\\$&");
-        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-            results = regex.exec(url);
-        if (!results) return null;
-        if (!results[2]) return '';
-        return decodeURIComponent(results[2].replace(/\+/g, " "));
-    };
-
     var api = configModule.getApi();
 
     /*=========get all communities=========*/
@@ -61,7 +50,7 @@ var communitiesModule = (function () {
         // TODO: create helper/config for global api endpoints
         // TODO: change to put
 
-        var community_id = getParameterByName('community_id');
+        var community_id = helperModule.getParameterByName('community_id');
 
         $.ajax(api + '/api/communities?community_id=' + community_id)
             .done(function(data) {
@@ -102,7 +91,10 @@ var communitiesModule = (function () {
     };
 
     obj.init = function () {
-        // getTopLevelCollections();
+
+        userModule.renderUserName();
+
+        /*
         $("#community-form").validate({
             submitHandler: function(form) {
                 // some other code
@@ -112,7 +104,7 @@ var communitiesModule = (function () {
                 console.log('meow!');
             }
         });
-
+        */
     };
 
     return obj;

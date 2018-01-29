@@ -34,7 +34,7 @@ exports.get_communities = function (req, callback) {
                 });
             })
             .catch(function (error) {
-                // TODO: add error callback
+                // TODO: add error callback and log to file
                 console.log(error);
             });
 
@@ -93,8 +93,8 @@ exports.get_community_tn = function (req, callback) {
         data = null;
 
     try {
-        // TODO: place in config
-        var tn = '/home/appuser/du-repository/public/app/tn/community-tns/community-tn-';
+
+        var tn = Config.communityTnPath;
         data = fs.readFileSync(tn + id + '.jpg');
         callback({
             status: 200,
@@ -102,16 +102,19 @@ exports.get_community_tn = function (req, callback) {
             data: data,
             message: 'Community TN object'
         });
+
     } catch(e) {
+
         console.log(e);
-        // TODO: return default thumbnail
+        // TODO: log to file
+        data = fs.readFileSync(Config.errorTn);
         callback({
-            status: 404,
-            mime_type: {'Content-Type': 'application/json'}
+            status: 200,
+            mime_type: {'Content-Type': 'image/jpeg'},
+            data: data,
+            message: 'Community TN object'
         });
-
     }
-
 };
 
 exports.get_collections = function (req, callback) {
@@ -207,8 +210,8 @@ exports.get_collection_tn = function (req, callback) {
         data = null;
 
     try {
-        // TODO: place in config
-        var tn = '/home/appuser/du-repository/public/app/tn/collection-tns/collection-tn-';
+
+        var tn = Config.collectionTnPath;
         data = fs.readFileSync(tn + id + '.jpg');
         callback({
             status: 200,
@@ -216,16 +219,19 @@ exports.get_collection_tn = function (req, callback) {
             data: data,
             message: 'Collection TN object'
         });
+
     } catch(e) {
+
         console.log(e);
-        // TODO: return default thumbnail
+        // TODO: log to file
+        data = fs.readFileSync(Config.errorTn);
         callback({
-            status: 404,
-            mime_type: {'Content-Type': 'application/json'}
+            status: 200,
+            mime_type: {'Content-Type': 'image/jpeg'},
+            data: data,
+            message: 'Collection TN object'
         });
-
     }
-
 };
 
 exports.get_objects = function (req, callback) {
@@ -286,20 +292,16 @@ exports.get_object_tn = function (req, callback) {
             message: 'TN object'
         });
     } catch(e) {
+
         console.log(e);
-        // TODO: return default thumbnail
-        callback({
-            status: 404,
-            mime_type: {'Content-Type': 'application/json'}
-        });
-        /*
+        // TODO: log to file
+        data = fs.readFileSync(Config.errorTn);
         callback({
             status: 200,
             mime_type: {'Content-Type': 'image/jpeg'},
             data: data,
-            message: 'No TN object'
+            message: 'Object TN object'
         });
-        */
     }
 };
 
@@ -332,7 +334,6 @@ exports.get_image_jpg = function (req, callback) {
 
     try {
         data = fs.readFileSync(Config.objectPath + pid + '/obj/image/access/' + pid + '_JPG.jpg');
-        // data = fs.readFileSync(Config.objectPath + pid + '/tn/' + pid + '_JPG.jpg');
         callback({
             status: 200,
             mime_type: {'Content-Type': 'image/jpeg'},
@@ -389,6 +390,7 @@ exports.get_image_tiff = function (req, callback) {
 };
 
 exports.get_image_jp2 = function (req, callback) {
+
     var pid = req.query.pid.replace(/:/g, '_'),
         data = null;
 

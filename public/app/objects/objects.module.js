@@ -41,7 +41,6 @@ var objectsModule = (function () {
             html += '<div class="mask">';
             html += '<div class="tools tools-bottom">';
             html += '<a href="/dashboard/object?pid=' + data[i].pid + '" title="View Object Details"><i class="fa fa-link"></i></a>';
-            html += '<a href="' + data[i].pid + '" title="Edit Object"><i class="fa fa-pencil"></i></a>';
             html += '</div></div></div>';
             html += '<div class="caption">';
             html += '<p><strong>' + title + '</strong></p>';
@@ -229,7 +228,7 @@ var objectsModule = (function () {
 
 
     obj.init = function () {
-        // TODO: get API URLs from config/helper file
+        userModule.renderUserName();
     };
 
     return obj;

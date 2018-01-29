@@ -12,7 +12,10 @@ module.exports = {
     dbName: process.env.DB_NAME,
     elasticSearch: process.env.ELASTIC_SEARCH,
     elasticSearchIndex: process.env.ELASTIC_SEARCH_INDEX,
+    communityTnPath: process.env.COMMUNITY_TN_PATH,
+    collectionTnPath: process.env.COLLECTION_TN_PATH,
     objectPath: process.env.OBJECT_PATH,
+    errorTn: process.env.ERROR_TN,
     smtp: process.env.SMTP,
     fromEmail: process.env.FROM_EMAIL,
     emailSubject: process.env.SUBJECT
