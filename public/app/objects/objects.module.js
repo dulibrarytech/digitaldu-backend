@@ -40,7 +40,7 @@ var objectsModule = (function () {
             html += '<img style="width: 100%; display: block;" src="' + api + '/api/object/tn?pid=' + data[i].pid + '" alt="image" />';
             html += '<div class="mask">';
             html += '<div class="tools tools-bottom">';
-            html += '<a href="/dashboard/object?pid=' + data[i].pid + '" title="View Object Details"><i class="fa fa-link"></i></a>';
+            html += '<a href="/dashboard/object?pid=' + data[i].pid + '" title="View Object Details"><i class="fa fa-th-list"></i></a>';
             html += '</div></div></div>';
             html += '<div class="caption">';
             html += '<p><strong>' + title + '</strong></p>';

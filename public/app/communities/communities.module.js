@@ -22,8 +22,9 @@ var communitiesModule = (function () {
             html += '<img style="width: 100%; display: block;" src="' + api + '/api/community/tn?community_id=' + data[i].id + '" alt="image" />';
             html += '<div class="mask">';
             html += '<div class="tools tools-bottom">';
-            html += '<a href="/dashboard/collections?community_id=' + data[i].id + '" title="View Collections"><i class="fa fa-link"></i></a>';
-            html += '<a href="/dashboard/community/edit?community_id=' + data[i].id + '" title="Edit Community"><i class="fa fa-pencil"></i></a>';
+            html += '<a href="/dashboard/collections?community_id=' + data[i].id + '" title="View Collections"><i class="fa fa-list"></i></a>';
+            html += '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+            html += '<a href="/dashboard/community/edit?community_id=' + data[i].id + '" title="Edit Community"><i class="fa fa-edit"></i></a>';
             html += '</div></div></div>';
             html += '<div class="caption">';
             html += '<p><strong>' + data[i].title + '</strong></p>';

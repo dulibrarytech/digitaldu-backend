@@ -58,3 +58,11 @@ exports.get_dashboard_object_detail = function (req, res) {
         pid: req.query.pid
     });
 };
+
+exports.get_dashboard_users = function (req, res) {
+
+    res.render('dashboard-users', {
+        // message: 'Authentication Failed. Please try again.',
+        // username: req.body.username
+    });
+};

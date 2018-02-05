@@ -30,4 +30,8 @@ module.exports = function (app) {
 
     app.route('/dashboard/object')
         .get(Dashboard.get_dashboard_object_detail);
+
+    /* users */
+    app.route('/dashboard/users')
+        .get(Dashboard.get_dashboard_users);
 };
