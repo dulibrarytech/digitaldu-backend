@@ -49,6 +49,7 @@ var objectsModule = (function () {
 
         // TODO: implement pagination
         $('#objects').html(html);
+        $('a').tooltip();
     };
 
     var renderObjectDetail = function (data) {

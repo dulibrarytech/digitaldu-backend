@@ -43,6 +43,7 @@ var collectionsModule = (function () {
 
         // TODO: implement pagination
         $('#collections').html(html);
+        $('a').tooltip();
     };
 
     obj.getCollections = function () {

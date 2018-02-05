@@ -33,6 +33,7 @@ var communitiesModule = (function () {
 
         // TODO: implement pagination/infinite scrolling?
         $('#communities').html(html);
+        $('a').tooltip();
     };
 
     obj.getCommunities = function () {
