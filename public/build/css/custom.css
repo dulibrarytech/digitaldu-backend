@@ -2219,10 +2219,12 @@ a.btn-warning,
 a.btn-danger {
     color: #fff
 }
-.btn-success {  /* TODO */
-    background: #7F202E; /* #26B99A */
-    border: 1px solid #8B2332; /*#169F85*/
+/*
+.btn-success {  /* TODO *
+    background: #7F202E; /* #26B99A *
+    border: 1px solid #8B2332; /*#169F85*
 }
+
 .btn-success:hover,
 .btn-success:focus,
 .btn-success:active,
@@ -2230,6 +2232,7 @@ a.btn-danger {
 .open .dropdown-toggle.btn-success {
     background: #8B2332
 }
+*/
 .btn-dark {
     color: #E9EDEF;
     background-color: #4B5F71;
