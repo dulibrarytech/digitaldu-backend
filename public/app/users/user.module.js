@@ -18,8 +18,11 @@ var userModule = (function () {
 
     obj.renderUserName = function () {
         var data = JSON.parse(window.sessionStorage.getItem('repo_data'));
-        console.log(data.uid);
         $('#username').html(data.uid);
+    };
+
+    obj.init = function () {
+        obj.renderUserName();
     };
 
     return obj;

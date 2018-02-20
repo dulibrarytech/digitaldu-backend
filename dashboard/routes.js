@@ -34,4 +34,7 @@ module.exports = function (app) {
     /* users */
     app.route('/dashboard/users')
         .get(Dashboard.get_dashboard_users);
+
+    app.route('/dashboard/search')
+        .get(Dashboard.get_dashboard_search);
 };

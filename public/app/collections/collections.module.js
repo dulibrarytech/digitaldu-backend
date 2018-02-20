@@ -107,6 +107,65 @@ var collectionsModule = (function () {
             });
     };
 
+    var updateCollection = function () {
+
+        var data = {};
+        var description;
+        var is_active;
+        var is_published;
+
+        data.id = $('#id').val();
+        data.pid = $('#pid').val();
+        data.title = $('#title').val();
+        data.description = $('#description').val();
+
+        /*
+        if (description.length > 0) {
+            data.description = description;
+        }
+        */
+
+        is_active = $('#is_active').prop('checked');
+
+        if (is_active === false) {
+            is_active = 0;
+        } else if (is_active === true) {
+            is_active = 1;
+        }
+
+        is_published = $('#is_published').prop('checked');
+
+        if (is_published === false) {
+            is_published = 0;
+        } else if (is_published === true) {
+            is_published = 1;
+        }
+
+        data.is_active = is_active;
+        data.is_published = is_published;
+
+        $.ajax({
+            url: api + '/api/collection',
+            method: 'PUT',
+            data: data,
+            cache: false
+        })
+            .done(function (data) {
+                console.log(data);
+            })
+            .fail(function () {
+                renderError();
+            });
+    };
+
+    obj.updateCollectionInit = function () {
+        $('#collection-form').validate({
+            submitHandler: function () {
+                updateCollection();
+            }
+        });
+    };
+
     obj.init = function () {
         userModule.renderUserName();
     };

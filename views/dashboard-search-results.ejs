@@ -30,7 +30,7 @@
 
                 <!-- /menu footer buttons -->
                 <div class="sidebar-footer hidden-small">
-                    <a data-toggle="tooltip" data-placement="top" title="Logout" href="/dashboard/login">
+                    <a data-toggle="tooltip" data-placement="top" title="Logout" href="login.html">
                         <span class="glyphicon glyphicon-off" aria-hidden="true"></span>
                     </a>
 
@@ -85,19 +85,9 @@
 
                     <div class="title_right">
                         <!--<div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">-->
+
                         <% include partials/search.ejs %>
-                        <!--
-                        <form method="get" action="/dashboard/search">
-                        <div class="col-md-8 col-sm-5 col-xs-12 form-group top_search">
-                            <div class="input-group">
-                                <input name="q" type="text" class="form-control" placeholder="">
-                                <span class="input-group-btn">
-                                    <button class="btn btn-default" type="submit">Search</button>
-                                </span>
-                            </div>
-                        </div>
-                        </form>
-                        -->
+
                     </div>
                 </div>
 
@@ -107,11 +97,12 @@
                     <div class="col-md-12">
                         <div class="x_panel">
                             <div class="x_title">
-                                <h2>Communities</h2>
+                                <h2>Search Results</h2>
                                 <div class="clearfix"></div>
                             </div>
                             <div class="x_content">
-                                <div class="row" id="communities"><!-- communities are rendered here --></div>
+                                <div id="message"></div>
+                                <div class="row" id="objects"><!-- objects are rendered here --></div>
                             </div>
                         </div>
                     </div>
@@ -149,15 +140,11 @@
 <!-- app -->
 <script src="../app/libs/helper.js"></script>
 <script src="../app/libs/config.js"></script>
-<script src="../app/users/user.module.js"></script>
-<script src="../app/communities/communities.module.js"></script>
+<script src="../app/search/search.module.js"></script>
 <!-- Custom Theme Scripts -->
 <script src="../build/js/custom.js"></script>
 <script>
-    communitiesModule.init();
-    communitiesModule.getCommunities();
-
-
+    searchModule.search();
 </script>
 </body>
 </html>

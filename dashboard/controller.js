@@ -66,3 +66,11 @@ exports.get_dashboard_users = function (req, res) {
         // username: req.body.username
     });
 };
+
+exports.get_dashboard_search = function (req, res) {
+
+    res.render('dashboard-search-results', {
+        // message: 'Authentication Failed. Please try again.',
+        // username: req.body.username
+    });
+};

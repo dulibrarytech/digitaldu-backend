@@ -2,6 +2,7 @@
 
 var fs = require('fs'),
     Config = require('../config/config'),
+    es = require('elasticsearch'),
     knex = require('knex')({
         client: 'mysql2',
         connection: {
@@ -11,6 +12,11 @@ var fs = require('fs'),
             database: Config.dbName
         }
     });
+
+var client = new es.Client({
+    host: Config.elasticSearch
+    // log: 'trace'
+});
 
 exports.get_communities = function (req, callback) {
 
@@ -119,12 +125,34 @@ exports.get_community_tn = function (req, callback) {
 
 exports.get_collections = function (req, callback) {
 
+    knex('tbl_collections')
+        .select('id', 'pid', 'title', 'description')
+        .where({
+            is_root: 1,
+            is_child: 0,
+            is_active: 1,
+            is_published: 1
+        })
+        .then(function (data) {
+            callback({
+                status: 200,
+                content_type: {'Content-Type': 'application/json'},
+                data: data,
+                message: 'Collections'
+            });
+        })
+        .catch(function (error) {
+            // TODO: add error callback
+            console.log(error);
+        });
+
+    /*
     var community_id = req.query.community_id;
 
     if (community_id !== undefined) {
 
         knex('tbl_collections')
-            .select('id', 'community_id', 'pid', 'title', 'description')
+            .select('id', 'pid', 'title', 'description')
             .where({
                 community_id: community_id,
                 is_root: 1,
@@ -148,7 +176,7 @@ exports.get_collections = function (req, callback) {
     } else {
 
         knex('tbl_collections')
-            .select('id', 'community_id', 'pid', 'title', 'description')
+            .select('id', 'pid', 'title', 'description')
             .where({
                 is_root: 1,
                 is_child: 0,
@@ -168,8 +196,7 @@ exports.get_collections = function (req, callback) {
                 console.log(error);
             });
     }
-
-
+    */
 };
 
 exports.get_collection = function (req, callback) {
@@ -202,6 +229,38 @@ exports.get_collection = function (req, callback) {
                 console.log(error);
             });
     }
+};
+
+exports.update_collection = function (req, callback) {
+
+    var updateObj = {};
+    updateObj.title = req.body.title;
+
+    if (req.body.description !== undefined) {  // && req.body.description.length > 0
+        updateObj.description = req.body.description;
+    }
+
+    updateObj.is_active = req.body.is_active;
+    updateObj.is_published = req.body.is_published;
+
+    console.log(updateObj);
+
+    knex('tbl_collections')
+        .where({
+            id: req.body.id,
+            pid: req.body.pid
+        })
+        .update(updateObj)
+        .then(function (data) {
+            callback({
+                status: 200,
+                content_type: {'Content-Type': 'application/json'},
+                message: 'Collection updated'
+            });
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
 };
 
 exports.get_collection_tn = function (req, callback) {
@@ -508,4 +567,28 @@ exports.get_video_mov = function (req, callback) {
          });
          */
     }
+};
+
+exports.do_search = function (req, callback) {
+
+    var q = req.query.q;
+
+    client.search({
+        // from: 0, // search.from,
+        // size: 40, // search.size,
+        index: Config.elasticSearchIndex,
+        q: q
+    }).then(function (body) {
+        // console.log(body.hits.hits);
+        // callback(body.hits.hits);
+
+        callback({
+            status: 200,
+            data: body.hits.hits,
+            message: 'Search Results'
+        });
+
+    }, function (error) {
+       // callback(error);
+    });
 };

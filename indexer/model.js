@@ -67,24 +67,22 @@ var index_single = function (pid, callback) {
         .join('tbl_object_data', 'tbl_metadata.pid', 'tbl_object_data.pid')
         .join('tbl_rels', 'tbl_object_data.pid', 'tbl_rels.pid')
         .join('tbl_collections', 'tbl_rels.is_member_of_collection', 'tbl_collections.pid')
-        .select('tbl_metadata.pid', 'tbl_metadata.display_record', 'tbl_object_data.mime_type', 'tbl_object_data.file_size', 'tbl_rels.is_member_of_collection', 'tbl_rels.is_member_of', 'tbl_rels.is_compound', 'tbl_collections.title', 'tbl_collections.description', 'tbl_collections.is_member_of')
+        .select('tbl_metadata.pid', 'tbl_metadata.display_record', 'tbl_object_data.mime_type', 'tbl_object_data.file_size', 'tbl_rels.is_member_of_collection', 'tbl_rels.is_member_of', 'tbl_rels.is_compound', 'tbl_collections.title', 'tbl_collections.is_member_of')  // 'tbl_collections.description',
         .where('tbl_metadata.pid', pid)
         .then(function (data) {
 
-            var pid_temp = data[0].pid.split(':');
-            var id = pid_temp[1];
-            var record = JSON.parse(data[0].display_record);
-            var title = '';
-            var subject = [];
-            var creator = '';
-            var description = '';
-            var type = '';
-            var notes = '';
-
-            // console.log(record);
+            var pid_temp = data[0].pid.split(':'),
+                id = pid_temp[1],
+                record = JSON.parse(data[0].display_record),
+                title = [],
+                subject = [],
+                creator = '',
+                description = '',
+                type = '';
+            // var notes = '';
 
             if (record.title !== undefined) {
-                record.title.toString();
+                title.push(record.title.toString());
             }
 
             if (record.subjectTopic !== undefined) {
@@ -123,18 +121,18 @@ var index_single = function (pid, callback) {
                 type = record.typeOfResource;
             }
 
+            /*
             if (record.note !== undefined) {
                 notes = record.note;
             }
+            */
 
             data[0].title = title;
             data[0].subject = subject;
             data[0].creator = creator;
             data[0].modsDescription = description;
             data[0].type = type;
-            data[0].notes = notes;
-
-            console.log(data[0]);
+            // data[0].notes = notes;
 
             client.index({
                 index: Config.elasticSearchIndex,

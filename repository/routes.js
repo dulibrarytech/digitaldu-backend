@@ -21,8 +21,8 @@ module.exports = function (app) {
 
     /* retrieves single collection record for edit used by repo*/
     app.route('/api/collection')
-        .get(Repo.get_collection);
-        // .put()
+        .get(Repo.get_collection)
+        .put(Repo.update_collection);
 
     // used by discovery layer and repo
     app.route('/api/collection/tn')
@@ -58,6 +58,9 @@ module.exports = function (app) {
 
     app.route('/api/object/video/mp4')
         .get(Repo.get_video_mp4);
+
+    app.route('/api/search')
+        .get(Repo.do_search);
 
     /*
 

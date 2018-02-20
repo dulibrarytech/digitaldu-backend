@@ -36,6 +36,11 @@ exports.get_collection = function (req, res) {
     });
 };
 
+exports.update_collection = function (req, res) {
+    Repo.update_collection(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
 
 exports.get_collection_tn = function (req, res) {
     Repo.get_collection_tn(req, function (data) {
@@ -112,11 +117,9 @@ exports.get_video_mp4 = function (req, res) {
     });
 };
 
-/* used with single object request
- if (data.mime_type['Content-Type'] !== undefined && data.mime_type['Content-Type'] === 'application/json') {
- res.status(data.status).json(data.data);
- } else {
- res.writeHead(data.status, data.mime_type);
- res.end(data.data, 'binary');
- }
- */
+/* search */
+exports.do_search = function (req, res) {
+    Repo.do_search(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};

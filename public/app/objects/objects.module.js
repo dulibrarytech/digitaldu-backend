@@ -119,6 +119,7 @@ var objectsModule = (function () {
 
         if (data[0].mime_type === 'application/pdf') {
             var pdf = '<iframe src="' + api + '/api/object/pdf?pid=' + pid + '" style="width:600px; height:500px;" frameborder="0"></iframe>';
+            console.log(pdf);
             $("#object-binary").append(pdf);
         }
 

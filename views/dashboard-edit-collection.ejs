@@ -17,9 +17,9 @@
     <link href="../../vendors/font-awesome/css/font-awesome.min.css" rel="stylesheet">
     <!-- NProgress -->
     <link href="../../vendors/nprogress/nprogress.css" rel="stylesheet">
-    <!-- bootstrap-daterangepicker -->
+    <!-- bootstrap-daterangepicker
     <link href="../../vendors/bootstrap-daterangepicker/daterangepicker.css" rel="stylesheet">
-
+    -->
     <!-- Custom Theme Style -->
     <link href="../../build/css/custom.css" rel="stylesheet">
 </head>
@@ -41,8 +41,8 @@
                         <img src="../../images/img.jpg" alt="..." class="img-circle profile_img">
                     </div>
                     <div class="profile_info">
-                        <span>Welcome,</span>
-                        <h2>User name here</h2>
+                        <!--<span>Welcome,</span>-->
+                        <h2 id="username"></h2>
                     </div>
                 </div>
                 <!-- /menu profile quick info -->
@@ -108,15 +108,7 @@
                     </div>
 
                     <div class="title_right">
-                        <!--<div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">-->
-                        <div class="col-md-8 col-sm-5 col-xs-12 form-group top_search">
-                            <div class="input-group">
-                                <input type="text" class="form-control" placeholder="">
-                    <span class="input-group-btn">
-                        <button class="btn btn-default" type="button">Search</button>
-                    </span>
-                            </div>
-                        </div>
+                        <% include partials/search.ejs %>
                     </div>
                 </div>
 
@@ -135,7 +127,7 @@
 
                                     <br />
 
-                                    <form id="collection-form" class="form-horizontal form-label-left" method="post" novalidate>
+                                    <form id="collection-form" class="form-horizontal form-label-left" novalidate>
 
                                         <input id="id" name="id" type="hidden">
                                         <input id="pid" name="pid" type="hidden">
@@ -148,10 +140,9 @@
                                         </div>
 
                                         <div class="form-group">
-                                            <label class="control-label col-md-3 col-sm-3 col-xs-12">Description <span class="required">*</span>
-                                            </label>
+                                            <label class="control-label col-md-3 col-sm-3 col-xs-12">Description</label>
                                             <div class="col-md-9 col-sm-9 col-xs-12">
-                                                <textarea id="description" class="form-control" rows="3" placeholder="" required></textarea>
+                                                <textarea id="description" class="form-control" rows="3" placeholder=""></textarea>
                                             </div>
                                         </div>
 
@@ -164,12 +155,12 @@
                                             <div class="col-md-9 col-sm-9 col-xs-12">
                                                 <div class="checkbox">
                                                     <label>
-                                                        <input id="is_active" name="is_active" type="checkbox" value=""> Active
+                                                        <input id="is_active" name="is_active" type="checkbox"> Active
                                                     </label>
                                                 </div>
                                                 <div class="checkbox">
                                                     <label>
-                                                        <input id="is_published" name="is_published" type="checkbox" value=""> Published
+                                                        <input id="is_published" name="is_published" type="checkbox"> Published
                                                     </label>
                                                 </div>
                                             </div>
@@ -208,32 +199,23 @@
 
 <!-- jQuery -->
 <script src="../../vendors/jquery/dist/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.17.0/jquery.validate.min.js"></script>
 <!-- Bootstrap -->
 <script src="../../vendors/bootstrap/dist/js/bootstrap.min.js"></script>
 <!-- FastClick -->
 <script src="../../vendors/fastclick/lib/fastclick.js"></script>
 <!-- NProgress -->
 <script src="../../vendors/nprogress/nprogress.js"></script>
-<!-- Chart.js -->
-<script src="../../vendors/Chart.js/dist/Chart.min.js"></script>
-<!-- jQuery Sparklines -->
-<script src="../../vendors/jquery-sparkline/dist/jquery.sparkline.min.js"></script>
-<!-- DateJS -->
-<script src="../../vendors/DateJS/build/date.js"></script>
-<!-- bootstrap-daterangepicker -->
-<script src="../../vendors/moment/min/moment.min.js"></script>
-<script src="../../vendors/bootstrap-daterangepicker/daterangepicker.js"></script>
-<!-- Datatables -->
-<script src="../../vendors/datatables.net/js/jquery.dataTables.min.js"></script>
-<script src="../../vendors/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
-<script src="../../vendors/datatables.net-responsive/js/dataTables.responsive.min.js"></script>
 <!-- app -->
 <script src="../../app/libs/helper.js"></script>
 <script src="../../app/libs/config.js"></script>
+<script src="../../app/users/user.module.js"></script>
 <script src="../../app/collections/collections.module.js"></script>
 <!-- Custom Theme Scripts -->
 <script src="../../build/js/custom.js"></script>
 <script>
+    collectionsModule.init();
+    collectionsModule.updateCollectionInit();
     collectionsModule.getCollection();
 </script>
 </body>

@@ -41,8 +41,8 @@
                         <img src="../../images/img.jpg" alt="..." class="img-circle profile_img">
                     </div>
                     <div class="profile_info">
-                        <span>Welcome,</span>
-                        <h2>User name here</h2>
+                        <!--<span>Welcome,</span>-->
+                        <h2 id="username"></h2>
                     </div>
                 </div>
                 <!-- /menu profile quick info -->
@@ -107,15 +107,7 @@
                         <!--<h3> Media Gallery <small> gallery design</small> </h3>-->
                     </div>
                     <div class="title_right">
-                        <!--<div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">-->
-                        <div class="col-md-8 col-sm-5 col-xs-12 form-group top_search">
-                            <div class="input-group">
-                                <input type="text" class="form-control" placeholder="">
-                    <span class="input-group-btn">
-                        <button class="btn btn-default" type="button">Search</button>
-                    </span>
-                            </div>
-                        </div>
+                        <% include partials/search.ejs %>
                     </div>
                 </div>
 
@@ -143,6 +135,7 @@
                                             <th>Email</th>
                                             <th>Role</th>
                                             <th>Status</th>
+                                            <th>Group</th>
                                         </tr>
                                         </thead>
 
@@ -153,8 +146,9 @@
                                             <td>Fernando</td>
                                             <td>Reyes</td>
                                             <td>fernando.reyes@du.edu</td>
-                                            <td>Administrator</td>
+                                            <td>Admin</td>
                                             <td>Active</td>
+                                            <td>Administrators</td>
                                         </tr>
 
                                         <tr>
@@ -162,8 +156,9 @@
                                             <td>Jeff</td>
                                             <td>Rynhart</td>
                                             <td>jeff.rynhart@du.edu</td>
-                                            <td>Administrator</td>
+                                            <td>User</td>
                                             <td>Active</td>
+                                            <td>Administrators</td>
                                         </tr>
 
                                         <tr>
@@ -171,8 +166,9 @@
                                             <td>Kevin</td>
                                             <td>Clair</td>
                                             <td>kevin.clair@du.edu</td>
-                                            <td>Special Collections user</td>
+                                            <td>Admin</td>
                                             <td>Active</td>
+                                            <td>Special Collections, Art and Art History</td>
                                         </tr>
 
                                         </tbody>
@@ -223,6 +219,7 @@
 <!-- Custom Theme Scripts -->
 <script src="../../build/js/custom.js"></script>
 <script>
+    userModule.init();
     // communitiesModule.getCommunity();
     // communitiesModule.init();
 </script>
