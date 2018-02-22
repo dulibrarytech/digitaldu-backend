@@ -204,6 +204,8 @@ var objectsModule = (function () {
 
         var pid = getParameterByName('pid');
 
+        collectionsModule.getCollectionName(pid);
+
         $.ajax(api + '/api/objects?pid=' + pid)
             .done(function(data) {
                 renderObjects(data);
@@ -212,8 +214,6 @@ var objectsModule = (function () {
                 renderError();
             });
     };
-
-    // TODO: get object here...
 
     obj.getObjectDetail = function () {
 

@@ -6,15 +6,17 @@ var Repo = require('../repository/controller');
 module.exports = function (app) {
 
     /* communities used by discovery layer and repo */
+    /*
     app.route('/api/communities')
         .get(Repo.get_communities)
         .put(Repo.update_community);
-
+    */
     /*  used by discovery layer and repo */
+    /*
     app.route('/api/community/tn')
         .get(Repo.get_community_tn);
         // .put(Repo.update_community_tn);
-
+    */
     /* collections used by discovery layer and repo */
     app.route('/api/collections')
         .get(Repo.get_collections);
@@ -23,6 +25,9 @@ module.exports = function (app) {
     app.route('/api/collection')
         .get(Repo.get_collection)
         .put(Repo.update_collection);
+
+    app.route('/api/collection/name')
+        .get(Repo.get_collection_name);
 
     // used by discovery layer and repo
     app.route('/api/collection/tn')

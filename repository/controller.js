@@ -3,6 +3,7 @@
 var Repo = require('../repository/model');
 
 /* communities */
+/*
 exports.get_communities = function (req, res) {
     Repo.get_communities(req, function (data) {
         res.status(data.status).send(data.data);
@@ -22,6 +23,7 @@ exports.get_community_tn = function (req, res) {
         res.end(data.data, 'binary');
     });
 };
+*/
 
 /* collections */
 exports.get_collections = function (req, res) {
@@ -36,9 +38,16 @@ exports.get_collection = function (req, res) {
     });
 };
 
+exports.get_collection_name = function (req, res) {
+    Repo.get_collection_name(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+
 exports.update_collection = function (req, res) {
     Repo.update_collection(req, function (data) {
-        res.status(data.status).send(data.data);
+        res.status(data.status).send(data);
     });
 };
 
@@ -49,6 +58,7 @@ exports.get_collection_tn = function (req, res) {
     });
 };
 
+/* objects */
 exports.get_objects = function (req, res) {
     Repo.get_objects(req, function (data) {
         res.status(data.status).send(data.data);

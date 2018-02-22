@@ -18,6 +18,7 @@ var client = new es.Client({
     // log: 'trace'
 });
 
+/*
 exports.get_communities = function (req, callback) {
 
     var community_id = req.query.community_id;
@@ -66,7 +67,8 @@ exports.get_communities = function (req, callback) {
             });
     }
 };
-
+*/
+/*
 exports.update_community = function (req, callback) {
 
     // TODO: change to update query
@@ -90,9 +92,10 @@ exports.update_community = function (req, callback) {
             // TODO: add error callback
             console.log(error);
         });
-    */
+    *
 };
-
+*/
+/*
 exports.get_community_tn = function (req, callback) {
 
     var id = req.query.community_id,
@@ -122,6 +125,7 @@ exports.get_community_tn = function (req, callback) {
         });
     }
 };
+*/
 
 exports.get_collections = function (req, callback) {
 
@@ -231,19 +235,45 @@ exports.get_collection = function (req, callback) {
     }
 };
 
+exports.get_collection_name = function (req, callback) {
+
+    var pid = req.query.pid;
+
+    if (pid !== undefined) {
+
+        knex('tbl_collections')
+            .select('pid', 'title', 'description')
+            .where({
+                pid: pid,
+                is_active: 1,
+                is_published: 1
+            })
+            .then(function (data) {
+                callback({
+                    status: 200,
+                    content_type: {'Content-Type': 'application/json'},
+                    data: data,
+                    message: 'Collection info'
+                });
+            })
+            .catch(function (error) {
+                // TODO: add error callback
+                console.log(error);
+            });
+    }
+};
+
 exports.update_collection = function (req, callback) {
 
     var updateObj = {};
     updateObj.title = req.body.title;
 
-    if (req.body.description !== undefined) {  // && req.body.description.length > 0
+    if (req.body.description !== undefined) {
         updateObj.description = req.body.description;
     }
 
     updateObj.is_active = req.body.is_active;
     updateObj.is_published = req.body.is_published;
-
-    console.log(updateObj);
 
     knex('tbl_collections')
         .where({

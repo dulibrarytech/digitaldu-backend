@@ -70,6 +70,25 @@ var collectionsModule = (function () {
         }
     };
 
+    obj.getCollectionName = function () {
+
+        var pid = getParameterByName('pid');
+
+        $.ajax(api + '/api/collection/name?pid=' + pid)
+            .done(function(data) {
+
+                if (data.length === 0) {
+                    return $('#message').html('Collection not found.');
+                }
+
+                $('#collection-name').html(data[0].title);
+                $('#collection-description').html(data[0].description);
+            })
+            .fail(function() {
+                renderError();
+            });
+    };
+
     obj.getCollection = function () {
 
         var collection_id = getParameterByName('collection_id');
@@ -119,12 +138,6 @@ var collectionsModule = (function () {
         data.title = $('#title').val();
         data.description = $('#description').val();
 
-        /*
-        if (description.length > 0) {
-            data.description = description;
-        }
-        */
-
         is_active = $('#is_active').prop('checked');
 
         if (is_active === false) {
@@ -150,8 +163,14 @@ var collectionsModule = (function () {
             data: data,
             cache: false
         })
-            .done(function (data) {
-                console.log(data);
+            .done(function (response) {
+                if (response.status === 200) {
+                    setTimeout(function () {
+                        $('#message').html('');
+                    }, 3000);
+
+                    $('#message').html('<div class="alert alert-success">' + response.message + '</div>');
+                }
             })
             .fail(function () {
                 renderError();
