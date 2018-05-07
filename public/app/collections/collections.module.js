@@ -70,9 +70,11 @@ var collectionsModule = (function () {
         }
     };
 
-    obj.getCollectionName = function () {
+    obj.getCollectionName = function (pid) {
 
-        var pid = getParameterByName('pid');
+        if (pid === undefined) {
+            var pid = getParameterByName('pid');
+        }
 
         $.ajax(api + '/api/collection/name?pid=' + pid)
             .done(function(data) {

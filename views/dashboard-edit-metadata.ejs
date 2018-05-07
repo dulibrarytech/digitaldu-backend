@@ -1,4 +1,28 @@
-<% include partials/header.ejs %>
+<% // include partials/header.ejs %>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>University of Denver - Digital Repository</title>
+
+    <!-- Bootstrap -->
+    <link href="../../vendors/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="../../vendors/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <!-- NProgress -->
+    <link href="../../vendors/nprogress/nprogress.css" rel="stylesheet">
+    <!-- bootstrap-daterangepicker
+    <link href="../../vendors/bootstrap-daterangepicker/daterangepicker.css" rel="stylesheet">
+    -->
+    <!-- Custom Theme Style -->
+    <link href="../../build/css/custom.css" rel="stylesheet">
+</head>
 
 <body class="nav-md">
 <div class="container body">
@@ -14,7 +38,7 @@
                 <!-- menu profile quick info -->
                 <div class="profile clearfix">
                     <div class="profile_pic">
-                        <img src="../images/img.jpg" alt="..." class="img-circle profile_img">
+                        <img src="../../images/img.jpg" alt="..." class="img-circle profile_img">
                     </div>
                     <div class="profile_info">
                         <!--<span>Welcome,</span>-->
@@ -50,7 +74,7 @@
                     <ul class="nav navbar-nav navbar-right">
                         <li class="">
                             <a href="javascript:;" class="user-profile dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-                                <img src="../images/img.jpg" alt="">Fernando Reyes
+                                <img src="../../images/img.jpg" alt="">Fernando Reyes
                                 <span class=" fa fa-angle-down"></span>
                             </a>
                             <ul class="dropdown-menu dropdown-usermenu pull-right">
@@ -94,12 +118,15 @@
                     <div class="col-md-12">
                         <div class="x_panel">
                             <div class="x_title">
-                                <h3 id="collection-name"></h3>
+                                <h2>Edit Metadata</h2>
                                 <div class="clearfix"></div>
                             </div>
-                            <div><p id="collection-description"></p></div>
                             <div class="x_content">
-                                <div class="row" id="objects"><!-- objects are rendered here --></div>
+                                <div class="row" id="edit-metadata"><!-- metadata edit form is rendered here -->
+                                    <div id="message"></div>
+                                    <br />
+                                    <form id="metadata-form"></form>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -114,35 +141,24 @@
 </div>
 
 <!-- jQuery -->
-<script src="../vendors/jquery/dist/jquery.min.js"></script>
+<script src="../../vendors/jquery/dist/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.17.0/jquery.validate.min.js"></script>
 <!-- Bootstrap -->
-<script src="../vendors/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="../../vendors/bootstrap/dist/js/bootstrap.min.js"></script>
 <!-- FastClick -->
-<script src="../vendors/fastclick/lib/fastclick.js"></script>
+<script src="../../vendors/fastclick/lib/fastclick.js"></script>
 <!-- NProgress -->
-<script src="../vendors/nprogress/nprogress.js"></script>
-<!-- Chart.js -->
-<script src="../vendors/Chart.js/dist/Chart.min.js"></script>
-<!-- jQuery Sparklines -->
-<script src="../vendors/jquery-sparkline/dist/jquery.sparkline.min.js"></script>
-<!-- DateJS -->
-<script src="../vendors/DateJS/build/date.js"></script>
-<!-- bootstrap-daterangepicker -->
-<script src="../vendors/moment/min/moment.min.js"></script>
-<script src="../vendors/bootstrap-daterangepicker/daterangepicker.js"></script>
-<!-- Datatables -->
-<script src="../vendors/datatables.net/js/jquery.dataTables.min.js"></script>
-<script src="../vendors/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
-<script src="../vendors/datatables.net-responsive/js/dataTables.responsive.min.js"></script>
+<script src="../../vendors/nprogress/nprogress.js"></script>
 <!-- app -->
-<script src="../app/libs/helper.js"></script>
-<script src="../app/libs/config.js"></script>
-<script src="../app/collections/collections.module.js"></script>
-<script src="../app/objects/objects.module.js"></script>
+<script src="../../app/libs/xml2json.min.js"></script>
+<script src="../../app/libs/helper.js"></script>
+<script src="../../app/libs/config.js"></script>
+<script src="../../app/users/user.module.js"></script>
+<script src="../../app/metadata/metadata.module.js"></script>
 <!-- Custom Theme Scripts -->
-<script src="../build/js/custom.js"></script>
+<script src="../../build/js/custom.js"></script>
 <script>
-    objectsModule.getObjects();
+    metadataModule.init();
 </script>
 </body>
 </html>

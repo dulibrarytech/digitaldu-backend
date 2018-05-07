@@ -37,4 +37,8 @@ module.exports = function (app) {
 
     app.route('/dashboard/search')
         .get(Dashboard.get_dashboard_search);
+
+    /* edit metadata */
+    app.route('/dashboard/metadata/edit')
+        .get(Dashboard.get_dashboard_metadata);
 };

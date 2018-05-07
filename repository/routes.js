@@ -5,18 +5,6 @@ var Repo = require('../repository/controller');
 // TODO: apply api security.  i.e. API key (for discovery layer)
 module.exports = function (app) {
 
-    /* communities used by discovery layer and repo */
-    /*
-    app.route('/api/communities')
-        .get(Repo.get_communities)
-        .put(Repo.update_community);
-    */
-    /*  used by discovery layer and repo */
-    /*
-    app.route('/api/community/tn')
-        .get(Repo.get_community_tn);
-        // .put(Repo.update_community_tn);
-    */
     /* collections used by discovery layer and repo */
     app.route('/api/collections')
         .get(Repo.get_collections);

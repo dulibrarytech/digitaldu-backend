@@ -18,115 +18,6 @@ var client = new es.Client({
     // log: 'trace'
 });
 
-/*
-exports.get_communities = function (req, callback) {
-
-    var community_id = req.query.community_id;
-
-    if (community_id !== undefined) {
-
-        knex('tbl_communities')
-            .select('*')
-            .where({
-                id: community_id,
-                is_active: 1,
-                is_published: 1
-            })
-            .then(function (data) {
-                callback({
-                    status: 200,
-                    content_type: {'Content-Type': 'application/json'},
-                    data: data,
-                    message: 'Communities'
-                });
-            })
-            .catch(function (error) {
-                // TODO: add error callback and log to file
-                console.log(error);
-            });
-
-    } else {
-
-        knex('tbl_communities')
-            .select('id', 'title', 'description')
-            .where({
-                is_active: 1,
-                is_published: 1
-            })
-            .then(function (data) {
-                callback({
-                    status: 200,
-                    content_type: {'Content-Type': 'application/json'},
-                    data: data,
-                    message: 'Communities'
-                });
-            })
-            .catch(function (error) {
-                // TODO: add error callback
-                console.log(error);
-            });
-    }
-};
-*/
-/*
-exports.update_community = function (req, callback) {
-
-    // TODO: change to update query
-    /*
-    knex('tbl_communities')
-        .select('id', 'title', 'description')
-        .where({
-            is_active: 1,
-            is_published: 1
-        })
-        .then(function (data) {
-
-            callback({
-                status: 200,
-                content_type: {'Content-Type': 'application/json'},
-                data: data,
-                message: 'Communities'
-            });
-        })
-        .catch(function (error) {
-            // TODO: add error callback
-            console.log(error);
-        });
-    *
-};
-*/
-/*
-exports.get_community_tn = function (req, callback) {
-
-    var id = req.query.community_id,
-        data = null;
-
-    try {
-
-        var tn = Config.communityTnPath;
-        data = fs.readFileSync(tn + id + '.jpg');
-        callback({
-            status: 200,
-            mime_type: {'Content-Type': 'image/jpeg'},
-            data: data,
-            message: 'Community TN object'
-        });
-
-    } catch(e) {
-
-        console.log(e);
-        // TODO: log to file
-        data = fs.readFileSync(Config.errorTn);
-        callback({
-            status: 200,
-            mime_type: {'Content-Type': 'image/jpeg'},
-            data: data,
-            message: 'Community TN object'
-        });
-    }
-};
-*/
-
 exports.get_collections = function (req, callback) {
 
     knex('tbl_collections')
@@ -149,58 +40,6 @@ exports.get_collections = function (req, callback) {
             // TODO: add error callback
             console.log(error);
         });
-
-    /*
-    var community_id = req.query.community_id;
-
-    if (community_id !== undefined) {
-
-        knex('tbl_collections')
-            .select('id', 'pid', 'title', 'description')
-            .where({
-                community_id: community_id,
-                is_root: 1,
-                is_child: 0,
-                is_active: 1,
-                is_published: 1
-            })
-            .then(function (data) {
-                callback({
-                    status: 200,
-                    content_type: {'Content-Type': 'application/json'},
-                    data: data,
-                    message: 'Collections'
-                });
-            })
-            .catch(function (error) {
-                // TODO: add error callback
-                console.log(error);
-            });
-
-    } else {
-
-        knex('tbl_collections')
-            .select('id', 'pid', 'title', 'description')
-            .where({
-                is_root: 1,
-                is_child: 0,
-                is_active: 1,
-                is_published: 1
-            })
-            .then(function (data) {
-                callback({
-                    status: 200,
-                    content_type: {'Content-Type': 'application/json'},
-                    data: data,
-                    message: 'Collections'
-                });
-            })
-            .catch(function (error) {
-                // TODO: add error callback
-                console.log(error);
-            });
-    }
-    */
 };
 
 exports.get_collection = function (req, callback) {
@@ -348,13 +187,14 @@ exports.get_objects = function (req, callback) {
 exports.get_object_metadata = function (req, callback) {
 
     var pid = req.query.pid.replace(/_/g, ':');
-    // TODO: add query to get collection name
+
     knex('tbl_rels')
         .join('tbl_metadata', 'tbl_rels.pid', 'tbl_metadata.pid')
         .join('tbl_object_data', 'tbl_metadata.pid', 'tbl_object_data.pid')
         .select('*')
         .where('tbl_rels.pid', pid)
         .then(function (data) {
+            console.log(data);
             callback({
                 status: 200,
                 content_type: {'Content-Type': 'application/json'},

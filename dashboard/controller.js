@@ -74,3 +74,7 @@ exports.get_dashboard_search = function (req, res) {
         // username: req.body.username
     });
 };
+
+exports.get_dashboard_metadata = function (req, res) {
+    res.render('dashboard-edit-metadata', {});
+};

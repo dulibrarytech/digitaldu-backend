@@ -106,7 +106,7 @@
                     <div class="col-md-12 col-sm-12 col-xs-12">
                         <div class="x_panel">
                             <div class="x_title">
-                                <h2 id="object-title"></h2>
+                                <h3 id="object-title"></h3>
                                 <ul class="nav navbar-right panel_toolbox">
                                     <!--
                                     <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
@@ -123,8 +123,8 @@
                                         </ul>
                                         -->
                                     </li>
-                                    <!--<li><a class="close-link"><i class="fa fa-close"></i></a>-->
-                                    </li>
+                                    <!--<li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>-->
                                 </ul>
                                 <div class="clearfix"></div>
                             </div>
@@ -139,34 +139,38 @@
                                     <!-- check mime type -->
                                     <div id="object-binary"></div>
                                     <br><br>
-                                    <div class="product-image" id="object-detail"><!-- Object details here --></div>
+                                    <div><strong>Collection:</strong> <span id="collection-name"></span></div>
+                                    <div id="object-detail"></div>
+
+                                    <!-- class="list-inline prod_color" -->
+
+                                    <!--<div><strong>Collection:</strong> <span id="collection-name"></span></div>-->
+                                    <!--
+                                    <div class="product-image" id="object-detail"><!-- Object details here --</div>
+                                    -->
                                 </div>
 
                                 <div class="col-md-5 col-sm-5 col-xs-12" style="border:0px solid #e5e5e5;">
 
                                     <h3 class="prod_title"><%= pid %></h3>
 
-                                    <div class="">
-                                        <h2><small>Edit Object</small></h2>
-                                        <ul><!-- class="list-inline prod_color" -->
-                                            <li>
-                                                <button type="button" class="btn btn-default" style="width: 100px">MODS</button>
-                                            </li>
-                                            <li>
-                                                <button type="button" class="btn btn-default" style="width: 100px">TECHMD</button>
-                                            </li>
-                                            <li>
-                                                <button type="button" class="btn btn-default" style="width: 100px">TN</button>
-                                            </li>
-                                            <li>
-                                                <button type="button" class="btn btn-default" style="width: 100px">OBJECT</button>
-                                            </li>
-                                            <li>
-                                                <button type="button" class="btn btn-default" style="width: 100px">Permissions</button>
-                                            </li>
-                                        </ul>
-                                    </div>
-
+                                    <ul>
+                                        <li>
+                                            <a href="/dashboard/metadata/edit?pid=<%= pid %>" class="btn btn-default" style="width: 100px">MODS</a>
+                                        </li>
+                                        <li>
+                                            <button type="button" class="btn btn-default" style="width: 100px">TECHMD</button>
+                                        </li>
+                                        <li>
+                                            <button type="button" class="btn btn-default" style="width: 100px">TN</button>
+                                        </li>
+                                        <li>
+                                            <button type="button" class="btn btn-default" style="width: 100px">OBJECT</button>
+                                        </li>
+                                        <li>
+                                            <button type="button" class="btn btn-default" style="width: 100px">Permissions</button>
+                                        </li>
+                                    </ul>
 
                                     <div class="">
                                         <!--
@@ -277,11 +281,14 @@
 <script src="../vendors/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
 <script src="../vendors/datatables.net-responsive/js/dataTables.responsive.min.js"></script>
 
+<script src="../app/libs/ImageViewer/imageviewer.min.js"></script>
+
 <!-- Custom Theme Scripts -->
 <script src="../build/js/mediaelement-mediaelement-cc69163/build/mediaelement-and-player.min.js"></script>
 <script src="../build/js/custom.js"></script>
 <script src="../app/libs/helper.js"></script>
 <script src="../app/libs/config.js"></script>
+<script src="../app/collections/collections.module.js"></script>
 <script src="../app/users/user.module.js"></script>
 <script src="../app/objects/objects.module.js"></script>
 <script>

@@ -59,9 +59,21 @@ var objectsModule = (function () {
 
         var recordPid = JSON.parse(data[0].display_record);
         var pid = 'codu:' + recordPid.id;
+        //var img ='';
 
         // TODO: split off into helper
         if (data[0].mime_type === 'image/tiff') {
+
+            var img = '<img id="viewer" src="' + api + '/api/object/image/jpg?pid=' + pid + '" data-high-res-src="' + api + '/api/object/image/jpg?pid=' + pid + '" alt="' + pid + '" style="max-width:500px;border:solid 1px black">'; // height:500px;
+
+            $('#object-binary').html(img);
+            // $('#viewer').ImageViewer();
+
+            // img = '<img src="' + api + '/api/object/image/jpg?pid=' + pid + '" data-high-res-src="' + api + '/api/object/image/jpg?pid=' + pid + '" alt="' + recordTitle + '">';
+            // $("#object-binary").append(img);
+            // $('.pannable-image').ImageViewer();
+
+            /*
             var img = $("<img />").attr({
                 src: api + '/api/object/image/jpg?pid=' + pid,
                 height: '400'
@@ -73,9 +85,16 @@ var objectsModule = (function () {
                         $("#object-binary").append(img);
                     }
                 });
+                */
         }
 
         if (data[0].mime_type === 'image/tif') {
+
+            var img = '<img id="viewer" src="' + api + '/api/object/image/jpg?pid=' + pid + '" data-high-res-src="' + api + '/api/object/image/jpg?pid=' + pid + '" alt="' + pid + '" style="max-width:500px;border:solid 1px black">'; // height:500px;
+
+            $('#object-binary').html(img);
+
+            /*
             var img = $("<img />").attr({
                 src: api + '/api/object/image/tiff?pid=' + pid,
                 height: '400'
@@ -87,9 +106,34 @@ var objectsModule = (function () {
                         $("#object-binary").append(img);
                     }
                 });
+            */
+
+            /*
+            var img = '<img id="viewer" src="' + api + '/api/object/image/tiff?pid=' + pid + '" data-high-res-src="' + api + '/api/object/image/tiff?pid=' + pid + '" alt="' + pid + '" style="height:400px;max-width:400px;border:solid 1px black">';
+
+            $('#image-viewer').html(img);
+            $('#object-binary').ImageViewer();
+            */
         }
 
         if (data[0].mime_type === 'image/jpeg') {
+
+
+            var img = '<img id="viewer" src="' + api + '/api/object/image/jpg?pid=' + pid + '" data-high-res-src="' + api + '/api/object/image/jpg?pid=' + pid + '" alt="' + pid + '" style="max-width:500px;border:solid 1px black">'; // height:500px;
+
+            $('#object-binary').html(img);
+
+            // img = '<img src="' + api + '/api/object/image/jpg?pid=' + pid + '" data-high-res-src="' + api + '/api/object/image/jpg?pid=' + pid + '" alt="' + recordTitle + '">';
+           // $('#object-binary').html(img);
+
+            /*
+            var img = '<img id="viewer" src="' + api + '/api/object/image/jpg?pid=' + pid + '" data-high-res-src="' + api + '/api/object/image/jpg?pid=' + pid + '" alt="' + pid + '" style="height:400px;max-width:400px;border:solid 1px black">';
+
+            $('#image-viewer').html(img);
+            $('#object-binary').ImageViewer();
+            */
+
+            /*
             var img = $("<img>").attr({
                 src: api + '/api/object/image/jpg?pid=' + pid,
                 height: '400'
@@ -101,9 +145,15 @@ var objectsModule = (function () {
                         $("#object-binary").append(img);
                     }
                 });
+                */
         }
 
         if (data[0].mime_type === 'image/png') {
+
+            var img = '<img src="' + api + '/api/object/image/png?pid=' + pid + '" data-high-res-src="' + api + '/api/object/image/png?pid=' + pid + '" alt="' + recordTitle + '">';
+            $('#object-binary').append(img);
+
+            /*
             var img = $("<img />").attr({
                 src: api + '/api/image/png?pid=' + pid,
                 height: '400'
@@ -115,18 +165,18 @@ var objectsModule = (function () {
                         $("#object-binary").append(img);
                     }
                 });
+                */
         }
 
         if (data[0].mime_type === 'application/pdf') {
-            var pdf = '<iframe src="' + api + '/api/object/pdf?pid=' + pid + '" style="width:600px; height:500px;" frameborder="0"></iframe>';
-            console.log(pdf);
+            var pdf = '<iframe src="' + api + '/api/object/pdf?pid=' + pid + '" style="width:500px;height:600px;" frameborder="0"></iframe>';
             $("#object-binary").append(pdf);
         }
 
         if (data[0].mime_type === 'video/mp4') {
             // var video = '<video width="320" height="240"><source type="video/mp4" src="http://localhost:8000/video?pid=' + pid + '" /></video>';
             // $("#object-binary").append(video);
-            var video = '<iframe src="' + api + '/api/object/video/mp4?pid=' + pid + '" style="width:320px; height:240px;" frameborder="0"></iframe>';
+            var video = '<iframe src="' + api + '/api/object/video/mp4?pid=' + pid + '" style="width:320px;height:240px;" frameborder="0"></iframe>';
             $("#object-binary").append(video);
         }
 
@@ -137,12 +187,9 @@ var objectsModule = (function () {
             $("#object-binary").append(video);
         }
 
-        console.log(data[0].mime_type);
+        collectionsModule.getCollectionName(data[0].is_member_of_collection);
 
         var html = '';
-
-        html += '<p><strong>Collection(s):</strong> Collection name here</p>';
-
 
         for (var i=0;i<data.length;i++) {
 
@@ -154,6 +201,61 @@ var objectsModule = (function () {
                 html += '<hr>';
                 html += '<p>';
                 html += '<strong>Alternative Title:</strong> ' + record.title[1];
+                html += '</p>';
+            }
+
+            if (record.abstract !== undefined) {
+                html += '<hr>';
+                html += '<p>';
+                html += '<strong>Abstract:</strong> ' + record.abstract;
+                html += '</p>';
+            }
+
+            if (record.subjectTopic !== undefined) {
+                html += '<hr>';
+                html += '<p>';
+                html += '<strong>Subject Topic:</strong> ';
+                html += '<ul>';
+                for (var i = 0;i<record.subjectTopic.length;i++) {
+                    html += '<li>' + record.subjectTopic[i] + '</li>'
+                }
+                html += '</ul>';
+                html += '</p>';
+            }
+
+            if (record.subjectOccupation !== undefined) {
+                html += '<hr>';
+                html += '<p>';
+                html += '<strong>Subject Occupation:</strong> ';
+                html += '<ul>';
+                for (var i = 0;i<record.subjectOccupation.length;i++) {
+                    html += '<li>' + record.subjectOccupation[i] + '</li>'
+                }
+                html += '</ul>';
+                html += '</p>';
+            }
+
+            if (record.subjectGeographic !== undefined) {
+                html += '<hr>';
+                html += '<p>';
+                html += '<strong>Subject Geographic:</strong> ';
+                html += '<ul>';
+                for (var i = 0;i<record.subjectGeographic.length;i++) {
+                    html += '<li>' + record.subjectGeographic[i] + '</li>'
+                }
+                html += '</ul>';
+                html += '</p>';
+            }
+
+            if (record.subjectGenre !== undefined) {
+                html += '<hr>';
+                html += '<p>';
+                html += '<strong>Subject Genre:</strong> ';
+                html += '<ul>';
+                for (var i = 0;i<record.subjectGenre.length;i++) {
+                    html += '<li>' + record.subjectGenre[i] + '</li>'
+                }
+                html += '</ul>';
                 html += '</p>';
             }
 
@@ -186,6 +288,40 @@ var objectsModule = (function () {
                 html += '</p>';
             }
 
+            if (record.digitalOrigin !== undefined) {
+                html += '<hr>';
+                html += '<p>';
+                html += '<strong>Digital Origin:</strong> ' + record.digitalOrigin;
+                html += '</p>';
+            }
+
+            if (record.dateCreated !== undefined) {
+                html += '<hr>';
+                html += '<p>';
+                html += '<strong>Date Created:</strong> ' + record.dateCreated;
+                html += '</p>';
+            }
+
+            if (record.accessCondition !== undefined) {
+                html += '<hr>';
+                html += '<p>';
+                html += '<strong>Access Condition:</strong> ' + record.accessCondition;
+                html += '</p>';
+            }
+
+            if (record.note !== undefined) {
+                html += '<hr>';
+                html += '<p>';
+                html += '<strong>Note:</strong> ' + record.note;
+                html += '</p>';
+            }
+
+            if (record.url !== undefined) {
+                html += '<hr>';
+                html += '<p>';
+                html += '<strong>Handle:</strong> ' + record.url;
+                html += '</p>';
+            }
         }
 
         $('#object-detail').html(html);
