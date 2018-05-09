@@ -10,12 +10,14 @@ exports.note = function (array, index) {
             note += '<note displayLabel="' + array[index].attr['displayLabel'] + '">';
         } else if (array[index].attr['ID'] !== undefined) {
             note += '<note ID="' + array[index].attr['ID'] + '">';
-        } else if (array[index].attr['authority'] !== undefined) {
+        } else if (array[index].attr['altRepGroup'] !== undefined) {
             note += '<note altRepGroup="' + array[index].attr['altRepGroup'] + '">';
         } else if (array[index].attr['typeURI'] !== undefined) {
             note += '<note typeURI="' + array[index].attr['typeURI'] + '">';
         } else if (array[index].attr['lang'] !== undefined) {
             note += '<note lang="' + array[index].attr['lang'] + '">';
+        } else if (array[index].attr['type'] !== undefined) {
+            note += '<note type="' + array[index].attr['type'] + '">';
         } else {
             note += '<note>';
         }

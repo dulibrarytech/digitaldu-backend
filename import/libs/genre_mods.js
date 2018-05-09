@@ -2,9 +2,9 @@
 
 exports.genre = function (array, index) {
 
-    if (array[index].val !== undefined && array[index].val.length !== 0) {
+    var genre = '';
 
-        var genre = '';
+    if (array[index].val !== undefined && array[index].val.length !== 0) {
 
         // check for element attributes
         if (array[index].attr['authority'] !== undefined) {
@@ -25,7 +25,7 @@ exports.genre = function (array, index) {
 
         genre += array[index].val.trim();
         genre += '</genre>';
-
-        return genre;
     }
+
+    return genre;
 };

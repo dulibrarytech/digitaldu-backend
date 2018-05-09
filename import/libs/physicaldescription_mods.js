@@ -40,26 +40,13 @@ exports.physicalDescription = function (array, index) {
         if (array[index].name === 'reformattingQuality') {
 
             if (array[index].val !== undefined && array[index].val.length !== 0) {
-
-                // check for element attributes
-                if (array[index].attr['type'] !== undefined) {
-                    physicalDescription += '<reformattingQuality type="' + array[index].attr['type'] + '">';
-                } else if (array[index].attr['authority'] !== undefined) {
-                    physicalDescription += '<reformattingQuality authority="' + array[index].attr['authority'] + '">';
-                } else if (array[index].attr['lang'] !== undefined) {
-                    physicalDescription += '<reformattingQuality lang="' + array[index].attr['lang'] + '">';
-                }
-                else {
-                    physicalDescription += '<reformattingQuality>';
-                }
-
+                physicalDescription += '<reformattingQuality>';
                 physicalDescription += array[index].val.trim();
                 physicalDescription += '</reformattingQuality>';
             }
         }
 
         if (array[index].name === 'internetMediaType') {
-
 
             if (array[index].val !== undefined && array[index].val.length !== 0) {
 
@@ -88,15 +75,21 @@ exports.physicalDescription = function (array, index) {
                     physicalDescription += '<extent unit="' + array[index].attr['unit'] + '">';
                 } else if (array[index].attr['lang'] !== undefined) {
                     physicalDescription += '<extent lang="' + array[index].attr['lang'] + '">';
-                } else if (array[index].attr['digitalOrigin'] !== undefined) {
-                    physicalDescription += '<extent digitalOrigin="' + array[index].attr['digitalOrigin'] + '">';
-                }
-                else {
+                } else {
                     physicalDescription += '<extent>';
                 }
 
                 physicalDescription += array[index].val.trim();
                 physicalDescription += '</extent>';
+            }
+        }
+
+        if (array[index].name === 'digitalOrigin') {
+
+            if (array[index].val !== undefined && array[index].val.length !== 0) {
+                physicalDescription += '<digitalOrigin>';
+                physicalDescription += array[index].val.trim();
+                physicalDescription += '</digitalOrigin>';
             }
         }
 
@@ -117,20 +110,11 @@ exports.physicalDescription = function (array, index) {
                     physicalDescription += '<note ID="' + array[index].attr['ID'] + '">';
                 }
                 else {
-                    physicalDescription += '<extent>';
+                    physicalDescription += '<note>';
                 }
 
                 physicalDescription += array[index].val.trim();
-                physicalDescription += '</extent>';
-            }
-        }
-
-        if (array[index].name === 'digitalOrigin') {
-
-            if (array[index].val !== undefined && array[index].val.length !== 0) {
-                physicalDescription += '<digitalOrigin>';
-                physicalDescription += array[index].val.trim();
-                physicalDescription += '</digitalOrigin>';
+                physicalDescription += '</note>';
             }
         }
     });

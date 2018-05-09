@@ -435,8 +435,8 @@ exports.subject = function (array, index) {
                         }
 
                         // check for element attributes
-                        if (array[index].attr['authority'] !== undefined) {
-                            subject += '<namePart authority="' + array[index].attr['authority'] + '">';
+                        if (array[index].attr['type'] !== undefined) {
+                            subject += '<namePart type="' + array[index].attr['type'] + '">';
                         } else if (array[index].attr['authorityURI'] !== undefined) {
                             subject += '<namePart authorityURI="' + array[index].attr['authorityURI'] + '">';
                         } else if (array[index].attr['valueURI'] !== undefined) {
@@ -486,19 +486,7 @@ exports.subject = function (array, index) {
                             subject += '<name>';
                         }
 
-                        // check for element attributes
-                        if (array[index].attr['authority'] !== undefined) {
-                            subject += '<displayForm authority="' + array[index].attr['authority'] + '">';
-                        } else if (array[index].attr['authorityURI'] !== undefined) {
-                            subject += '<displayForm authorityURI="' + array[index].attr['authorityURI'] + '">';
-                        } else if (array[index].attr['valueURI'] !== undefined) {
-                            subject += '<displayForm valueURI="' + array[index].attr['valueURI'] + '">';
-                        } else if (array[index].attr['lang'] !== undefined) {
-                            subject += '<displayForm lang="' + array[index].attr['lang'] + '">';
-                        } else {
-                            subject += '<displayForm>';
-                        }
-
+                        subject += '<displayForm>';
                         subject += array[index].val.trim();
                         subject += '</displayForm>';
                         subject += '</name>';
@@ -593,8 +581,8 @@ exports.subject = function (array, index) {
                         subject += '<role>';
 
                         // check for element attributes
-                        if (array[index].attr['authority'] !== undefined) {
-                            subject += '<roleTerm authority="' + array[index].attr['authority'] + '">';
+                        if (array[index].attr['type'] !== undefined) {
+                            subject += '<roleTerm type="' + array[index].attr['type'] + '">';
                         } else if (array[index].attr['authorityURI'] !== undefined) {
                             subject += '<roleTerm authorityURI="' + array[index].attr['authorityURI'] + '">';
                         } else if (array[index].attr['valueURI'] !== undefined) {
@@ -688,24 +676,20 @@ exports.subject = function (array, index) {
                 }
 
                 // check for element attributes
-                if (array[index].attr['typeURI'] !== undefined) {
-                    subject += '<geographicCode typeURI="' + array[index].attr['typeURI'] + '">';
+                if (array[index].attr['authority'] !== undefined) {
+                    subject += '<geographicCode authority="' + array[index].attr['authority'] + '">';
                 } else if (array[index].attr['lang'] !== undefined) {
                     subject += '<geographicCode lang="' + array[index].attr['lang'] + '">';
-                } else if (array[index].attr['displayLabel'] !== undefined) {
-                    subject += '<geographicCode displayLabel="' + array[index].attr['displayLabel'] + '">';
-                } else if (array[index].attr['type'] !== undefined) {
-                    subject += '<geographicCode type="' + array[index].attr['type'] + '">';
-                } else if (array[index].attr['ID'] !== undefined) {
-                    subject += '<geographicCode ID="' + array[index].attr['ID'] + '">';
-                }
-                else {
+                } else if (array[index].attr['authorityURI'] !== undefined) {
+                    subject += '<geographicCode authorityURI="' + array[index].attr['authorityURI'] + '">';
+                } else if (array[index].attr['valueURI'] !== undefined) {
+                    subject += '<geographicCode valueURI="' + array[index].attr['valueURI'] + '">';
+                } else {
                     subject += '<geographicCode>';
                 }
 
                 subject += array[index].val.trim();
                 subject += '</geographicCode>';
-
                 subject += '</subject>';
             }
         }
@@ -728,7 +712,20 @@ exports.subject = function (array, index) {
                     subject += '<subject>';
                 }
 
-                subject += '<genre>';
+                if (array[index].attr['authority'] !== undefined) {
+                    subject += '<genre authority="' + array[index].attr['authority'] + '">';
+                } else if (array[index].attr['lang'] !== undefined) {
+                    subject += '<genre lang="' + array[index].attr['lang'] + '">';
+                } else if (array[index].attr['authorityURI'] !== undefined) {
+                    subject += '<genre authorityURI="' + array[index].attr['authorityURI'] + '">';
+                } else if (array[index].attr['valueURI'] !== undefined) {
+                    subject += '<genre valueURI="' + array[index].attr['valueURI'] + '">';
+                } else if (array[index].attr['lang'] !== undefined) {
+                    subject += '<genre lang="' + array[index].attr['lang'] + '">';
+                } else {
+                    subject += '<genre>';
+                }
+
                 subject += array[index].val.trim();
                 subject += '</genre>';
                 subject += '</subject>';
@@ -738,8 +735,6 @@ exports.subject = function (array, index) {
         if (array[index].name === 'hierarchicalGeographic') {
 
             array[index].eachChild(function (child, index, array) {
-
-                // titleInfo sub elements
 
                 if (array[index].name === 'continent') {
 

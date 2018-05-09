@@ -65,6 +65,84 @@ exports.name = function (array, index) {
                 }
             });
         }
+
+        if (array[index].name === 'nameIdentifier') {
+
+            if (array[index].val.length !== 0) {
+
+                if (array[index].attr['type'] !== undefined) {
+                    name += '<nameIdentifier type="' + array[index].attr['type'] + '">';
+                } else if (array[index].attr['lang'] !== undefined) {
+                    name += '<nameIdentifier lang="' + array[index].attr['lang'] + '">';
+                } else {
+                    name += '<nameIdentifier>';
+                }
+
+                name += array[index].val.trim();
+                name += '</nameIdentifier>';
+            }
+        }
+
+        if (array[index].name === 'displayForm') {
+
+            if (array[index].val.length !== 0) {
+
+                if (array[index].attr['type'] !== undefined) {
+                    name += '<displayForm type="' + array[index].attr['type'] + '">';
+                } else if (array[index].attr['lang'] !== undefined) {
+                    name += '<displayForm lang="' + array[index].attr['lang'] + '">';
+                } else {
+                    name += '<displayForm>';
+                }
+
+                name += array[index].val.trim();
+                name += '</displayForm>';
+            }
+        }
+
+        if (array[index].name === 'affiliation') {
+
+            if (array[index].val.length !== 0) {
+
+                if (array[index].attr['type'] !== undefined) {
+                    name += '<affiliation type="' + array[index].attr['type'] + '">';
+                } else if (array[index].attr['lang'] !== undefined) {
+                    name += '<affiliation lang="' + array[index].attr['lang'] + '">';
+                } else {
+                    name += '<affiliation>';
+                }
+
+                name += array[index].val.trim();
+                name += '</affiliation>';
+            }
+        }
+
+        if (array[index].name === 'description') {
+
+            if (array[index].val.length !== 0) {
+
+                if (array[index].attr['type'] !== undefined) {
+                    name += '<description type="' + array[index].attr['type'] + '">';
+                } else if (array[index].attr['lang'] !== undefined) {
+                    name += '<description lang="' + array[index].attr['lang'] + '">';
+                } else {
+                    name += '<description>';
+                }
+
+                name += array[index].val.trim();
+                name += '</description>';
+            }
+        }
+
+        if (array[index].name === 'etal') {
+
+            if (array[index].val.length !== 0) {
+                name += '<etal>';
+                name += array[index].val.trim();
+                name += '</etal>';
+            }
+        }
+
     });
 
     name += '</name>';

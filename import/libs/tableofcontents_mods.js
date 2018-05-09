@@ -2,9 +2,9 @@
 
 exports.tableOfContents = function (array, index) {
 
-    if (array[index].val !== undefined && array[index].val.length !== 0) {
+    var tableOfContents = '';
 
-        var tableOfContents = '';
+    if (array[index].val !== undefined && array[index].val.length !== 0) {
 
         if (array[index].attr['type'] !== undefined) {
             tableOfContents += '<tableOfContents type="' + array[index].attr['type'] + '">';
@@ -26,7 +26,7 @@ exports.tableOfContents = function (array, index) {
 
         tableOfContents += array[index].val.trim();
         tableOfContents += '</tableOfContents>';
-
-        return tableOfContents;
     }
+
+    return tableOfContents;
 };

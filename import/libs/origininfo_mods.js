@@ -19,6 +19,35 @@ exports.origininfo = function (array, index) {
 
     array[index].eachChild(function (child, index, array) {
 
+        if (array[index].name === 'place') {
+
+            array[index].eachChild(function (child, index, array) {
+
+                if (array[index].val !== undefined && array[index].val.length !== 0) {
+
+                    // check for element attributes
+                    if (array[index].attr['supplied'] !== undefined) {
+                        originInfo += '<place supplied="' + array[index].attr['supplied'] + '">';
+                    } else {
+                        originInfo += '<place>';
+                    }
+
+                    // check for element attributes
+                    if (array[index].attr['type'] !== undefined) {
+                        originInfo += '<placeTerm type="' + array[index].attr['type'] + '">';
+                    } else if (array[index].attr['authority'] !== undefined) {
+                        originInfo += '<placeTerm authority="' + array[index].attr['authority'] + '">';
+                    } else {
+                        originInfo += '<placeTerm>';
+                    }
+
+                    originInfo += array[index].val.trim();
+                    originInfo += '</placeTerm>';
+                    originInfo += '</place>';
+                }
+            });
+        }
+
         if (array[index].name === 'publisher') {
 
             if (array[index].val !== undefined && array[index].val.length !== 0) {
@@ -56,6 +85,29 @@ exports.origininfo = function (array, index) {
 
                 originInfo += array[index].val.trim();
                 originInfo += '</dateIssued>';
+            }
+        }
+
+        if (array[index].name === 'dateCreated') {
+
+            if (array[index].val !== undefined && array[index].val.length !== 0) {
+
+                if (array[index].attr['encoding'] !== undefined) {
+                    originInfo += '<dateCreated encoding="' + array[index].attr['encoding'] + '">';
+                } else if (array[index].attr['point'] !== undefined) {
+                    originInfo += '<dateCreated point="' + array[index].attr['point'] + '">';
+                } else if (array[index].attr['keyDate'] !== undefined) {
+                    originInfo += '<dateCreated keyDate="' + array[index].attr['keyDate'] + '">';
+                } else if (array[index].attr['qualifier'] !== undefined) {
+                    originInfo += '<dateCreated qualifier="' + array[index].attr['qualifier'] + '">';
+                } else if (array[index].attr['lang'] !== undefined) {
+                    originInfo += '<dateCreated lang="' + array[index].attr['lang'] + '">';
+                } else {
+                    originInfo += '<dateCreated>';
+                }
+
+                originInfo += array[index].val.trim();
+                originInfo += '</dateCreated>';
             }
         }
 
@@ -207,6 +259,8 @@ exports.origininfo = function (array, index) {
 
                 if (array[index].attr['authority'] !== undefined) {
                     originInfo += '<frequency authority="' + array[index].attr['authority'] + '">';
+                } else if (array[index].attr['lang'] !== undefined) {
+                    originInfo += '<frequency lang="' + array[index].attr['lang'] + '">';
                 } else {
                     originInfo += '<frequency>';
                 }
@@ -214,35 +268,6 @@ exports.origininfo = function (array, index) {
                 originInfo += array[index].val.trim();
                 originInfo += '</frequency>';
             }
-        }
-
-        if (array[index].name === 'place') {
-
-            array[index].eachChild(function (child, index, array) {
-
-                if (array[index].val !== undefined && array[index].val.length !== 0) {
-
-                    // check for element attributes
-                    if (array[index].attr['supplied'] !== undefined) {
-                        originInfo += '<place supplied="' + array[index].attr['supplied'] + '">';
-                    } else {
-                        originInfo += '<place>';
-                    }
-
-                    // check for element attributes
-                    if (array[index].attr['type'] !== undefined) {
-                        originInfo += '<placeTerm type="' + array[index].attr['type'] + '">';
-                    } else if (array[index].attr['authority'] !== undefined) {
-                        originInfo += '<placeTerm authority="' + array[index].attr['authority'] + '">';
-                    } else {
-                        originInfo += '<placeTerm>';
-                    }
-
-                    originInfo += array[index].val.trim();
-                    originInfo += '</placeTerm>';
-                    originInfo += '</place>';
-                }
-            });
         }
     });
 
