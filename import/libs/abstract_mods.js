@@ -2,9 +2,9 @@
 
 exports.abstract = function (array, index) {
 
-    if (array[index].val !== undefined && array[index].val.length !== 0) {
+    var abstract = '';
 
-        var abstract = '';
+    if (array[index].val !== undefined && array[index].val.length !== 0) {
 
         if (array[index].attr['type'] !== undefined) {
             abstract += '<abstract type="' + array[index].attr['type'] + '">';
@@ -26,7 +26,7 @@ exports.abstract = function (array, index) {
 
         abstract += array[index].val.trim();
         abstract += '</abstract>';
-
-        return abstract;
     }
+
+    return abstract;
 };

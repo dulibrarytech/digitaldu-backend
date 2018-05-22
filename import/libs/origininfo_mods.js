@@ -4,6 +4,18 @@ exports.origininfo = function (array, index) {
 
     var originInfo = '';
 
+    if (array[index].children[1] === undefined || array[index].children[1].val === undefined || array[index].children[1].val.length === 0) {
+        return originInfo;
+    }
+
+    if (array[index].children[1] === undefined || array[index].children[1].name === undefined) {
+        return originInfo;
+    }
+
+    if (array[index].children[1].val == undefined) {
+        return originInfo;
+    }
+
     // check for element attributes
     if (array[index].attr['	lang'] !== undefined) {
         originInfo += '<originInfo lang="' + array[index].attr['lang'] + '">';

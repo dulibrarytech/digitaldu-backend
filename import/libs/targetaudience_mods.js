@@ -8,9 +8,11 @@ exports.targetAudience = function (array, index) {
 
         if (array[index].attr['displayLabel'] !== undefined) {
             targetAudience += '<targetAudience displayLabel="' + array[index].attr['displayLabel'] + '">';
-        } else if (array[index].attr['altContent'] !== undefined) {
-            targetAudience += '<targetAudience authority="' + array[index].attr['authority'] + '">';
+        } else if (array[index].attr['altRepGroup'] !== undefined) {
+            targetAudience += '<targetAudience altRepGroup="' + array[index].attr['altRepGroup'] + '">';
         } else if (array[index].attr['authority'] !== undefined) {
+            targetAudience += '<targetAudience authority="' + array[index].attr['authority'] + '">';
+        } else if (array[index].attr['altRepGroup'] !== undefined) {
             targetAudience += '<targetAudience altRepGroup="' + array[index].attr['altRepGroup'] + '">';
         } else if (array[index].attr['shareable'] !== undefined) {
             targetAudience += '<targetAudience shareable="' + array[index].attr['shareable'] + '">';

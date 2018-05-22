@@ -4,6 +4,18 @@ exports.name = function (array, index) {
 
     var name = '';
 
+    if (array[index].children[1] === undefined || array[index].children[1].val === undefined || array[index].children[1].val.length === 0) {
+        return name;
+    }
+
+    if (array[index].children[1] === undefined || array[index].children[1].name === undefined) {
+        return name;
+    }
+
+    if (array[index].children[1].val == undefined) {
+        return name;
+    }
+
     // check for element attributes
     if (array[index].attr['type'] !== undefined) {
         name += '<name type="' + array[index].attr['type'] + '">';

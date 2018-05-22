@@ -2,9 +2,21 @@
 
 exports.language = function (array, index) {
 
-    if (array[index].val !== undefined && array[index].val.length !== 0) {
+    var language = '';
 
-        var language = '';
+    if (array[index].children[1] === undefined || array[index].children[1].val === undefined || array[index].children[1].val.length === 0) {
+        return language;
+    }
+
+    if (array[index].children[1] === undefined || array[index].children[1].name === undefined) {
+        return language;
+    }
+
+    if (array[index].children[1].val == undefined) {
+        return language;
+    }
+
+    if (array[index].val !== undefined && array[index].val.length !== 0) {
 
         if (array[index].attr['objectPart'] !== undefined) {
             language += '<language objectPart="' + array[index].attr['objectPart'] + '">';
@@ -66,7 +78,7 @@ exports.language = function (array, index) {
         });
 
         language += '</language>';
-
-        return language;
     }
+
+    return language;
 };

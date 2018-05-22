@@ -4,6 +4,18 @@ exports.physicalDescription = function (array, index) {
 
     var physicalDescription = '';
 
+    if (array[index].children[1] === undefined || array[index].children[1].val === undefined || array[index].children[1].val.length === 0) {
+        return physicalDescription;
+    }
+
+    if (array[index].children[1] === undefined || array[index].children[1].name === undefined) {
+        return physicalDescription;
+    }
+
+    if (array[index].children[1].val == undefined) {
+        return physicalDescription;
+    }
+
     if (array[index].attr['lang'] !== undefined) {
         physicalDescription += '<physicalDescription lang="' + array[index].attr['lang'] + '">';
     } else if (array[index].attr['displayLabel'] !== undefined) {

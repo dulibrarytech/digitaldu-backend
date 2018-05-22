@@ -2,9 +2,9 @@
 
 exports.typeOfResource = function (array, index) {
 
-    if (array[index].val !== undefined && array[index].val.length !== 0) {
+    var typeOfResource = '';
 
-        var typeOfResource = '';
+    if (array[index].val !== undefined && array[index].val.length !== 0) {
 
         if (array[index].attr['collection'] !== undefined) {
             typeOfResource += '<typeOfResource collection="' + array[index].attr['collection'] + '">';
@@ -22,7 +22,7 @@ exports.typeOfResource = function (array, index) {
 
         typeOfResource += array[index].val.trim();
         typeOfResource += '</typeOfResource>';
-
-        return typeOfResource;
     }
+
+    return typeOfResource;
 };

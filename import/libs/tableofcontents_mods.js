@@ -17,9 +17,11 @@ exports.tableOfContents = function (array, index) {
         } else if (array[index].attr['altRepGroup'] !== undefined) {
             tableOfContents += '<tableOfContents altRepGroup="' + array[index].attr['altRepGroup'] + '">';
         } else if (array[index].attr['shareable'] !== undefined) {
-            tableOfContents += '<tableOfContents shareable="' + array[index].attr['lang'] + '">';
+            tableOfContents += '<tableOfContents shareable="' + array[index].attr['shareable'] + '">';
         } else if (array[index].attr['lang'] !== undefined) {
             tableOfContents += '<tableOfContents lang="' + array[index].attr['lang'] + '">';
+        } else if (array[index].attr['xlink:href'] !== undefined) {
+            tableOfContents += '<tableOfContents xlink:href="' + array[index].attr['xlink:href'] + '">';
         } else {
             tableOfContents += '<tableOfContents>';
         }
