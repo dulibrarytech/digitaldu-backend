@@ -1,20 +1,22 @@
 'use strict';
 
+var xmlString = require('../../import/libs/xmlEncode');
+
 exports.extension = function (array, index) {
+
+    var extension = '';
 
     if (array[index].val !== undefined && array[index].val.length !== 0) {
 
-        var extension = '';
-
         if (array[index].attr['displayLabel'] !== undefined) {
-            extension += '<extension displayLabel="' + array[index].attr['displayLabel'] + '">';
+            extension += '<extension displayLabel="' + array[index].attr['displayLabel'].toLowerCase() + '">';
         } else {
             extension += '<extension>';
         }
 
-        extension += array[index].val.trim();
+        extension += xmlString.encode(array[index].val.trim());
         extension += '</extension>';
-
-        return extension;
     }
+
+    return extension;
 };

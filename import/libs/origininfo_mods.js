@@ -1,5 +1,7 @@
 'use strict';
 
+var xmlString = require('../../import/libs/xmlEncode');
+
 exports.origininfo = function (array, index) {
 
     var originInfo = '';
@@ -18,20 +20,20 @@ exports.origininfo = function (array, index) {
 
     // check for element attributes
     if (array[index].attr['	lang'] !== undefined) {
-        originInfo += '<originInfo lang="' + array[index].attr['lang'] + '">';
+        originInfo += '<originInfo lang="' + array[index].attr['lang'].toLowerCase() + '">';
     } else if (array[index].attr['displayLabel'] !== undefined) {
-        originInfo += '<originInfo displayLabel="' + array[index].attr['displayLabel'] + '">';
+        originInfo += '<originInfo displayLabel="' + array[index].attr['displayLabel'].toLowerCase() + '">';
     } else if (array[index].attr['altRepGroup'] !== undefined) {
-        originInfo += '<originInfo altRepGroup="' + array[index].attr['altRepGroup'] + '">';
+        originInfo += '<originInfo altRepGroup="' + array[index].attr['altRepGroup'].toLowerCase() + '">';
     } else if (array[index].attr['eventType'] !== undefined) {
-        originInfo += '<originInfo eventType="' + array[index].attr['eventType'] + '">';
+        originInfo += '<originInfo eventType="' + array[index].attr['eventType'].toLowerCase() + '">';
     } else {
         originInfo += '<originInfo>';
     }
 
     array[index].eachChild(function (child, index, array) {
 
-        if (array[index].name === 'place') {
+        if (array[index].name === 'place' && array[index].val.length > 0) {
 
             array[index].eachChild(function (child, index, array) {
 
@@ -39,245 +41,245 @@ exports.origininfo = function (array, index) {
 
                     // check for element attributes
                     if (array[index].attr['supplied'] !== undefined) {
-                        originInfo += '<place supplied="' + array[index].attr['supplied'] + '">';
+                        originInfo += '<place supplied="' + array[index].attr['supplied'].toLowerCase() + '">';
                     } else {
                         originInfo += '<place>';
                     }
 
                     // check for element attributes
                     if (array[index].attr['type'] !== undefined) {
-                        originInfo += '<placeTerm type="' + array[index].attr['type'] + '">';
+                        originInfo += '<placeTerm type="' + array[index].attr['type'].toLowerCase() + '">';
                     } else if (array[index].attr['authority'] !== undefined) {
-                        originInfo += '<placeTerm authority="' + array[index].attr['authority'] + '">';
+                        originInfo += '<placeTerm authority="' + array[index].attr['authority'].toLowerCase() + '">';
                     } else {
                         originInfo += '<placeTerm>';
                     }
 
-                    originInfo += array[index].val.trim();
+                    originInfo += xmlString.encode(array[index].val.trim());
                     originInfo += '</placeTerm>';
                     originInfo += '</place>';
                 }
             });
         }
 
-        if (array[index].name === 'publisher') {
+        if (array[index].name === 'publisher' && array[index].val.length > 0) {
 
             if (array[index].val !== undefined && array[index].val.length !== 0) {
 
                 if (array[index].attr['type'] !== undefined) {
-                    originInfo += '<publisher type="' + array[index].attr['type'] + '">';
+                    originInfo += '<publisher type="' + array[index].attr['type'].toLowerCase() + '">';
                 } else if (array[index].attr['lang'] !== undefined) {
-                    originInfo += '<publisher lang="' + array[index].attr['lang'] + '">';
+                    originInfo += '<publisher lang="' + array[index].attr['lang'].toLowerCase() + '">';
                 } else {
                     originInfo += '<publisher>';
                 }
 
-                originInfo += array[index].val.trim();
+                originInfo += xmlString.encode(array[index].val.trim());
                 originInfo += '</publisher>';
             }
         }
 
-        if (array[index].name === 'dateIssued') {
+        if (array[index].name === 'dateIssued' && array[index].val.length > 0) {
 
             if (array[index].val !== undefined && array[index].val.length !== 0) {
 
                 if (array[index].attr['encoding'] !== undefined) {
-                    originInfo += '<dateIssued encoding="' + array[index].attr['encoding'] + '">';
+                    originInfo += '<dateIssued encoding="' + array[index].attr['encoding'].toLowerCase() + '">';
                 } else if (array[index].attr['point'] !== undefined) {
-                    originInfo += '<dateIssued point="' + array[index].attr['point'] + '">';
+                    originInfo += '<dateIssued point="' + array[index].attr['point'].toLowerCase() + '">';
                 } else if (array[index].attr['keyDate'] !== undefined) {
-                    originInfo += '<dateIssued keyDate="' + array[index].attr['keyDate'] + '">';
+                    originInfo += '<dateIssued keyDate="' + array[index].attr['keyDate'].toLowerCase() + '">';
                 } else if (array[index].attr['qualifier'] !== undefined) {
-                    originInfo += '<dateIssued qualifier="' + array[index].attr['qualifier'] + '">';
+                    originInfo += '<dateIssued qualifier="' + array[index].attr['qualifier'].toLowerCase() + '">';
                 } else if (array[index].attr['lang'] !== undefined) {
-                    originInfo += '<dateIssued lang="' + array[index].attr['lang'] + '">';
+                    originInfo += '<dateIssued lang="' + array[index].attr['lang'].toLowerCase() + '">';
                 } else {
                     originInfo += '<dateIssued>';
                 }
 
-                originInfo += array[index].val.trim();
+                originInfo += xmlString.encode(array[index].val.trim());
                 originInfo += '</dateIssued>';
             }
         }
 
-        if (array[index].name === 'dateCreated') {
+        if (array[index].name === 'dateCreated' && array[index].val.length > 0) {
 
             if (array[index].val !== undefined && array[index].val.length !== 0) {
 
                 if (array[index].attr['encoding'] !== undefined) {
-                    originInfo += '<dateCreated encoding="' + array[index].attr['encoding'] + '">';
+                    originInfo += '<dateCreated encoding="' + array[index].attr['encoding'].toLowerCase() + '">';
                 } else if (array[index].attr['point'] !== undefined) {
-                    originInfo += '<dateCreated point="' + array[index].attr['point'] + '">';
+                    originInfo += '<dateCreated point="' + array[index].attr['point'].toLowerCase() + '">';
                 } else if (array[index].attr['keyDate'] !== undefined) {
-                    originInfo += '<dateCreated keyDate="' + array[index].attr['keyDate'] + '">';
+                    originInfo += '<dateCreated keyDate="' + array[index].attr['keyDate'].toLowerCase() + '">';
                 } else if (array[index].attr['qualifier'] !== undefined) {
-                    originInfo += '<dateCreated qualifier="' + array[index].attr['qualifier'] + '">';
+                    originInfo += '<dateCreated qualifier="' + array[index].attr['qualifier'].toLowerCase() + '">';
                 } else if (array[index].attr['lang'] !== undefined) {
-                    originInfo += '<dateCreated lang="' + array[index].attr['lang'] + '">';
+                    originInfo += '<dateCreated lang="' + array[index].attr['lang'].toLowerCase() + '">';
                 } else {
                     originInfo += '<dateCreated>';
                 }
 
-                originInfo += array[index].val.trim();
+                originInfo += xmlString.encode(array[index].val.trim());
                 originInfo += '</dateCreated>';
             }
         }
 
-        if (array[index].name === 'dateCaptured') {
+        if (array[index].name === 'dateCaptured' && array[index].val.length > 0) {
 
             if (array[index].val !== undefined && array[index].val.length !== 0) {
 
                 if (array[index].attr['encoding'] !== undefined) {
-                    originInfo += '<dateCaptured encoding="' + array[index].attr['encoding'] + '">';
+                    originInfo += '<dateCaptured encoding="' + array[index].attr['encoding'].toLowerCase() + '">';
                 } else if (array[index].attr['point'] !== undefined) {
-                    originInfo += '<dateCaptured point="' + array[index].attr['point'] + '">';
+                    originInfo += '<dateCaptured point="' + array[index].attr['point'].toLowerCase() + '">';
                 } else if (array[index].attr['keyDate'] !== undefined) {
-                    originInfo += '<dateCaptured keyDate="' + array[index].attr['keyDate'] + '">';
+                    originInfo += '<dateCaptured keyDate="' + array[index].attr['keyDate'].toLowerCase() + '">';
                 } else if (array[index].attr['qualifier'] !== undefined) {
-                    originInfo += '<dateCaptured qualifier="' + array[index].attr['qualifier'] + '">';
+                    originInfo += '<dateCaptured qualifier="' + array[index].attr['qualifier'].toLowerCase() + '">';
                 } else if (array[index].attr['lang'] !== undefined) {
-                    originInfo += '<dateCaptured lang="' + array[index].attr['lang'] + '">';
+                    originInfo += '<dateCaptured lang="' + array[index].attr['lang'].toLowerCase() + '">';
                 } else {
                     originInfo += '<dateCaptured>';
                 }
 
-                originInfo += array[index].val.trim();
+                originInfo += xmlString.encode(array[index].val.trim());
                 originInfo += '</dateCaptured>';
             }
         }
 
-        if (array[index].name === 'dateValid') {
+        if (array[index].name === 'dateValid' && array[index].val.length > 0) {
 
             if (array[index].val !== undefined && array[index].val.length !== 0) {
 
                 if (array[index].attr['encoding'] !== undefined) {
-                    originInfo += '<dateValid encoding="' + array[index].attr['encoding'] + '">';
+                    originInfo += '<dateValid encoding="' + array[index].attr['encoding'].toLowerCase() + '">';
                 } else if (array[index].attr['point'] !== undefined) {
-                    originInfo += '<dateValid point="' + array[index].attr['point'] + '">';
+                    originInfo += '<dateValid point="' + array[index].attr['point'].toLowerCase() + '">';
                 } else if (array[index].attr['keyDate'] !== undefined) {
-                    originInfo += '<dateValid keyDate="' + array[index].attr['keyDate'] + '">';
+                    originInfo += '<dateValid keyDate="' + array[index].attr['keyDate'].toLowerCase() + '">';
                 } else if (array[index].attr['qualifier'] !== undefined) {
-                    originInfo += '<dateValid qualifier="' + array[index].attr['qualifier'] + '">';
+                    originInfo += '<dateValid qualifier="' + array[index].attr['qualifier'].toLowerCase() + '">';
                 } else if (array[index].attr['lang'] !== undefined) {
-                    originInfo += '<dateValid lang="' + array[index].attr['lang'] + '">';
+                    originInfo += '<dateValid lang="' + array[index].attr['lang'].toLowerCase() + '">';
                 } else {
                     originInfo += '<dateValid>';
                 }
 
-                originInfo += array[index].val.trim();
+                originInfo += xmlString.encode(array[index].val.trim());
                 originInfo += '</dateValid>';
             }
         }
 
-        if (array[index].name === 'dateModified') {
+        if (array[index].name === 'dateModified' && array[index].val.length > 0) {
 
             if (array[index].val !== undefined && array[index].val.length !== 0) {
 
                 if (array[index].attr['encoding'] !== undefined) {
-                    originInfo += '<dateValid encoding="' + array[index].attr['encoding'] + '">';
+                    originInfo += '<dateValid encoding="' + array[index].attr['encoding'].toLowerCase() + '">';
                 } else if (array[index].attr['point'] !== undefined) {
-                    originInfo += '<dateValid point="' + array[index].attr['point'] + '">';
+                    originInfo += '<dateValid point="' + array[index].attr['point'].toLowerCase() + '">';
                 } else if (array[index].attr['keyDate'] !== undefined) {
-                    originInfo += '<dateValid keyDate="' + array[index].attr['keyDate'] + '">';
+                    originInfo += '<dateValid keyDate="' + array[index].attr['keyDate'].toLowerCase() + '">';
                 } else if (array[index].attr['qualifier'] !== undefined) {
-                    originInfo += '<dateValid qualifier="' + array[index].attr['qualifier'] + '">';
+                    originInfo += '<dateValid qualifier="' + array[index].attr['qualifier'].toLowerCase() + '">';
                 } else if (array[index].attr['lang'] !== undefined) {
-                    originInfo += '<dateValid lang="' + array[index].attr['lang'] + '">';
+                    originInfo += '<dateValid lang="' + array[index].attr['lang'].toLowerCase() + '">';
                 } else {
                     originInfo += '<dateModified>';
                 }
 
-                originInfo += array[index].val.trim();
+                originInfo += xmlString.encode(array[index].val.trim());
                 originInfo += '</dateModified>';
             }
         }
 
-        if (array[index].name === 'copyrightDate') {
+        if (array[index].name === 'copyrightDate' && array[index].val.length > 0) {
 
             if (array[index].val !== undefined && array[index].val.length !== 0) {
 
                 if (array[index].attr['encoding'] !== undefined) {
-                    originInfo += '<copyrightDate encoding="' + array[index].attr['encoding'] + '">';
+                    originInfo += '<copyrightDate encoding="' + array[index].attr['encoding'].toLowerCase() + '">';
                 } else if (array[index].attr['point'] !== undefined) {
-                    originInfo += '<copyrightDate point="' + array[index].attr['point'] + '">';
+                    originInfo += '<copyrightDate point="' + array[index].attr['point'].toLowerCase() + '">';
                 } else if (array[index].attr['keyDate'] !== undefined) {
-                    originInfo += '<copyrightDate keyDate="' + array[index].attr['keyDate'] + '">';
+                    originInfo += '<copyrightDate keyDate="' + array[index].attr['keyDate'].toLowerCase() + '">';
                 } else if (array[index].attr['qualifier'] !== undefined) {
-                    originInfo += '<copyrightDate qualifier="' + array[index].attr['qualifier'] + '">';
+                    originInfo += '<copyrightDate qualifier="' + array[index].attr['qualifier'].toLowerCase() + '">';
                 } else if (array[index].attr['lang'] !== undefined) {
-                    originInfo += '<copyrightDate lang="' + array[index].attr['lang'] + '">';
+                    originInfo += '<copyrightDate lang="' + array[index].attr['lang'].toLowerCase() + '">';
                 } else {
                     originInfo += '<copyrightDate>';
                 }
 
-                originInfo += array[index].val.trim();
+                originInfo += xmlString.encode(array[index].val.trim());
                 originInfo += '</copyrightDate>';
             }
         }
 
-        if (array[index].name === 'dateOther') {
+        if (array[index].name === 'dateOther' && array[index].val.length > 0) {
 
             if (array[index].val !== undefined && array[index].val.length !== 0) {
 
                 if (array[index].attr['encoding'] !== undefined) {
-                    originInfo += '<dateOther encoding="' + array[index].attr['encoding'] + '">';
+                    originInfo += '<dateOther encoding="' + array[index].attr['encoding'].toLowerCase() + '">';
                 } else if (array[index].attr['point'] !== undefined) {
-                    originInfo += '<dateOther point="' + array[index].attr['point'] + '">';
+                    originInfo += '<dateOther point="' + array[index].attr['point'].toLowerCase() + '">';
                 } else if (array[index].attr['keyDate'] !== undefined) {
-                    originInfo += '<dateOther keyDate="' + array[index].attr['keyDate'] + '">';
+                    originInfo += '<dateOther keyDate="' + array[index].attr['keyDate'].toLowerCase() + '">';
                 } else if (array[index].attr['qualifier'] !== undefined) {
-                    originInfo += '<dateOther qualifier="' + array[index].attr['qualifier'] + '">';
+                    originInfo += '<dateOther qualifier="' + array[index].attr['qualifier'].toLowerCase() + '">';
                 } else if (array[index].attr['lang'] !== undefined) {
-                    originInfo += '<dateOther lang="' + array[index].attr['lang'] + '">';
+                    originInfo += '<dateOther lang="' + array[index].attr['lang'].toLowerCase() + '">';
                 } else {
                     originInfo += '<dateOther>';
                 }
 
-                originInfo += array[index].val.trim();
+                originInfo += xmlString.encode(array[index].val.trim());
                 originInfo += '</dateOther>';
             }
         }
 
-        if (array[index].name === 'edition') {
+        if (array[index].name === 'edition' && array[index].val.length > 0) {
 
             if (array[index].val !== undefined && array[index].val.length !== 0) {
 
                 if (array[index].attr['supplied'] !== undefined) {
-                    originInfo += '<edition supplied="' + array[index].attr['supplied'] + '">';
+                    originInfo += '<edition supplied="' + array[index].attr['supplied'].toLowerCase() + '">';
                 } else if (array[index].attr['lang'] !== undefined) {
-                    originInfo += '<edition lang="' + array[index].attr['lang'] + '">';
+                    originInfo += '<edition lang="' + array[index].attr['lang'].toLowerCase() + '">';
                 } else {
                     originInfo += '<edition>';
                 }
 
-                originInfo += array[index].val.trim();
+                originInfo += xmlString.encode(array[index].val.trim());
                 originInfo += '</edition>';
             }
         }
 
-        if (array[index].name === 'issuance') {
+        if (array[index].name === 'issuance' && array[index].val.length > 0) {
 
             if (array[index].val !== undefined && array[index].val.length !== 0) {
 
                 originInfo += '<issuance>';
-                originInfo += array[index].val.trim();
+                originInfo += xmlString.encode(array[index].val.trim());
                 originInfo += '</issuance>';
             }
         }
 
-        if (array[index].name === 'frequency') {
+        if (array[index].name === 'frequency' && array[index].val.length > 0) {
 
             if (array[index].val !== undefined && array[index].val.length !== 0) {
 
                 if (array[index].attr['authority'] !== undefined) {
-                    originInfo += '<frequency authority="' + array[index].attr['authority'] + '">';
+                    originInfo += '<frequency authority="' + array[index].attr['authority'].toLowerCase() + '">';
                 } else if (array[index].attr['lang'] !== undefined) {
-                    originInfo += '<frequency lang="' + array[index].attr['lang'] + '">';
+                    originInfo += '<frequency lang="' + array[index].attr['lang'].toLowerCase() + '">';
                 } else {
                     originInfo += '<frequency>';
                 }
 
-                originInfo += array[index].val.trim();
+                originInfo += xmlString.encode(array[index].val.trim());
                 originInfo += '</frequency>';
             }
         }

@@ -5,7 +5,17 @@ var Repo = require('../repository/controller');
 // TODO: apply api security.  i.e. API key (for discovery layer)
 module.exports = function (app) {
 
+
+    /* Used by discovery layer*/
+    app.route('/api/objects')
+        .get(Repo.get_objects);
+
+    app.route('/api/object')
+        .get(Repo.get_object);
+
+
     /* collections used by discovery layer and repo */
+    /* gets top level collections */
     app.route('/api/collections')
         .get(Repo.get_collections);
 
@@ -14,17 +24,15 @@ module.exports = function (app) {
         .get(Repo.get_collection)
         .put(Repo.update_collection);
 
+    /*
     app.route('/api/collection/name')
         .get(Repo.get_collection_name);
+    */
 
     // used by discovery layer and repo
     app.route('/api/collection/tn')
         .get(Repo.get_collection_tn);
     // .put(Repo.update_collection_tn);
-
-    /* objects used by discovery layer*/
-    app.route('/api/objects')
-        .get(Repo.get_objects);
 
     app.route('/api/object/metadata')
         .get(Repo.get_object_metadata);
@@ -54,14 +62,4 @@ module.exports = function (app) {
 
     app.route('/api/search')
         .get(Repo.do_search);
-
-    /*
-
-    app.route('/api/object/video/mov')
-        .get(Repo.get_video_mov);
-
-    app.route('/api/object/audio/mp3')
-        .get(Repo.get_audio_mp3);
-
-    */
 };

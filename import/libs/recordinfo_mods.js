@@ -1,223 +1,236 @@
 'use strict';
 
+var xmlString = require('../../import/libs/xmlEncode');
+
 exports.recordInfo = function (array, index) {
 
     var recordInfo = '';
 
+    if (array[index].children[1] === undefined || array[index].children[1].val === undefined || array[index].children[1].val.length === 0) {
+        return recordInfo;
+    }
+
+    if (array[index].children[1] === undefined || array[index].children[1].name === undefined) {
+        return recordInfo;
+    }
+
+    if (array[index].children[1].val == undefined) {
+        return recordInfo;
+    }
+
+    // check for element attributes
+    if (array[index].attr['	lang'] !== undefined) {
+        recordInfo += '<recordInfo lang="' + array[index].attr['lang'].toLowerCase() + '">';
+    } else if (array[index].attr['displayLabel'] !== undefined) {
+        recordInfo += '<recordInfo displayLabel="' + array[index].attr['displayLabel'].toLowerCase() + '">';
+    } else if (array[index].attr['altRepGroup'] !== undefined) {
+        recordInfo += '<recordInfo altRepGroup="' + array[index].attr['altRepGroup'].toLowerCase() + '">';
+    } else if (array[index].attr['eventType'] !== undefined) {
+        recordInfo += '<recordInfo eventType="' + array[index].attr['eventType'].toLowerCase() + '">';
+    } else {
+        recordInfo += '<recordInfo>';
+    }
+
     array[index].eachChild(function (child, index, array) {
 
-        // TODO: test...
-
-        if (array[index].name === 'recordContentSource') {
-
-            if (array[index].attr['ID'] !== undefined) {
-                part += '<recordInfo ID="' + array[index].attr['ID'] + '">';
-            } else if (array[index].attr['type'] !== undefined) {
-                part += '<recordInfo type="' + array[index].attr['type'] + '">';
-            } else if (array[index].attr['order'] !== undefined) {
-                part += '<recordInfo order="' + array[index].attr['order'] + '">';
-            } else if (array[index].attr['lang'] !== undefined) {
-                part += '<recordInfo lang="' + array[index].attr['lang'] + '">';
-            } else if (array[index].attr['displayLabel'] !== undefined) {
-                part += '<recordInfo displayLabel="' + array[index].attr['displayLabel'] + '">';
-            } else if (array[index].attr['altRepGroup'] !== undefined) {
-                part += '<recordInfo altRepGroup="' + array[index].attr['altRepGroup'] + '">';
-            } else {
-                part += '<recordInfo>';
-            }
-
-            part += '<recordContentSource>';
+        if (array[index].name === 'languageOfCataloging') {
 
             array[index].eachChild(function (child, index, array) {
 
-                if (array[index].name === 'number') {
+                if (array[index].val !== undefined && array[index].val.length !== 0) {
 
-                    if (array[index].attr['lang'] !== undefined) {
-                        part += '<number lang="' + array[index].attr['lang'] + '">';
-                    } else {
-                        part += '<number>';
+                    if (array[index].name === 'languageTerm' && array[index].val.length > 0) {
+
+                        // check for element attributes
+                        if (array[index].attr['supplied'] !== undefined) {
+                            recordInfo += '<languageOfCataloging supplied="' + array[index].attr['supplied'].toLowerCase() + '">';
+                        } else {
+                            recordInfo += '<languageOfCataloging>';
+                        }
+
+                        // check for element attributes
+                        if (array[index].attr['type'] !== undefined) {
+                            recordInfo += '<languageTerm type="' + array[index].attr['type'].toLowerCase() + '">';
+                        } else if (array[index].attr['authority'] !== undefined) {
+                            recordInfo += '<languageTerm authority="' + array[index].attr['authority'].toLowerCase() + '">';
+                        } else {
+                            recordInfo += '<languageTerm>';
+                        }
+
+                        recordInfo += xmlString.encode(array[index].val.trim());
+                        recordInfo += '</languageTerm>';
+                        recordInfo += '</languageOfCataloging>';
+
                     }
 
-                    part += array[index].val.trim();
-                    part += '</number>';
-                }
+                    if (array[index].name === 'scriptTerm' && array[index].val.length > 0) {
 
-                if (array[index].name === 'caption') {
+                        // check for element attributes
+                        if (array[index].attr['supplied'] !== undefined) {
+                            recordInfo += '<languageOfCataloging supplied="' + array[index].attr['supplied'].toLowerCase() + '">';
+                        } else {
+                            recordInfo += '<languageOfCataloging>';
+                        }
 
-                    if (array[index].attr['lang'] !== undefined) {
-                        part += '<caption lang="' + array[index].attr['lang'] + '">';
-                    } else {
-                        part += '<caption>';
+                        // check for element attributes
+                        if (array[index].attr['type'] !== undefined) {
+                            recordInfo += '<scriptTerm type="' + array[index].attr['type'].toLowerCase() + '">';
+                        } else if (array[index].attr['authority'] !== undefined) {
+                            recordInfo += '<scriptTerm authority="' + array[index].attr['authority'].toLowerCase() + '">';
+                        } else if (array[index].attr['authorityURI'] !== undefined) {
+                            recordInfo += '<scriptTerm authorityURI="' + array[index].attr['authorityURI'].toLowerCase() + '">';
+                        } else if (array[index].attr['valueURI'] !== undefined) {
+                            recordInfo += '<scriptTerm valueURI="' + array[index].attr['valueURI'].toLowerCase() + '">';
+                        } else if (array[index].attr['lang'] !== undefined) {
+                            recordInfo += '<scriptTerm lang="' + array[index].attr['lang'].toLowerCase() + '">';
+                        } else if (array[index].attr['xml:lang'] !== undefined) {
+                            recordInfo += '<scriptTerm xml:lang="' + array[index].attr['xml:lang'].toLowerCase() + '">';
+                        } else if (array[index].attr['script'] !== undefined) {
+                            recordInfo += '<scriptTerm script="' + array[index].attr['script'].toLowerCase() + '">';
+                        } else if (array[index].attr['transliteration'] !== undefined) {
+                            recordInfo += '<scriptTerm transliteration="' + array[index].attr['transliteration'].toLowerCase() + '">';
+                        } else {
+                            recordInfo += '<scriptTerm>';
+                        }
+
+                        recordInfo += xmlString.encode(array[index].val.trim());
+                        recordInfo += '</scriptTerm>';
+                        recordInfo += '</languageOfCataloging>';
+
                     }
-
-                    part += array[index].val.trim();
-                    part += '</caption>';
-                }
-
-                if (array[index].name === 'title') {
-
-                    if (array[index].attr['type'] !== undefined) {
-                        part += '<title type="' + array[index].attr['type'] + '">';
-                    } else if (array[index].attr['level'] !== undefined) {
-                        part += '<title level="' + array[index].attr['level'] + '">';
-                    } else if (array[index].attr['lang'] !== undefined) {
-                        part += '<title lang="' + array[index].attr['lang'] + '">';
-                    } else {
-                        part += '<title>';
-                    }
-
-                    part += array[index].val.trim();
-                    part += '</title>';
                 }
             });
-
-            part += '</detail>';
-            part += '</part>';
         }
 
-        if (array[index].name === 'extent') {
-
-            if (array[index].attr['ID'] !== undefined) {
-                part += '<part ID="' + array[index].attr['ID'] + '">';
-            } else if (array[index].attr['type'] !== undefined) {
-                part += '<part type="' + array[index].attr['type'] + '">';
-            } else if (array[index].attr['order'] !== undefined) {
-                part += '<part order="' + array[index].attr['order'] + '">';
-            } else if (array[index].attr['lang'] !== undefined) {
-                part += '<part lang="' + array[index].attr['lang'] + '">';
-            } else if (array[index].attr['displayLabel'] !== undefined) {
-                part += '<part displayLabel="' + array[index].attr['displayLabel'] + '">';
-            } else if (array[index].attr['altRepGroup'] !== undefined) {
-                part += '<part altRepGroup="' + array[index].attr['altRepGroup'] + '">';
-            } else {
-                part += '<part>';
-            }
-
-            part += '<extent>';
-
-            array[index].eachChild(function (child, index, array) {
-
-                if (array[index].name === 'start') {
-
-                    if (array[index].attr['lang'] !== undefined) {
-                        part += '<start lang="' + array[index].attr['lang'] + '">';
-                    } else {
-                        part += '<start>';
-                    }
-
-                    part += array[index].val.trim();
-                    part += '</start>';
-                }
-
-                if (array[index].name === 'end') {
-
-                    if (array[index].attr['lang'] !== undefined) {
-                        part += '<end lang="' + array[index].attr['lang'] + '">';
-                    } else {
-                        part += '<end>';
-                    }
-
-                    part += array[index].val.trim();
-                    part += '</end>';
-                }
-
-                if (array[index].name === 'total') {
-
-                    part += '<total>';
-                    part += array[index].val.trim();
-                    part += '</total>';
-                }
-
-                if (array[index].name === 'list') {
-
-                    if (array[index].attr['type'] !== undefined) {
-                        part += '<list type="' + array[index].attr['type'] + '">';
-                    } else if (array[index].attr['level'] !== undefined) {
-                        part += '<list level="' + array[index].attr['level'] + '">';
-                    } else if (array[index].attr['lang'] !== undefined) {
-                        part += '<list lang="' + array[index].attr['lang'] + '">';
-                    } else {
-                        part += '<list>';
-                    }
-
-                    part += array[index].val.trim();
-                    part += '</list>';
-                }
-            });
-
-            part += '</extent>';
-            part += '</part>';
-        }
-
-        if (array[index].name === 'date') {
+        if (array[index].name === 'recordContentSource' && array[index].val.length > 0) {
 
             if (array[index].val !== undefined && array[index].val.length !== 0) {
 
-                if (array[index].attr['lang'] !== undefined) {
-                    location += '<part lang="' + array[index].attr['lang'] + '">';
-                } else if (array[index].attr['authority'] !== undefined) {
-                    location += '<part authority="' + array[index].attr['authority'] + '">';
-                } else if (array[index].attr['displayLabel'] !== undefined) {
-                    location += '<part displayLabel="' + array[index].attr['displayLabel'] + '">';
-                } else if (array[index].attr['altRepGroup'] !== undefined) {
-                    location += '<part altRepGroup="' + array[index].attr['altRepGroup'] + '">';
+                if (array[index].attr['authorityURI'] !== undefined) {
+                    recordInfo += '<recordContentSource authorityURI="' + array[index].attr['authorityURI'].toLowerCase() + '">';
+                } else if (array[index].attr['valueURI'] !== undefined) {
+                    recordInfo += '<recordContentSource valueURI="' + array[index].attr['valueURI'].toLowerCase() + '">';
+                } else if (array[index].attr['lang'] !== undefined) {
+                    recordInfo += '<recordContentSource lang="' + array[index].attr['lang'].toLowerCase() + '">';
+                } else if (array[index].attr['xml:lang'] !== undefined) {
+                    recordInfo += '<recordContentSource xml:lang="' + array[index].attr['xml:lang'].toLowerCase() + '">';
+                } else if (array[index].attr['script'] !== undefined) {
+                    recordInfo += '<recordContentSource script="' + array[index].attr['script'].toLowerCase() + '">';
+                } else if (array[index].attr['transliteration'] !== undefined) {
+                    recordInfo += '<recordContentSource transliteration="' + array[index].attr['transliteration'].toLowerCase() + '">';
                 } else {
-                    location += '<part>';
+                    recordInfo += '<recordContentSource>';
                 }
 
-                // check for element attributes
+                recordInfo += xmlString.encode(array[index].val.trim());
+                recordInfo += '</recordContentSource>';
+            }
+        }
+
+        if (array[index].name === 'recordCreationDate' && array[index].val.length > 0) {
+
+            if (array[index].val !== undefined && array[index].val.length !== 0) {
+
                 if (array[index].attr['encoding'] !== undefined) {
-                    location += '<date encoding="' + array[index].attr['encoding'] + '">';
+                    recordInfo += '<recordCreationDate encoding="' + array[index].attr['encoding'].toLowerCase() + '">';
                 } else if (array[index].attr['point'] !== undefined) {
-                    location += '<date point="' + array[index].attr['point'] + '">';
-                } else if (array[index].attr['qualifier '] !== undefined) {
-                    location += '<date qualifier ="' + array[index].attr['qualifier '] + '">';
+                    recordInfo += '<recordCreationDate point="' + array[index].attr['point'].toLowerCase() + '">';
+                } else if (array[index].attr['keyDate'] !== undefined) {
+                    recordInfo += '<recordCreationDate keyDate="' + array[index].attr['keyDate'].toLowerCase() + '">';
+                } else if (array[index].attr['qualifier'] !== undefined) {
+                    recordInfo += '<dateIssued qualifier="' + array[index].attr['qualifier'].toLowerCase() + '">';
                 } else if (array[index].attr['lang'] !== undefined) {
-                    location += '<date lang="' + array[index].attr['lang'] + '">';
+                    recordInfo += '<recordCreationDate lang="' + array[index].attr['lang'].toLowerCase() + '">';
+                } else if (array[index].attr['xml:lang'] !== undefined) {
+                    recordInfo += '<recordCreationDate xml:lang="' + array[index].attr['xml:lang'].toLowerCase() + '">';
+                } else if (array[index].attr['script'] !== undefined) {
+                    recordInfo += '<recordCreationDate script="' + array[index].attr['script'].toLowerCase() + '">';
+                } else if (array[index].attr['transliteration'] !== undefined) {
+                    recordInfo += '<recordCreationDate transliteration="' + array[index].attr['transliteration'].toLowerCase() + '">';
                 } else {
-                    location += '<date>';
+                    recordInfo += '<recordCreationDate>';
                 }
 
-                location += array[index].val.trim();
-                location += '</date>';
-                location += '</part>';
+                recordInfo += xmlString.encode(array[index].val.trim());
+                recordInfo += '</recordCreationDate>';
             }
         }
 
-        if (array[index].name === 'text') {
+        if (array[index].name === 'recordChangeDate' && array[index].val.length > 0) {
+
+            if (array[index].val !== undefined && array[index].val.length !== 0) {
+
+                if (array[index].attr['encoding'] !== undefined) {
+                    recordInfo += '<recordChangeDate encoding="' + array[index].attr['encoding'].toLowerCase() + '">';
+                } else if (array[index].attr['point'] !== undefined) {
+                    recordInfo += '<drecordChangeDate point="' + array[index].attr['point'].toLowerCase() + '">';
+                } else if (array[index].attr['keyDate'] !== undefined) {
+                    recordInfo += '<recordChangeDate keyDate="' + array[index].attr['keyDate'].toLowerCase() + '">';
+                } else if (array[index].attr['qualifier'] !== undefined) {
+                    recordInfo += '<recordChangeDate qualifier="' + array[index].attr['qualifier'].toLowerCase() + '">';
+                } else if (array[index].attr['lang'] !== undefined) {
+                    recordInfo += '<recordChangeDate lang="' + array[index].attr['lang'].toLowerCase() + '">';
+                } else if (array[index].attr['xml:lang'] !== undefined) {
+                    recordInfo += '<recordChangeDate xml:lang="' + array[index].attr['xml:lang'].toLowerCase() + '">';
+                } else if (array[index].attr['script'] !== undefined) {
+                    recordInfo += '<recordChangeDate script="' + array[index].attr['script'].toLowerCase() + '">';
+                } else if (array[index].attr['transliteration'] !== undefined) {
+                    recordInfo += '<recordChangeDate transliteration="' + array[index].attr['transliteration'].toLowerCase() + '">';
+                } else {
+                    recordInfo += '<recordChangeDate>';
+                }
+
+                recordInfo += xmlString.encode(array[index].val.trim());
+                recordInfo += '</recordChangeDate>';
+            }
+        }
+
+        if (array[index].name === 'recordIdentifier' && array[index].val.length > 0) {
+
+            if (array[index].val !== undefined && array[index].val.length !== 0) {
+
+                if (array[index].attr['source'] !== undefined) {
+                    recordInfo += '<recordIdentifier source="' + array[index].attr['source'].toLowerCase() + '">';
+                } else if (array[index].attr['lang'] !== undefined) {
+                    recordInfo += '<recordIdentifier lang="' + array[index].attr['lang'].toLowerCase() + '">';
+                } else if (array[index].attr['xml:lang'] !== undefined) {
+                    recordInfo += '<recordIdentifier xml:lang="' + array[index].attr['xml:lang'].toLowerCase() + '">';
+                } else if (array[index].attr['script'] !== undefined) {
+                    recordInfo += '<recordIdentifier script="' + array[index].attr['script'].toLowerCase() + '">';
+                } else if (array[index].attr['lang'] !== undefined) {
+                    recordInfo += '<recordIdentifier transliteration="' + array[index].attr['transliteration'].toLowerCase() + '">';
+                } else {
+                    recordInfo += '<recordIdentifier>';
+                }
+
+                recordInfo += xmlString.encode(array[index].val.trim());
+                recordInfo += '</recordIdentifier>';
+            }
+        }
+
+        if (array[index].name === 'recordOrigin' && array[index].val.length > 0) {
 
             if (array[index].val !== undefined && array[index].val.length !== 0) {
 
                 if (array[index].attr['lang'] !== undefined) {
-                    location += '<location lang="' + array[index].attr['lang'] + '">';
-                } else if (array[index].attr['authority'] !== undefined) {
-                    location += '<location authority="' + array[index].attr['authority'] + '">';
-                } else if (array[index].attr['displayLabel'] !== undefined) {
-                    location += '<location displayLabel="' + array[index].attr['displayLabel'] + '">';
-                } else if (array[index].attr['altRepGroup'] !== undefined) {
-                    location += '<location altRepGroup="' + array[index].attr['altRepGroup'] + '">';
+                    recordInfo += '<recordOrigin lang="' + array[index].attr['lang'].toLowerCase() + '">';
+                } else if (array[index].attr['xml:lang'] !== undefined) {
+                    recordInfo += '<recordOrigin xml:lang="' + array[index].attr['xml:lang'].toLowerCase() + '">';
+                } else if (array[index].attr['script'] !== undefined) {
+                    recordInfo += '<recordOrigin script="' + array[index].attr['script'].toLowerCase() + '">';
+                } else if (array[index].attr['transliteration'] !== undefined) {
+                    recordInfo += '<recordOrigin transliteration="' + array[index].attr['transliteration'].toLowerCase() + '">';
                 } else {
-                    location += '<location>';
+                    recordInfo += '<recordOrigin>';
                 }
 
-                // check for element attributes
-                if (array[index].attr['type'] !== undefined) {
-                    location += '<text type="' + array[index].attr['type'] + '">';
-                } else if (array[index].attr['displayLabel'] !== undefined) {
-                    location += '<text displayLabel="' + array[index].attr['displayLabel'] + '">';
-                } else if (array[index].attr['lang'] !== undefined) {
-                    location += '<text lang="' + array[index].attr['lang'] + '">';
-                } else {
-                    location += '<text>';
-                }
-
-                location += array[index].val.trim();
-                location += '</text>';
-
-                location += '</location>';
+                recordInfo += xmlString.encode(array[index].val.trim());
+                recordInfo += '</recordOrigin>';
             }
         }
     });
+
+    recordInfo += '</recordInfo>';
 
     return recordInfo;
 };

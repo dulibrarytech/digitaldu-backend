@@ -1,5 +1,7 @@
 'use strict';
 
+var xmlString = require('../../import/libs/xmlEncode');
+
 exports.genre = function (array, index) {
 
     var genre = '';
@@ -8,22 +10,22 @@ exports.genre = function (array, index) {
 
         // check for element attributes
         if (array[index].attr['authority'] !== undefined) {
-            genre += '<genre authority="' + array[index].attr['authority'] + '">';
+            genre += '<genre authority="' + array[index].attr['authority'].toLowerCase() + '">';
         } else if (array[index].attr['lang'] !== undefined) {
-            genre += '<genre lang="' + array[index].attr['lang'] + '">';
+            genre += '<genre lang="' + array[index].attr['lang'].toLowerCase() + '">';
         } else if (array[index].attr['type'] !== undefined) {
-            genre += '<genre type="' + array[index].attr['type'] + '">';
+            genre += '<genre type="' + array[index].attr['type'].toLowerCase() + '">';
         } else if (array[index].attr['displayLabel'] !== undefined) {
-            genre += '<genre displayLabel="' + array[index].attr['displayLabel'] + '">';
+            genre += '<genre displayLabel="' + array[index].attr['displayLabel'].toLowerCase() + '">';
         } else if (array[index].attr['usage'] !== undefined) {
-            genre += '<genre usage="' + array[index].attr['usage'] + '">';
+            genre += '<genre usage="' + array[index].attr['usage'].toLowerCase() + '">';
         } else if (array[index].attr['altRepGroup'] !== undefined) {
-            genre += '<genre altRepGroup="' + array[index].attr['altRepGroup'] + '">';
+            genre += '<genre altRepGroup="' + array[index].attr['altRepGroup'].toLowerCase() + '">';
         } else {
             genre += '<genre>';
         }
 
-        genre += array[index].val.trim();
+        genre += xmlString.encode(array[index].val.trim());
         genre += '</genre>';
     }
 

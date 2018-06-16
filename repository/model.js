@@ -18,13 +18,83 @@ var client = new es.Client({
     // log: 'trace'
 });
 
+exports.get_objects = function (req, callback) {
+
+    var pid = req.query.pid; // TODO: sanitize
+
+    knex('tbl_objects')
+        .select('is_member_of_collection', 'pid', 'object_type', 'display_record', 'mime_type', 'is_compound', 'created')
+        .where({
+            is_member_of_collection: pid,
+            is_active: 1
+            // is_published: 1
+        })
+        .then(function (data) {
+            callback({
+                status: 200,
+                content_type: {'Content-Type': 'application/json'},
+                data: data,
+                message: 'Collection'
+            });
+        })
+        .catch(function (error) {
+            // TODO: add error callback
+            console.log(error);
+        });
+};
+
+exports.get_object = function (req, callback) {
+
+    var pid = req.query.pid;  // TODO: sanitize
+
+    knex('tbl_objects')
+        .select('is_member_of_collection', 'pid', 'object_type', 'display_record', 'mime_type', 'is_compound', 'created')
+        .where({
+            // is_member_of_collection: pid,
+            pid: pid,
+            is_active: 1
+            // is_published: 1
+        })
+        .then(function (data) {
+            callback({
+                status: 200,
+                content_type: {'Content-Type': 'application/json'},
+                data: data,
+                message: 'Collection'
+            });
+        })
+        .catch(function (error) {
+            // TODO: add error callback
+            console.log(error);
+        });
+};
+
+/*
+ knex('tbl_rels')
+ .join('tbl_metadata', 'tbl_rels.pid', 'tbl_metadata.pid')
+ .join('tbl_object_data', 'tbl_metadata.pid', 'tbl_object_data.pid')
+ .select('*')
+ .where('tbl_rels.is_member_of_collection', pid)
+ .then(function (data) {
+ callback({
+ status: 200,
+ content_type: {'Content-Type': 'application/json'},
+ data: data,
+ message: 'Objects'
+ });
+ })
+ .catch(function (error) {
+ console.log(error);
+ });
+ */
+
+/* gets root collections */
 exports.get_collections = function (req, callback) {
 
-    knex('tbl_collections')
-        .select('id', 'pid', 'title', 'description')
+    knex('tbl_objects')
+        .select('is_member_of_collection', 'pid', 'object_type', 'display_record', 'created')
         .where({
-            is_root: 1,
-            is_child: 0,
+            is_member_of_collection: 'codu:root',
             is_active: 1,
             is_published: 1
         })
@@ -33,7 +103,7 @@ exports.get_collections = function (req, callback) {
                 status: 200,
                 content_type: {'Content-Type': 'application/json'},
                 data: data,
-                message: 'Collections'
+                message: 'Root collections'
             });
         })
         .catch(function (error) {
@@ -44,18 +114,16 @@ exports.get_collections = function (req, callback) {
 
 exports.get_collection = function (req, callback) {
 
-    var id = req.query.collection_id;
+    var id = req.query.collection_pid;
     var pid = req.query.pid;
 
     if (id !== undefined && pid !== undefined) {
 
-        knex('tbl_collections')
+        knex('tbl_objects')
             .select('*')
             .where({
-                id: id,
+                collection_pid: pid,
                 pid: pid,
-                is_root: 1,
-                is_child: 0,
                 is_active: 1,
                 is_published: 1
             })
@@ -160,28 +228,6 @@ exports.get_collection_tn = function (req, callback) {
             message: 'Collection TN object'
         });
     }
-};
-
-exports.get_objects = function (req, callback) {
-
-    var pid = req.query.pid.replace(/_/g, ':');
-
-    knex('tbl_rels')
-        .join('tbl_metadata', 'tbl_rels.pid', 'tbl_metadata.pid')
-        .join('tbl_object_data', 'tbl_metadata.pid', 'tbl_object_data.pid')
-        .select('*')
-        .where('tbl_rels.is_member_of_collection', pid)
-        .then(function (data) {
-            callback({
-                status: 200,
-                content_type: {'Content-Type': 'application/json'},
-                data: data,
-                message: 'Objects'
-            });
-        })
-        .catch(function (error) {
-            console.log(error);
-        });
 };
 
 exports.get_object_metadata = function (req, callback) {

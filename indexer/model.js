@@ -161,7 +161,7 @@ var index_all = function () {
 
     knex('tbl_metadata')
         .update({
-            is_indexed: 0
+            is_indexed: 0  // resets to 0 (not indexed)
         })
         .then(function (data) {
             get_index_data();

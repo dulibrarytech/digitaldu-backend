@@ -2,28 +2,22 @@
 
 var Repo = require('../repository/model');
 
-/* communities */
-/*
-exports.get_communities = function (req, res) {
-    Repo.get_communities(req, function (data) {
+/* gets objects by is_member_of_collection pid */
+exports.get_objects = function (req, res) {
+    Repo.get_objects(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
 
-exports.update_community = function (req, res) {
-    Repo.update_community(req, function (data) {
+/* gets single object */
+exports.get_object = function (req, res) {
+    Repo.get_object(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
 
-exports.get_community_tn = function (req, res) {
 
-    Repo.get_community_tn(req, function (data) {
-        res.writeHead(data.status, data.mime_type);
-        res.end(data.data, 'binary');
-    });
-};
-*/
+
 
 /* collections */
 exports.get_collections = function (req, res) {
@@ -55,13 +49,6 @@ exports.get_collection_tn = function (req, res) {
     Repo.get_collection_tn(req, function (data) {
         res.writeHead(data.status, data.mime_type);
         res.end(data.data, 'binary');
-    });
-};
-
-/* objects */
-exports.get_objects = function (req, res) {
-    Repo.get_objects(req, function (data) {
-        res.status(data.status).send(data.data);
     });
 };
 

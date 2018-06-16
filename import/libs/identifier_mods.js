@@ -1,5 +1,7 @@
 'use strict';
 
+var xmlString = require('../../import/libs/xmlEncode');
+
 exports.identifier = function (array, index) {
 
     var identifier = '';
@@ -7,22 +9,22 @@ exports.identifier = function (array, index) {
     if (array[index].val !== undefined && array[index].val.length !== 0) {
 
         if (array[index].attr['lang'] !== undefined) {
-            identifier += '<identifier lang="' + array[index].attr['lang'] + '">';
+            identifier += '<identifier lang="' + array[index].attr['lang'].toLowerCase() + '">';
         } else if (array[index].attr['type'] !== undefined) {
-            identifier += '<identifier type="' + array[index].attr['type'] + '">';
+            identifier += '<identifier type="' + array[index].attr['type'].toLowerCase() + '">';
         } else if (array[index].attr['typeURI'] !== undefined) {
-            identifier += '<identifier typeURI="' + array[index].attr['typeURI'] + '">';
+            identifier += '<identifier typeURI="' + array[index].attr['typeURI'].toLowerCase() + '">';
         } else if (array[index].attr['displayLabel'] !== undefined) {
-            identifier += '<identifier displayLabel="' + array[index].attr['displayLabel'] + '">';
+            identifier += '<identifier displayLabel="' + array[index].attr['displayLabel'].toLowerCase() + '">';
         } else if (array[index].attr['invalid'] !== undefined) {
-            identifier += '<identifier invalid="' + array[index].attr['invalid'] + '">';
+            identifier += '<identifier invalid="' + array[index].attr['invalid'].toLowerCase() + '">';
         } else if (array[index].attr['altRepGroup'] !== undefined) {
-            identifier += '<identifier altRepGroup="' + array[index].attr['altRepGroup'] + '">';
+            identifier += '<identifier altRepGroup="' + array[index].attr['altRepGroup'].toLowerCase() + '">';
         } else {
             identifier += '<identifier>';
         }
 
-        identifier += array[index].val.trim();
+        identifier += xmlString.encode(array[index].val.trim());
         identifier += '</identifier>';
     }
 

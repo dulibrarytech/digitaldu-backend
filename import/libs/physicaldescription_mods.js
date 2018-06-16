@@ -1,5 +1,7 @@
 'use strict';
 
+var xmlString = require('../../import/libs/xmlEncode');
+
 exports.physicalDescription = function (array, index) {
 
     var physicalDescription = '';
@@ -17,115 +19,115 @@ exports.physicalDescription = function (array, index) {
     }
 
     if (array[index].attr['lang'] !== undefined) {
-        physicalDescription += '<physicalDescription lang="' + array[index].attr['lang'] + '">';
+        physicalDescription += '<physicalDescription lang="' + array[index].attr['lang'].toLowerCase() + '">';
     } else if (array[index].attr['displayLabel'] !== undefined) {
-        physicalDescription += '<physicalDescription displayLabel="' + array[index].attr['displayLabel'] + '">';
+        physicalDescription += '<physicalDescription displayLabel="' + array[index].attr['displayLabel'].toLowerCase() + '">';
     } else if (array[index].attr['altRepGroup'] !== undefined) {
-        physicalDescription += '<physicalDescription altRepGroup="' + array[index].attr['altRepGroup'] + '">';
+        physicalDescription += '<physicalDescription altRepGroup="' + array[index].attr['altRepGroup'].toLowerCase() + '">';
     } else {
         physicalDescription += '<physicalDescription>';
     }
 
     array[index].eachChild(function (child, index, array) {
 
-        if (array[index].name === 'form') {
+        if (array[index].name === 'form' && array[index].val.length > 0) {
 
             if (array[index].val !== undefined && array[index].val.length !== 0) {
 
                 // check for element attributes
                 if (array[index].attr['type'] !== undefined) {
-                    physicalDescription += '<form type="' + array[index].attr['type'] + '">';
+                    physicalDescription += '<form type="' + array[index].attr['type'].toLowerCase() + '">';
                 } else if (array[index].attr['authority'] !== undefined) {
-                    physicalDescription += '<form authority="' + array[index].attr['authority'] + '">';
+                    physicalDescription += '<form authority="' + array[index].attr['authority'].toLowerCase() + '">';
                 } else if (array[index].attr['lang'] !== undefined) {
-                    physicalDescription += '<form lang="' + array[index].attr['lang'] + '">';
+                    physicalDescription += '<form lang="' + array[index].attr['lang'].toLowerCase() + '">';
                 }
                 else {
                     physicalDescription += '<form>';
                 }
 
-                physicalDescription += array[index].val.trim();
+                physicalDescription += xmlString.encode(array[index].val.trim());
                 physicalDescription += '</form>';
             }
         }
 
-        if (array[index].name === 'reformattingQuality') {
+        if (array[index].name === 'reformattingQuality' && array[index].val.length > 0) {
 
             if (array[index].val !== undefined && array[index].val.length !== 0) {
                 physicalDescription += '<reformattingQuality>';
-                physicalDescription += array[index].val.trim();
+                physicalDescription += xmlString.encode(array[index].val.trim());
                 physicalDescription += '</reformattingQuality>';
             }
         }
 
-        if (array[index].name === 'internetMediaType') {
+        if (array[index].name === 'internetMediaType' && array[index].val.length > 0) {
 
             if (array[index].val !== undefined && array[index].val.length !== 0) {
 
                 // check for element attributes
                 if (array[index].attr['lang'] !== undefined) {
-                    physicalDescription += '<internetMediaType lang="' + array[index].attr['lang'] + '">';
+                    physicalDescription += '<internetMediaType lang="' + array[index].attr['lang'].toLowerCase() + '">';
                 }
                 else {
                     physicalDescription += '<internetMediaType>';
                 }
 
-                physicalDescription += array[index].val.trim();
+                physicalDescription += xmlString.encode(array[index].val.trim());
                 physicalDescription += '</internetMediaType>';
             }
 
         }
 
-        if (array[index].name === 'extent') {
+        if (array[index].name === 'extent' && array[index].val.length > 0) {
 
             if (array[index].val !== undefined && array[index].val.length !== 0) {
 
                 // check for element attributes
                 if (array[index].attr['supplied'] !== undefined) {
-                    physicalDescription += '<extent supplied="' + array[index].attr['supplied'] + '">';
+                    physicalDescription += '<extent supplied="' + array[index].attr['supplied'].toLowerCase() + '">';
                 } else if (array[index].attr['unit'] !== undefined) {
-                    physicalDescription += '<extent unit="' + array[index].attr['unit'] + '">';
+                    physicalDescription += '<extent unit="' + array[index].attr['unit'].toLowerCase() + '">';
                 } else if (array[index].attr['lang'] !== undefined) {
-                    physicalDescription += '<extent lang="' + array[index].attr['lang'] + '">';
+                    physicalDescription += '<extent lang="' + array[index].attr['lang'].toLowerCase() + '">';
                 } else {
                     physicalDescription += '<extent>';
                 }
 
-                physicalDescription += array[index].val.trim();
+                physicalDescription += xmlString.encode(array[index].val.trim());
                 physicalDescription += '</extent>';
             }
         }
 
-        if (array[index].name === 'digitalOrigin') {
+        if (array[index].name === 'digitalOrigin' && array[index].val.length > 0) {
 
             if (array[index].val !== undefined && array[index].val.length !== 0) {
                 physicalDescription += '<digitalOrigin>';
-                physicalDescription += array[index].val.trim();
+                physicalDescription += xmlString.encode(array[index].val.trim().toLowerCase());
                 physicalDescription += '</digitalOrigin>';
             }
         }
 
-        if (array[index].name === 'note') {
+        if (array[index].name === 'note' && array[index].val.length > 0) {
 
             if (array[index].val !== undefined && array[index].val.length !== 0) {
 
                 // check for element attributes
                 if (array[index].attr['typeURI'] !== undefined) {
-                    physicalDescription += '<note typeURI="' + array[index].attr['typeURI'] + '">';
+                    physicalDescription += '<note typeURI="' + array[index].attr['typeURI'].toLowerCase() + '">';
                 } else if (array[index].attr['lang'] !== undefined) {
-                    physicalDescription += '<note lang="' + array[index].attr['lang'] + '">';
+                    physicalDescription += '<note lang="' + array[index].attr['lang'].toLowerCase() + '">';
                 } else if (array[index].attr['displayLabel'] !== undefined) {
-                    physicalDescription += '<note displayLabel="' + array[index].attr['displayLabel'] + '">';
+                    physicalDescription += '<note displayLabel="' + array[index].attr['displayLabel'].toLowerCase() + '">';
                 } else if (array[index].attr['type'] !== undefined) {
-                    physicalDescription += '<note type="' + array[index].attr['type'] + '">';
+                    physicalDescription += '<note type="' + array[index].attr['type'].toLowerCase() + '">';
                 } else if (array[index].attr['ID'] !== undefined) {
-                    physicalDescription += '<note ID="' + array[index].attr['ID'] + '">';
+                    physicalDescription += '<note ID="' + array[index].attr['ID'].toLowerCase() + '">';
                 }
                 else {
                     physicalDescription += '<note>';
                 }
 
-                physicalDescription += array[index].val.trim();
+                physicalDescription += xmlString.encode(array[index].val.trim());
                 physicalDescription += '</note>';
             }
         }
