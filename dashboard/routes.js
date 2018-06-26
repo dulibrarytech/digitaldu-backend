@@ -9,24 +9,17 @@ module.exports = function (app) {
     app.route('/dashboard/home')
         .get(Dashboard.get_dashboard_home);
 
-    /* communities */
-    app.route('/dashboard/communities')
-        .get(Dashboard.get_dashboard_communities);
-
-    /* edit community */
-    app.route('/dashboard/community/edit')
-        .get(Dashboard.edit_dashboard_community);
-
-    /* collections */
-    app.route('/dashboard/collections')
+    /* root collections */
+    app.route('/dashboard/root-collections')
         .get(Dashboard.get_dashboard_collections);
+
+    app.route('/dashboard/objects')
+        .get(Dashboard.get_dashboard_objects);
 
     /* edit collection */
     app.route('/dashboard/collection/edit')
         .get(Dashboard.edit_dashboard_collection);
 
-    app.route('/dashboard/objects')
-        .get(Dashboard.get_dashboard_objects);
 
     app.route('/dashboard/object')
         .get(Dashboard.get_dashboard_object_detail);
@@ -38,7 +31,9 @@ module.exports = function (app) {
     app.route('/dashboard/search')
         .get(Dashboard.get_dashboard_search);
 
-    /* edit metadata */
+    /* edit metadata
     app.route('/dashboard/metadata/edit')
         .get(Dashboard.get_dashboard_metadata);
+
+     */
 };

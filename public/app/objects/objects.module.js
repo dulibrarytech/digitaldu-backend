@@ -27,24 +27,69 @@ var objectsModule = (function () {
 
         for (var i=0;i<data.length;i++) {
 
+            // console.log(data[i].is_member_of_collection);
             var record = JSON.parse(data[i].display_record);
-            var title = 'Title not found';
+            // console.log(record);
+            // TODO: place domain in config
+            var tn = 'http://librepo01-vlp.du.edu:8080/fedora/objects/' + data[i].pid + '/datastreams/TN/content';
+            // console.log(tn);
 
-            if ( record.title !== undefined) {
-                title = record.title[0].toString();
+            html += '<div class="row">';
+            html += '<div class="col-md-3"><img style="width: 40%; display: block; padding: 5px;" src="' + tn +'" alt="image" /></div>';
+            html += '<div class="col-md-6" style="padding: 5px">';
+
+            if (record.title !== undefined) {
+
+                if (data[i].object_type === 'collection') {
+                    html += '<h4><a href="' + api + '/dashboard/objects/?pid=' + data[i].pid + '">' + record.title[0] + '</a></h4>';
+                } else if (data[i].object_type === 'object') {
+                    html += '<h4><a href="' + api + '/dashboard/object/?pid=' + data[i].pid + '">' + record.title[0] + '</a></h4>';
+                }
+
+            } else {
+                html += '<h4>No Title</h4>';
             }
 
-            html += '<div class="col-md-55">';
-            html += '<div class="thumbnail">';
-            html += '<div class="image view view-first">';
-            html += '<img style="width: 100%; display: block;" src="' + api + '/api/object/tn?pid=' + data[i].pid + '" alt="image" />';
-            html += '<div class="mask">';
-            html += '<div class="tools tools-bottom">';
-            html += '<a href="/dashboard/object?pid=' + data[i].pid + '" title="View Object Details"><i class="fa fa-th-list"></i></a>';
-            html += '</div></div></div>';
-            html += '<div class="caption">';
-            html += '<p><strong>' + title + '</strong></p>';
-            html += '<p>&nbsp;</p></div></div></div>';
+            // TODO: display more metadata
+            if (data[i].object_type === 'object') {
+                console.log(record);
+                // TODO: check if value is defined and if is_array before rendering
+                html += '<ul>';
+                html += '<li><small><strong>pid:</strong>&nbsp;' + data[i].pid + '</small></li>';
+                html += '<li><small><strong>TypeOfResource:</strong>&nbsp;' + record.typeOfResource + '</small></li>';
+                html += '<li><small><strong>AccessCondition:</strong>&nbsp;' + record.accessCondition + '</small></li>';
+                html += '<li><small><strong>Abstract:</strong>&nbsp;' + record.abstract + '</small></li>';
+                html += '</ul>';
+            }
+
+            if (data[i].object_type === 'collection' && record.abstract !== undefined) {
+                html += '<p style="min-height: 75px"><small>' + record.abstract + '</small></p>';
+            } else {
+                // html += '<p style="min-height: 75px"><small>No description.</small></p>';
+            }
+
+
+            html += '</div>';
+            html += '<div class="col-md-3" style="padding: 5px">';
+
+            if (data[i].object_type === 'collection') {
+                html += '<p><small style="background: skyblue; padding: 3px; color: white">Collection</small></p>';
+            } else if (data[i].object_type === 'object') {
+                html += '<p><small style="background: cadetblue; padding: 3px; color: white">Object</small></p>';
+            }
+
+            if (data[i].is_published === 1) {
+                html += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
+                html += '<p><a href="#"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
+            } else {
+                html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
+                html += '<p><a href="#"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
+            }
+
+            html += '<p><a href="#"><i class="fa fa-edit"></i>&nbsp;Edit Object</a></p>';
+            html += '</div>';
+            html += '</div>';
+            html += '<hr>';
         }
 
         // TODO: implement pagination
@@ -187,7 +232,7 @@ var objectsModule = (function () {
             $("#object-binary").append(video);
         }
 
-        collectionsModule.getCollectionName(data[0].is_member_of_collection);
+        // collectionsModule.getCollectionName(data[0].is_member_of_collection);
 
         var html = '';
 
@@ -195,7 +240,7 @@ var objectsModule = (function () {
 
             var record = JSON.parse(data[i].display_record);
 
-            console.log(record);
+            // console.log(record);
 
             if (record.title.length > 1) {
                 html += '<hr>';
@@ -338,11 +383,11 @@ var objectsModule = (function () {
 
     obj.getObjects = function () {
 
-        var pid = getParameterByName('pid');
+        var pid = getParameterByName('pid'); // TODO: sanitize
 
         collectionsModule.getCollectionName(pid);
 
-        $.ajax(api + '/api/objects?pid=' + pid)
+        $.ajax(api + '/api/admin/v1/objects?pid=' + pid)
             .done(function(data) {
                 renderObjects(data);
             })

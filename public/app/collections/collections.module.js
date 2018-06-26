@@ -21,24 +21,48 @@ var collectionsModule = (function () {
 
     var api = configModule.getApi();
 
-    var renderCollections = function (data) {
+    var renderRootCollections = function (data) {
 
         var html = '';
 
         for (var i=0;i<data.length;i++) {
-            html += '<div class="col-md-55">';
-            html += '<div class="thumbnail">';
-            html += '<div class="image view view-first">';
-            html += '<img style="width: 100%; display: block;" src="' + api + '/api/collection/tn?collection_id=' + data[i].id + '" alt="image" />';
-            html += '<div class="mask">';
-            html += '<div class="tools tools-bottom">';
-            html += '<a href="/dashboard/objects?pid=' + data[i].pid + '" title="View Collection Objects"><i class="fa fa-list"></i></a>';
-            html += '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
-            html += '<a href="/dashboard/collection/edit?collection_id=' + data[i].id + '&pid=' + data[i].pid + '" title="Edit Collection"><i class="fa fa-edit"></i></a>';
-            html += '</div></div></div>';
-            html += '<div class="caption">';
-            html += '<p><strong>' + data[i].title + '</strong></p>';
-            html += '<p>&nbsp;</p></div></div></div>';
+
+            var record = JSON.parse(data[i].display_record);
+            // TODO: place domain in config
+            var tn = 'http://librepo01-vlp.du.edu:8080/fedora/objects/' + data[i].pid + '/datastreams/TN/content';
+
+            html += '<div class="row">';
+            html += '<div class="col-md-3"><img style="width: 45%; display: block; padding: 5px;" src="' + tn +'" alt="image" /></div>';
+            html += '<div class="col-md-6" style="padding: 5px">';
+
+            if (record.title[0] !== undefined) {
+                html += '<h4><a href="' + api + '/dashboard/objects/?pid=' + data[i].pid + '">' + record.title[0] + '</a></h4>';
+            } else {
+                html += '<h4>No Title</h4>';
+            }
+
+            if (record.abstract !== undefined) {
+                html += '<p style="min-height: 75px"><small>' + record.abstract + '</small></p>';
+            } else {
+                html += '<p style="min-height: 75px"><small>No description.</small></p>';
+            }
+
+            html += '</div>';
+            html += '<div class="col-md-3" style="padding: 5px">';
+
+            if (data[i].is_published === 1) {
+                html += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
+                html += '<p><a href="#"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
+            } else {
+                html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
+                html += '<p><a href="#"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
+            }
+
+            html += '<p><a href="#"><i class="fa fa-plus"></i>&nbsp;Add Object</a></p>';
+            html += '<p><a href="#"><i class="fa fa-edit"></i>&nbsp;Edit Object</a></p>';
+            html += '</div>';
+            html += '</div>';
+            html += '<hr>';
         }
 
         // TODO: implement pagination
@@ -46,28 +70,16 @@ var collectionsModule = (function () {
         $('a').tooltip();
     };
 
-    obj.getCollections = function () {
+    obj.getRootCollections = function () {
 
-        var community_id = getParameterByName('community_id');
-
-        if (community_id !== null) {
-            $.ajax(api + '/api/collections?community_id=' + community_id)
+            $.ajax(api + '/api/admin/v1/objects?pid=codu:root')
                 .done(function(data) {
-                    renderCollections(data);
+                    // console.log(data);
+                    renderRootCollections(data);
                 })
                 .fail(function() {
                     renderError();
                 });
-        } else {
-            $.ajax(api + '/api/collections')
-                .done(function(data) {
-                    console.log(data);
-                    renderCollections(data);
-                })
-                .fail(function() {
-                    renderError();
-                });
-        }
     };
 
     obj.getCollectionName = function (pid) {
@@ -76,21 +88,29 @@ var collectionsModule = (function () {
             var pid = getParameterByName('pid');
         }
 
-        $.ajax(api + '/api/collection/name?pid=' + pid)
+        $.ajax(api + '/api/admin/v1/object/?pid=' + pid)
             .done(function(data) {
+
+                var record = JSON.parse(data[0].display_record);
+                var title = 'No title.';
+
+                if (record.title !== undefined) {
+                    title = record.title[0];
+                }
 
                 if (data.length === 0) {
                     return $('#message').html('Collection not found.');
                 }
 
-                $('#collection-name').html(data[0].title);
-                $('#collection-description').html(data[0].description);
+                $('#collection-name').html(title);
+                // $('#collection-description').html(data[0].description);
             })
             .fail(function() {
                 renderError();
             });
     };
 
+    /*
     obj.getCollection = function () {
 
         var collection_id = getParameterByName('collection_id');
@@ -127,7 +147,9 @@ var collectionsModule = (function () {
                 renderError();
             });
     };
+    */
 
+    /*
     var updateCollection = function () {
 
         var data = {};
@@ -178,7 +200,9 @@ var collectionsModule = (function () {
                 renderError();
             });
     };
+    */
 
+    /*
     obj.updateCollectionInit = function () {
         $('#collection-form').validate({
             submitHandler: function () {
@@ -186,6 +210,7 @@ var collectionsModule = (function () {
             }
         });
     };
+    */
 
     obj.init = function () {
         userModule.renderUserName();

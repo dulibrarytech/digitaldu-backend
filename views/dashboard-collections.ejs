@@ -97,7 +97,10 @@
                     <div class="col-md-12">
                         <div class="x_panel">
                             <div class="x_title">
-                                <h2>Collections</h2>
+                                <h2>Root Collections</h2>
+                                <ul class="nav navbar-right"><!-- panel_toolbox -->
+                                    <li><a href="#"><i class="fa fa-plus"></i>&nbsp;Add root collection</a></li>
+                                </ul>
                                 <div class="clearfix"></div>
                             </div>
                             <div class="x_content">
@@ -146,8 +149,8 @@
 <script src="../build/js/custom.js"></script>
 <script>
     collectionsModule.init();
-    collectionsModule.getCollections();
-    searchModule.search();
+    collectionsModule.getRootCollections();
+    // searchModule.search();
 </script>
 </body>
 </html>

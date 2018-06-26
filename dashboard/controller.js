@@ -2,6 +2,7 @@
 
 // var Repo = require('../dashboard/model');
 
+/* home page */
 exports.get_dashboard_home = function (req, res) {
 
     res.render('dashboard-home', {
@@ -10,27 +11,18 @@ exports.get_dashboard_home = function (req, res) {
     });
 };
 
-/* communities */
-exports.get_dashboard_communities = function (req, res) {
-
-    res.render('dashboard-communities', {
-        // message: 'Authentication Failed. Please try again.',
-        // username: req.body.username
-    });
-};
-
-exports.edit_dashboard_community = function (req, res) {
-
-    res.render('dashboard-edit-community', {
-        // message: 'Authentication Failed. Please try again.',
-        // username: req.body.username
-    });
-};
-
-/* collections */
+/* root collections page */
 exports.get_dashboard_collections = function (req, res) {
 
     res.render('dashboard-collections', {
+        // message: 'Authentication Failed. Please try again.',
+        // username: req.body.username
+    });
+};
+
+exports.get_dashboard_objects = function (req, res) {
+
+    res.render('dashboard-objects', {
         // message: 'Authentication Failed. Please try again.',
         // username: req.body.username
     });
@@ -44,13 +36,6 @@ exports.edit_dashboard_collection = function (req, res) {
     });
 };
 
-exports.get_dashboard_objects = function (req, res) {
-
-    res.render('dashboard-objects', {
-        // message: 'Authentication Failed. Please try again.',
-        // username: req.body.username
-    });
-};
 
 exports.get_dashboard_object_detail = function (req, res) {
 
