@@ -16,13 +16,12 @@ module.exports = function (app) {
     app.route('/dashboard/objects')
         .get(Dashboard.get_dashboard_objects);
 
-    /* edit collection */
-    app.route('/dashboard/collection/edit')
-        .get(Dashboard.edit_dashboard_collection);
-
-
     app.route('/dashboard/object')
         .get(Dashboard.get_dashboard_object_detail);
+
+    /* edit object */
+    app.route('/dashboard/object/edit')
+        .get(Dashboard.edit_dashboard_object);
 
     /* users */
     app.route('/dashboard/users')

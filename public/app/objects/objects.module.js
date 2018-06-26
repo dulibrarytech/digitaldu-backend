@@ -56,18 +56,33 @@ var objectsModule = (function () {
                 // TODO: check if value is defined and if is_array before rendering
                 html += '<ul>';
                 html += '<li><small><strong>pid:</strong>&nbsp;' + data[i].pid + '</small></li>';
-                html += '<li><small><strong>TypeOfResource:</strong>&nbsp;' + record.typeOfResource + '</small></li>';
-                html += '<li><small><strong>AccessCondition:</strong>&nbsp;' + record.accessCondition + '</small></li>';
-                html += '<li><small><strong>Abstract:</strong>&nbsp;' + record.abstract + '</small></li>';
+
+                if (record.identifier !== undefined) {
+                    html += '<li><small><strong>Identifier:</strong>&nbsp;' + record.identifier + '</small></li>';
+                }
+
+                if (record.typeOfResource !== undefined) {
+                    html += '<li><small><strong>TypeOfResource:</strong>&nbsp;' + record.typeOfResource + '</small></li>';
+                }
+
+                if (record.language !== undefined) {
+                    html += '<li><small><strong>Language:</strong>&nbsp;' + record.language + '</small></li>';
+                }
+
+                if (record.accessCondition !== undefined) {
+                    html += '<li><small><strong>AccessCondition:</strong>&nbsp;' + record.accessCondition + '</small></li>';
+                }
+
+                if (record.abstract !== undefined) {
+                    html += '<li><small><strong>Abstract:</strong>&nbsp;' + record.abstract + '</small></li>';
+                }
+
                 html += '</ul>';
             }
 
             if (data[i].object_type === 'collection' && record.abstract !== undefined) {
                 html += '<p style="min-height: 75px"><small>' + record.abstract + '</small></p>';
-            } else {
-                // html += '<p style="min-height: 75px"><small>No description.</small></p>';
             }
-
 
             html += '</div>';
             html += '<div class="col-md-3" style="padding: 5px">';
@@ -86,7 +101,11 @@ var objectsModule = (function () {
                 html += '<p><a href="#"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
             }
 
-            html += '<p><a href="#"><i class="fa fa-edit"></i>&nbsp;Edit Object</a></p>';
+            if (data[i].object_type === 'object') {
+                html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '"><i class="fa fa-download"></i>&nbsp;Download Object</a></p>';
+            }
+
+            html += '<p><a href="' + api + '/dashboard/object/edit?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Edit Object</a></p>';
             html += '</div>';
             html += '</div>';
             html += '<hr>';
@@ -99,277 +118,95 @@ var objectsModule = (function () {
 
     var renderObjectDetail = function (data) {
 
-        var recordTitle = JSON.parse(data[0].display_record);
-        $('#object-title').html(recordTitle.title[0]);
-
-        var recordPid = JSON.parse(data[0].display_record);
-        var pid = 'codu:' + recordPid.id;
-        //var img ='';
-
-        // TODO: split off into helper
-        if (data[0].mime_type === 'image/tiff') {
-
-            var img = '<img id="viewer" src="' + api + '/api/object/image/jpg?pid=' + pid + '" data-high-res-src="' + api + '/api/object/image/jpg?pid=' + pid + '" alt="' + pid + '" style="max-width:500px;border:solid 1px black">'; // height:500px;
-
-            $('#object-binary').html(img);
-            // $('#viewer').ImageViewer();
-
-            // img = '<img src="' + api + '/api/object/image/jpg?pid=' + pid + '" data-high-res-src="' + api + '/api/object/image/jpg?pid=' + pid + '" alt="' + recordTitle + '">';
-            // $("#object-binary").append(img);
-            // $('.pannable-image').ImageViewer();
-
-            /*
-            var img = $("<img />").attr({
-                src: api + '/api/object/image/jpg?pid=' + pid,
-                height: '400'
-            })
-                .on('load', function() {
-                    if (!this.complete || typeof this.naturalWidth == "undefined" || this.naturalWidth == 0) {
-                        $("#object-binary").append('Unable to load object.');
-                    } else {
-                        $("#object-binary").append(img);
-                    }
-                });
-                */
-        }
-
-        if (data[0].mime_type === 'image/tif') {
-
-            var img = '<img id="viewer" src="' + api + '/api/object/image/jpg?pid=' + pid + '" data-high-res-src="' + api + '/api/object/image/jpg?pid=' + pid + '" alt="' + pid + '" style="max-width:500px;border:solid 1px black">'; // height:500px;
-
-            $('#object-binary').html(img);
-
-            /*
-            var img = $("<img />").attr({
-                src: api + '/api/object/image/tiff?pid=' + pid,
-                height: '400'
-            })
-                .on('load', function() {
-                    if (!this.complete || typeof this.naturalWidth == "undefined" || this.naturalWidth == 0) {
-                        $("#object-binary").append('Unable to load object.');
-                    } else {
-                        $("#object-binary").append(img);
-                    }
-                });
-            */
-
-            /*
-            var img = '<img id="viewer" src="' + api + '/api/object/image/tiff?pid=' + pid + '" data-high-res-src="' + api + '/api/object/image/tiff?pid=' + pid + '" alt="' + pid + '" style="height:400px;max-width:400px;border:solid 1px black">';
-
-            $('#image-viewer').html(img);
-            $('#object-binary').ImageViewer();
-            */
-        }
-
-        if (data[0].mime_type === 'image/jpeg') {
-
-
-            var img = '<img id="viewer" src="' + api + '/api/object/image/jpg?pid=' + pid + '" data-high-res-src="' + api + '/api/object/image/jpg?pid=' + pid + '" alt="' + pid + '" style="max-width:500px;border:solid 1px black">'; // height:500px;
-
-            $('#object-binary').html(img);
-
-            // img = '<img src="' + api + '/api/object/image/jpg?pid=' + pid + '" data-high-res-src="' + api + '/api/object/image/jpg?pid=' + pid + '" alt="' + recordTitle + '">';
-           // $('#object-binary').html(img);
-
-            /*
-            var img = '<img id="viewer" src="' + api + '/api/object/image/jpg?pid=' + pid + '" data-high-res-src="' + api + '/api/object/image/jpg?pid=' + pid + '" alt="' + pid + '" style="height:400px;max-width:400px;border:solid 1px black">';
-
-            $('#image-viewer').html(img);
-            $('#object-binary').ImageViewer();
-            */
-
-            /*
-            var img = $("<img>").attr({
-                src: api + '/api/object/image/jpg?pid=' + pid,
-                height: '400'
-            })
-                .on('load', function() {
-                    if (!this.complete || typeof this.naturalWidth == "undefined" || this.naturalWidth == 0) {
-                        $("#object-binary").append('Unable to load object.');
-                    } else {
-                        $("#object-binary").append(img);
-                    }
-                });
-                */
-        }
-
-        if (data[0].mime_type === 'image/png') {
-
-            var img = '<img src="' + api + '/api/object/image/png?pid=' + pid + '" data-high-res-src="' + api + '/api/object/image/png?pid=' + pid + '" alt="' + recordTitle + '">';
-            $('#object-binary').append(img);
-
-            /*
-            var img = $("<img />").attr({
-                src: api + '/api/image/png?pid=' + pid,
-                height: '400'
-            })
-                .on('load', function() {
-                    if (!this.complete || typeof this.naturalWidth == "undefined" || this.naturalWidth == 0) {
-                        $("#object-binary").append('Unable to load object.');
-                    } else {
-                        $("#object-binary").append(img);
-                    }
-                });
-                */
-        }
-
-        if (data[0].mime_type === 'application/pdf') {
-            var pdf = '<iframe src="' + api + '/api/object/pdf?pid=' + pid + '" style="width:500px;height:600px;" frameborder="0"></iframe>';
-            $("#object-binary").append(pdf);
-        }
-
-        if (data[0].mime_type === 'video/mp4') {
-            // var video = '<video width="320" height="240"><source type="video/mp4" src="http://localhost:8000/video?pid=' + pid + '" /></video>';
-            // $("#object-binary").append(video);
-            var video = '<iframe src="' + api + '/api/object/video/mp4?pid=' + pid + '" style="width:320px;height:240px;" frameborder="0"></iframe>';
-            $("#object-binary").append(video);
-        }
-
-        if (data[0].mime_type === 'video/mov') {
-            // var video = '<video width="320" height="240"><source type="video/mp4" src="http://localhost:8000/video?pid=' + pid + '" /></video>';
-            // $("#object-binary").append(video);
-            var video = '<iframe src="' + api + '/api/object/video/mov?pid=' + pid + '" style="width:320px; height:240px;" frameborder="0"></iframe>';
-            $("#object-binary").append(video);
-        }
-
-        // collectionsModule.getCollectionName(data[0].is_member_of_collection);
-
         var html = '';
 
         for (var i=0;i<data.length;i++) {
 
+            collectionsModule.getCollectionName(data[i].pid);
             var record = JSON.parse(data[i].display_record);
+            // TODO: place domain in config
+            var tn = 'http://librepo01-vlp.du.edu:8080/fedora/objects/' + data[i].pid + '/datastreams/TN/content';
 
-            // console.log(record);
+            html += '<div class="row">';
+            // TODO: check mime type here
+            html += '<div class="col-md-4"><img style="width: 70%; display: block; padding: 5px;" src="' + tn +'" alt="image" /></div>';
+            html += '<div class="col-md-5" style="padding: 5px">';
 
-            if (record.title.length > 1) {
-                html += '<hr>';
-                html += '<p>';
-                html += '<strong>Alternative Title:</strong> ' + record.title[1];
-                html += '</p>';
-            }
+            if (record.title !== undefined) {
 
-            if (record.abstract !== undefined) {
-                html += '<hr>';
-                html += '<p>';
-                html += '<strong>Abstract:</strong> ' + record.abstract;
-                html += '</p>';
-            }
-
-            if (record.subjectTopic !== undefined) {
-                html += '<hr>';
-                html += '<p>';
-                html += '<strong>Subject Topic:</strong> ';
-                html += '<ul>';
-                for (var i = 0;i<record.subjectTopic.length;i++) {
-                    html += '<li>' + record.subjectTopic[i] + '</li>'
+                if (data[i].object_type === 'object') {
+                    // html += '<h3>' + record.title[0] + '</h3>';
+                    $('#object-title').html(record.title[0]);
                 }
-                html += '</ul>';
-                html += '</p>';
+
+            } else {
+                // html += '<h4>No Title</h4>';
+                $('#object-title').html('No Title');
             }
 
-            if (record.subjectOccupation !== undefined) {
-                html += '<hr>';
-                html += '<p>';
-                html += '<strong>Subject Occupation:</strong> ';
+            // TODO: display more metadata
+            if (data[i].object_type === 'object') {
+                console.log(record);
+                // TODO: check if value is defined and if is_array before rendering
                 html += '<ul>';
-                for (var i = 0;i<record.subjectOccupation.length;i++) {
-                    html += '<li>' + record.subjectOccupation[i] + '</li>'
+                html += '<li><small><strong>pid:</strong>&nbsp;' + data[i].pid + '</small></li>';
+
+                if (record.identifier !== undefined) {
+                    html += '<li><small><strong>Identifier:</strong>&nbsp;' + record.identifier + '</small></li>';
                 }
-                html += '</ul>';
-                html += '</p>';
-            }
 
-            if (record.subjectGeographic !== undefined) {
-                html += '<hr>';
-                html += '<p>';
-                html += '<strong>Subject Geographic:</strong> ';
-                html += '<ul>';
-                for (var i = 0;i<record.subjectGeographic.length;i++) {
-                    html += '<li>' + record.subjectGeographic[i] + '</li>'
+                if (record.typeOfResource !== undefined) {
+                    html += '<li><small><strong>TypeOfResource:</strong>&nbsp;' + record.typeOfResource + '</small></li>';
                 }
-                html += '</ul>';
-                html += '</p>';
-            }
 
-            if (record.subjectGenre !== undefined) {
-                html += '<hr>';
-                html += '<p>';
-                html += '<strong>Subject Genre:</strong> ';
-                html += '<ul>';
-                for (var i = 0;i<record.subjectGenre.length;i++) {
-                    html += '<li>' + record.subjectGenre[i] + '</li>'
+                if (record.language !== undefined) {
+                    html += '<li><small><strong>Language:</strong>&nbsp;' + record.language + '</small></li>';
                 }
+
+                if (record.accessCondition !== undefined) {
+                    html += '<li><small><strong>AccessCondition:</strong>&nbsp;' + record.accessCondition + '</small></li>';
+                }
+
+                if (record.abstract !== undefined) {
+                    html += '<li><small><strong>Abstract:</strong>&nbsp;' + record.abstract + '</small></li>';
+                }
+
                 html += '</ul>';
-                html += '</p>';
             }
 
-            // TODO: check if value is undefined before rendering
-            if (record.publisher !== undefined) {
-                html += '<hr>';
-                html += '<p>';
-                html += '<strong>Publisher:</strong> ' + record.publisher;
-                html += '</p>';
+            if (data[i].object_type === 'collection' && record.abstract !== undefined) {
+                html += '<p style="min-height: 75px"><small>' + record.abstract + '</small></p>';
+            } else {
+                // html += '<p style="min-height: 75px"><small>No description.</small></p>';
             }
 
-            if (record.dateCreated !== undefined) {
-                html += '<hr>';
-                html += '<p>';
-                html += '<strong>Date Created:</strong> ' + record.dateCreated;
-                html += '</p>';
+
+            html += '</div>';
+            html += '<div class="col-md-3" style="padding: 5px">';
+
+            if (data[i].is_published === 1) {
+                html += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
+                html += '<p><a href="#"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
+            } else {
+                html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
+                html += '<p><a href="#"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
             }
 
-            if (record.typeOfResource !== undefined) {
-                html += '<hr>';
-                html += '<p>';
-                html += '<strong>Type of Resources:</strong> ' + record.typeOfResource;
-                html += '</p>';
+            if (data[i].object_type === 'object') {
+                html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '"><i class="fa fa-download"></i>&nbsp;Download Object</a></p>';
             }
 
-            if (record.extent !== undefined) {
-                html += '<hr>';
-                html += '<p>';
-                html += '<strong>Extent:</strong> ' + record.extent;
-                html += '</p>';
-            }
-
-            if (record.digitalOrigin !== undefined) {
-                html += '<hr>';
-                html += '<p>';
-                html += '<strong>Digital Origin:</strong> ' + record.digitalOrigin;
-                html += '</p>';
-            }
-
-            if (record.dateCreated !== undefined) {
-                html += '<hr>';
-                html += '<p>';
-                html += '<strong>Date Created:</strong> ' + record.dateCreated;
-                html += '</p>';
-            }
-
-            if (record.accessCondition !== undefined) {
-                html += '<hr>';
-                html += '<p>';
-                html += '<strong>Access Condition:</strong> ' + record.accessCondition;
-                html += '</p>';
-            }
-
-            if (record.note !== undefined) {
-                html += '<hr>';
-                html += '<p>';
-                html += '<strong>Note:</strong> ' + record.note;
-                html += '</p>';
-            }
-
-            if (record.url !== undefined) {
-                html += '<hr>';
-                html += '<p>';
-                html += '<strong>Handle:</strong> ' + record.url;
-                html += '</p>';
-            }
+            html += '<p><a href="#"><i class="fa fa-edit"></i>&nbsp;Edit Object</a></p>';
+            html += '<p><a href="#"><i class="fa fa-code"></i>&nbsp;Technical Metadata</a></p>';
+            html += '<p><a href="#"><i class="fa fa-code"></i>&nbsp;MODS</a></p>';
+            html += '</div>';
+            html += '</div>';
+            html += '<hr>';
         }
 
+        // TODO: implement pagination
         $('#object-detail').html(html);
+        $('a').tooltip();
 
         /*
          Dev note: object viewer / player here <br>
@@ -400,7 +237,7 @@ var objectsModule = (function () {
 
         var pid = getParameterByName('pid');
 
-        $.ajax(api + '/api/object/metadata?pid=' + pid)
+        $.ajax(api + '/api/admin/v1/object?pid=' + pid)
             .done(function(data) {
                 renderObjectDetail(data);
             })
@@ -408,7 +245,6 @@ var objectsModule = (function () {
                 renderError();
             });
     };
-
 
     obj.init = function () {
         userModule.renderUserName();

@@ -59,7 +59,7 @@ var collectionsModule = (function () {
             }
 
             html += '<p><a href="#"><i class="fa fa-plus"></i>&nbsp;Add Object</a></p>';
-            html += '<p><a href="#"><i class="fa fa-edit"></i>&nbsp;Edit Object</a></p>';
+            html += '<p><a href="' + api + '/dashboard/object/edit?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Edit Object</a></p>';
             html += '</div>';
             html += '</div>';
             html += '<hr>';
@@ -74,7 +74,6 @@ var collectionsModule = (function () {
 
             $.ajax(api + '/api/admin/v1/objects?pid=codu:root')
                 .done(function(data) {
-                    // console.log(data);
                     renderRootCollections(data);
                 })
                 .fail(function() {

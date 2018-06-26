@@ -28,12 +28,8 @@ exports.get_dashboard_objects = function (req, res) {
     });
 };
 
-exports.edit_dashboard_collection = function (req, res) {
-
-    res.render('dashboard-edit-collection', {
-        // message: 'Authentication Failed. Please try again.',
-        // username: req.body.username
-    });
+exports.edit_dashboard_object = function (req, res) {
+    res.render('dashboard-edit-object', {});
 };
 
 
