@@ -27,12 +27,8 @@ var objectsModule = (function () {
 
         for (var i=0;i<data.length;i++) {
 
-            // console.log(data[i].is_member_of_collection);
             var record = JSON.parse(data[i].display_record);
-            // console.log(record);
-            // TODO: place domain in config
             var tn = 'http://librepo01-vlp.du.edu:8080/fedora/objects/' + data[i].pid + '/datastreams/TN/content';
-            // console.log(tn);
 
             html += '<div class="row">';
             html += '<div class="col-md-3"><img style="width: 40%; display: block; padding: 5px;" src="' + tn +'" alt="image" /></div>';
