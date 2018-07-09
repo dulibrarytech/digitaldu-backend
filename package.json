@@ -9,6 +9,7 @@
   "author": "fernando.reyes@du.edu",
   "license": "MIT",
   "dependencies": {
+    "async": "^2.6.1",
     "body-parser": "^1.18.2",
     "compression": "^1.7.1",
     "dotenv": "^4.0.0",

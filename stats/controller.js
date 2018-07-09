@@ -2,6 +2,13 @@
 
 var Stats = require('../stats/model');
 
+exports.get_stats = function (req, res) {
+    Stats.get_stats(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+/*
 exports.get_collection_count = function (req, res) {
     Stats.get_collection_count(req, function (data) {
         res.status(data.status).send(data.data);
@@ -19,3 +26,4 @@ exports.get_user_count = function (req, res) {
         res.status(data.status).send(data.data);
     });
 };
+*/

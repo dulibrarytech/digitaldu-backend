@@ -21,6 +21,9 @@ module.exports = function (app) {
     app.route('/api/admin/v1/object')
         .get(Repo.get_admin_object);
 
+    app.route('/api/admin/v1/import')
+        .post(Repo.import);
+
     /*
     app.route('/api/search')
         .get(Repo.do_search);

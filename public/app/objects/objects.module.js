@@ -25,6 +25,12 @@ var objectsModule = (function () {
 
         var html = '';
 
+        if (data.length === 0) {
+            html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp;There are no objects in this collection.</strong></div>';
+            $('#objects').html(html);
+            return false;
+        }
+
         for (var i=0;i<data.length;i++) {
 
             var record = JSON.parse(data[i].display_record);
@@ -71,6 +77,10 @@ var objectsModule = (function () {
 
                 if (record.abstract !== undefined) {
                     html += '<li><small><strong>Abstract:</strong>&nbsp;' + record.abstract + '</small></li>';
+                }
+
+                if (record.location !== undefined) {
+                    html += '<li><small><strong>Handle:</strong>&nbsp;' + record.location[0].url + '</small></li>';
                 }
 
                 html += '</ul>';

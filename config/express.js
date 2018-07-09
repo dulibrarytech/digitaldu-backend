@@ -34,6 +34,7 @@ module.exports = function () {
     require('../repository/routes.js')(app);
     require('../indexer/routes.js')(app);
     require('../dashboard/routes.js')(app);
+    require('../stats/routes.js')(app);
     // require('express-template-cache');
 
     return server;

@@ -116,6 +116,28 @@ exports.get_admin_object = function (req, callback) {
         });
 };
 
+exports.import_admin_objects = function (req, callback) {
+
+    knex('tbl_objects')
+        .select('is_member_of_collection', 'pid', 'object_type', 'display_record', 'mime_type', 'is_published', 'is_compound', 'created')
+        .where({
+            pid: pid,
+            is_active: 1
+        })
+        .then(function (data) {
+            callback({
+                status: 200,
+                content_type: {'Content-Type': 'application/json'},
+                data: data,
+                message: 'Object retrieved.'
+            });
+        })
+        .catch(function (error) {
+            // TODO: add error callback
+            console.log(error);
+        });
+};
+
 /*
 exports.update_collection = function (req, callback) {
 

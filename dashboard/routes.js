@@ -23,6 +23,10 @@ module.exports = function (app) {
     app.route('/dashboard/object/edit')
         .get(Dashboard.edit_dashboard_object);
 
+    /* import objects */
+    app.route('/dashboard/import')
+        .get(Dashboard.get_dashboard_import);
+
     /* users */
     app.route('/dashboard/users')
         .get(Dashboard.get_dashboard_users);

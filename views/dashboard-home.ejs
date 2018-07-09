@@ -91,95 +91,88 @@
                 <div class="row top_tiles">
                     <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
                         <div class="tile-stats">
-                            <div class="icon"><i class="fa fa-cube"></i></div>
-                            <div class="count">20</div>
-                            <h3>Collections</h3>
-                            <!--<p>Lorem ipsum psdea itgum rixt.</p>-->
+                            <div class="icon"><i class="fa fa-archive"></i></div>
+                            <div class="count" id="published-collection-count">...</div>
+                            <h3>Published<br>Collections</h3>
+                            <p id="loading-published-collection-count"><strong>Loading...</strong></p>
                         </div>
                     </div>
                     <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
                         <div class="tile-stats">
-                            <div class="icon"><i class="fa fa-cubes"></i></div>
-                            <div class="count">40,000</div>
-                            <h3>Objects</h3>
-                            <!--<p>Lorem ipsum psdea itgum rixt.</p>-->
+                            <div class="icon"><i class="fa fa-archive"></i></div>
+                            <div class="count" id="total-collection-count">...</div>
+                            <h3>Total<br>Collections</h3>
+                            <p id="loading-total-collection-count"><strong>Loading...</strong></p>
                         </div>
                     </div>
+                    <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
+                        <div class="tile-stats">
+                            <div class="icon"><i class="fa fa-file"></i></div>
+                            <div class="count" id="published-object-count">...</div>
+                            <h3>Published<br>Objects</h3>
+                            <p id="loading-published-object-count"><strong>Loading...</strong></p>
+                        </div>
+                    </div>
+                    <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
+                        <div class="tile-stats">
+                            <div class="icon"><i class="fa fa-file"></i></div>
+                            <div class="count" id="total-object-count">...</div>
+                            <h3>Total<br>Objects</h3>
+                            <p id="loading-total-object-count"><strong>Loading...</strong></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row top_tiles">
+                    <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
+                        <div class="tile-stats">
+                            <div class="icon"><i class="fa fa-file-image-o"></i></div>
+                            <div class="count" id="total-image-count">...</div>
+                            <h3>Total<br>Images</h3>
+                            <p id="loading-image-count"><strong>Loading...</strong></p>
+                        </div>
+                    </div>
+                    <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
+                        <div class="tile-stats">
+                            <div class="icon"><i class="fa fa-file-pdf-o"></i></div>
+                            <div class="count" id="total-pdf-count">...</div>
+                            <h3>Total<br>PDFs</h3>
+                            <p id="loading-pdf-count"><strong>Loading...</strong></p>
+                        </div>
+                    </div>
+                    <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
+                        <div class="tile-stats">
+                            <div class="icon"><i class="fa fa-file-audio-o"></i></div>
+                            <div class="count" id="total-audio-count">...</div>
+                            <h3>Total<br>Audio</h3>
+                            <p id="loading-audio-count"><strong>Loading...</strong></p>
+                        </div>
+                    </div>
+                    <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
+                        <div class="tile-stats">
+                            <div class="icon"><i class="fa fa-file-video-o"></i></div>
+                            <div class="count" id="total-video-count">...</div>
+                            <h3>Total<br>Videos</h3>
+                            <p id="loading-video-count"><strong>Loading...</strong></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row top_tiles">
                     <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
                         <div class="tile-stats">
                             <div class="icon"><i class="fa fa-users"></i></div>
-                            <div class="count">10</div>
+                            <div class="count">0</div>
                             <h3>Users</h3>
                             <!--<p>Lorem ipsum psdea itgum rixt.</p>-->
                         </div>
                     </div>
                     <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
                         <div class="tile-stats">
-                            <div class="icon"><i class="fa fa-check-square-o"></i></div>
-                            <div class="count">200</div>
+                            <div class="icon"><i class="fa fa-plus-square"></i></div>
+                            <div class="count">0</div>
                             <h3>New Objects</h3>
                             <!--<p>Lorem ipsum psdea itgum rixt.</p>-->
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6 col-sm-6 col-xs-12">
-                    <div class="x_panel">
-                        <div class="x_title">
-                            <h2>Monthly Summary <small>Objects ingested</small></h2>
-                            <ul class="nav navbar-right panel_toolbox">
-                                <!--
-                                <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                                </li>
-                                -->
-                                <li class="dropdown">
-                                    <!--<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>-->
-                                    <ul class="dropdown-menu" role="menu">
-                                        <li><a href="#">View by month</a>
-                                        </li>
-                                        <li><a href="#">View by year</a>
-                                        </li>
-                                    </ul>
-                                </li>
-                                <!--<li><a class="close-link"><i class="fa fa-close"></i></a>-->
-                                </li>
-                            </ul>
-                            <div class="clearfix"></div>
-                        </div>
-                        <div class="x_content">
-                            <canvas id="mybarChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6 col-sm-6 col-xs-12">
-                    <div class="x_panel">
-                        <div class="x_title">
-                            <h2>Useful Data Summary <small></small></h2>
-                            <ul class="nav navbar-right panel_toolbox">
-                                <!--<li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>-->
-                                </li>
-                                <li class="dropdown">
-                                    <!--
-                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
-                                    -->
-                                    <ul class="dropdown-menu" role="menu">
-                                        <li><a href="#">Create a handle</a>
-                                        </li>
-                                        <li><a href="#">Update a handle</a>
-                                        </li>
-                                    </ul>
-                                </li>
-                                <!--<li><a class="close-link"><i class="fa fa-close"></i></a>-->
-                                </li>
-                            </ul>
-                            <div class="clearfix"></div>
-                        </div>
-                        <div class="x_content">
-                            TODO: save token to client<br>
-                            TODO: hide token from URL<br>
-                            Dev note: What should go in these panels? Data for annual reports?, no panels?<br>
-                            <!--<canvas id="mybarChart"></canvas>-->
                         </div>
                     </div>
                 </div>
@@ -226,9 +219,13 @@
 <script src="../app/libs/helper.js"></script>
 <script src="../app/libs/config.js"></script>
 <script src="../app/users/user.module.js"></script>
+<script src="../app/stats.module.js"></script>
 <script src="../app/home/home.module.js"></script>
 <!-- Custom Theme Scripts -->
 <script src="../build/js/custom.min.js"></script>
-<script>homeModule.init();</script>
+<script>
+    homeModule.init();
+    statsModule.init();
+</script>
 </body>
 </html>

@@ -40,6 +40,11 @@ exports.get_dashboard_object_detail = function (req, res) {
     });
 };
 
+exports.get_dashboard_import = function (req, res) {
+
+    res.render('dashboard-import', {});
+};
+
 exports.get_dashboard_users = function (req, res) {
 
     res.render('dashboard-users', {
