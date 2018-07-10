@@ -27,6 +27,10 @@ module.exports = function (app) {
     app.route('/dashboard/import')
         .get(Dashboard.get_dashboard_import);
 
+    /* import object files */
+    app.route('/dashboard/import/files')
+        .get(Dashboard.get_dashboard_import_files);
+
     /* users */
     app.route('/dashboard/users')
         .get(Dashboard.get_dashboard_users);

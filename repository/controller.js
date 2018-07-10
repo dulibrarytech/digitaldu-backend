@@ -31,8 +31,8 @@ exports.get_admin_object = function (req, res) {
 };
 
 /* imports object(s) for administrators */
-exports.import = function (req, res) {
-    Repo.import_admin_objects(req, function (data) {
+exports.get_import_admin_objects = function (req, res) {
+    Repo.get_import_admin_objects(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };

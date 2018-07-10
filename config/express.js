@@ -30,11 +30,11 @@ module.exports = function () {
     app.set('view engine', 'ejs');
 
     require('../auth/routes.js')(app);
-    // require('../import/routes.js')(app);
     require('../repository/routes.js')(app);
     require('../indexer/routes.js')(app);
     require('../dashboard/routes.js')(app);
     require('../stats/routes.js')(app);
+    require('../import/routes.js')(app);
     // require('express-template-cache');
 
     return server;

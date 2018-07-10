@@ -131,15 +131,25 @@
                     <div class="col-md-12">
                         <div class="x_panel">
                             <div class="x_title">
-                                <h2 id="object-title"></h2>
+                                <h2>Import</h2>
                                 <ul class="nav navbar-right"><!-- panel_toolbox -->
-                                    <li><a href="#"><i class="fa fa-plus"></i>&nbsp;Add object</a></li>
+                                    <li><a href="#"><i class="fa fa-plus"></i>&nbsp;Import All Objects</a></li>
                                 </ul>
                                 <div class="clearfix"></div>
                             </div>
                             <div class="x_content">
-                                <div class="row" id="object-detail"><!-- object details are rendered here --></div>
-                                <div><strong>Collection:</strong> <span id="collection-name"></span></div>
+
+                                <!-- datatable-checkbox_ -->
+                                <table class="table table-striped table-bordered bulk_action">
+                                    <thead>
+                                    <tr>
+                                        <th>Objects</th>
+                                        <th>File Count</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="import-objects"></tbody>
+                                </table>
 
                             </div>
                         </div>
@@ -185,10 +195,10 @@
     <script src="../../app/libs/config.js"></script>
     <script src="../../app/collections/collections.module.js"></script>
     <script src="../../app/users/user.module.js"></script>
-    <script src="../../app/objects/objects.module.js"></script>
+    <script src="../../app/import.module.js"></script>
     <script>
-        // objectsModule.init();
-        // objectsModule.getObjectDetail();
+        importModule.init();
+        importModule.getImportObjects();
     </script>
 </body>
 </html>
