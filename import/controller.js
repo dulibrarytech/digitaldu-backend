@@ -8,3 +8,9 @@ exports.get_import_admin_objects = function (req, res) {
         res.status(data.status).send(data.data);
     });
 };
+
+exports.get_import_admin_object_files = function (req, res) {
+    Import.get_import_admin_objects_files(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
