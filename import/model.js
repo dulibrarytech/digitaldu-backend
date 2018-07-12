@@ -72,6 +72,7 @@ exports.get_import_admin_objects_files = function (req, callback) {
 
             var stats = fs.statSync(importPath + file);
             var bytes = stats.size;
+            console.log(bytes);
             // var megabytes = bytes / 1000000.0;
 
             // coduObj.file = file;
