@@ -15,6 +15,7 @@ module.exports = {
     communityTnPath: process.env.COMMUNITY_TN_PATH,
     collectionTnPath: process.env.COLLECTION_TN_PATH,
     objectPath: process.env.OBJECT_PATH,
+    importPath: process.env.IMPORT_PATH,
     errorTn: process.env.ERROR_TN,
     smtp: process.env.SMTP,
     fromEmail: process.env.FROM_EMAIL,

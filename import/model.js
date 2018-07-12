@@ -1,20 +1,20 @@
 'use strict';
 
 var fs = require('fs'),
-    Config = require('../config/config'),
+    config = require('../config/config'),
     es = require('elasticsearch'),
     knex = require('knex')({
         client: 'mysql2',
         connection: {
-            host: Config.dbHost,
-            user: Config.dbUser,
-            password: Config.dbPassword,
-            database: Config.dbName
+            host: config.dbHost,
+            user: config.dbUser,
+            password: config.dbPassword,
+            database: config.dbName
         }
     });
 
 var client = new es.Client({
-    host: Config.elasticSearch
+    host: config.elasticSearch
     // log: 'trace'
 });
 
@@ -60,7 +60,7 @@ exports.get_import_admin_objects_files = function (req, callback) {
     var object = req.query.object;
     var coduObj = {};
     // TODO: place in .env var
-    var importPath = '/Users/freyes/Documents/import/' + object + '/';
+    var importPath = config.importPath + object + '/';
 
     var files = fs.readdirSync(importPath).map(function(file) {
 
