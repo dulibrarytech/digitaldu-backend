@@ -46,30 +46,27 @@ var importModule = (function () {
 
     var renderImportObjectFiles = function (data) {
 
-        console.log(data);
-
         var html = '';
 
-        /*
         for (var i=0;i<data.length;i++) {
 
             html += '<tr>';
-            html += '<td>' + data[i].object + '</td>';
-            html += '<td>' + data[i].files + '</td>';
-            html += '<td>';
-            html += '<a href="#" class="btn btn-success btn-sm"><i class="fa fa-upload"></i>&nbsp;Import</a>&nbsp;';
 
-            if (data[i].files !== 0) {
-                html += '<a href="/dashboard/import/files?object=' + data[i].object + '" class="btn btn-primary btn-sm"><i class="fa fa-file"></i>&nbsp;View Files</a>&nbsp;';
+            if (data[i].xmlFile !== undefined) {
+                html += '<td>' + data[i].xmlFile + '</td>';
             }
 
-            // html += '<a href="#" class="btn btn-danger btn-sm"><i class="fa fa-times"></i>&nbsp;Delete</a>';
-            html += '</td>';
+            if (data[i].objectFile !== undefined) {
+                html += '<td>' + data[i].objectFile + '</td>';
+            }
+
+            html += '<td>' + data[i].fileSize + '</td>';
+            html += '<td>' + data[i].mimeType + '</td>';
             html += '</tr>';
         }
-        */
 
         $('#import-object-files').html(html);
+        $('.loading').html('');
     };
 
     obj.getImportObjects = function () {
@@ -90,6 +87,7 @@ var importModule = (function () {
 
         $.ajax(api + '/api/admin/v1/import/files?object=' + object)
             .done(function(data) {
+                // console.log(data);
                 renderImportObjectFiles(data);
             })
             .fail(function() {

@@ -1,8 +1,10 @@
 'use strict';
 
 var fs = require('fs'),
+    path = require('path'),
     config = require('../config/config'),
     es = require('elasticsearch'),
+    shell = require('shelljs'),
     knex = require('knex')({
         client: 'mysql2',
         connection: {
@@ -20,11 +22,23 @@ var client = new es.Client({
 
 exports.get_import_admin_objects = function (req, callback) {
 
-    var importPath = '/Users/freyes/Documents/import/';
+    var importPath = config.importPath;
+
+    // check if object folder exists
+    if (!fs.existsSync(importPath)) {
+        callback({
+            status: 500,
+            content_type: {'Content-Type': 'application/json'},
+            message: 'Import path does not exist',
+            data: []
+        });
+        return false;
+    }
+
     var objects = fs.readdirSync(importPath).map(function(object) {
 
-        var stat = fs.statSync(importPath + object);
-        var coduObj = {};
+        var stat = fs.statSync(importPath + object),
+            coduObj = {};
 
         // get folders
         if (stat && stat.isDirectory()) {
@@ -33,6 +47,7 @@ exports.get_import_admin_objects = function (req, callback) {
             var files = fs.readdirSync(importPath + object).filter(function(file) {
 
                 var ignore = ['.svn', '.git', '.DS_Store', 'thumbs.db'];
+
                 if (ignore.indexOf(file) === -1) {
                     return file;
                 }
@@ -44,8 +59,11 @@ exports.get_import_admin_objects = function (req, callback) {
         }
     });
 
-    // removes null value
-    objects.shift();
+    // removes null value TODO: figure out why null value is generated and assigned to index 0
+
+    if (objects[0] === undefined) {
+        objects.shift();
+    }
 
     callback({
         status: 200,
@@ -57,35 +75,58 @@ exports.get_import_admin_objects = function (req, callback) {
 
 exports.get_import_admin_objects_files = function (req, callback) {
 
-    var object = req.query.object;
-    var coduObj = {};
-    // TODO: place in .env var
-    var importPath = config.importPath + object + '/';
+    var object = req.query.object,
+        importPath = config.importPath + object + '/';
+
+    // check if object folder exists
+    if (!fs.existsSync(importPath)) {
+        callback({
+            status: 404,
+            content_type: {'Content-Type': 'application/json'},
+            message: 'Import object does not exist',
+            data: []
+        });
+
+        return false;
+    }
 
     var files = fs.readdirSync(importPath).map(function(file) {
 
+        var coduObj = {},
+            ignore = ['.svn', '.git', '.DS_Store', 'thumbs.db'];
 
-        var ignore = ['.svn', '.git', '.DS_Store', 'thumbs.db'];
+        // console.log(file);
+
         if (ignore.indexOf(file) === -1) {
 
             console.log(file);
 
-            var stats = fs.statSync(importPath + file);
-            var bytes = stats.size;
-            console.log(bytes);
-            // var megabytes = bytes / 1000000.0;
+            var stats = fs.statSync(importPath + file),
+                ext = path.extname(file),
+                bytes = stats.size,
+                megabytes = bytes / 1000000.0;
 
-            // coduObj.file = file;
-            // coduObj.fileSize = bytes;
-            // return coduObj;
-            return file;
+            if (ext === '.xml') {
+                coduObj.xmlFile = file;
+                coduObj.fileSize = bytes + ' bytes';
+                coduObj.mimeType = 'application/xml';
+            } else {
+
+                var tmp = shell.exec('file --mime-type ' + importPath + file).stdout,
+                    mimetype = tmp.split(':');
+
+                coduObj.objectFile = file;
+                coduObj.fileSize = megabytes.toFixed(1) + ' MB';
+                coduObj.mimeType = mimetype[1].trim();
+            }
+
+            return coduObj;
         }
     });
 
-    // console.log(files);
-
-    // removes null value
-    // objects.shift();
+    if (files[0] === undefined) {
+        files.shift();
+    }
 
     callback({
         status: 200,
