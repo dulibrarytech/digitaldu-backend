@@ -59,10 +59,9 @@ exports.get_import_admin_objects = function (req, callback) {
         }
     });
 
-    // removes null value TODO: figure out why null value is generated and assigned to index 0
-
-    if (objects[0] === undefined) {
-        objects.shift();
+    if (objects.indexOf(undefined) != -1) {
+        var index = objects.indexOf(undefined);
+        objects.splice(index, 1);
     }
 
     callback({
@@ -95,8 +94,6 @@ exports.get_import_admin_objects_files = function (req, callback) {
         var coduObj = {},
             ignore = ['.svn', '.git', '.DS_Store', 'thumbs.db'];
 
-        // console.log(file);
-
         if (ignore.indexOf(file) === -1) {
 
             console.log(file);
@@ -124,14 +121,80 @@ exports.get_import_admin_objects_files = function (req, callback) {
         }
     });
 
-    if (files[0] === undefined) {
-        files.shift();
+    if (files.indexOf(undefined) != -1) {
+        var index = files.indexOf(undefined);
+        files.splice(index, 1);
     }
 
     callback({
         status: 200,
         content_type: {'Content-Type': 'application/json'},
         message: 'Import object files retrieved',
+        data: files
+    });
+};
+
+exports.import_admin_objects = function (req, callback) {
+
+    console.log('importing...');
+
+    var object = req.query.object,
+        importPath = config.importPath + object + '/';
+
+    // check if object folder exists
+    if (!fs.existsSync(importPath)) {
+        callback({
+            status: 404,
+            content_type: {'Content-Type': 'application/json'},
+            message: 'Import object does not exist',
+            data: []
+        });
+
+        return false;
+    }
+
+    var files = fs.readdirSync(importPath).map(function(file) {
+
+        var coduObj = {},
+            ignore = ['.svn', '.git', '.DS_Store', 'Thumbs.db'];
+
+        if (ignore.indexOf(file) === -1) {
+
+            var stats = fs.statSync(importPath + file),
+                ext = path.extname(file),
+                bytes = stats.size,
+                megabytes = bytes / 1000000.0;
+
+            if (ext === '.xml') {
+                coduObj.xmlFile = file;
+                coduObj.fileSize = bytes + ' bytes';
+                coduObj.mimeType = 'application/xml';
+            } else {
+
+                var tmp = shell.exec('file --mime-type ' + importPath + file).stdout,
+                    mimetype = tmp.split(':');
+
+                coduObj.objectFile = file;
+                coduObj.fileSize = megabytes.toFixed(1) + ' MB';
+                coduObj.mimeType = mimetype[1].trim();
+            }
+
+            return coduObj;
+        }
+    });
+
+    if (files.indexOf(undefined) != -1) {
+        var index = files.indexOf(undefined);
+        files.splice(index, 1);
+    }
+
+    // TODO: separate xml from objects here
+
+
+    callback({
+        status: 201,
+        content_type: {'Content-Type': 'application/json'},
+        message: 'Object files imported',
         data: files
     });
 };

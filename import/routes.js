@@ -6,7 +6,8 @@ var Import = require('../import/controller');
 module.exports = function (app) {
 
     app.route('/api/admin/v1/import')
-        .get(Import.get_import_admin_objects);
+        .get(Import.get_import_admin_objects)
+        .post(Import.import_admin_objects);
 
     app.route('/api/admin/v1/import/files')
         .get(Import.get_import_admin_object_files);

@@ -69,6 +69,18 @@ var importModule = (function () {
         $('.loading').html('');
     };
 
+    var importObjects = function () {
+
+        $.ajax({
+            url: api + '/api/admin/v1/import',
+            type: 'post'
+        }).done(function(data) {
+            console.log(data);
+        }).fail(function() {
+                renderError();
+        });
+    };
+
     obj.getImportObjects = function () {
 
         $.ajax(api + '/api/admin/v1/import')
