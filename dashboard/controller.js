@@ -33,6 +33,10 @@ exports.get_dashboard_import_files = function (req, res) {
     res.render('dashboard-import-files', {});
 };
 
+exports.get_dashboard_import_batch = function (req, res) {
+    res.render('dashboard-import-batch', {});
+};
+
 exports.get_dashboard_users = function (req, res) {
     res.render('dashboard-users', {});
 };
