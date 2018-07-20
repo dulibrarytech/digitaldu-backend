@@ -1,5 +1,6 @@
 'use strict';
 
+// TODO: email user after import is complete
 var nodemailer = require('nodemailer'),
     config = require('../config/config');
 

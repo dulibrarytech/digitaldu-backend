@@ -18,6 +18,58 @@ var client = new es.Client({
     // log: 'trace'
 });
 
+exports.get_next_pid = function (req, callback) {
+
+    var namespace = req.query.namespace;
+
+    knex.transaction(function(trx) {
+
+        return knex('tbl_pid_gen')
+            .select('namespace', 'current_pid')
+            .where({
+                namespace: namespace
+            })
+            .limit(1)
+            .transacting(trx)
+            .then(function(data) {
+
+                // increment pid
+                var new_id = (parseInt(data[0].current_pid) + 1),
+                    new_pid = data[0].namespace + ':' + new_id;
+
+                // update current pid with new pid value
+                return knex('tbl_pid_gen')
+                    .where({
+                        namespace: data[0].namespace
+                    })
+                    .update({
+                        current_pid: new_id
+                    })
+                    .then(function () {
+                        return new_pid;
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+
+            })
+            .then(trx.commit)
+            .catch(trx.rollback);
+    })
+        .then(function(pid) {
+
+            callback({
+                status: 200,
+                content_type: {'Content-Type': 'application/json'},
+                data: {pid: pid},
+                message: 'PID retrieved.'
+            });
+        })
+        .catch(function(error) {
+            console.error(error);
+        });
+};
+
 exports.get_objects = function (req, callback) {
 
     var pid = req.query.pid; // TODO: sanitize

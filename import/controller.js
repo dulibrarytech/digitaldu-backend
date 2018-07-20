@@ -20,3 +20,9 @@ exports.import_admin_objects = function (req, res) {
         res.status(data.status).send(data.data);
     });
 };
+
+exports.import_xml = function (req, res) {
+    Import.import_xml(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};

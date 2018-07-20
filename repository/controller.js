@@ -37,6 +37,14 @@ exports.get_import_admin_objects = function (req, res) {
     });
 };
 
+exports.get_next_pid = function (req, res) {
+    Repo.get_next_pid(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+
+
 /* search
 exports.do_search = function (req, res) {
     Repo.do_search(req, function (data) {
