@@ -39,6 +39,13 @@ module.exports = function (app) {
     app.route('/dashboard/users')
         .get(Dashboard.get_dashboard_users);
 
+    app.route('/dashboard/users/detail')
+        .get(Dashboard.get_dashboard_user_detail);
+
+    /* groups */
+    app.route('/dashboard/groups')
+        .get(Dashboard.get_dashboard_groups);
+
     app.route('/dashboard/search')
         .get(Dashboard.get_dashboard_search);
 

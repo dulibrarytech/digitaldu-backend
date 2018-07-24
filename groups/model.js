@@ -18,14 +18,14 @@ exports.save_group = function (req, callback) {
 
 exports.get_groups = function (req, callback) {
 
-    knex('tbl_users')
-        .select('id', 'group_id', 'du_id', 'email', 'first_name', 'last_name', 'status', 'created')
+    knex('tbl_groups')
+        .select('id', 'group_name', 'group_description', 'permissions', 'resources', 'created')
         .then(function (data) {
             callback({
                 status: 200,
                 content_type: {'Content-Type': 'application/json'},
                 data: data,
-                message: 'Users retrieved.'
+                message: 'Groups retrieved.'
             });
         })
         .catch(function (error) {

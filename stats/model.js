@@ -23,8 +23,6 @@ var client = new es.Client({
 
 exports.get_stats = function (req, callback) {
 
-    // TODO: get collection count, object count, user count, latest records
-
     async.waterfall([
         getPublishedCollectionCount,
         getPublishedObjectCount,

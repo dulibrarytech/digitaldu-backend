@@ -5,6 +5,7 @@ var fs = require('fs'),
     config = require('../config/config'),
     modslib = require('../libs/mods/mods_init'),
     uuid = require('uuid'),
+    crypto = require('crypto'),
     request = require('request'),
     es = require('elasticsearch'),
     shell = require('shelljs'),
@@ -261,10 +262,9 @@ var process_queue = function (import_id) {
 
                             knex('tbl_objects')
                                 .insert(recordObj)
-                                .then(function (data) {
+                                .then(function () {
 
                                     console.log('Repository record created');
-                                    // console.log(data);
 
                                     process_xml(obj);
                                     get_technical_metadata(obj);
@@ -272,7 +272,7 @@ var process_queue = function (import_id) {
                                     create_file_hash(obj);
                                     create_handle(obj);
 
-                                    // TODO: update queue here?
+                                    // TODO: verify completion of import process and update queue here
 
                                 })
                                 .catch(function (error) {
@@ -358,6 +358,9 @@ var process_xml = function (obj) {
 
             var mods = modslib.process_mods(xml);
 
+            // TODO: validate processed mods as well
+            // TODO: write new mods to file and validate
+
             console.log('Saving mods.');
             knex('tbl_objects')
                 .where({
@@ -384,23 +387,23 @@ var process_xml = function (obj) {
 var process_file = function (obj) {
 
     console.log('processing file...');
-    // console.log(obj);
 
-    var stats = fs.statSync(importPath + file),
+    // TODO: get file extension based on mime type
+    var folder = obj.is_member_of_collection.replace(':', '_'),
+        file = config.importPath + folder + '/' + obj.filename + ext;
+
+    // TODO: get file size
+    var stats = fs.statSync(file),
         ext = path.extname(file),
         bytes = stats.size,
         megabytes = bytes / 1000000.0;
 
 
-    var tmp = shell.exec('file --mime-type ' + importPath + file).stdout,
-            mimetype = tmp.split(':');
+    //var tmp = shell.exec('file --mime-type ' + importPath + file).stdout,
+    //        mimetype = tmp.split(':');
 
-    coduObj.objectFile = file;
-    coduObj.fileSize = megabytes.toFixed(1) + ' MB';
-    coduObj.mimeType = mimetype[1].trim();
-
-
-
+    // TODO: rename file (pid)
+    // TODO: move file to permanent storage space
 
     /*
      import_id: '22037748-17ca-4cfe-a4bd-5e5b93e42a65',
@@ -414,18 +417,87 @@ var process_file = function (obj) {
 var get_technical_metadata = function (obj) {
 
     console.log('getting technical metadata...');
-    // console.log(obj);
+    // TODO: get correct file extension based on mime-type
+    var file = config.importPath + folder + '/' + obj.filename + ext;
+    // TODO: place in .env
+    var outputPath = '';
+    var fits_command = 'sh ./libs/fits-1.3.0/fits.sh -i ' + file + ' -xc -o ' + outputPath + '/techmd_' + obj.pid + '.xml';
+
+    shell.exec(fits_command, function(code, stdout, stderr) {
+
+        if (code !== 0) {
+            console.log(stderr);
+            // TODO: log
+            return false;
+        }
+
+        // read file content
+        fs.readFile(outputPath + '/techmd_' + obj.pid + '.xml', {encoding: 'utf-8'}, function(error, tech_md) {
+
+            if (error) {
+                console.log(error);
+                // TODO: log
+                return false;
+            }
+
+            console.log('Saving technical metadata.');
+            knex('tbl_objects')
+                .where({
+                    is_member_of_collection: obj.is_member_of_collection,
+                    pid: obj.pid
+                })
+                .update({
+                    technical_metadata: tech_md
+                })
+                .then(function (result) {
+                    console.log('Technical metadata saved. ', result);
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+        });
+    });
 };
 
 var create_file_hash = function (obj) {
 
     console.log('creating file hash...');
-    // console.log(obj);
+
+    // TODO: get file extension based on mime_type
+    var folder = obj.is_member_of_collection.replace(':', '_'),
+        file = config.importPath + folder + '/' + obj.filename + ext,
+        sha1sum = crypto.createHash('sha1'),
+        stream = fs.ReadStream(file);
+
+    stream.on('data', function(d) {
+        sha1sum.update(d);
+    });
+
+    stream.on('end', function() {
+
+        var checksum = sha1sum.digest('hex');
+
+        knex('tbl_objects')
+            .where({
+                is_member_of_collection: obj.is_member_of_collection,
+                pid: obj.pid
+            })
+            .update({
+                checksum: checksum
+            })
+            .then(function (result) {
+                console.log('Hash digest saved. ', result);
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+    });
 };
 
+// TODO: will this occur in Archivmatica?
 var create_handle = function (obj) {
 
-    console.log('creating file hash...');
+    console.log('creating handle...');
     // console.log(obj);
 };
 

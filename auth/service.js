@@ -11,9 +11,9 @@ exports.authenticate = function (username, password, callback) {
                 password: password
             }
         },
-        function (err, headers, response) {
+        function (error, headers, response) {
 
-            if (err) {
+            if (error) {
                 var errorObj = {
                     status: 500,
                     success: false,
