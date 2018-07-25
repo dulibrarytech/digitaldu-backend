@@ -150,3 +150,34 @@ exports.update_user = function (req, callback) {
 exports.save_user = function (req, callback) {
     // TODO: ...
 };
+
+exports.get_user_groups = function (req, callback) {
+
+    // TODO: sanitize
+    var id = req.query.id;
+
+    knex('tbl_users_tbl_groups')
+        .join('tbl_groups', 'tbl_groups.id', '=', 'tbl_users_tbl_groups.group_id')
+        .select(
+        'tbl_users_tbl_groups.group_id',
+        'tbl_groups.group_name',
+        'tbl_groups.group_description',
+        'tbl_groups.permissions',
+        'tbl_groups.resources'
+    )
+        .where({
+            user_id: id
+        })
+        .then(function (data) {
+            callback({
+                status: 200,
+                content_type: {'Content-Type': 'application/json'},
+                data: data,
+                message: 'User groups retrieved.'
+            });
+        })
+        .catch(function (error) {
+            // TODO: add error callback
+            console.log(error);
+        });
+};

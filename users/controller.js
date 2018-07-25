@@ -19,3 +19,9 @@ exports.save_user = function (req, res) {
         res.status(data.status).send(data.data);
     });
 };
+
+exports.get_user_groups = function (req, res) {
+    Users.get_user_groups(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};

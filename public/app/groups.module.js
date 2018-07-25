@@ -5,7 +5,7 @@ var groupsModule = (function () {
     var obj = {};
 
     var renderError = function () {
-        $('#objects').html('Error: Unable to retrieve objects');
+        $('#objects').html('Error: Unable to retrieve data');
     };
 
     var api = configModule.getApi();
@@ -45,6 +45,21 @@ var groupsModule = (function () {
         $.ajax(api + '/api/admin/v1/groups')
             .done(function(data) {
                 renderGroups(data);
+            })
+            .fail(function() {
+                renderError();
+            });
+    };
+
+    obj.getGroupUsers = function () {
+
+        var id = getParameterByName('id');
+
+        $.ajax(api + '/api/admin/v1/groups/users?id=' + id)
+            .done(function(data) {
+                console.log(data);
+                $('#group').html('Group: ' + data[0].group_name);
+                userModule.renderUsers(data);
             })
             .fail(function() {
                 renderError();

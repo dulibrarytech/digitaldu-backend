@@ -45,6 +45,10 @@ exports.get_dashboard_user_detail = function (req, res) {
     res.render('dashboard-users-detail', {});
 };
 
+exports.get_dashboard_group_users = function (req, res) {
+    res.render('dashboard-group-users', {});
+};
+
 exports.get_dashboard_groups = function (req, res) {
     res.render('dashboard-groups', {});
 };

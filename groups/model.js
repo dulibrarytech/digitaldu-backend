@@ -60,3 +60,37 @@ exports.get_group = function (req, callback) {
 exports.update_group = function (req, callback) {
     // TODO: ...
 };
+
+exports.get_group_users = function (req, callback) {
+
+    // TODO: sanitize (group_id)
+    var id = req.query.id;
+
+    knex('tbl_users_tbl_groups')
+        .join('tbl_users', 'tbl_users.id', '=', 'tbl_users_tbl_groups.user_id')
+        .join('tbl_groups', 'tbl_groups.id', '=', 'tbl_users_tbl_groups.group_id')
+        .select(
+        'tbl_users_tbl_groups.group_id',
+        'tbl_users.first_name',
+        'tbl_users.last_name',
+        'tbl_users.email',
+        'tbl_users.status',
+        'tbl_groups.group_name'
+    )
+        .where({
+            group_id: id
+        })
+        .then(function (data) {
+            callback({
+                status: 200,
+                content_type: {'Content-Type': 'application/json'},
+                data: data,
+                message: 'Users retrieved.'
+            });
+        })
+        .catch(function (error) {
+            // TODO: add error callback
+            console.log(error);
+        });
+};
+

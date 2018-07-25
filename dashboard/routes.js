@@ -46,12 +46,10 @@ module.exports = function (app) {
     app.route('/dashboard/groups')
         .get(Dashboard.get_dashboard_groups);
 
+    app.route('/dashboard/groups/users')
+        .get(Dashboard.get_dashboard_group_users);
+
     app.route('/dashboard/search')
         .get(Dashboard.get_dashboard_search);
 
-    /* edit metadata
-    app.route('/dashboard/metadata/edit')
-        .get(Dashboard.get_dashboard_metadata);
-
-     */
 };
