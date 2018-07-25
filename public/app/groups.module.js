@@ -51,6 +51,32 @@ var groupsModule = (function () {
             });
     };
 
+    var renderGroupUsers = function (data) {
+
+        var html = '';
+
+        for (var i=0;i<data.length;i++) {
+
+            html += '<tr>';
+            html += '<td>' + data[i].first_name + '</td>';
+            html += '<td>' + data[i].last_name + '</td>';
+            html += '<td>' + data[i].email + '</td>';
+
+            if (data[i].status === 1) {
+                html += '<td>Active</td>';
+            } else {
+                html += '<td>Inactive</td>';
+            }
+
+            html += '<td><a href="/dashboard/users/delete?id=' + data[i].id + '" title="Remove user from group"><i class="fa fa-times"></i></a></td>';
+            html += '</tr>';
+        }
+
+        $('#users').html(html);
+        $('.loading').html('');
+    };
+
+
     obj.getGroupUsers = function () {
 
         var id = getParameterByName('id');
@@ -59,7 +85,7 @@ var groupsModule = (function () {
             .done(function(data) {
                 console.log(data);
                 $('#group').html('Group: ' + data[0].group_name);
-                userModule.renderUsers(data);
+                renderGroupUsers(data);
             })
             .fail(function() {
                 renderError();

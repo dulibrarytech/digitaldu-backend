@@ -71,6 +71,7 @@ exports.get_group_users = function (req, callback) {
         .join('tbl_groups', 'tbl_groups.id', '=', 'tbl_users_tbl_groups.group_id')
         .select(
         'tbl_users_tbl_groups.group_id',
+        'tbl_users.id',
         'tbl_users.first_name',
         'tbl_users.last_name',
         'tbl_users.email',

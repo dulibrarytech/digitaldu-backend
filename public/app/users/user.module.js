@@ -18,7 +18,7 @@ var userModule = (function () {
         return decodeURIComponent(results[2].replace(/\+/g, " "));
     };
 
-    obj.renderUsers = function (data) {
+    var renderUsers = function (data) {
 
         var html = '';
 
@@ -46,8 +46,6 @@ var userModule = (function () {
     };
 
     var renderUserDetails = function (data) {
-
-        console.log(data);
 
         var html = '';
         for (var i=0;i<data.length;i++) {
@@ -80,7 +78,7 @@ var userModule = (function () {
 
         $.ajax(api + '/api/admin/v1/users')
             .done(function(data) {
-                userModule.renderUsers(data);
+                renderUsers(data);
             })
             .fail(function() {
                 renderError();
