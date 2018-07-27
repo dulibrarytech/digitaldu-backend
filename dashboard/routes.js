@@ -9,10 +9,14 @@ module.exports = function (app) {
     app.route('/dashboard/home')
         .get(Dashboard.get_dashboard_home);
 
-    /* root collections */
+    /* collections */
     app.route('/dashboard/root-collections')
         .get(Dashboard.get_dashboard_collections);
 
+    app.route('/dashboard/collections/add')
+        .get(Dashboard.get_dashboard_collection_add_form);
+
+    /* objects */
     app.route('/dashboard/objects')
         .get(Dashboard.get_dashboard_objects);
 
@@ -41,6 +45,9 @@ module.exports = function (app) {
 
     app.route('/dashboard/users/detail')
         .get(Dashboard.get_dashboard_user_detail);
+
+    app.route('/dashboard/users/add')
+        .get(Dashboard.get_dashboard_user_add_form);
 
     /* groups */
     app.route('/dashboard/groups')

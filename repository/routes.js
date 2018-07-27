@@ -15,11 +15,13 @@ module.exports = function (app) {
         .get(Repo.get_object);
 
     //--- Used by repo admin dashboard ---//
+    // TODO: add "repo" to route path
     app.route('/api/admin/v1/objects')
         .get(Repo.get_admin_objects);
 
     app.route('/api/admin/v1/object')
-        .get(Repo.get_admin_object);
+        .get(Repo.get_admin_object)
+        .post(Repo.save_admin_collection_object);
 
     app.route('/api/admin/v1/repo/pid')
         .post(Repo.get_next_pid);

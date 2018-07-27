@@ -7,8 +7,11 @@ exports.get_dashboard_home = function (req, res) {
 
 /* root collections page */
 exports.get_dashboard_collections = function (req, res) {
-
     res.render('dashboard-collections', {});
+};
+
+exports.get_dashboard_collection_add_form = function (req, res) {
+    res.render('dashboard-add-collection', {});
 };
 
 exports.get_dashboard_objects = function (req, res) {
@@ -44,6 +47,11 @@ exports.get_dashboard_users = function (req, res) {
 exports.get_dashboard_user_detail = function (req, res) {
     res.render('dashboard-users-detail', {});
 };
+
+exports.get_dashboard_user_add_form = function (req, res) {
+    res.render('dashboard-add-user', {});
+};
+
 
 exports.get_dashboard_group_users = function (req, res) {
     res.render('dashboard-group-users', {});

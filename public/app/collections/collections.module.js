@@ -49,6 +49,7 @@ var collectionsModule = (function () {
 
             html += '</div>';
             html += '<div class="col-md-3" style="padding: 5px">';
+            html += '<p>' + data[i].pid + '</p>';
 
             if (data[i].is_published === 1) {
                 html += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
@@ -58,8 +59,8 @@ var collectionsModule = (function () {
                 html += '<p><a href="#"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
             }
 
-            html += '<p><a href="#"><i class="fa fa-plus"></i>&nbsp;Add Object</a></p>';
-            html += '<p><a href="' + api + '/dashboard/object/edit?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Edit Object</a></p>';
+            html += '<p><a href="/dashboard/collections/add?is_member_of_collection=' + data[i].pid + '"><i class="fa fa-plus"></i>&nbsp;Add collection</a></p>';
+            html += '<p><a href="' + api + '/dashboard/object/edit?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Edit collection</a></p>';
             html += '</div>';
             html += '</div>';
             html += '<hr>';
@@ -109,107 +110,58 @@ var collectionsModule = (function () {
             });
     };
 
-    /*
-    obj.getCollection = function () {
-
-        var collection_id = getParameterByName('collection_id');
-        var pid = getParameterByName('pid');
-
-        $.ajax(api + '/api/collection?collection_id=' + collection_id + '&pid=' + pid)
-            .done(function(data) {
-
-                if (data.length === 0) {
-                    return $('#message').html('Collection not found.');
-                }
-
-                $('#id').val(data[0].id);
-                $('#pid').val(data[0].pid);
-                $('#title').val(data[0].title);
-                $('#description').val(data[0].description);
-
-                if (data[0].is_active === 1) {
-                    $('#is_active').prop('checked', true);
-                }
-
-                if (data[0].is_published === 1) {
-                    $('#is_published').prop('checked', true);
-                }
-
-                var html = '';
-                html += '<a href="tn?id=' + data[0].id + '">'; // TODO...
-                html += '<img height="100" alt="' + data[0].title + '" src="' + api + '/api/collection/tn?collection_id=' + data[0].id + '">';
-                html += '</a>';
-
-                $('#collection-tn').html(html);
-            })
-            .fail(function() {
-                renderError();
-            });
+    // sets collection pid in collection form (hidden field)
+    obj.getIsMemberOfCollection = function () {
+        var is_member_of_collection = getParameterByName('is_member_of_collection');
+        $('#is-member-of-collection').val(is_member_of_collection);
     };
-    */
 
-    /*
-    var updateCollection = function () {
+    var getCollectionFormData = function () {
+        return $('#collection-form').serialize();
+    };
 
-        var data = {};
-        var description;
-        var is_active;
-        var is_published;
+    var addCollection = function () {
 
-        data.id = $('#id').val();
-        data.pid = $('#pid').val();
-        data.title = $('#title').val();
-        data.description = $('#description').val();
-
-        is_active = $('#is_active').prop('checked');
-
-        if (is_active === false) {
-            is_active = 0;
-        } else if (is_active === true) {
-            is_active = 1;
-        }
-
-        is_published = $('#is_published').prop('checked');
-
-        if (is_published === false) {
-            is_published = 0;
-        } else if (is_published === true) {
-            is_published = 1;
-        }
-
-        data.is_active = is_active;
-        data.is_published = is_published;
+        var saveButton = '#add-collection-button';
+        // $(saveButton).prop('value', 'Saving...');
+        // $(saveButton).prop('disabled', true);
+        var message = '<div class="alert alert-success">Saving Collection...</div>';
+        $('#collection-form').hide();
+        $('#message').html(message);
 
         $.ajax({
-            url: api + '/api/collection',
-            method: 'PUT',
-            data: data,
-            cache: false
-        })
-            .done(function (response) {
-                if (response.status === 200) {
-                    setTimeout(function () {
-                        $('#message').html('');
-                    }, 3000);
+            url: api + '/api/admin/v1/object',
+            type: 'post',
+            data: getCollectionFormData()
+        }).done(function(data) {
 
-                    $('#message').html('<div class="alert alert-success">' + response.message + '</div>');
-                }
-            })
-            .fail(function () {
-                renderError();
-            });
-    };
-    */
+            var message = '<div class="alert alert-success">Collection created (' + data[0].pid + ')</div>';
+            $('#message').html(message);
 
-    /*
-    obj.updateCollectionInit = function () {
-        $('#collection-form').validate({
-            submitHandler: function () {
-                updateCollection();
-            }
+            // $(saveButton).prop('value', 'Save');
+            // $(saveButton).prop('disabled', false);
+            $('#collection-form')[0].reset();
+
+            setTimeout(function () {
+                $('#message').html('');
+                $('#collection-form').show();
+            }, 3000);
+
+        }).fail(function() {
+            renderError();
         });
     };
-    */
+
+    obj.collectionFormValidation = function () {
+
+        $(document).ready(function () {
+            $('#collection-form').validate({
+                submitHandler: function () {
+                    addCollection();
+                }
+            });
+        });
+    };
 
     obj.init = function () {
         userModule.renderUserName();

@@ -139,6 +139,7 @@ var importModule = (function () {
 
         $.ajax(api + '/api/admin/v1/import')
             .done(function(data) {
+                console.log(data);
                 renderImportObjects(data);
             })
             .fail(function() {

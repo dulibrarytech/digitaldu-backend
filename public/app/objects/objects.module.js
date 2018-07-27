@@ -23,7 +23,10 @@ var objectsModule = (function () {
 
     var renderObjects = function (data) {
 
-        var html = '';
+        var is_member_of_collection = getParameterByName('pid'),
+            html = '';
+
+        $('#current-collection').prop('href', '/dashboard/collections/add?is_member_of_collection=' + is_member_of_collection);
 
         if (data.length === 0) {
             html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp;There are no objects in this collection.</strong></div>';
@@ -92,6 +95,7 @@ var objectsModule = (function () {
 
             html += '</div>';
             html += '<div class="col-md-3" style="padding: 5px">';
+            html += '<p>' + data[i].pid + '</p>';
 
             if (data[i].object_type === 'collection') {
                 html += '<p><small style="background: skyblue; padding: 3px; color: white">Collection</small></p>';
@@ -108,10 +112,16 @@ var objectsModule = (function () {
             }
 
             if (data[i].object_type === 'object') {
-                html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '"><i class="fa fa-download"></i>&nbsp;Download Object</a></p>';
+                html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '"><i class="fa fa-download"></i>&nbsp;Download object</a></p>';
             }
 
-            html += '<p><a href="' + api + '/dashboard/object/edit?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Edit Object</a></p>';
+            if (data[i].object_type === 'collection') {
+                html += '<p><a href="' + api + '/dashboard/object/edit?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Edit collection</a></p>';
+            } else if (data[i].object_type === 'object') {
+                html += '<p><a href="' + api + '/dashboard/object/edit?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Edit object</a></p>';
+
+            }
+
             html += '</div>';
             html += '</div>';
             html += '<hr>';

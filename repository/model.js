@@ -1,26 +1,28 @@
 'use strict';
 
 var fs = require('fs'),
-    Config = require('../config/config'),
+    config = require('../config/config'),
+    pid = require('../libs/next-pid'),
     es = require('elasticsearch'),
+    shell = require('shelljs'),
     knex = require('knex')({
         client: 'mysql2',
         connection: {
-            host: Config.dbHost,
-            user: Config.dbUser,
-            password: Config.dbPassword,
-            database: Config.dbName
+            host: config.dbHost,
+            user: config.dbUser,
+            password: config.dbPassword,
+            database: config.dbName
         }
     });
 
 var client = new es.Client({
-    host: Config.elasticSearch
+    host: config.elasticSearch
     // log: 'trace'
 });
 
 exports.get_next_pid = function (req, callback) {
 
-    var namespace = req.query.namespace;
+    var namespace = config.namespace; //req.query.namespace;
 
     knex.transaction(function(trx) {
 
@@ -168,37 +170,127 @@ exports.get_admin_object = function (req, callback) {
         });
 };
 
-/*
-exports.update_collection = function (req, callback) {
+exports.save_admin_collection_object = function (req, callback) {
 
-    var updateObj = {};
-    updateObj.title = req.body.title;
+    var data = req.body;
 
-    if (req.body.description !== undefined) {
-        updateObj.description = req.body.description;
+    if (data.is_member_of_collection === undefined || data.is_member_of_collection.length === 0) {
+
+        callback({
+            status: 400,
+            content_type: {'Content-Type': 'application/json'},
+            data: [],
+            message: 'Missing collection PID.'
+        });
+
+        return false;
     }
 
-    updateObj.is_active = req.body.is_active;
-    updateObj.is_published = req.body.is_published;
+    pid.get_next_pid(function (pid) {
 
-    knex('tbl_collections')
-        .where({
-            id: req.body.id,
-            pid: req.body.pid
-        })
-        .update(updateObj)
-        .then(function (data) {
-            callback({
-                status: 200,
-                content_type: {'Content-Type': 'application/json'},
-                message: 'Collection updated'
-            });
-        })
-        .catch(function (error) {
-            console.log(error);
+        construct_mods(data, function (results) {
+
+            // TODO: create display record
+
+            var recordObj = {};
+
+            if (data.object_type !== undefined || data.object_type.length !== 0) {
+                recordObj.object_type = data.object_type;
+            }
+
+            recordObj.is_member_of_collection = data.is_member_of_collection;
+            recordObj.pid = pid;
+            recordObj.mods = results.mods;
+            recordObj.display_record = results.display_record;
+
+            knex('tbl_objects')
+                .insert(recordObj)
+                .then(function (data) {
+                    callback({
+                        status: 201,
+                        content_type: {'Content-Type': 'application/json'},
+                        data: [{'pid': pid}],
+                        message: 'Object created.'
+                    });
+                })
+                .catch(function (error) {
+                    console.log(error);
+                    callback({
+                        status: 500,
+                        content_type: {'Content-Type': 'application/json'},
+                        message: 'Database error occurred.'
+                    });
+                });
         });
+    });
 };
-*/
+
+var construct_mods = function (data, callback) {
+
+    var results = {};
+    var mods = '<mods xmlns="http://www.loc.gov/mods/v3" xmlns:mods="http://www.loc.gov/mods/v3" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">';
+
+    for (var prop in data) {
+
+        if (prop === 'mods_title') {
+            mods += '<titleInfo><title>' + data.mods_title + '</title></titleInfo>';
+        }
+
+        if (prop === 'mods_abstract') {
+            mods += '<abstract>' + data.mods_abstract + '</abstract>';
+        }
+
+        // TODO: more fields for collection mods?
+    }
+
+    mods += '</mods>';
+
+    results.display_record = '{"title":["' + data.mods_title + '"],"abstract":"' + data.mods_abstract + '"}';
+
+    var modsTmp = Math.round(new Date().getTime()/1000);
+    var file = config.tempPath + modsTmp + '_mods.xml';
+    fs.writeFileSync(file, mods);
+
+    if (!fs.existsSync(file)) {
+        // TODO: error
+        // TODO: log
+        return false;
+    }
+
+    var validate_xml_command = './libs/xsd-validator/xsdv.sh ./libs/xsd-validator/mods-3-6.xsd.xml ' + file;
+    shell.exec(validate_xml_command, function(code, stdout, stderr) {
+
+        // TODO: log
+        console.log(stdout);
+
+        if (code !== 0) {
+            console.log(stderr);
+            // TODO: log
+            return false;
+        }
+
+        // read file content
+        fs.readFile(file, {encoding: 'utf-8'}, function(error, xml) {
+
+            if (error) {
+                console.log(error);
+                // TODO: log
+                return false;
+            }
+
+            results.mods = xml;
+
+            fs.unlink(file, function (error) {
+                if (error) {
+                    console.log(error);
+                }
+                console.log(file + ' was deleted');
+            });
+
+            callback(results);
+        });
+    });
+};
 
 /*
 exports.do_search = function (req, callback) {

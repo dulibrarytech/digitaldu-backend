@@ -62,6 +62,7 @@ exports.get_import_admin_objects = function (req, callback) {
         }
     });
 
+    // TODO: files cause null value to be added to array and breaks JS view
     if (objects.indexOf(undefined) != -1) {
         var index = objects.indexOf(undefined);
         objects.splice(index, 1);
