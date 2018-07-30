@@ -61,6 +61,10 @@ exports.get_dashboard_groups = function (req, res) {
     res.render('dashboard-groups', {});
 };
 
+exports.get_dashboard_group_add_form = function (req, res) {
+    res.render('dashboard-add-group', {});
+};
+
 exports.get_dashboard_search = function (req, res) {
     res.render('dashboard-search-results', {});
 };

@@ -138,29 +138,30 @@
                             </div>
                             <div class="x_content">
                                 <div class="row" id="user-details">
+                                    <div id="message"></div>
                                     <div class="col-xs-6">
 
-                                        <form name="user-form">
+                                        <form name="user-form" id="user-form">
                                             <div class="form-group">
                                                 <label for="du_id">DU ID:</label>
-                                                <input type="text" class="form-control" id="du_id">
+                                                <input type="text" class="form-control" id="du_id" name="du_id" required>
                                             </div>
                                             <div class="form-group">
                                                 <label for="email">Email Address:</label>
-                                                <input type="email" class="form-control" id="email">
+                                                <input type="email" class="form-control" id="email" name="email" required>
                                             </div>
                                             <div class="form-group">
                                                 <label for="first_name">First Name:</label>
-                                                <input type="text" class="form-control" id="first_name">
+                                                <input type="text" class="form-control" id="first_name" name="first_name" required>
                                             </div>
                                             <div class="form-group">
                                                 <label for="last_name">Last Name:</label>
-                                                <input type="text" class="form-control" id="last_name">
+                                                <input type="text" class="form-control" id="last_name" name="last_name" required>
                                             </div>
                                             <br>
-                                            <button type="submit" class="btn btn-primary">Save</button>
+                                            <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i>&nbsp; Save</button>
                                             &nbsp;&nbsp;
-                                            <button type="button" class="btn btn-default">Cancel</button>
+                                            <button type="button" class="btn btn-default"><i class="fa fa-times"></i>&nbsp; Cancel</button>
                                         </form>
 
                                     </div>
@@ -185,6 +186,8 @@
 
     <!-- jQuery -->
     <script src="../../vendors/jquery/dist/jquery.min.js"></script>
+    <!-- Form Validation -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.17.0/dist/jquery.validate.js"></script>
     <!-- Bootstrap -->
     <script src="../../vendors/bootstrap/dist/js/bootstrap.min.js"></script>
     <!-- FastClick -->
@@ -218,8 +221,8 @@
     <script src="../../app/users/user.module.js"></script>
     <script src="../../app/objects/objects.module.js"></script>
     <script>
-        // userModule.init();
-        // userModule.getUserDetails();
+        userModule.init();
+        userModule.userFormValidation();
     </script>
 </body>
 </html>

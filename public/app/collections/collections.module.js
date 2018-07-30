@@ -125,7 +125,7 @@ var collectionsModule = (function () {
         var saveButton = '#add-collection-button';
         // $(saveButton).prop('value', 'Saving...');
         // $(saveButton).prop('disabled', true);
-        var message = '<div class="alert alert-success">Saving Collection...</div>';
+        var message = '<div class="alert alert-info">Saving Collection...</div>';
         $('#collection-form').hide();
         $('#message').html(message);
 
@@ -137,14 +137,14 @@ var collectionsModule = (function () {
 
             var message = '<div class="alert alert-success">Collection created (' + data[0].pid + ')</div>';
             $('#message').html(message);
-
+            $('#collection-form').show();
             // $(saveButton).prop('value', 'Save');
             // $(saveButton).prop('disabled', false);
             $('#collection-form')[0].reset();
 
             setTimeout(function () {
                 $('#message').html('');
-                $('#collection-form').show();
+
             }, 3000);
 
         }).fail(function() {

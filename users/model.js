@@ -15,6 +15,15 @@ var fs = require('fs'),
 
 exports.get_users = function (req, callback) {
 
+    if (req.query.id !== undefined) {
+
+        get_user(req, function (user) {
+            callback(user);
+        });
+
+        return false;
+    }
+
     knex('tbl_users')
         .select(
         'tbl_users.id',
@@ -120,12 +129,12 @@ exports.get_users = function (req, callback) {
         */
 };
 
-exports.get_user = function (req, callback) {
+var get_user = function (req, callback) {
 
     var id = req.query.id; // TODO: sanitize
 
     knex('tbl_users')
-        .select('id', 'group_id', 'du_id', 'email', 'first_name', 'last_name', 'status', 'created')
+        .select('id', 'du_id', 'email', 'first_name', 'last_name', 'status', 'created')
         .where({
             id: id
         })
@@ -148,7 +157,27 @@ exports.update_user = function (req, callback) {
 };
 
 exports.save_user = function (req, callback) {
-    // TODO: ...
+
+    // TODO: sanitize
+    var userObj = req.body;
+
+    knex('tbl_users')
+        .insert(userObj)
+        .then(function (data) {
+            callback({
+                status: 201,
+                content_type: {'Content-Type': 'application/json'},
+                message: 'User created.'
+            });
+        })
+        .catch(function (error) {
+            console.log(error);
+            callback({
+                status: 500,
+                content_type: {'Content-Type': 'application/json'},
+                message: 'Database error occurred.'
+            });
+        });
 };
 
 exports.get_user_groups = function (req, callback) {

@@ -63,10 +63,11 @@ var userModule = (function () {
 
             html += '<hr>';
 
-            for (var j=0;j<data[i].groups.length;j++) {
-                html += '<p><strong>User group:</strong> ' + data[i].groups[j].group_name + '</p>';
+            if (data[i].groups !== undefined) {
+                for (var j=0;j<data[i].groups.length;j++) {
+                    html += '<p><strong>User group:</strong> ' + data[i].groups[j].group_name + '</p>';
+                }
             }
-
         }
 
         $('#user-details').html(html);
@@ -126,6 +127,49 @@ var userModule = (function () {
     obj.renderUserName = function () {
         var data = JSON.parse(window.sessionStorage.getItem('repo_data'));
         $('#username').html(data.uid);
+    };
+
+    var getUserFormData = function () {
+        return $('#user-form').serialize();
+    };
+
+    var addUser = function () {
+
+        var saveButton = '#add-user-button';
+        var message = '<div class="alert alert-info">Saving User...</div>';
+        $('#user-form').hide();
+        $('#message').html(message);
+
+        $.ajax({
+            url: api + '/api/admin/v1/users',
+            type: 'post',
+            data: getUserFormData()
+        }).done(function(data) {
+
+            var message = '<div class="alert alert-success">User created</div>';
+            $('#message').html(message);
+            $('#user-form').show();
+            $('#user-form')[0].reset();
+
+            setTimeout(function () {
+                $('#message').html('');
+
+            }, 3000);
+
+        }).fail(function() {
+            renderError();
+        });
+    };
+
+    obj.userFormValidation = function () {
+
+        $(document).ready(function () {
+            $('#user-form').validate({
+                submitHandler: function () {
+                    addUser();
+                }
+            });
+        });
     };
 
     obj.init = function () {

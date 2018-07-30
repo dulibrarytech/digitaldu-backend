@@ -53,6 +53,9 @@ module.exports = function (app) {
     app.route('/dashboard/groups')
         .get(Dashboard.get_dashboard_groups);
 
+    app.route('/dashboard/groups/add')
+        .get(Dashboard.get_dashboard_group_add_form);
+
     app.route('/dashboard/groups/users')
         .get(Dashboard.get_dashboard_group_users);
 
