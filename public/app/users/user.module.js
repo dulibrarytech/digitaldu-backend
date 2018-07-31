@@ -18,13 +18,65 @@ var userModule = (function () {
         return decodeURIComponent(results[2].replace(/\+/g, " "));
     };
 
+    obj.addUserToGroup = function (id) {
+
+        var user_id = id,
+            group_id = getParameterByName('id'),
+            message = '<div class="alert alert-info">Adding user to group...</div>';
+
+        $('#user-form').hide();
+        $('#message').html(message);
+
+        $.ajax({
+            url: api + '/api/admin/v1/groups/users',
+            type: 'post',
+            data: {user_id: user_id, group_id: group_id}
+        }).done(function (data) {
+
+            var message = '<div class="alert alert-success">User added to group</div>';
+            $('#message').html(message);
+
+            setTimeout(function () {
+                $('#message').html('');
+
+            }, 3000);
+
+        }).fail(function () {
+            var message = '<div class="alert alert-warning">User is already in this group</div>';
+            $('#message').html(message);
+
+            setTimeout(function () {
+                $('#message').html('');
+
+            }, 3000);
+        });
+    };
+
+    var renderUsersForGroups = function (data) {
+
+        var html = '';
+
+        for (var i = 0; i < data.length; i++) {
+
+            if (data[i].status === 1) {
+                html += '<tr>';
+                html += '<td>' + data[i].first_name + '</td>';
+                html += '<td>' + data[i].last_name + '</td>';
+                html += '<td>' + data[i].email + '</td>';
+                html += '<td><a href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Add user to group"><i class="fa fa-plus"></i></a></td>';
+                html += '</tr>';
+            }
+        }
+
+        $('#users').html(html);
+        $('.loading').html('');
+    };
+
     var renderUsers = function (data) {
 
         var html = '';
 
-        for (var i=0;i<data.length;i++) {
-
-            // console.log(data[i].id);
+        for (var i = 0; i < data.length; i++) {
 
             html += '<tr>';
             html += '<td>' + data[i].first_name + '</td>';
@@ -37,7 +89,11 @@ var userModule = (function () {
                 html += '<td>Inactive</td>';
             }
 
-            html += '<td><a href="/dashboard/users/detail?id=' + data[i].id + '" title="User Details"><i class="fa fa-user"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/dashboard/users/edit?id=' + data[i].id + '" title="Edit User"><i class="fa fa-edit"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="/dashboard/users/delete?id=' + data[i].id + '" title="Delete User"><i class="fa fa-times"></i></a></td>';
+            html += '<td>';
+            html += '<a class="btn btn-xs btn-primary" href="/dashboard/users/detail?id=' + data[i].id + '" title="User Details"><i class="fa fa-user"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;';
+            html += '<a class="btn btn-xs btn-default" href="/dashboard/users/edit?id=' + data[i].id + '" title="Edit User"><i class="fa fa-edit"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;';
+            html += '<a class="btn btn-xs btn-danger" href="/dashboard/users/delete?id=' + data[i].id + '" title="Delete User"><i class="fa fa-times"></i></a>';
+            html += '</td>';
             html += '</tr>';
         }
 
@@ -48,7 +104,7 @@ var userModule = (function () {
     var renderUserDetails = function (data) {
 
         var html = '';
-        for (var i=0;i<data.length;i++) {
+        for (var i = 0; i < data.length; i++) {
 
             $('#user-name').html(data[i].first_name + ' ' + data[i].last_name);
 
@@ -64,7 +120,7 @@ var userModule = (function () {
             html += '<hr>';
 
             if (data[i].groups !== undefined) {
-                for (var j=0;j<data[i].groups.length;j++) {
+                for (var j = 0; j < data[i].groups.length; j++) {
                     html += '<p><strong>User group:</strong> ' + data[i].groups[j].group_name + '</p>';
                 }
             }
@@ -72,16 +128,26 @@ var userModule = (function () {
 
         $('#user-details').html(html);
         $('.loading').html('');
-
     };
 
     obj.getUsers = function () {
 
         $.ajax(api + '/api/admin/v1/users')
-            .done(function(data) {
+            .done(function (data) {
                 renderUsers(data);
             })
-            .fail(function() {
+            .fail(function () {
+                renderError();
+            });
+    };
+
+    obj.getUsersForGroups = function () {
+
+        $.ajax(api + '/api/admin/v1/users')
+            .done(function (data) {
+                renderUsersForGroups(data);
+            })
+            .fail(function () {
                 renderError();
             });
     };
@@ -90,10 +156,10 @@ var userModule = (function () {
 
         // user "id" passed in
         $.ajax(api + '/api/admin/v1/users/groups?id=' + user_id)
-            .done(function(data) {
+            .done(function (data) {
                 callback(data);
             })
-            .fail(function() {
+            .fail(function () {
                 renderError();
             });
     };
@@ -104,14 +170,14 @@ var userModule = (function () {
         var id = getParameterByName('id');
 
         $.ajax(api + '/api/admin/v1/users?id=' + id)
-            .done(function(data) {
+            .done(function (data) {
 
                 userModule.getUserGroups(id, function (groups) {
                     data[0].groups = groups;
                     renderUserDetails(data);
                 });
             })
-            .fail(function() {
+            .fail(function () {
                 renderError();
             });
     };
@@ -135,7 +201,7 @@ var userModule = (function () {
 
     var addUser = function () {
 
-        var saveButton = '#add-user-button';
+        // var saveButton = '#add-user-button';
         var message = '<div class="alert alert-info">Saving User...</div>';
         $('#user-form').hide();
         $('#message').html(message);
@@ -144,7 +210,7 @@ var userModule = (function () {
             url: api + '/api/admin/v1/users',
             type: 'post',
             data: getUserFormData()
-        }).done(function(data) {
+        }).done(function (data) {
 
             var message = '<div class="alert alert-success">User created</div>';
             $('#message').html(message);
@@ -156,7 +222,7 @@ var userModule = (function () {
 
             }, 3000);
 
-        }).fail(function() {
+        }).fail(function () {
             renderError();
         });
     };

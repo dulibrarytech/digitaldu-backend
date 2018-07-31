@@ -9,6 +9,8 @@ module.exports = function (app) {
 
     /* gets users assigned to each group */
     app.route('/api/admin/v1/groups/users')
-        .get(Groups.get_group_users);
+        .get(Groups.get_group_users)
+        .post(Groups.add_user_to_group)
+        .delete(Groups.remove_user_from_group);
 
 };

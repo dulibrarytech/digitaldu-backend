@@ -48,10 +48,9 @@ exports.get_users = function (req, callback) {
         });
 
     /*
-    var getUsers = function () {
-
-        knex('tbl_users')
-            .join('tbl_users_tbl_groups', 'tbl_users.id', '=', 'tbl_users_tbl_groups.user_id')
+    knex('tbl_users_tbl_groups')
+            .join('tbl_users', 'tbl_users.id', '=', 'tbl_users_tbl_groups.user_id')
+            .groupBy('tbl_users.id')
             .select(
             'tbl_users.id',
             'tbl_users.du_id',
@@ -63,6 +62,7 @@ exports.get_users = function (req, callback) {
             'tbl_users_tbl_groups.group_id'
         )
             .then(function (data) {
+                console.log(data);
                 callback({
                     status: 200,
                     content_type: {'Content-Type': 'application/json'},
@@ -74,12 +74,9 @@ exports.get_users = function (req, callback) {
                 // TODO: add error callback
                 console.log(error);
             });
-    };
 
-    var getGroups = function () {
-
-
-    };
+        */
+    /*
 
     async.waterfall([
         getUsers,

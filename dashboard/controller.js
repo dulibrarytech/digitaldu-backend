@@ -52,7 +52,6 @@ exports.get_dashboard_user_add_form = function (req, res) {
     res.render('dashboard-add-user', {});
 };
 
-
 exports.get_dashboard_group_users = function (req, res) {
     res.render('dashboard-group-users', {});
 };
@@ -63,6 +62,10 @@ exports.get_dashboard_groups = function (req, res) {
 
 exports.get_dashboard_group_add_form = function (req, res) {
     res.render('dashboard-add-group', {});
+};
+
+exports.get_dashboard_group_user_add_form = function (req, res) {
+    res.render('dashboard-add-group-user.ejs', {});
 };
 
 exports.get_dashboard_search = function (req, res) {
