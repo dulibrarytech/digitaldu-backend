@@ -63,7 +63,7 @@ var userModule = (function () {
                 html += '<td>' + data[i].first_name + '</td>';
                 html += '<td>' + data[i].last_name + '</td>';
                 html += '<td>' + data[i].email + '</td>';
-                html += '<td><a href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Add user to group"><i class="fa fa-plus"></i></a></td>';
+                html += '<td><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Add user to group"><i class="fa fa-plus"></i></a></td>';
                 html += '</tr>';
             }
         }

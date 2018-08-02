@@ -151,7 +151,7 @@ exports.get_admin_object = function (req, callback) {
     var pid = req.query.pid;  // TODO: sanitize
 
     knex('tbl_objects')
-        .select('is_member_of_collection', 'pid', 'object_type', 'display_record', 'mime_type', 'is_published', 'is_compound', 'created')
+        .select('is_member_of_collection', 'pid', 'object_type', 'mods', 'display_record', 'mime_type', 'is_published', 'is_compound', 'created')
         .where({
             pid: pid,
             is_active: 1

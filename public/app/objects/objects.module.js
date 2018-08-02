@@ -21,6 +21,27 @@ var objectsModule = (function () {
 
     var api = configModule.getApi();
 
+    obj.editObject = function () {
+
+        var pid = getParameterByName('pid');
+
+        // TODO: construct form on server...
+        $.ajax(api + '/api/admin/v1/object?pid=' + pid)
+            .done(function(data) {
+                // renderRootCollections(data);
+                console.log(data);
+                var modsXml = $.parseXML(data[0].mods);
+                console.log(modsXml);
+                var xml = $(modsXml);
+                console.log(xml.find('mods > titleInfo > title'));
+                // renderObjectEditForm();
+            })
+            .fail(function() {
+                renderError();
+            });
+
+    };
+
     var renderObjects = function (data) {
 
         var is_member_of_collection = getParameterByName('pid'),

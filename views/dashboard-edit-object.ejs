@@ -131,16 +131,17 @@
                     <div class="col-md-12">
                         <div class="x_panel">
                             <div class="x_title">
-                                <h2 id="object-title"></h2>
+                                <h2 id="object-title">Edit Object</h2>
                                 <ul class="nav navbar-right"><!-- panel_toolbox -->
-                                    <li><a href="#"><i class="fa fa-plus"></i>&nbsp;Add object</a></li>
+                                    <!--<li><a href="#"><i class="fa fa-plus"></i>&nbsp;Add object</a></li>-->
                                 </ul>
                                 <div class="clearfix"></div>
                             </div>
                             <div class="x_content">
-                                <div class="row" id="object-detail"><!-- object details are rendered here --></div>
-                                <div><strong>Collection:</strong> <span id="collection-name"></span></div>
-
+                                <!--<div class="row" id="object-data"></div>-->
+                                <form id="object-edit-form">
+                                    <!-- TODO: render edit form with data here... -->
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -188,7 +189,8 @@
     <script src="../../app/objects/objects.module.js"></script>
     <script>
         objectsModule.init();
-        objectsModule.getObjectDetail();
+        objectsModule.editObject();
+        // objectsModule.getObjectDetail();
     </script>
     <script>
         /*
