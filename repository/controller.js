@@ -1,6 +1,7 @@
 'use strict';
 
-var Repo = require('../repository/model');
+var Repo = require('../repository/model'),
+    fs = require('fs');
 
 /* gets objects by is_member_of_collection pid for discovery layer */
 exports.get_objects = function (req, res) {
@@ -49,7 +50,29 @@ exports.get_next_pid = function (req, res) {
     });
 };
 
+exports.get_repo_object = function (req, res) {
+    Repo.get_repo_object(req, function (result) {
+        // res.setHeader('Content-Length', result.stat.size);
+        res.setHeader('Content-Disposition', 'inline; filename=' + result.filename);
+        res.setHeader('Content-Type', 'application/pdf');
+        //console.log(result.pdf);
+        //res.send(result.pdf);
 
+        res.writeHead(200, {
+            'Content-Type': "application/octet-stream",
+            'Content-Disposition': "attachment; filename=" + result.filename
+        });
+
+        fs.createReadStream(result.pdf).pipe(res);
+
+        /*
+        result.pdf.on('open', function () {
+            result.pdf.pipe(res);
+        });
+        */
+
+    });
+};
 
 /* search
 exports.do_search = function (req, res) {

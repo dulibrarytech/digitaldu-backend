@@ -1,6 +1,7 @@
 'use strict';
 
 var fs = require('fs'),
+    request = require('request'),
     config = require('../config/config'),
     pid = require('../libs/next-pid'),
     es = require('elasticsearch'),
@@ -289,6 +290,69 @@ var construct_mods = function (data, callback) {
 
             callback(results);
         });
+    });
+};
+
+exports.get_repo_object = function (req, callback) {
+
+    var pid = req.params.pid;
+    var datastream = req.params.ds;
+
+    var obj = {};
+    obj.user = 'fedoraAdmin';
+    obj.password = 'f3d0r@@dm1ndu';
+    obj.host = 'librepo01-vlp.du.edu:8080/fedora/';
+
+    request('http://' + obj.user + ':' + obj.password + '@' + obj.host + 'objects/' + pid + '/datastreams/' + datastream + '/content', function (error, response, ds) {
+
+        if (error) {
+            console.log(error);
+        }
+
+
+        var path = './data/pdfs/';
+        var filename = pid.replace(':', '_') + '.pdf';
+        var file = path + filename;
+        /*
+        var pdf = fs.writeFileSync(file, ds);
+        */
+        // var fileStream = fs.createReadStream(file);
+        // var stat = fs.statSync(file);
+
+        // console.log(stat.size);
+
+        callback({
+            status: 200,
+            filename: file,
+            pdf: ds
+        });
+
+        /*
+        fs.writeFile(file, ds, 'binary', function (error) {
+
+            if (error) {
+                console.log('Unable to get PDF');
+            }
+
+            var fileStream = fs.createReadStream(file);
+            var stat = fs.statSync(file);
+
+            console.log(stat.size);
+
+            callback({
+                status: 200,
+                filename: filename,
+                pdf: fileStream,
+                stat: stat
+            });
+
+            setTimeout(function () {
+                console.log('pdf!');
+            }, 1000);
+            *
+        } );
+    */
+
     });
 };
 

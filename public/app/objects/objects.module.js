@@ -166,7 +166,7 @@ var objectsModule = (function () {
 
             html += '<div class="row">';
             // TODO: check mime type here
-            html += '<div class="col-md-4"><img style="width: 70%; display: block; padding: 5px;" src="' + tn +'" alt="image" /></div>';
+            html += '<div class="col-md-4"><img style="width: 70%; display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
             html += '<div class="col-md-5" style="padding: 5px">';
 
             if (record.title !== undefined) {
@@ -239,6 +239,16 @@ var objectsModule = (function () {
             html += '</div>';
             html += '</div>';
             html += '<hr>';
+
+
+            var obj = {};
+            obj.host = 'librepo01-vlp.du.edu:8080/fedora/';
+
+            var datastream = 'OBJ';
+            var pid = 'codu:38487';
+
+            var url = 'http://' + obj.host + 'objects/' + pid + '/datastreams/' + datastream + '/content';
+            $("#pdfContainer").html('<embed src="' + url + '" type="application/pdf" />');
         }
 
         // TODO: implement pagination
