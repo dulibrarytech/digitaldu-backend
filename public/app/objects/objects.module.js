@@ -239,16 +239,6 @@ var objectsModule = (function () {
             html += '</div>';
             html += '</div>';
             html += '<hr>';
-
-
-            var obj = {};
-            obj.host = 'librepo01-vlp.du.edu:8080/fedora/';
-
-            var datastream = 'OBJ';
-            var pid = 'codu:38487';
-
-            var url = 'http://' + obj.host + 'objects/' + pid + '/datastreams/' + datastream + '/content';
-            $("#pdfContainer").html('<embed src="' + url + '" type="application/pdf" />');
         }
 
         // TODO: implement pagination
