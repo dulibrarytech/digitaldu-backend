@@ -132,6 +132,8 @@ var userModule = (function () {
 
     obj.getUsers = function () {
 
+        userModule.setHeaderUserToken();
+
         $.ajax(api + '/api/admin/v1/users')
             .done(function (data) {
                 renderUsers(data);
@@ -143,6 +145,8 @@ var userModule = (function () {
 
     obj.getUsersForGroups = function () {
 
+        userModule.setHeaderUserToken();
+
         $.ajax(api + '/api/admin/v1/users')
             .done(function (data) {
                 renderUsersForGroups(data);
@@ -153,6 +157,8 @@ var userModule = (function () {
     };
 
     obj.getUserGroups = function (user_id, callback) {
+
+        userModule.setHeaderUserToken();
 
         // user "id" passed in
         $.ajax(api + '/api/admin/v1/users/groups?id=' + user_id)
@@ -168,6 +174,8 @@ var userModule = (function () {
 
         // TODO: sanitize
         var id = getParameterByName('id');
+
+        userModule.setHeaderUserToken();
 
         $.ajax(api + '/api/admin/v1/users?id=' + id)
             .done(function (data) {
@@ -206,6 +214,8 @@ var userModule = (function () {
         $('#user-form').hide();
         $('#message').html(message);
 
+        userModule.setHeaderUserToken();
+
         $.ajax({
             url: api + '/api/admin/v1/users',
             type: 'post',
@@ -235,6 +245,23 @@ var userModule = (function () {
                     addUser();
                 }
             });
+        });
+    };
+
+    obj.setHeaderUserToken = function () {
+
+        var data = window.sessionStorage.getItem('repo_data');
+
+        console.log(data);
+
+        if (data.token === null) {
+            // TODO: redirect to login
+        }
+
+        $.ajaxSetup({
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('x-access-token', data.token);
+            }
         });
     };
 

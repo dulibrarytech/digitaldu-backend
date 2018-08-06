@@ -67,6 +67,8 @@ var searchModule = (function () {
 
         var q = getParameterByName('q');
 
+        userModule.setHeaderUserToken();
+
         $.ajax(api + '/api/search?q=' + q)
             .done(function(data) {
                 renderSearchResults(data);
@@ -77,6 +79,7 @@ var searchModule = (function () {
     };
 
     obj.init = function () {
+        // userModule.setHeaderUserToken();
         userModule.renderUserName();
     };
 

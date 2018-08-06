@@ -7,7 +7,7 @@ exports.create = function (username) {
 
     var tokenData = {
         sub: username,
-        iss: 'https://fines.library.du.edu'
+        iss: 'https://libspec01-vlp.du.edu'
     };
 
     var token = jwt.sign(tokenData, config.tokenSecret, {
@@ -20,24 +20,20 @@ exports.create = function (username) {
 
 exports.verify = function (req, res, next) {
 
-    var token = req.query.t;
+    var token = req.headers['x-access-token'] || req.query.t;
 
     if (token) {
 
         jwt.verify(token, config.tokenSecret, function (err, decoded) {
 
             if (err) {
-                return res.renderStatic('session', {
-                    url: config.primoUrl
-                });
+                // TODO: redirect to login
             }
 
             req.decoded = decoded;
             next();
         });
     } else {
-        return res.renderStatic('session', {
-            url: config.primoUrl
-        });
+        console.log('Unable to verify token');
     }
 };

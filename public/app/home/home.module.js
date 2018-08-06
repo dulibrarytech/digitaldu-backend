@@ -5,7 +5,7 @@ var homeModule = (function () {
     var obj = {};
     var api = configModule.getApi();
     var renderError = function () {
-        $('#user').html('Error: Unable to retrieve username');
+        $('#message').html('Error: Unable to retrieve username');
     };
 
     var saveToken = function () {
@@ -30,9 +30,12 @@ var homeModule = (function () {
 
         if (!userModule.checkUserData()) {
             saveToken();
+            userModule.setHeaderUserToken();
         }
 
         userModule.renderUserName();
+
+        // TODO: rewrite URL. remove token and uid from url
     };
 
     return obj;

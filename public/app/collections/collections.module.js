@@ -25,14 +25,14 @@ var collectionsModule = (function () {
 
         var html = '';
 
-        for (var i=0;i<data.length;i++) {
+        for (var i = 0; i < data.length; i++) {
 
             var record = JSON.parse(data[i].display_record);
             // TODO: place domain in config
             var tn = 'http://librepo01-vlp.du.edu:8080/fedora/objects/' + data[i].pid + '/datastreams/TN/content';
 
             html += '<div class="row">';
-            html += '<div class="col-md-3"><img style="width: 45%; display: block; padding: 5px;" src="' + tn +'" alt="image" /></div>';
+            html += '<div class="col-md-3"><img style="width: 45%; display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
             html += '<div class="col-md-6" style="padding: 5px">';
 
             if (record.title !== undefined) {
@@ -73,13 +73,15 @@ var collectionsModule = (function () {
 
     obj.getRootCollections = function () {
 
-            $.ajax(api + '/api/admin/v1/objects?pid=codu:root')
-                .done(function(data) {
-                    renderRootCollections(data);
-                })
-                .fail(function() {
-                    renderError();
-                });
+        userModule.setHeaderUserToken();
+
+        $.ajax(api + '/api/admin/v1/objects?pid=codu:root')
+            .done(function (data) {
+                renderRootCollections(data);
+            })
+            .fail(function () {
+                renderError();
+            });
     };
 
     obj.getCollectionName = function (pid) {
@@ -88,8 +90,10 @@ var collectionsModule = (function () {
             var pid = getParameterByName('pid');
         }
 
+        userModule.setHeaderUserToken();
+
         $.ajax(api + '/api/admin/v1/object/?pid=' + pid)
-            .done(function(data) {
+            .done(function (data) {
 
                 var record = JSON.parse(data[0].display_record);
                 var title = 'No title.';
@@ -105,7 +109,7 @@ var collectionsModule = (function () {
                 $('#collection-name').html(title);
                 // $('#collection-description').html(data[0].description);
             })
-            .fail(function() {
+            .fail(function () {
                 renderError();
             });
     };
@@ -129,11 +133,13 @@ var collectionsModule = (function () {
         $('#collection-form').hide();
         $('#message').html(message);
 
+        userModule.setHeaderUserToken();
+
         $.ajax({
             url: api + '/api/admin/v1/object',
             type: 'post',
             data: getCollectionFormData()
-        }).done(function(data) {
+        }).done(function (data) {
 
             var message = '<div class="alert alert-success">Collection created (' + data[0].pid + ')</div>';
             $('#message').html(message);
@@ -147,7 +153,7 @@ var collectionsModule = (function () {
 
             }, 3000);
 
-        }).fail(function() {
+        }).fail(function () {
             renderError();
         });
     };
@@ -164,6 +170,7 @@ var collectionsModule = (function () {
     };
 
     obj.init = function () {
+        // userModule.setHeaderUserToken();
         userModule.renderUserName();
     };
 

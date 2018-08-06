@@ -25,6 +25,8 @@ var objectsModule = (function () {
 
         var pid = getParameterByName('pid');
 
+        userModule.setHeaderUserToken();
+
         // TODO: construct form on server...
         $.ajax(api + '/api/admin/v1/object?pid=' + pid)
             .done(function(data) {
@@ -261,6 +263,8 @@ var objectsModule = (function () {
 
         collectionsModule.getCollectionName(pid);
 
+        userModule.setHeaderUserToken();
+
         $.ajax(api + '/api/admin/v1/objects?pid=' + pid)
             .done(function(data) {
                 renderObjects(data);
@@ -274,6 +278,8 @@ var objectsModule = (function () {
 
         var pid = getParameterByName('pid');
 
+        userModule.setHeaderUserToken();
+
         $.ajax(api + '/api/admin/v1/object?pid=' + pid)
             .done(function(data) {
                 renderObjectDetail(data);
@@ -284,6 +290,7 @@ var objectsModule = (function () {
     };
 
     obj.init = function () {
+        // userModule.setHeaderUserToken();
         userModule.renderUserName();
     };
 

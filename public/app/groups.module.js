@@ -44,6 +44,8 @@ var groupsModule = (function () {
 
     obj.getGroups = function () {
 
+        userModule.setHeaderUserToken();
+
         $.ajax(api + '/api/admin/v1/groups')
             .done(function(data) {
                 renderGroups(data);
@@ -54,6 +56,8 @@ var groupsModule = (function () {
     };
 
     obj.removeUserFromGroup = function (user_id, group_id) {
+
+        userModule.setHeaderUserToken();
 
         $.ajax({
             url: api + '/api/admin/v1/groups/users?user_id=' + user_id + '&group_id=' + group_id,
@@ -108,6 +112,8 @@ var groupsModule = (function () {
 
         var group_id = getParameterByName('id');
 
+        userModule.setHeaderUserToken();
+
         $.ajax(api + '/api/admin/v1/groups?id=' + group_id)
             .done(function(data) {
                 renderGroup(data);
@@ -123,6 +129,8 @@ var groupsModule = (function () {
 
         // set group id link
         $('#group-id').prop('href', '/dashboard/groups/user/add?id=' + group_id);
+
+        userModule.setHeaderUserToken();
 
         $.ajax(api + '/api/admin/v1/groups/users?id=' + group_id)
             .done(function(data) {
