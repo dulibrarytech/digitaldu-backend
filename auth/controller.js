@@ -2,6 +2,7 @@
 
 var _ = require('lodash'),
     validator = require('validator'),
+    config = require('../config/config'),
     Token = require('../libs/tokens'),
     Service = require('../auth/service');
 
@@ -15,6 +16,7 @@ exports.login = function (req, res) {
         if (username.length === 0) {
 
             res.render('login', {
+                host: config.host,
                 message: 'Please enter your DU ID.',
                 username: ''
             });
@@ -33,6 +35,7 @@ exports.login = function (req, res) {
         } else if (!validator.isNumeric(username)) {
 
             res.render('login', {
+                host: config.host,
                 message: 'Please enter a DU ID. i.e. 871******',
                 username: ''
             });
@@ -53,6 +56,7 @@ exports.login = function (req, res) {
             } else if (isAuth.auth === false) {
 
                 res.render('login', {
+                    host: config.host,
                     message: '',
                     username: ''
                 });
@@ -61,6 +65,7 @@ exports.login = function (req, res) {
 
     } else {
         res.render('login', {
+            host: config.host,
             message: '',
             username: ''
         });
