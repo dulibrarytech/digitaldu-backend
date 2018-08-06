@@ -209,7 +209,6 @@ var userModule = (function () {
 
     var addUser = function () {
 
-        // var saveButton = '#add-user-button';
         var message = '<div class="alert alert-info">Saving User...</div>';
         $('#user-form').hide();
         $('#message').html(message);
@@ -252,8 +251,6 @@ var userModule = (function () {
 
         var data = window.sessionStorage.getItem('repo_data');
 
-        console.log(data);
-
         if (data.token === null) {
             // TODO: redirect to login
         }
@@ -263,6 +260,10 @@ var userModule = (function () {
                 xhr.setRequestHeader('x-access-token', data.token);
             }
         });
+    };
+
+    obj.reset = function () {
+        window.sessionStorage.clear();
     };
 
     obj.init = function () {
