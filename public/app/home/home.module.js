@@ -17,7 +17,6 @@ var homeModule = (function () {
         }
 
         // TODO: rewrite URL. remove token and uid from url
-        // TODO: get user information.  uid, group id
     };
 
     return obj;

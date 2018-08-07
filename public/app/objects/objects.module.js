@@ -9,6 +9,7 @@ var objectsModule = (function () {
     };
 
     // TODO: move to lib...
+    /*
     var getParameterByName = function (name, url) {
         if (!url) url = window.location.href;
         name = name.replace(/[\[\]]/g, "\\$&");
@@ -18,25 +19,22 @@ var objectsModule = (function () {
         if (!results[2]) return '';
         return decodeURIComponent(results[2].replace(/\+/g, " "));
     };
+    */
 
     var api = configModule.getApi();
 
     obj.editObject = function () {
 
-        var pid = getParameterByName('pid');
+        var pid = helperModule.getParameterByName('pid');
 
         userModule.setHeaderUserToken();
 
-        // TODO: construct form on server...
         $.ajax(api + '/api/admin/v1/object?pid=' + pid)
             .done(function(data) {
-                // renderRootCollections(data);
-                console.log(data);
+
                 var modsXml = $.parseXML(data[0].mods);
-                console.log(modsXml);
                 var xml = $(modsXml);
-                console.log(xml.find('mods > titleInfo > title'));
-                // renderObjectEditForm();
+                renderObjectEditForm(xml);
             })
             .fail(function() {
                 renderError();
@@ -44,9 +42,37 @@ var objectsModule = (function () {
 
     };
 
+    var renderObjectEditForm = function (xml) {
+
+        console.log(xml);
+
+        //TODO: Implement MODS spec
+        var modsForm = '';
+
+        /* mods > titleInfo > title */
+        var title = xml.find('title');
+        /* mods > abstract */
+        var abstract = xml.find('abstract');
+
+        if (title.text().length !== 0) {
+            modsForm += '<div class="form-group">';
+            modsForm += '<label for="mods_title">Mods > TitleInfo > Title</label>';
+            modsForm += '<input id="mods_title" class="form-control" name="mods_title" type="text" value="' + title.text() + '">';
+            modsForm += '</div>';
+        }
+
+        if (abstract.text().length !== 0) {
+            modsForm += '<label for="mods_abstract">Mods > Abstract</label>';
+            modsForm += '<textarea id="mods_abstract" class="form-control" name="mods_abstract" rows="7">' + abstract.text() + '</textarea>';
+        }
+
+
+        $('#object-edit-form').html(modsForm);
+    };
+
     var renderObjects = function (data) {
 
-        var is_member_of_collection = getParameterByName('pid'),
+        var is_member_of_collection = helperModule.getParameterByName('pid'),
             html = '';
 
         $('#current-collection').prop('href', '/dashboard/collections/add?is_member_of_collection=' + is_member_of_collection);
@@ -259,7 +285,7 @@ var objectsModule = (function () {
 
     obj.getObjects = function () {
 
-        var pid = getParameterByName('pid'); // TODO: sanitize
+        var pid = helperModule.getParameterByName('pid'); // TODO: sanitize
 
         collectionsModule.getCollectionName(pid);
 
@@ -276,7 +302,7 @@ var objectsModule = (function () {
 
     obj.getObjectDetail = function () {
 
-        var pid = getParameterByName('pid');
+        var pid = helperModule.getParameterByName('pid');
 
         userModule.setHeaderUserToken();
 

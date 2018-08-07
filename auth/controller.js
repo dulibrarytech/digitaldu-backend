@@ -50,7 +50,6 @@ exports.login = function (req, res) {
 
                 var token = Token.create(username);
                 token = encodeURIComponent(token);
-                // var encodedID = new Buffer(username).toString('base64');
                 var uid = username.trim();
 
                 /* check if user has access to repo */
