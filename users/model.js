@@ -149,6 +149,66 @@ var get_user = function (req, callback) {
         });
 };
 
+// checks whether user is allowed to access repo
+exports.check_auth_user = function (username, callback) {
+
+    knex('tbl_users')
+        // .count('du_id as count')
+        .select('id')
+        .where({
+            du_id: username,
+            status: 1
+        })
+        .then(function (data) {
+
+            if (data.length === 1) {
+                callback({
+                    auth: true,
+                    data: data[0].id
+                });
+            } else {
+                callback({
+                    auth: false,
+                    data: []
+                });
+            }
+        })
+        .catch(function (error) {
+            // TODO: add error callback
+            console.log(error);
+        });
+};
+
+/* gets user information used when requesting repo data and objects */
+exports.get_auth_user_data = function (username, callback) {
+
+    // TODO: get group_id(s)
+    knex('tbl_users')
+        .select('id', 'du_id', 'email', 'first_name', 'last_name')
+        .where({
+            du_id: username,
+            status: 1
+        })
+        .then(function (data) {
+
+            console.log(data);
+
+            if (data.length === 1) {
+                callback({
+                    data: data
+                });
+            } else {
+                callback({
+                    data: []
+                });
+            }
+        })
+        .catch(function (error) {
+            // TODO: add error callback
+            console.log(error);
+        });
+};
+
 exports.update_user = function (req, callback) {
     // TODO:...
 };

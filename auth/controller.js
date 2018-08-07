@@ -4,7 +4,8 @@ var _ = require('lodash'),
     validator = require('validator'),
     config = require('../config/config'),
     Token = require('../libs/tokens'),
-    Service = require('../auth/service');
+    Service = require('../auth/service'),
+    User = require('../users/model');
 
 exports.login = function (req, res) {
 
@@ -51,7 +52,16 @@ exports.login = function (req, res) {
                 token = encodeURIComponent(token);
                 // var encodedID = new Buffer(username).toString('base64');
                 var uid = username.trim();
-                res.redirect('/dashboard/home?t=' + token + '&uid=' + uid);
+
+                /* check if user has access to repo */
+                User.check_auth_user(username, function (result) {
+
+                    if (result.auth === true) {
+                        res.redirect('/dashboard/home?t=' + token + '&uid=' + result.data);
+                    } else {
+                        res.redirect('/login?error=true');
+                    }
+                });
 
             } else if (isAuth.auth === false) {
 

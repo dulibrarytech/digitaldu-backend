@@ -24,6 +24,7 @@ exports.authenticate = function (username, password, callback) {
             }
 
             var responseObj = JSON.parse(response);
+            console.log(responseObj);
             callback(responseObj);
         });
 };

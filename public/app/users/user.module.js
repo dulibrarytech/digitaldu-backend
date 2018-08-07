@@ -191,7 +191,7 @@ var userModule = (function () {
     };
 
     obj.checkUserData = function () {
-        var data = window.sessionStorage.getItem('repo_data');
+        var data = window.sessionStorage.getItem('repo_user');
 
         if (data !== null) {
             return true;
@@ -199,8 +199,8 @@ var userModule = (function () {
     };
 
     obj.renderUserName = function () {
-        var data = JSON.parse(window.sessionStorage.getItem('repo_data'));
-        $('#username').html(data.uid);
+        var data = JSON.parse(window.sessionStorage.getItem('repo_user'));
+        $('#username').html(data.name);
     };
 
     var getUserFormData = function () {
@@ -249,7 +249,7 @@ var userModule = (function () {
 
     obj.setHeaderUserToken = function () {
 
-        var data = window.sessionStorage.getItem('repo_data');
+        var data = window.sessionStorage.getItem('repo_token');
 
         if (data.token === null) {
             // TODO: redirect to login
@@ -262,6 +262,60 @@ var userModule = (function () {
         });
     };
 
+    // TODO:...
+    obj.getAuthUserData = function () {
+
+        userModule.saveToken();
+        // TODO: sanitize
+        var uid = helperModule.getParameterByName('uid');
+
+        if (uid !== null) {
+
+            userModule.setHeaderUserToken();
+
+            $.ajax(api + '/api/admin/v1/users?id=' + uid)
+                .done(function (data) {
+
+                    userModule.getUserGroups(uid, function (groups) {
+
+                        data[0].groups = groups;
+                        userModule.saveUserAuthData(data);
+                        userModule.renderUserName();
+                    });
+                })
+                .fail(function () {
+                    renderError();
+                });
+        } else {
+            userModule.renderUserName();
+        }
+    };
+
+    obj.saveUserAuthData = function (data) {
+
+        var userObj = {
+            uid: data[0].id,
+            name: data[0].first_name + ' ' + data[0].last_name,
+            groups: data[0].groups
+        };
+
+        window.sessionStorage.setItem('repo_user', JSON.stringify(userObj));
+    };
+
+    obj.saveToken = function () {
+
+        var token = helperModule.getParameterByName('t');
+
+        if (token !== null) {
+            var data = {
+                token: token
+            };
+
+            window.sessionStorage.setItem('repo_token', JSON.stringify(data));
+        }
+    };
+
+    /* used when user logs out */
     obj.reset = function () {
         window.sessionStorage.clear();
     };
