@@ -32,9 +32,9 @@ var objectsModule = (function () {
         $.ajax(api + '/api/admin/v1/object?pid=' + pid)
             .done(function(data) {
 
-                var modsXml = $.parseXML(data[0].mods);
-                var xml = $(modsXml);
-                renderObjectEditForm(xml);
+                // var modsXml = $.parseXML(data[0].mods);
+                // var xml = $(modsXml);
+                renderObjectEditForm(data);
             })
             .fail(function() {
                 renderError();
@@ -42,22 +42,48 @@ var objectsModule = (function () {
 
     };
 
-    var renderObjectEditForm = function (xml) {
+    var renderObjectEditForm = function (data) {
 
-        console.log(xml);
+        // console.log(xml);
+        $('#object-type').html(data[0].object_type);
+        var modsXml = $.parseXML(data[0].mods);
+        var xml = $(modsXml);
 
         //TODO: Implement MODS spec
         var modsForm = '';
 
-        /* mods > titleInfo > title */
-        var title = xml.find('title');
+        /* titleInfo */
+        var titleInfo = xml.find('titleInfo'),
+            title = xml.find('title'),
+            subTitle = xml.find('subTitle'),
+            partNumber = xml.find('partNumber'),
+            partName = xml.find('partName'),
+            nonSort = xml.find('nonSort');
+
+        /* name */
+        var name = xml.find('name');
+
+        console.log(name.attr('type'));
+
+
+
         /* mods > abstract */
         var abstract = xml.find('abstract');
 
         if (title.text().length !== 0) {
+
+            // TODO: get attributes
+            var titleLangAttr = title.attr('lang');
+
             modsForm += '<div class="form-group">';
             modsForm += '<label for="mods_title">Mods > TitleInfo > Title</label>';
             modsForm += '<input id="mods_title" class="form-control" name="mods_title" type="text" value="' + title.text() + '">';
+            modsForm += '</div>';
+            // TODO: render attributes
+            modsForm += '<div class="form-group">';
+            modsForm += '<select class="form-control">';
+            modsForm += '<option></option>';
+            modsForm += '</select>';
             modsForm += '</div>';
         }
 
