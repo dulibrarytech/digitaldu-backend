@@ -44,15 +44,15 @@ var objectsModule = (function () {
 
     var renderObjectEditForm = function (data) {
 
-        // console.log(xml);
-        $('#object-type').html(data[0].object_type);
+        $('#object-type').html('Edit ' + data[0].object_type);
         var modsXml = $.parseXML(data[0].mods);
         var xml = $(modsXml);
 
         //TODO: Implement MODS spec
         var modsForm = '';
 
-        /* titleInfo */
+        //==================TITLEINFO============================//
+
         var titleInfo = xml.find('titleInfo'),
             title = xml.find('title'),
             subTitle = xml.find('subTitle'),
@@ -60,36 +60,189 @@ var objectsModule = (function () {
             partName = xml.find('partName'),
             nonSort = xml.find('nonSort');
 
+        if (title.text().length !== 0) {
+
+            modsForm += '<fieldset>';
+            modsForm += '<legend>TitleInfo</legend>';
+
+            /* titleInfo attributes */
+            var titleInfoIdAttr = titleInfo.attr('ID'),
+                titleInfoXlinkAttr = titleInfo.attr('xlink'),
+                titleInfoXmlLangAttr = titleInfo.attr('xml:lang'),
+                titleInfoScriptAttr = titleInfo.attr('script'),
+                titleInfoTransliteration = titleInfo.attr('transliteration'),
+                titleInfoLangAttr = title.attr('lang'),
+                titleInfoTypeAttr = titleInfo.attr('type'),
+                titleInfoOtherTypeAttr = titleInfo.attr('otherType'),
+                titleInfoAuthorityAttr = titleInfo.attr('authority'),
+                titleInfoDisplayLabelAttr = titleInfo.attr('displayLabel'),
+                titleInfoSuppliedAttr = titleInfo.attr('supplied'),
+                titleInfoUsageAttr = titleInfo.attr('usage'),
+                titleInfoAltRepGroupAttr = titleInfo.attr('altRepGroup');
+
+            if (titleInfoIdAttr !== undefined) {
+
+                modsForm += '<div class="form-group">';
+                modsForm += '<label for="mods_titleInfo_id_attr">Mods > TitleInfo: (ID) attribute</label>';
+                modsForm += '<input id="mods_titleInfo_id_attr" class="form-control" name="mods_titleInfo_id_attr" type="text" value="' + titleInfoIdAttr + '">';
+                modsForm += '</div>';
+            }
+
+            if (titleInfoXlinkAttr !== undefined) {
+
+                modsForm += '<div class="form-group">';
+                modsForm += '<label for="mods_titleInfo_xlink_attr">Mods > TitleInfo: (XLINK) attribute</label>';
+                modsForm += '<input id="mods_titleInfo_xlink_attr" class="form-control" name="mods_titleInfo_xlink_attr" type="text" value="' + titleInfoXlinkAttr + '">';
+                modsForm += '</div>';
+            }
+
+            if (titleInfoXmlLangAttr !== undefined) {
+
+                modsForm += '<div class="form-group">';
+                modsForm += '<label for="mods_titleInfo_xmllang_attr">Mods > TitleInfo: (XML:LANG) attribute</label>';
+                modsForm += '<input id="mods_titleInfo_xmllang_attr" class="form-control" name="mods_titleInfo_xmllang_attr" type="text" value="' + titleInfoXmlLangAttr + '">';
+                modsForm += '</div>';
+            }
+
+            if (titleInfoScriptAttr !== undefined) {
+
+                modsForm += '<div class="form-group">';
+                modsForm += '<label for="mods_titleInfo_script_attr">Mods > TitleInfo: (SCRIPT) attribute</label>';
+                modsForm += '<input id="mods_titleInfo_script_attr" class="form-control" name="mods_titleInfo_script_attr" type="text" value="' + titleInfoScriptAttr + '">';
+                modsForm += '</div>';
+            }
+
+            if (titleInfoTransliteration !== undefined) {
+
+                modsForm += '<div class="form-group">';
+                modsForm += '<label for="mods_titleInfo_transliteration_attr">Mods > TitleInfo: (TRANSLITERATION) attribute</label>';
+                modsForm += '<input id="mods_titleInfo_transliteration_attr" class="form-control" name="mods_titleInfo_transliteration_attr" type="text" value="' + titleInfoTransliteration + '">';
+                modsForm += '</div>';
+            }
+
+            if (titleInfoLangAttr !== undefined) {
+
+                modsForm += '<div class="form-group">';
+                modsForm += '<label for="mods_titleInfo_lang_attr">Mods > TitleInfo: (LANG) attribute</label>';
+                modsForm += '<input id="mods_titleInfo_lang_attr" class="form-control" name="mods_titleInfo_lang_attr" type="text" value="' + titleInfoLangAttr + '">';
+                modsForm += '</div>';
+            }
+
+            if (titleInfoTypeAttr !== undefined) {
+
+                var typeAttr = ['none',
+                    'enumerated: abbreviated',
+                    'translated',
+                    'alternative',
+                    'uniform'];
+
+                // render form fragments
+                modsForm += '<div class="form-group">';
+                modsForm += '<label for="mods_title_info_attr">Mods > TitleInfo: (TYPE) attribute</label>';
+                modsForm += '<select id="mods_title_info_attr" class="form-control">';
+
+                // render type attribute values
+                for (var i=0;i<typeAttr.length;i++) {
+
+                    if (typeAttr[i] === titleInfoTypeAttr) {
+                        modsForm += '<option selected>' + titleInfoTypeAttr + '</option>';
+                    } else {
+                        modsForm += '<option>' + typeAttr[i] + '</option>';
+                    }
+                }
+
+                modsForm += '</select>';
+                modsForm += '</div>';
+            }
+
+            if (titleInfoOtherTypeAttr !== undefined) {
+
+                modsForm += '<div class="form-group">';
+                modsForm += '<label for="mods_titleInfo_othertype_attr">Mods > TitleInfo: (OTHERTYPE) attribute</label>';
+                modsForm += '<input id="mods_titleInfo_othertype_attr" class="form-control" name="mods_titleInfo_othertype_attr" type="text" value="' + titleInfoOtherTypeAttr + '">';
+                modsForm += '</div>';
+
+            }
+
+            if (titleInfoAuthorityAttr !== undefined) {
+
+                modsForm += '<div class="form-group">';
+                modsForm += '<label for="mods_titleInfo_authority_attr">Mods > TitleInfo: (AUTHORITY) attribute</label>';
+                modsForm += '<input id="mods_titleInfo_authority_attr" class="form-control" name="mods_titleInfo_othertype_attr" type="text" value="' + titleInfoAuthorityAttr + '">';
+                modsForm += '</div>';
+
+            }
+
+            if (titleInfoDisplayLabelAttr !== undefined) {
+
+                modsForm += '<div class="form-group">';
+                modsForm += '<label for="mods_titleInfo_displaylabel_attr">Mods > TitleInfo: (DISPLAYLABEL) attribute</label>';
+                modsForm += '<input id="mods_titleInfo_displaylabel_attr" class="form-control" name="mods_titleInfo_displaylabel_attr" type="text" value="' + titleInfoDisplayLabelAttr + '">';
+                modsForm += '</div>';
+
+            }
+
+            if (titleInfoSuppliedAttr !== undefined) {
+
+                modsForm += '<div class="form-group">';
+                modsForm += '<label for="mods_title_info_supplied_attr">Mods > TitleInfo: (SUPPLIED) attribute</label>';
+                modsForm += '<select id="mods_title_info_supplied_attr" class="form-control">';
+                modsForm += '<option>' + titleInfoSuppliedAttr + '</option>'; // yes
+                modsForm += '</select>';
+                modsForm += '</div>';
+
+            }
+
+            if (titleInfoUsageAttr !== undefined) {
+
+                modsForm += '<div class="form-group">';
+                modsForm += '<label for="mods_title_info_usage_attr">Mods > TitleInfo: (USAGE) attribute</label>';
+                modsForm += '<select id="mods_title_info_usage_attr" class="form-control">';
+                modsForm += '<option>' + titleInfoUsageAttr + '</option>'; // primary
+                modsForm += '</select>';
+                modsForm += '</div>';
+
+            }
+
+            if (titleInfoAltRepGroupAttr !== undefined) {
+
+                modsForm += '<div class="form-group">';
+                modsForm += '<label for="mods_titleInfo_altrepgroup_attr">Mods > TitleInfo: (ALTREPGROUP) attribute</label>';
+                modsForm += '<input id="mods_titleInfo_altrepgroup_attr" class="form-control" name="mods_titleInfo_altrepgroup_attr" type="text" value="' + titleInfoAltRepGroupAttr + '">';
+                modsForm += '</div>';
+
+            }
+
+
+            modsForm += '<div class="form-group">';
+            modsForm += '<label for="mods_title">Mods > TitleInfo > TITLE</label>';
+            modsForm += '<input id="mods_title" class="form-control" name="mods_title" type="text" value="' + title.text() + '">';
+            modsForm += '</div>';
+
+            modsForm += '</fieldset>';
+        }
+
+
+
+        //==============================================//
+        modsForm += '<br><br><br><br>';
+
         /* name */
         var name = xml.find('name');
 
-        console.log(name.attr('type'));
-
-
+        // console.log(name.attr('type'));
 
         /* mods > abstract */
         var abstract = xml.find('abstract');
 
-        if (title.text().length !== 0) {
-
-            // TODO: get attributes
-            var titleLangAttr = title.attr('lang');
-
-            modsForm += '<div class="form-group">';
-            modsForm += '<label for="mods_title">Mods > TitleInfo > Title</label>';
-            modsForm += '<input id="mods_title" class="form-control" name="mods_title" type="text" value="' + title.text() + '">';
-            modsForm += '</div>';
-            // TODO: render attributes
-            modsForm += '<div class="form-group">';
-            modsForm += '<select class="form-control">';
-            modsForm += '<option></option>';
-            modsForm += '</select>';
-            modsForm += '</div>';
-        }
-
         if (abstract.text().length !== 0) {
+            modsForm += '<fieldset>';
+            modsForm += '<legend>Abstract</legend>';
+
             modsForm += '<label for="mods_abstract">Mods > Abstract</label>';
-            modsForm += '<textarea id="mods_abstract" class="form-control" name="mods_abstract" rows="7">' + abstract.text() + '</textarea>';
+            modsForm += '<textarea id="mods_abstract" class="form-control col-xs-6" name="mods_abstract" rows="7">' + abstract.text() + '</textarea>';
+
+            modsForm += '</fieldset>';
         }
 
 
