@@ -4,6 +4,7 @@ var fs = require('fs'),
     path = require('path'),
     config = require('../config/config'),
     modslib = require('../libs/mods/mods_init'),
+    archivematica = require('../libs/archivematica'),
     uuid = require('uuid'),
     crypto = require('crypto'),
     request = require('request'),
@@ -216,6 +217,44 @@ exports.import_admin_objects = function (req, callback) {
     });
 };
 
+/* creates folder on archivematica sftp server */
+exports.create_folder = function (req, callback) {
+
+    var folder = req.body.folder;
+
+    archivematica.create_folder(folder, function (results) {
+
+        // TODO: confirm that folder exists
+
+        callback({
+            status: 200,
+            content_type: {'Content-Type': 'application/json'},
+            message: 'folder created'
+        });
+    })
+};
+
+/* list files under a folder on the archivematica sftp server */
+exports.list = function (req, callback) {
+
+    var folder = req.body.folder;
+
+    archivematica.list(folder, function (results) {
+
+        callback({
+            status: 200,
+            content_type: {'Content-Type': 'application/json'},
+            message: 'list',
+            data: {list: results}
+        });
+    });
+};
+
+exports.upload = function (req, callback) {
+ // TODO
+};
+
+// import helpers
 var process_queue = function (import_id) {
 
     console.log('processing queue...');
@@ -495,7 +534,6 @@ var create_file_hash = function (obj) {
     });
 };
 
-// TODO: will this occur in Archivmatica?
 var create_handle = function (obj) {
 
     console.log('creating handle...');

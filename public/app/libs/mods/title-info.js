@@ -267,6 +267,7 @@ var getModsTitleInfo = function (xml) {
         modsForm += '</div>';
 
         if (title.length !== 0) {
+            modsForm += '<br>';
             modsForm += '<div class="form-group">';
             modsForm += '<label for="mods_title">* Mods > TitleInfo > TITLE</label>';
             modsForm += '<input id="mods_title" class="form-control" name="mods_title" type="text" value="' + title.text() + '">';

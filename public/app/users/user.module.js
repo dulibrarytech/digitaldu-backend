@@ -21,7 +21,7 @@ var userModule = (function () {
     obj.addUserToGroup = function (id) {
 
         var user_id = id,
-            group_id = getParameterByName('id'),
+            group_id = helperModule.getParameterByName('id'),
             message = '<div class="alert alert-info">Adding user to group...</div>';
 
         $('#user-form').hide();
@@ -63,7 +63,7 @@ var userModule = (function () {
                 html += '<td>' + data[i].first_name + '</td>';
                 html += '<td>' + data[i].last_name + '</td>';
                 html += '<td>' + data[i].email + '</td>';
-                html += '<td><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Add user to group"><i class="fa fa-plus"></i></a></td>';
+                html += '<td><a class="btn btn-xs btn-success" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Add user to group"><i class="fa fa-plus"></i></a></td>';
                 html += '</tr>';
             }
         }
@@ -245,6 +245,15 @@ var userModule = (function () {
                 }
             });
         });
+    };
+
+    obj.getHeaderUserPermissions = function () {
+
+        var data = window.sessionStorage.getItem('repo_user'),
+            user = JSON.parse(data);
+            var userPermissions = user.groups;
+
+        return userPermissions;
     };
 
     obj.setHeaderUserToken = function () {

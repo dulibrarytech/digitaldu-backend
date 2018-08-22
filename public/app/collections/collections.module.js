@@ -29,6 +29,7 @@ var collectionsModule = (function () {
 
             var record = JSON.parse(data[i].display_record);
             // TODO: place domain in config
+            // TODO: route to local route
             var tn = 'http://librepo01-vlp.du.edu:8080/fedora/objects/' + data[i].pid + '/datastreams/TN/content';
 
             html += '<div class="row">';
@@ -74,8 +75,33 @@ var collectionsModule = (function () {
     obj.getRootCollections = function () {
 
         userModule.setHeaderUserToken();
+        var userPermissions = userModule.getHeaderUserPermissions(),
+            permissions = [];
 
-        $.ajax(api + '/api/admin/v1/objects?pid=codu:root')
+        // TODO: move to lib
+        if (userPermissions.length > 1) {
+
+            for (var i=0;i<userPermissions.length;i++) {
+
+                var accessObj = {};
+                accessObj.group = userPermissions[i].group_name;
+                accessObj.permissions = userPermissions[i].permissions;
+                accessObj.resources = userPermissions[i].resources;
+                permissions.push(accessObj);
+            }
+
+            console.log(permissions);
+
+        } else {
+
+
+        }
+
+        $.ajax({
+            url: api + '/api/admin/v1/repo/objects?pid=codu:root',
+            type: 'GET',
+            headers: {'x-access-permissions': JSON.stringify(permissions)}
+        })
             .done(function (data) {
                 renderRootCollections(data);
             })
@@ -107,7 +133,6 @@ var collectionsModule = (function () {
                 }
 
                 $('#collection-name').html(title);
-                // $('#collection-description').html(data[0].description);
             })
             .fail(function () {
                 renderError();
@@ -126,9 +151,7 @@ var collectionsModule = (function () {
 
     var addCollection = function () {
 
-        var saveButton = '#add-collection-button';
-        // $(saveButton).prop('value', 'Saving...');
-        // $(saveButton).prop('disabled', true);
+        // var saveButton = '#add-collection-button';
         var message = '<div class="alert alert-info">Saving Collection...</div>';
         $('#collection-form').hide();
         $('#message').html(message);
@@ -144,8 +167,6 @@ var collectionsModule = (function () {
             var message = '<div class="alert alert-success">Collection created (' + data[0].pid + ')</div>';
             $('#message').html(message);
             $('#collection-form').show();
-            // $(saveButton).prop('value', 'Save');
-            // $(saveButton).prop('disabled', false);
             $('#collection-form')[0].reset();
 
             setTimeout(function () {
@@ -170,7 +191,6 @@ var collectionsModule = (function () {
     };
 
     obj.init = function () {
-        // userModule.setHeaderUserToken();
         userModule.renderUserName();
     };
 

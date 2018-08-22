@@ -16,10 +16,10 @@ module.exports = function (app) {
         .get(Repo.get_object);
 
     //--- Used by repo admin dashboard ---//
-    // TODO: add "repo" to route path
-    app.route('/api/admin/v1/objects')
+    app.route('/api/admin/v1/repo/objects')
         .get(token.verify, Repo.get_admin_objects);
 
+    // TODO: add "repo" to route path
     app.route('/api/admin/v1/object')
         .get(token.verify, Repo.get_admin_object)
         .post(token.verify, Repo.save_admin_collection_object);
@@ -30,9 +30,4 @@ module.exports = function (app) {
     // temp
     app.route('/objects/:pid/datastreams/:ds/content')
         .get(Repo.get_repo_object);
-
-    /*
-    app.route('/api/search')
-        .get(Repo.do_search);
-    */
 };

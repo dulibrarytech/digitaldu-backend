@@ -37,6 +37,7 @@ module.exports = function () {
     require('../dashboard/routes.js')(app);
     require('../stats/routes.js')(app);
     require('../import/routes.js')(app);
+    require('../archivematica/routes.js')(app);
 
     return server;
 };
