@@ -126,15 +126,19 @@ exports.get_object = function (req, callback) {
 
 exports.get_admin_objects = function (req, callback) {
 
-    var pid = req.query.pid,
-        user_permissions = JSON.parse(req.headers['x-access-permissions']); // TODO: sanitize
+    // TODO: implement permission check
 
-    var resources = permissions.check_access(user_permissions);
+    var pid = req.query.pid;
+        // user_permissions = JSON.parse(req.headers['x-access-permissions']); // TODO: sanitize
+
+    // var resources = permissions.check_access(user_permissions);
+    /*
     var is_admin = resources.indexOf('*');
 
     if (is_admin !== 1) {
 
     }
+    */
 
     knex('tbl_objects')
         .select('is_member_of_collection', 'pid', 'object_type', 'display_record', 'mime_type', 'is_compound', 'is_published', 'created')

@@ -8,17 +8,6 @@ var collectionsModule = (function () {
         $('#collections').html('Error: Unable to retrieve collections');
     };
 
-    // TODO: move to lib...
-    var getParameterByName = function (name, url) {
-        if (!url) url = window.location.href;
-        name = name.replace(/[\[\]]/g, "\\$&");
-        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-            results = regex.exec(url);
-        if (!results) return null;
-        if (!results[2]) return '';
-        return decodeURIComponent(results[2].replace(/\+/g, " "));
-    };
-
     var api = configModule.getApi();
 
     var renderRootCollections = function (data) {
@@ -113,12 +102,12 @@ var collectionsModule = (function () {
     obj.getCollectionName = function (pid) {
 
         if (pid === undefined) {
-            var pid = getParameterByName('pid');
+            var pid = helperModule.getParameterByName('pid');
         }
 
         userModule.setHeaderUserToken();
 
-        $.ajax(api + '/api/admin/v1/object/?pid=' + pid)
+        $.ajax(api + '/api/admin/v1/repo/object/?pid=' + pid)
             .done(function (data) {
 
                 var record = JSON.parse(data[0].display_record);
@@ -141,7 +130,7 @@ var collectionsModule = (function () {
 
     // sets collection pid in collection form (hidden field)
     obj.getIsMemberOfCollection = function () {
-        var is_member_of_collection = getParameterByName('is_member_of_collection');
+        var is_member_of_collection = helperModule.getParameterByName('is_member_of_collection');
         $('#is-member-of-collection').val(is_member_of_collection);
     };
 
@@ -159,7 +148,7 @@ var collectionsModule = (function () {
         userModule.setHeaderUserToken();
 
         $.ajax({
-            url: api + '/api/admin/v1/object',
+            url: api + '/api/admin/v1/repo/object',
             type: 'post',
             data: getCollectionFormData()
         }).done(function (data) {

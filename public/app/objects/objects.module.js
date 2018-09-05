@@ -8,19 +8,6 @@ var objectsModule = (function () {
         $('#objects').html('Error: Unable to retrieve objects');
     };
 
-    // TODO: move to lib...
-    /*
-     var getParameterByName = function (name, url) {
-     if (!url) url = window.location.href;
-     name = name.replace(/[\[\]]/g, "\\$&");
-     var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-     results = regex.exec(url);
-     if (!results) return null;
-     if (!results[2]) return '';
-     return decodeURIComponent(results[2].replace(/\+/g, " "));
-     };
-     */
-
     var api = configModule.getApi();
 
     obj.editObject = function () {
@@ -116,7 +103,7 @@ var objectsModule = (function () {
 
             // TODO: display more metadata
             if (data[i].object_type === 'object') {
-                console.log(record);
+                // console.log(record);
                 // TODO: check if value is defined and if is_array before rendering
                 html += '<ul>';
                 html += '<li><small><strong>pid:</strong>&nbsp;' + data[i].pid + '</small></li>';
@@ -282,15 +269,6 @@ var objectsModule = (function () {
         // TODO: implement pagination
         $('#object-detail').html(html);
         $('a').tooltip();
-
-        /*
-         Dev note: object viewer / player here <br>
-         <!--
-         <audio autoplay="autoplay" controls="controls">
-         <source src="music.mp3" />
-         </audio>
-         -->
-         */
     };
 
     obj.getObjects = function () {
@@ -301,7 +279,7 @@ var objectsModule = (function () {
 
         userModule.setHeaderUserToken();
 
-        $.ajax(api + '/api/admin/v1/objects?pid=' + pid)
+        $.ajax(api + '/api/admin/v1/repo/objects?pid=' + pid)
             .done(function (data) {
                 renderObjects(data);
             })
@@ -316,7 +294,7 @@ var objectsModule = (function () {
 
         userModule.setHeaderUserToken();
 
-        $.ajax(api + '/api/admin/v1/object?pid=' + pid)
+        $.ajax(api + '/api/admin/v1/repo/object?pid=' + pid)
             .done(function (data) {
                 renderObjectDetail(data);
             })
@@ -326,7 +304,6 @@ var objectsModule = (function () {
     };
 
     obj.init = function () {
-        // userModule.setHeaderUserToken();
         userModule.renderUserName();
     };
 

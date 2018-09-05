@@ -237,9 +237,9 @@ exports.create_folder = function (req, callback) {
 /* list files under a folder on the archivematica sftp server */
 exports.list = function (req, callback) {
 
-    var folder = req.body.folder;
+    var query = req.query.folder;
 
-    archivematica.list(folder, function (results) {
+    archivematica.list(query, function (results) {
 
         callback({
             status: 200,

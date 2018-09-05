@@ -10,16 +10,6 @@ var groupsModule = (function () {
 
     var api = configModule.getApi();
 
-    var getParameterByName = function (name, url) {
-        if (!url) url = window.location.href;
-        name = name.replace(/[\[\]]/g, "\\$&");
-        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-            results = regex.exec(url);
-        if (!results) return null;
-        if (!results[2]) return '';
-        return decodeURIComponent(results[2].replace(/\+/g, " "));
-    };
-
     var renderGroups = function (data) {
 
         var html = '';
@@ -79,7 +69,7 @@ var groupsModule = (function () {
 
     var renderGroupUsers = function (data) {
 
-        var group_id = getParameterByName('id');
+        var group_id = helperModule.getParameterByName('id');
 
         var html = '';
 
@@ -110,7 +100,7 @@ var groupsModule = (function () {
 
     obj.getGroup = function () {
 
-        var group_id = getParameterByName('id');
+        var group_id = helperModule.getParameterByName('id');
 
         userModule.setHeaderUserToken();
 
@@ -125,7 +115,7 @@ var groupsModule = (function () {
 
     obj.getGroupUsers = function () {
 
-        var group_id = getParameterByName('id');
+        var group_id = helperModule.getParameterByName('id');
 
         // set group id link
         $('#group-id').prop('href', '/dashboard/groups/user/add?id=' + group_id);
@@ -134,7 +124,7 @@ var groupsModule = (function () {
 
         $.ajax(api + '/api/admin/v1/groups/users?id=' + group_id)
             .done(function(data) {
-                console.log(data);
+
                 $('#group').html('Group: ' + data[0].group_name);
                 renderGroupUsers(data);
             })

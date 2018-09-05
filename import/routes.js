@@ -13,7 +13,7 @@ module.exports = function (app) {
         .get(Import.get_import_admin_object_files);
 
     app.route('/api/admin/v1/import/list')
-        .post(Import.list);
+        .get(Import.list);
 
     app.route('/api/admin/v1/import/upload')
         .post(Import.upload);

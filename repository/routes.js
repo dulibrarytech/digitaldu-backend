@@ -20,7 +20,7 @@ module.exports = function (app) {
         .get(token.verify, Repo.get_admin_objects);
 
     // TODO: add "repo" to route path
-    app.route('/api/admin/v1/object')
+    app.route('/api/admin/v1/repo/object')
         .get(token.verify, Repo.get_admin_object)
         .post(token.verify, Repo.save_admin_collection_object);
 
@@ -28,6 +28,8 @@ module.exports = function (app) {
         .post(token.verify, Repo.get_next_pid);
 
     // temp
+    /*
     app.route('/objects/:pid/datastreams/:ds/content')
         .get(Repo.get_repo_object);
+        */
 };
