@@ -28,6 +28,8 @@ var client = new es.Client({
 
 exports.get_import_admin_objects = function (req, callback) {
 
+    console.log('test!!');
+
     var importPath = config.importPath;
 
     // check if object folder exists
@@ -75,6 +77,7 @@ exports.get_import_admin_objects = function (req, callback) {
         message: 'Import objects retrieved',
         data: objects
     });
+
 };
 
 exports.get_import_admin_objects_files = function (req, callback) {
@@ -136,9 +139,9 @@ exports.get_import_admin_objects_files = function (req, callback) {
     });
 };
 
-exports.import_admin_objects = function (req, callback) {
+exports.transfer_admin_objects = function (req, callback) {
 
-    console.log('importing...');
+    console.log('transferring files...');
 
     if (req.body === undefined) {
 
@@ -150,11 +153,20 @@ exports.import_admin_objects = function (req, callback) {
         });
     }
 
-    var collection = req.body.collection,
-        mime_type = req.body.mime_type,
-        importPath = config.importPath + collection + '/',
-        import_id = uuid();
+    var folder = req.body.folder;
 
+    archivematica.start_tranfser(folder, function (results) {
+
+        callback({
+            status: 200,
+            content_type: {'Content-Type': 'application/json'},
+            message: 'transfer started',
+            data: results
+        });
+    });
+
+    /*
+     // import_id = uuid();
     // check if object folder exists
     if (!fs.existsSync(importPath)) {
         callback({
@@ -215,6 +227,8 @@ exports.import_admin_objects = function (req, callback) {
         message: 'Object files saved to import queue',
         data: {import_id: importData[0].import_id}
     });
+
+    */
 };
 
 /* creates folder on archivematica sftp server */

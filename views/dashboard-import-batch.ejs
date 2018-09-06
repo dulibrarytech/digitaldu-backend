@@ -75,9 +75,9 @@
                                 <div class="clearfix"></div>
                             </div>
                             <div class="x_content">
-
-                                <p class="loading"><strong><em>Importing data...</em></strong></p>
-                                <p><a href="/dashboard/import"><i class="fa fa-angle-double-left"></i>&nbsp; Back to main import page</a></p>
+                                <div id="message"></div>
+                                <!--<p class="loading"><strong><em>Importing data...</em></strong></p>-->
+                                <!--<p><a href="/dashboard/import"><i class="fa fa-angle-double-left"></i>&nbsp; Back to main import page</a></p>-->
                                 <table class="table table-striped table-bordered bulk_action">
                                     <thead>
                                     <tr>
@@ -88,7 +88,7 @@
                                     </thead>
                                     <tbody id="import-object-files"></tbody>
                                 </table>
-                                <p><a href="/dashboard/import"><i class="fa fa-angle-double-left"></i>&nbsp; Back to main import page</a></p>
+                                <!--<p><a href="/dashboard/import"><i class="fa fa-angle-double-left"></i>&nbsp; Back to main import page</a></p>-->
                             </div>
                         </div>
                     </div>
@@ -136,7 +136,7 @@
     <script src="../../app/import.module.js"></script>
     <script>
         importModule.init();
-        importModule.importObjects();
+        importModule.transferObjects();
     </script>
 </body>
 </html>

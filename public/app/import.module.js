@@ -22,31 +22,17 @@ var importModule = (function () {
 
                 // render folder or file
                 if (data.list[i].type === 'd') {
-                    html += '<td><a href="/dashboard/import?folder=' + data.list[i].name + '">' + data.list[i].name + '</a></td>';
+                    html += '<td>';
+                    html += '<a class="btn btn-success btn-xs" href="/dashboard/import/batch?folder=' + data.list[i].name + '"><i class="fa fa-upload"></i>&nbsp;&nbsp;Import</a>';
+                    html += '&nbsp;&nbsp;&nbsp;<a href="/dashboard/import?folder=' + data.list[i].name + '"><i class="fa fa-folder"></i>&nbsp;&nbsp;' + data.list[i].name + '</a>';
+                    html += '</td>';
                 } else if (data.list[i].type === '-') {
-                    html += '<td>' + data.list[i].name + '</td>';
+                    html += '<td>';
+                    html += '<a type="button" class="btn btn-default btn-xs" disabled><i class="fa fa-ban"></i>&nbsp;&nbsp;Import</a>';
+                    html += '&nbsp;&nbsp;&nbsp;<i class="fa fa-file"></i>&nbsp;&nbsp;' + data.list[i].name;
+                    html += '</td>'
                 }
 
-                if (data.list[i].type === 'd') {
-                    html += '<td>Folder</td>';
-
-                } else if (data.list[i].type === '-') {
-                    html += '<td>File</td>';
-
-                }
-
-                html += '<td>';
-                html += '<form name="' + data.list[i].name + '" action="/dashboard/import/batch" method="get">';
-                html += '<input name="collection" type="hidden" value="' + data.list[i].name + '">';
-
-                if (data.list[i].type === 'd') {
-                    html += '<button type="submit" class="btn btn-success btn-sm"><i class="fa fa-upload"></i>&nbsp;Import</button>&nbsp;';
-                }
-
-                html += '<div class="col-xs-4">';
-                html += '</div>';
-                html += '</form>';
-                html += '</td>';
                 html += '</tr>';
             }
         }
@@ -91,34 +77,76 @@ var importModule = (function () {
         }, 5000);
     };
 
-    // TODO:...
-    obj.importObjects = function () {
+    obj.getUnapprovedTransfers = function () {
 
-        var collection = helperModule.getParameterByName('collection'),
-            mimeType = helperModule.getParameterByName('mime_type');
+        $.ajax(api + '/api/admin/v1/import/files?object=' + object)
+            .done(function (data) {
+                // console.log(data);
+                renderImportObjectFiles(data);
+            })
+            .fail(function () {
+                renderError();
+            });
+    };
 
-        if (collection === undefined || mimeType === undefined) {
-            // TODO: inject error message into DOM
-            alert('NOPE!');
-            return false;
-        }
+    // TODO: rename function to transferObjects
+    obj.transferObjects = function () {
+
+        var folder = helperModule.getParameterByName('folder');
 
         $.ajax({
-            url: api + '/api/admin/v1/import',
+            url: api + '/api/admin/v1/import',  // TODO: change route name
             type: 'post',
-            data: {collection: collection, mime_type: mimeType}
+            data: {folder: folder}
         }).done(function (data) {
-            console.log(data);
 
-            // TODO: socket.io queue (long-term)
-            // TODO: poll queue (short-term)
+            var json = JSON.parse(data);
+            $('#message').html('<div class="alert alert-success">' + json.message + '</div>');
 
-            checkQueue(data);
+            setTimeout(function () {
+                $('#message').empty();
+            }, 2000);
+
+            importModule.getUnapprovedTransfers();
+
+            // checkQueue(data);
         }).fail(function () {
             renderError();
         });
     };
 
+    var back = function () {
+
+        $('#back').click(function () {
+
+            var foldersArr = JSON.parse(window.sessionStorage.getItem('folders'));
+
+            if (foldersArr !== null) {
+
+                foldersArr.pop();
+                // console.log(foldersArr);
+                // console.log(foldersArr[foldersArr.length-1]);
+                History.pushState({folder: ''}, '', '?folder=' + foldersArr[foldersArr.length-1]);
+
+                // foldersArr.pop();
+
+                // $('#back > a').prop('href', '/dashboard/import?folder=' + foldersArr[foldersArr.length-1]);
+
+                if (foldersArr.length === 0) {
+                    window.sessionStorage.removeItem('folders');
+                } else {
+                    // TODO: save back to sessionStorage
+                    window.sessionStorage.setItem('folders', JSON.stringify(foldersArr));
+                }
+
+                importModule.getImportObjects();
+
+            }
+
+        });
+    };
+
+    /* gets folder / file listings from archivematica sftp server */
     obj.getImportObjects = function () {
 
         $('#message').html('<p><strong>Loading...</strong></p>');
@@ -127,11 +155,20 @@ var importModule = (function () {
             url = api + '/api/admin/v1/import/list?folder=' + null,
             foldersArr = [];
 
+        console.log('getImportObjects: ', folder);
+
         if (folder !== null) {
+
+            // TODO: implement back buttons
+            $('#back').html('<p><a href="#" class="btn btn-default" id="back"><i class="fa fa-arrow-left"></i> Back</a></p>');
+            back();
 
             var folders = window.sessionStorage.getItem('folders');
 
             if (folders !== null) {
+
+                $('#back').html('<p><a href="#" class="btn btn-default"><i class="fa fa-arrow-left"></i> Back</a></p>');
+                back();
 
                 foldersArr = JSON.parse(folders);
 

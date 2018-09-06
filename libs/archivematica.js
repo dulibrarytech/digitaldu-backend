@@ -54,9 +54,35 @@ exports.list = function (folder, callback) {
 };
 
 // 1.)
-exports.start_tranfser = function () {
+exports.start_tranfser = function (folder, callback) {
 
     'use strict';
+
+    var transferSource = config.archivematicaTransferSource,
+        sftpPath = config.sftpRemotePath,
+        location = transferSource + ':' + sftpPath + '/' + folder,
+        buffer = new Buffer(location),
+        encodedLocation = buffer.toString('base64'),
+        apiUrl = config.archivematicaApi + 'transfer/start_transfer/?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
+
+    request.post({
+        url: apiUrl,
+        form: {
+            'name': folder + '_transfer',
+            'type': 'standard',
+            'accession': '',
+            'paths[]': encodedLocation,
+            'rows_ids[]': '[""]'
+        }
+    }, function(error, httpResponse, body){
+
+        if (error) {
+            console.log(error);
+        }
+
+        callback(body);
+    });
+
 
     /*
     URL: /api/transfer/start_transfer/
