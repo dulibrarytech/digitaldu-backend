@@ -53,8 +53,8 @@ exports.get_dashboard_import_files = function (req, res) {
     });
 };
 
-exports.get_dashboard_import_batch = function (req, res) {
-    res.render('dashboard-import-batch', {
+exports.get_dashboard_import_status = function (req, res) {
+    res.render('dashboard-import-status', {
         host: config.host
     });
 };

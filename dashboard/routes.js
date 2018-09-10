@@ -35,9 +35,9 @@ module.exports = function (app) {
     app.route('/dashboard/import/files')
         .get(Dashboard.get_dashboard_import_files);
 
-    /* triggers import queue process */
-    app.route('/dashboard/import/batch')
-        .get(Dashboard.get_dashboard_import_batch);
+    /* renders transfer status page */
+    app.route('/dashboard/import/status')
+        .get(Dashboard.get_dashboard_import_status);
 
     /* users */
     app.route('/dashboard/users')

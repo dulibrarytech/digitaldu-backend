@@ -10,6 +10,9 @@ var importModule = (function () {
 
     var api = configModule.getApi();
 
+    /*
+
+     */
     var renderImportObjects = function (data) {
 
         var html = '';
@@ -22,8 +25,8 @@ var importModule = (function () {
 
                 // render folder or file
                 if (data.list[i].type === 'd') {
-                    html += '<td>';
-                    html += '<a class="btn btn-success btn-xs" href="/dashboard/import/batch?folder=' + data.list[i].name + '"><i class="fa fa-upload"></i>&nbsp;&nbsp;Import</a>';
+                    html += '<td>'; // /dashboard/import/status?folder=' + data.list[i].name + '
+                    html += '<a class="btn btn-success btn-xs" onclick="importModule.transferObjects(\'' + data.list[i].name + '\')" href="#"><i class="fa fa-upload"></i>&nbsp;&nbsp;Import</a>';
                     html += '&nbsp;&nbsp;&nbsp;<a href="/dashboard/import?folder=' + data.list[i].name + '"><i class="fa fa-folder"></i>&nbsp;&nbsp;' + data.list[i].name + '</a>';
                     html += '</td>';
                 } else if (data.list[i].type === '-') {
@@ -41,78 +44,148 @@ var importModule = (function () {
         $('#message').empty();
     };
 
-    var renderImportObjectFiles = function (data) {
+    /*  */
+    obj.transferObjects = function (folder) {
 
-        var html = '';
-
-        for (var i = 0; i < data.length; i++) {
-
-            html += '<tr>';
-
-            if (data[i].xmlFile !== undefined) {
-                html += '<td>' + data[i].xmlFile + '</td>';
-            }
-
-            if (data[i].objectFile !== undefined) {
-                html += '<td>' + data[i].objectFile + '</td>';
-            }
-
-            html += '<td>' + data[i].fileSize + '</td>';
-            html += '<td>' + data[i].mimeType + '</td>';
-            html += '</tr>';
-        }
-
-        $('#import-object-files').html(html);
-        $('.loading').html('');
-    };
-
-    var checkQueue = function (data) {
-        var import_id = data.import_id;
-        var timer = setInterval(function () {
-            console.log('checking...');
-            console.log(import_id);
-
-            // TODO: call function to update DOM
-
-        }, 5000);
-    };
-
-    obj.getUnapprovedTransfers = function () {
-
-        $.ajax(api + '/api/admin/v1/import/files?object=' + object)
-            .done(function (data) {
-                // console.log(data);
-                renderImportObjectFiles(data);
-            })
-            .fail(function () {
-                renderError();
-            });
-    };
-
-    // TODO: rename function to transferObjects
-    obj.transferObjects = function () {
-
-        var folder = helperModule.getParameterByName('folder');
+        $('#message').html('<div class="alert alert-success">Transfer started...</div>');
+        $('#import-table').hide();
 
         $.ajax({
-            url: api + '/api/admin/v1/import',  // TODO: change route name
+            url: api + '/api/admin/v1/import/start_transfer',
             type: 'post',
             data: {folder: folder}
         }).done(function (data) {
 
             var json = JSON.parse(data);
-            $('#message').html('<div class="alert alert-success">' + json.message + '</div>');
+            console.log(json);
+            console.log(json.uuid);
 
-            setTimeout(function () {
-                $('#message').empty();
-            }, 2000);
+            if (json.error !== undefined && json.error === true) {
+                $('#message').html('<div class="alert alert-danger">' + json.message + '</div>');
+                return false;
+            }
 
-            importModule.getUnapprovedTransfers();
+            // transfer approval message
+            $('#message').html('<div class="alert alert-success">' + json.message + '...</div>');
 
-            // checkQueue(data);
+            // check transfer status
+            importModule.getTransferStatus(json.uuid);
+
         }).fail(function () {
             renderError();
         });
+    };
+
+    obj.getTransferStatus = function (uuid) {
+
+        var transferTimer = setInterval(function () {
+
+            $.ajax({
+                url: api + '/api/admin/v1/import/transfer_status?uuid=' + uuid,
+                type: 'get'
+            }).done(function (data) {
+
+                var json = JSON.parse(data);
+                // console.log(json);
+
+                if (json.error !== undefined && json.error === true) {
+                    $('#message').html('<div class="alert alert-danger">' + json.message + '</div>');
+                    $('#import-table').show();
+                    return false;
+                }
+
+                if (json.status === 'PROCESSING') {
+                    $('#message').html('<div class="alert alert-success">Processing Transfer...  --' + json.microservice + '</div>');
+                    return false;
+                }
+
+                if (json.status === 'COMPLETE') {
+                    clearInterval(transferTimer);
+                    $('#message').html('<div class="alert alert-success">Transfer Complete.</div>');
+                    console.log(json);
+                    // check ingest status
+                    importModule.getIngestStatus(json.sip_uuid);
+                    return false;
+                }
+
+                if (json.status === 'FAILED') {
+                    clearInterval(transferTimer);
+                    $('#message').html('<div class="alert alert-success">Transfer Failed.</div>');
+                    $('#import-table').show();
+                    return false;
+                }
+
+                if (json.status === 'REJECTED') {
+                    clearInterval(transferTimer);
+                    $('#message').html('<div class="alert alert-success">Transfer Rejected.</div>');
+                    $('#import-table').show();
+                    return false;
+                }
+
+            }).fail(function () {
+                renderError();
+            });
+
+        }, 1000);
+    };
+
+    obj.getIngestStatus = function (uuid) {
+
+        var ingestTimer = setInterval(function () {
+
+            $.ajax({
+                url: api + '/api/admin/v1/import/ingest_status?uuid=' + uuid,
+                type: 'get'
+            }).done(function (data) {
+
+                var json = JSON.parse(data);
+
+                if (json.error !== undefined && json.error === true) {
+                    $('#message').html('<div class="alert alert-danger">' + json.message + '</div>');
+                    $('#import-table').show();
+                    return false;
+                }
+
+                if (json.status === 'PROCESSING') {
+                    $('#message').html('<div class="alert alert-success">Ingesting...  --' + json.microservice + '</div>');
+                    return false;
+                }
+
+                if (json.status === 'COMPLETE') {
+                    clearInterval(ingestTimer);
+                    $('#message').html('<div class="alert alert-success">Ingest Complete.</div>');
+
+                    console.log(json);
+
+                    setTimeout(function () {
+                        $('#message').html('');
+                        $('#import-table').show();
+                    }, 4000);
+
+                    // TODO: trigger removal of folder from sftp server
+
+                    return false;
+                }
+
+                if (json.status === 'FAILED') {
+                    clearInterval(ingestTimer);
+                    $('#message').html('<div class="alert alert-success">Ingest Failed.</div>');
+                    $('#import-table').show();
+                    return false;
+                }
+
+                if (json.status === 'REJECTED') {
+                    clearInterval(ingestTimer);
+                    $('#message').html('<div class="alert alert-success">Ingest Rejected.</div>');
+                    $('#import-table').show();
+                    return false;
+                }
+
+            }).fail(function () {
+                renderError();
+            });
+
+        }, 1000);
     };
 
     var back = function () {
@@ -154,8 +227,6 @@ var importModule = (function () {
         var folder = helperModule.getParameterByName('folder'),
             url = api + '/api/admin/v1/import/list?folder=' + null,
             foldersArr = [];
-
-        console.log('getImportObjects: ', folder);
 
         if (folder !== null) {
 
@@ -214,6 +285,11 @@ var importModule = (function () {
             });
     };
 
+    obj.init = function () {
+        userModule.renderUserName();
+    };
+
+    /*
     obj.getImportObjectFiles = function () {
 
         // TODO: sanitize
@@ -228,10 +304,89 @@ var importModule = (function () {
                 renderError();
             });
     };
+    */
 
-    obj.init = function () {
-        userModule.renderUserName();
-    };
+    /*
+     var renderImportObjectFiles = function (data) {
+
+     var html = '';
+
+     for (var i = 0; i < data.length; i++) {
+
+     html += '<tr>';
+
+     if (data[i].xmlFile !== undefined) {
+     html += '<td>' + data[i].xmlFile + '</td>';
+     }
+
+     if (data[i].objectFile !== undefined) {
+     html += '<td>' + data[i].objectFile + '</td>';
+     }
+
+     html += '<td>' + data[i].fileSize + '</td>';
+     html += '<td>' + data[i].mimeType + '</td>';
+     html += '</tr>';
+     }
+
+     $('#import-object-files').html(html);
+     $('.loading').html('');
+     };
+     */
+
+    /*
+     var checkQueue = function (data) {
+     var import_id = data.import_id;
+     var timer = setInterval(function () {
+     console.log('checking...');
+     console.log(import_id);
+
+     // TODO: call function to update DOM
+
+     }, 5000);
+     };
+     */
+
+    /*
+     var renderUnapprovedTransfers = function (data) {
+
+     console.log(data);
+
+     var html = '';
+
+     for (var i = 0; i < data.length; i++) {
+
+     html += '<tr>';
+
+     if (data[i].xmlFile !== undefined) {
+     html += '<td>' + data[i].xmlFile + '</td>';
+     }
+
+     if (data[i].objectFile !== undefined) {
+     html += '<td>' + data[i].objectFile + '</td>';
+     }
+
+     html += '<td>' + data[i].fileSize + '</td>';
+     html += '<td>' + data[i].mimeType + '</td>';
+     html += '</tr>';
+     }
+
+     $('#import-object-files').html(html);
+     $('.loading').html('');
+     };
+     */
+
+    /*
+     obj.getUnapprovedTransfers = function () {
+
+     $.ajax(api + '/api/admin/v1/import/unapproved_transfers')
+     .done(function (data) {
+     renderUnapprovedTransfers(data);
+     })
+     .fail(function () {
+     renderError();
+     });
+     };
+     */
 
     return obj;
 

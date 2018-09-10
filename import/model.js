@@ -26,6 +26,92 @@ var client = new es.Client({
     // log: 'trace'
 });
 
+/* TODO: rename get_transfers list files under a folder on the archivematica sftp server */
+exports.list = function (req, callback) {
+
+    var query = req.query.folder;
+
+    archivematica.list(query, function (results) {
+
+        callback({
+            status: 200,
+            content_type: {'Content-Type': 'application/json'},
+            message: 'list',
+            data: {list: results}
+        });
+    });
+};
+
+exports.start_transfer = function (req, callback) {
+
+    if (req.body === undefined) {
+
+        callback({
+            status: 404,
+            content_type: {'Content-Type': 'application/json'},
+            message: 'Nothing to see here...',
+            data: []
+        });
+    }
+
+    var folder = req.body.folder;
+
+    archivematica.start_tranfser(folder, function (results) {
+
+        var json = JSON.parse(results);
+        var path = json.path;
+        var pathArr = path.split('/');
+
+        var arr = pathArr.filter(function (result) {
+            if (result.length !== 0) {
+                return result;
+            }
+        });
+
+        var transferFolder = arr.pop();
+
+        archivematica.approve_transfer(transferFolder, function (results) {
+
+            callback({
+                status: 200,
+                content_type: {'Content-Type': 'application/json'},
+                message: 'Transfer started.',
+                data: results
+            });
+        });
+    });
+};
+
+exports.get_transfer_status = function (req, callback) {
+
+    var uuid = req.query.uuid;
+
+    archivematica.get_transfer_status(uuid, function (results) {
+
+        callback({
+            status: 200,
+            content_type: {'Content-Type': 'application/json'},
+            message: 'Transfer status retrieved.',
+            data: results
+        });
+    });
+};
+
+exports.get_ingest_status = function (req, callback) {
+
+    var uuid = req.query.uuid;
+
+    archivematica.get_ingest_status(uuid, function (results) {
+
+        callback({
+            status: 200,
+            content_type: {'Content-Type': 'application/json'},
+            message: 'Ingested status retrieved.',
+            data: results
+        });
+    });
+};
+
 exports.get_import_admin_objects = function (req, callback) {
 
     console.log('test!!');
@@ -139,98 +225,6 @@ exports.get_import_admin_objects_files = function (req, callback) {
     });
 };
 
-exports.transfer_admin_objects = function (req, callback) {
-
-    console.log('transferring files...');
-
-    if (req.body === undefined) {
-
-        callback({
-            status: 404,
-            content_type: {'Content-Type': 'application/json'},
-            message: 'Nothing to see here...',
-            data: []
-        });
-    }
-
-    var folder = req.body.folder;
-
-    archivematica.start_tranfser(folder, function (results) {
-
-        callback({
-            status: 200,
-            content_type: {'Content-Type': 'application/json'},
-            message: 'transfer started',
-            data: results
-        });
-    });
-
-    /*
-     // import_id = uuid();
-    // check if object folder exists
-    if (!fs.existsSync(importPath)) {
-        callback({
-            status: 404,
-            content_type: {'Content-Type': 'application/json'},
-            message: 'Import object does not exist',
-            data: []
-        });
-
-        return false;
-    }
-
-    var files = fs.readdirSync(importPath).map(function(file) {
-
-        if (ignore.indexOf(file) === -1) {
-
-            var ext = path.extname(file),
-                fileName = file.split(ext);
-
-            return fileName[0];
-        }
-    });
-
-    if (files.indexOf(undefined) != -1) {
-        var index = files.indexOf(undefined);
-        files.splice(index, 1);
-    }
-
-    // remove duplicates
-    var uniqueFileNames = files.filter(function (fileName, index, self) {
-        return index === self.indexOf(fileName);
-    });
-
-    // construct import queue objects
-    var importData = uniqueFileNames.map(function (data) {
-        var importQueueObj = {};
-        importQueueObj.import_id = import_id;
-        importQueueObj.is_member_of_collection = collection.replace('_', ':');
-        importQueueObj.mime_type = mime_type;
-        importQueueObj.filename = data;
-        return importQueueObj;
-    });
-
-    // save to queue
-    var chunkSize = importData.length;
-    knex.batchInsert('tbl_import_queue', importData, chunkSize)
-        .returning('import_id')
-        .then(function() {
-            process_queue(importData[0].import_id);
-        })
-        .catch(function(error) {
-            console.log(error);
-        });
-
-    callback({
-        status: 201,
-        content_type: {'Content-Type': 'application/json'},
-        message: 'Object files saved to import queue',
-        data: {import_id: importData[0].import_id}
-    });
-
-    */
-};
-
 /* creates folder on archivematica sftp server */
 exports.create_folder = function (req, callback) {
 
@@ -246,22 +240,6 @@ exports.create_folder = function (req, callback) {
             message: 'folder created'
         });
     })
-};
-
-/* list files under a folder on the archivematica sftp server */
-exports.list = function (req, callback) {
-
-    var query = req.query.folder;
-
-    archivematica.list(query, function (results) {
-
-        callback({
-            status: 200,
-            content_type: {'Content-Type': 'application/json'},
-            message: 'list',
-            data: {list: results}
-        });
-    });
 };
 
 exports.upload = function (req, callback) {
@@ -569,3 +547,69 @@ var create_handle = function (obj) {
 // FITS command:
 // sh libs/fits-1.3.0/fits.sh -i /Users/freyes/Documents/import/codu_102097/D018.01.0006.00033.tif -xc -o /Users/freyes/Documents/import/codu_102097/techmd_102097.xml
 // 11.) save fits xml to tbl_objects (update)
+
+
+/*
+ // import_id = uuid();
+ // check if object folder exists
+ if (!fs.existsSync(importPath)) {
+ callback({
+ status: 404,
+ content_type: {'Content-Type': 'application/json'},
+ message: 'Import object does not exist',
+ data: []
+ });
+
+ return false;
+ }
+
+ var files = fs.readdirSync(importPath).map(function(file) {
+
+ if (ignore.indexOf(file) === -1) {
+
+ var ext = path.extname(file),
+ fileName = file.split(ext);
+
+ return fileName[0];
+ }
+ });
+
+ if (files.indexOf(undefined) != -1) {
+ var index = files.indexOf(undefined);
+ files.splice(index, 1);
+ }
+
+ // remove duplicates
+ var uniqueFileNames = files.filter(function (fileName, index, self) {
+ return index === self.indexOf(fileName);
+ });
+
+ // construct import queue objects
+ var importData = uniqueFileNames.map(function (data) {
+ var importQueueObj = {};
+ importQueueObj.import_id = import_id;
+ importQueueObj.is_member_of_collection = collection.replace('_', ':');
+ importQueueObj.mime_type = mime_type;
+ importQueueObj.filename = data;
+ return importQueueObj;
+ });
+
+ // save to queue
+ var chunkSize = importData.length;
+ knex.batchInsert('tbl_import_queue', importData, chunkSize)
+ .returning('import_id')
+ .then(function() {
+ process_queue(importData[0].import_id);
+ })
+ .catch(function(error) {
+ console.log(error);
+ });
+
+ callback({
+ status: 201,
+ content_type: {'Content-Type': 'application/json'},
+ message: 'Object files saved to import queue',
+ data: {import_id: importData[0].import_id}
+ });
+
+ */
