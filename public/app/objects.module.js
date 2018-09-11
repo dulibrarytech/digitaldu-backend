@@ -16,7 +16,7 @@ var objectsModule = (function () {
 
         userModule.setHeaderUserToken();
 
-        $.ajax(api + '/api/admin/v1/object?pid=' + pid)
+        $.ajax(api + '/api/admin/v1/repo/object?pid=' + pid)
             .done(function (data) {
 
                 // var modsXml = $.parseXML(data[0].mods);

@@ -11,7 +11,7 @@ var importModule = (function () {
     var api = configModule.getApi();
 
     /*
-
+        Renders the directory listing from the archivematica sftp server
      */
     var renderImportObjects = function (data) {
 
@@ -25,7 +25,7 @@ var importModule = (function () {
 
                 // render folder or file
                 if (data.list[i].type === 'd') {
-                    html += '<td>'; // /dashboard/import/status?folder=' + data.list[i].name + '
+                    html += '<td>';
                     html += '<a class="btn btn-success btn-xs" onclick="importModule.transferObjects(\'' + data.list[i].name + '\')" href="#"><i class="fa fa-upload"></i>&nbsp;&nbsp;Import</a>';
                     html += '&nbsp;&nbsp;&nbsp;<a href="/dashboard/import?folder=' + data.list[i].name + '"><i class="fa fa-folder"></i>&nbsp;&nbsp;' + data.list[i].name + '</a>';
                     html += '</td>';
@@ -44,7 +44,9 @@ var importModule = (function () {
         $('#message').empty();
     };
 
-    /*  */
+    /*
+        Begins the Archivematica transfer/ingest process
+    */
     obj.transferObjects = function (folder) {
 
         $('#message').html('<div class="alert alert-success">Transfer started...</div>');
@@ -58,7 +60,6 @@ var importModule = (function () {
 
             var json = JSON.parse(data);
             console.log(json);
-            console.log(json.uuid);
 
             if (json.error !== undefined && json.error === true) {
                 $('#message').html('<div class="alert alert-danger">' + json.message + '</div>');
@@ -76,6 +77,9 @@ var importModule = (function () {
         });
     };
 
+    /*
+        Checks Archivematica transfer status Q1sec
+     */
     obj.getTransferStatus = function (uuid) {
 
         var transferTimer = setInterval(function () {
@@ -86,7 +90,8 @@ var importModule = (function () {
             }).done(function (data) {
 
                 var json = JSON.parse(data);
-                // console.log(json);
+
+                console.log(json);
 
                 if (json.error !== undefined && json.error === true) {
                     $('#message').html('<div class="alert alert-danger">' + json.message + '</div>');
@@ -102,7 +107,6 @@ var importModule = (function () {
                 if (json.status === 'COMPLETE') {
                     clearInterval(transferTimer);
                     $('#message').html('<div class="alert alert-success">Transfer Complete.</div>');
-                    console.log(json);
                     // check ingest status
                     importModule.getIngestStatus(json.sip_uuid);
                     return false;
@@ -110,14 +114,14 @@ var importModule = (function () {
 
                 if (json.status === 'FAILED') {
                     clearInterval(transferTimer);
-                    $('#message').html('<div class="alert alert-success">Transfer Failed.</div>');
+                    $('#message').html('<div class="alert alert-danger">Transfer Failed.  ' + json.message + '</div>');
                     $('#import-table').show();
                     return false;
                 }
 
                 if (json.status === 'REJECTED') {
                     clearInterval(transferTimer);
-                    $('#message').html('<div class="alert alert-success">Transfer Rejected.</div>');
+                    $('#message').html('<div class="alert alert-danger">Transfer Rejected.</div>');
                     $('#import-table').show();
                     return false;
                 }
@@ -140,6 +144,8 @@ var importModule = (function () {
 
                 var json = JSON.parse(data);
 
+                console.log(json);
+
                 if (json.error !== undefined && json.error === true) {
                     $('#message').html('<div class="alert alert-danger">' + json.message + '</div>');
                     $('#import-table').show();
@@ -147,7 +153,7 @@ var importModule = (function () {
                 }
 
                 if (json.status === 'PROCESSING') {
-                    $('#message').html('<div class="alert alert-success">Ingesting...  --' + json.microservice + '</div>');
+                    $('#message').html('<div class="alert alert-success">Ingesting...   --' + json.microservice + '</div>');
                     return false;
                 }
 
@@ -162,21 +168,20 @@ var importModule = (function () {
                         $('#import-table').show();
                     }, 4000);
 
-                    // TODO: trigger removal of folder from sftp server
-
                     return false;
                 }
 
                 if (json.status === 'FAILED') {
                     clearInterval(ingestTimer);
-                    $('#message').html('<div class="alert alert-success">Ingest Failed.</div>');
+                    console.log(json);
+                    $('#message').html('<div class="alert alert-danger">Ingest Failed.</div>');
                     $('#import-table').show();
                     return false;
                 }
 
                 if (json.status === 'REJECTED') {
                     clearInterval(ingestTimer);
-                    $('#message').html('<div class="alert alert-success">Ingest Rejected.</div>');
+                    $('#message').html('<div class="alert alert-danger">Ingest Rejected.</div>');
                     $('#import-table').show();
                     return false;
                 }
@@ -188,38 +193,7 @@ var importModule = (function () {
         }, 1000);
     };
 
-    var back = function () {
-
-        $('#back').click(function () {
-
-            var foldersArr = JSON.parse(window.sessionStorage.getItem('folders'));
-
-            if (foldersArr !== null) {
-
-                foldersArr.pop();
-                // console.log(foldersArr);
-                // console.log(foldersArr[foldersArr.length-1]);
-                History.pushState({folder: ''}, '', '?folder=' + foldersArr[foldersArr.length-1]);
-
-                // foldersArr.pop();
-
-                // $('#back > a').prop('href', '/dashboard/import?folder=' + foldersArr[foldersArr.length-1]);
-
-                if (foldersArr.length === 0) {
-                    window.sessionStorage.removeItem('folders');
-                } else {
-                    // TODO: save back to sessionStorage
-                    window.sessionStorage.setItem('folders', JSON.stringify(foldersArr));
-                }
-
-                importModule.getImportObjects();
-
-            }
-
-        });
-    };
-
-    /* gets folder / file listings from archivematica sftp server */
+    /* gets directory listings from archivematica sftp server */
     obj.getImportObjects = function () {
 
         $('#message').html('<p><strong>Loading...</strong></p>');
@@ -283,6 +257,37 @@ var importModule = (function () {
             .fail(function () {
                 renderError();
             });
+    };
+
+    // TODO:...
+    var back = function () {
+
+        $('#back').click(function () {
+
+            var foldersArr = JSON.parse(window.sessionStorage.getItem('folders'));
+
+            if (foldersArr !== null) {
+
+                foldersArr.pop();
+                // console.log(foldersArr);
+                // console.log(foldersArr[foldersArr.length-1]);
+                History.pushState({folder: ''}, '', '?folder=' + foldersArr[foldersArr.length-1]);
+
+                // foldersArr.pop();
+
+                // $('#back > a').prop('href', '/dashboard/import?folder=' + foldersArr[foldersArr.length-1]);
+
+                if (foldersArr.length === 0) {
+                    window.sessionStorage.removeItem('folders');
+                } else {
+                    // TODO: save back to sessionStorage
+                    window.sessionStorage.setItem('folders', JSON.stringify(foldersArr));
+                }
+
+                importModule.getImportObjects();
+
+            }
+        });
     };
 
     obj.init = function () {

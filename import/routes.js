@@ -38,7 +38,6 @@ module.exports = function (app) {
         .post(Import.upload);
     */
 
-    // NOT USED
     /*
     app.route('/api/admin/v1/import/create-folder')
         .post(Import.create_folder);

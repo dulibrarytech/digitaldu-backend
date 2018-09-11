@@ -8,8 +8,8 @@ var fs = require('fs'),
     uuid = require('uuid'),
     crypto = require('crypto'),
     request = require('request'),
-    es = require('elasticsearch'),
-    shell = require('shelljs'),
+    // es = require('elasticsearch'),
+    // shell = require('shelljs'),
     ignore = ['.svn', '.git', '.DS_Store', 'Thumbs.db'],
     knex = require('knex')({
         client: 'mysql2',
@@ -21,10 +21,12 @@ var fs = require('fs'),
         }
     });
 
+/*
 var client = new es.Client({
     host: config.elasticSearch
     // log: 'trace'
 });
+*/
 
 /* TODO: rename get_transfers list files under a folder on the archivematica sftp server */
 exports.list = function (req, callback) {
@@ -225,7 +227,7 @@ exports.get_import_admin_objects_files = function (req, callback) {
     });
 };
 
-/* creates folder on archivematica sftp server */
+/* creates folder on archivematica sftp server
 exports.create_folder = function (req, callback) {
 
     var folder = req.body.folder;
@@ -241,7 +243,9 @@ exports.create_folder = function (req, callback) {
         });
     })
 };
+ */
 
+/*
 exports.upload = function (req, callback) {
  // TODO
 };
@@ -326,6 +330,7 @@ var process_queue = function (import_id) {
 
     }, 4000);
 };
+*/
 
 var get_next_pid = function (namespace, callback) {
 
@@ -351,6 +356,7 @@ var get_next_pid = function (namespace, callback) {
 
 /*
     Import processes
+    TODO: get xml from AIP
  */
 var process_xml = function (obj) {
 
@@ -446,6 +452,7 @@ var process_file = function (obj) {
      */
 };
 
+// TODO: get from AIP
 var get_technical_metadata = function (obj) {
 
     console.log('getting technical metadata...');
@@ -491,6 +498,7 @@ var get_technical_metadata = function (obj) {
     });
 };
 
+// TODO: get from AIP
 var create_file_hash = function (obj) {
 
     console.log('creating file hash...');

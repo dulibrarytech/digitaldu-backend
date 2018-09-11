@@ -69,6 +69,7 @@ exports.approve_transfer = function (folder, callback) {
     'use strict';
 
     // the delay ensures that the folder's move has completed before attempting to approve it.
+    // TODO: more testing required for large collections
     setTimeout(function () {
 
         var apiUrl = config.archivematicaApi + 'transfer/approve?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
@@ -127,26 +128,6 @@ exports.get_ingest_status = function (uuid, callback) {
 
         callback(body);
     });
-};
-
-exports.get_unapproved_transfers = function () {
-
-    'use strict';
-
-    /*
-     URL: /api/transfer/unapproved
-     Verb: GET
-     Returns a list of transfers waiting for approval.
-     Response: JSON
-     message: "Fetched unapproved transfers successfully."
-     results: List of dicts with keys:
-     type: Transfer type. One of: standard, unzipped bag, zipped bag, dspace
-     directory: Directory the transfer is in currently
-     uuid: UUID of the transfer
-     */
-
-    // WORKS https://denver.archivesdirect.archivematica.org/api/transfer/unapproved?username=fernando&api_key=1adfdbca640e03269a0f416cad9571135afa4957
-    // get "uuid" and "directory" from response
 };
 
 exports.start_reingest = function () {
