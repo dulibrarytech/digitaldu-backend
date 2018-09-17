@@ -70,7 +70,7 @@ var importModule = (function () {
             $('#message').html('<div class="alert alert-success">' + json.message + '...</div>');
 
             // check transfer status
-            importModule.getTransferStatus(json.uuid);
+            importModule.getTransferStatus(folder, json.uuid);
 
         }).fail(function () {
             renderError();
@@ -80,12 +80,12 @@ var importModule = (function () {
     /*
         Checks Archivematica transfer status Q1sec
      */
-    obj.getTransferStatus = function (uuid) {
+    obj.getTransferStatus = function (folder, uuid) {
 
         var transferTimer = setInterval(function () {
 
             $.ajax({
-                url: api + '/api/admin/v1/import/transfer_status?uuid=' + uuid,
+                url: api + '/api/admin/v1/import/transfer_status?folder=' + folder + '&uuid=' + uuid,
                 type: 'get'
             }).done(function (data) {
 
@@ -105,10 +105,15 @@ var importModule = (function () {
                 }
 
                 if (json.status === 'COMPLETE') {
-                    clearInterval(transferTimer);
                     $('#message').html('<div class="alert alert-success">Transfer Complete.</div>');
                     // check ingest status
-                    importModule.getIngestStatus(json.sip_uuid);
+                    if (json.sip_uuid !== undefined) {
+                        clearInterval(transferTimer);
+                        importModule.getIngestStatus(folder, json.sip_uuid);
+                    } else {
+                        importModule.getTransferStatus(folder, json.uuid);
+                    }
+
                     return false;
                 }
 
@@ -133,12 +138,14 @@ var importModule = (function () {
         }, 1000);
     };
 
-    obj.getIngestStatus = function (uuid) {
+    obj.getIngestStatus = function (folder, uuid) {
 
         var ingestTimer = setInterval(function () {
 
+            console.log(uuid);
+
             $.ajax({
-                url: api + '/api/admin/v1/import/ingest_status?uuid=' + uuid,
+                url: api + '/api/admin/v1/import/ingest_status?folder=' + folder + '&uuid=' + uuid,
                 type: 'get'
             }).done(function (data) {
 
@@ -159,9 +166,10 @@ var importModule = (function () {
 
                 if (json.status === 'COMPLETE') {
                     clearInterval(ingestTimer);
-                    $('#message').html('<div class="alert alert-success">Ingest Complete.</div>');
+                    $('#message').html('<div class="alert alert-success">Archivematica Ingest Complete.</div>');
 
                     console.log(json);
+                    // TODO: start speccoll ingest
 
                     setTimeout(function () {
                         $('#message').html('');

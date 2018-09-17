@@ -74,6 +74,8 @@ exports.start_transfer = function (req, callback) {
 
         archivematica.approve_transfer(transferFolder, function (results) {
 
+            // TODO: save transfer uuid to DB
+
             callback({
                 status: 200,
                 content_type: {'Content-Type': 'application/json'},
@@ -86,32 +88,100 @@ exports.start_transfer = function (req, callback) {
 
 exports.get_transfer_status = function (req, callback) {
 
-    var uuid = req.query.uuid;
+    var uuid = req.query.uuid,
+        folder = req.query.folder;
 
     archivematica.get_transfer_status(uuid, function (results) {
 
-        callback({
-            status: 200,
-            content_type: {'Content-Type': 'application/json'},
-            message: 'Transfer status retrieved.',
-            data: results
-        });
+        if (results.status === 'COMPLETE' && results.sip_uuid !== undefined) {
+
+            // TODO: save ingest/SIP uuid to DB if status == COMPLETE
+            // TODO: construct DuraCloud path here?
+            // TODO: get pid and handle and save to DB (collection pid as id)
+            // TODO: save folder name (collection pid) to QUEUE
+
+            knex('tbl_import_queue')
+                .insert({
+                    is_member_of_collection: folder.replace('_', ':'),
+                    transfer_uuid: results.uuid,
+                    sip_uuid: results.sip_uuid
+                })
+                .then(function (data) {
+                    console.log(data);
+
+                    callback({
+                        status: 200,
+                        content_type: {'Content-Type': 'application/json'},
+                        message: 'Transfer complete.',
+                        data: results
+                    });
+
+                })
+                .catch(function (error) {
+                    console.log(error);
+                    callback({
+                        status: 500,
+                        content_type: {'Content-Type': 'application/json'},
+                        message: 'Database error occurred.'
+                    });
+                });
+        } else {
+            callback({
+                status: 200,
+                content_type: {'Content-Type': 'application/json'},
+                message: 'Transfer status retrieved.',
+                data: results
+            });
+        }
+
     });
 };
 
 exports.get_ingest_status = function (req, callback) {
 
-    var uuid = req.query.uuid;
+    var uuid = req.query.uuid,
+        folder = req.query.folder;
 
     archivematica.get_ingest_status(uuid, function (results) {
 
-        callback({
-            status: 200,
-            content_type: {'Content-Type': 'application/json'},
-            message: 'Ingested status retrieved.',
-            data: results
-        });
+        if (results.status === 'COMPLETE') {
+
+            callback({
+                status: 200,
+                content_type: {'Content-Type': 'application/json'},
+                message: 'Ingested complete.',
+                data: results
+            });
+
+        } else {
+
+            callback({
+                status: 200,
+                content_type: {'Content-Type': 'application/json'},
+                message: 'Ingested status retrieved.',
+                data: results
+            });
+        }
     });
+};
+
+exports.import_sip = function () {
+
+    // TODO:...
+    knex('tbl_import_queue')
+        .select('*')
+        .where({
+            sip_uuid: sip_uuid,
+            status: 0
+        })
+        .limit(1)
+        .then(function (data) {
+            console.log(data);
+
+        })
+        .catch(function (error) {
+
+        });
 };
 
 exports.get_import_admin_objects = function (req, callback) {
