@@ -4,7 +4,9 @@ var fs = require('fs'),
     path = require('path'),
     config = require('../config/config'),
     modslib = require('../libs/mods/mods_init'),
+    metslib = require('../libs/mets'),
     archivematica = require('../libs/archivematica'),
+    duracloud = require('../libs/duracloud'),
     uuid = require('uuid'),
     crypto = require('crypto'),
     request = require('request'),
@@ -165,22 +167,33 @@ exports.get_ingest_status = function (req, callback) {
     });
 };
 
-exports.import_sip = function () {
+exports.import_dip = function (req, callback) {
 
-    // TODO:...
-    knex('tbl_import_queue')
+    var uuid = req.body.sip_uuid;
+
+    knex('tbl_archivematica_import_queue')
         .select('*')
         .where({
-            sip_uuid: sip_uuid,
+            sip_uuid: uuid,
             status: 0
         })
         .limit(1)
         .then(function (data) {
-            console.log(data);
+            duracloud.get_mets(data, function (results) {
 
+                var duraCloudObj = {};
+                duraCloudObj.sip_uuid = results.sip_uuid;
+
+                // console.log(results.sip_uuid);
+                metslib.process_mets(results.mets);
+                // results.mets
+                // var xmldoc = require('xmldoc');
+
+                // TODO: save to DB
+            });
         })
         .catch(function (error) {
-
+            console.log(error);
         });
 };
 

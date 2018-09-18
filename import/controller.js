@@ -26,6 +26,12 @@ exports.get_ingest_status = function (req, res) {
     });
 };
 
+exports.import_dip = function (req, res) {
+    Import.import_dip(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
 /*
 exports.get_unapproved_transfers = function (req, res) {
     Import.get_unapproved_transfers(req, function (data) {

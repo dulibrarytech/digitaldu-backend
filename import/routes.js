@@ -17,6 +17,9 @@ module.exports = function (app) {
     app.route('/api/admin/v1/import/ingest_status')
         .get(Import.get_ingest_status);
 
+    app.route('/api/admin/v1/import/import_dip')
+        .post(Import.import_dip);
+
     /*
     app.route('/api/admin/v1/import')
         .get(Import.get_import_admin_objects);
