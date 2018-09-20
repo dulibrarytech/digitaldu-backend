@@ -134,7 +134,7 @@ exports.start_reingest = function () {
 
     'use strict';
 
-    /*
+    /* TODO:...
      URL: /api/transfer/reingest
      Verb: POST
      Start a full reingest.
@@ -147,36 +147,10 @@ exports.start_reingest = function () {
      */
 };
 
-/*
-exports.upload = function (callback) {
-
-    'use strict';
-
-    // TODO: pass in an array of files or upload each individual file
-    var sftp = new client();
-
-    sftp.connect({
-        host: config.sftpHost,
-        port: '22',
-        username: config.sftpId,
-        password: config.sftpPwd
-    }).then(function () {
-        // TODO: confirm that folder exists
-        // console.log(config.importPath + codu);
-        return sftp.put(config.importPath + codu + '/CSUbice.xml', config.sftpRemotePath + '/CSUbice.xml');
-    }).then(function (data) {
-        console.log(data, 'the data info');
-        callback(data);
-    }).catch(function (err) {
-        console.log(err, 'catch error');
-    });
-};
-*/
-
-/*
 exports.create_folder = function (folder, callback) {
 
     'use strict';
+    // TODO:...
 
     var sftp = new client();
 
@@ -194,4 +168,3 @@ exports.create_folder = function (folder, callback) {
         console.log(err, 'catch error');
     });
 };
-    */
