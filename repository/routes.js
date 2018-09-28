@@ -25,7 +25,7 @@ module.exports = function (app) {
         .post(token.verify, Repo.save_admin_collection_object);
 
     app.route('/api/admin/v1/repo/pid')
-        .post(token.verify, Repo.get_next_pid);
+        .post(Repo.get_next_pid);  // token.verify, // TODO: API key?
 
     // temp
     /*

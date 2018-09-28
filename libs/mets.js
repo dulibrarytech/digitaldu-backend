@@ -3,7 +3,7 @@
 var xmldoc = require('xmldoc'),
     _ = require('lodash');
 
-exports.process_mets = function (sip_uuid, xml) {
+exports.process_mets = function (sip_uuid, transfer_uuid, is_member_of_collection, xml) {
 
     var document = new xmldoc.XmlDocument(xml),
         Obj = {},
@@ -18,14 +18,31 @@ exports.process_mets = function (sip_uuid, xml) {
                 for (var i=0;i<array[index].children[1].children.length;i++) {
 
                     if (array[index].children[1].children[i].name === 'mets:file') {
-                        // get file ids
-                        Obj.uuid = array[index].children[1].children[i].attr.ID.replace(/file-/g,'');
-                        Obj.sip_uuid = sip_uuid;
 
                         for (var k=0;k<array[index].children[1].children[i].children.length;k++) {
-                            // get file names
+                            // get file id and names
                             if (array[index].children[1].children[i].children[k].name === 'mets:FLocat') {
+
+                                var tmpArr = array[index].children[1].children[i].children[k].attr['xlink:href'].replace(/objects\//g, '').split('.'),
+                                    file_id;
+
+                                var ext = tmpArr.pop();
+                                file_id = tmpArr.join('.');
+
+                                Obj.uuid = array[index].children[1].children[i].attr.ID.replace(/file-/g,'');
+                                Obj.sip_uuid = sip_uuid;
+                                Obj.transfer_uuid = transfer_uuid;
+                                Obj.is_member_of_collection = is_member_of_collection;
                                 Obj.file = array[index].children[1].children[i].children[k].attr['xlink:href'].replace(/objects\//g, '');
+
+                                if (ext === 'xml') {
+                                    Obj.type = 'xml';
+                                } else {
+                                    Obj.type = 'object';
+                                }
+
+                                Obj.file_id = file_id;
+
                             }
                         }
                    }

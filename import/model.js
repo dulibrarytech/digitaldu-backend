@@ -5,13 +5,15 @@ var fs = require('fs'),
     config = require('../config/config'),
     modslib = require('../libs/mods/mods_init'),
     metslib = require('../libs/mets'),
+    pids = require('../libs/next-pid'),
     archivematica = require('../libs/archivematica'),
     duracloud = require('../libs/duracloud'),
     uuid = require('uuid'),
     crypto = require('crypto'),
+    async = require('async'),
     request = require('request'),
     // es = require('elasticsearch'),
-    // shell = require('shelljs'),
+    shell = require('shelljs'),
     ignore = ['.svn', '.git', '.DS_Store', 'Thumbs.db'],
     knex = require('knex')({
         client: 'mysql2',
@@ -96,11 +98,6 @@ exports.get_transfer_status = function (req, callback) {
         // TODO: automate (don't rely on client to initiate)
         if (results.status === 'COMPLETE' && results.sip_uuid !== undefined) {
 
-            // TODO: save ingest/SIP uuid to DB if status == COMPLETE
-            // TODO: construct DuraCloud path here?
-            // TODO: get pid and handle and save to DB (collection pid as id)
-            // TODO: save folder name (collection pid) to QUEUE
-
             knex('tbl_archivematica_import_queue')
                 .insert({
                     is_member_of_collection: folder.replace('_', ':'),
@@ -181,13 +178,16 @@ exports.import_dip = function (req, callback) {
 
             duracloud.get_mets(data, function (results) {
 
-                var metsResults = metslib.process_mets(results.sip_uuid, results.mets);
-
+                var metsResults = metslib.process_mets(results.sip_uuid, data[0].transfer_uuid, data[0].is_member_of_collection, results.mets);
                 // save to queue
                 var chunkSize = metsResults.length;
                 knex.batchInsert('tbl_duracloud_import_queue', metsResults, chunkSize)
                     .then(function (data) {
-                        process_duracloud_queue(results.sip_uuid);
+
+                        pids.get_next_pid(function (pid) {
+                            process_duracloud_queue_objects(results.sip_uuid, pid);
+                        });
+
                     })
                     .catch(function (error) {
                         console.log(error);
@@ -207,28 +207,72 @@ exports.import_dip = function (req, callback) {
     });
 };
 
-var process_duracloud_queue = function (sip_uuid) {
+var process_duracloud_queue_objects = function (sip_uuid, pid) {
 
     knex('tbl_duracloud_import_queue')
-        .select('tbl_archivematica_import_queue.is_member_of_collection', 'tbl_archivematica_import_queue.transfer_uuid', 'tbl_duracloud_import_queue.sip_uuid', 'tbl_duracloud_import_queue.uuid', 'tbl_duracloud_import_queue.file')
-        .leftJoin('tbl_archivematica_import_queue', 'tbl_duracloud_import_queue.sip_uuid', '=', 'tbl_archivematica_import_queue.sip_uuid')
-        .where('tbl_duracloud_import_queue.sip_uuid', sip_uuid)
-        .where('tbl_duracloud_import_queue.status', 0)
+        .select('*')
+        .where({
+            sip_uuid: sip_uuid,
+            type: 'object',
+            status: 0
+        })
         .then(function (data) {
 
             var timer = setInterval(function () {
 
                 if (data.length === 0) {
                     clearInterval(timer);
+                    // Update queue status
+                    knex('tbl_duracloud_import_queue')
+                        .where({
+                            status: 0,
+                            sip_uuid: sip_uuid,
+                            type: 'object'
+                        })
+                        .update({
+                            status: 1
+                        })
+                        .then(function (data) {
+                            console.log(data);
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+
+                    process_duracloud_queue_xml(sip_uuid, pid);
+
                     return false;
                 }
 
                 var object = data.pop();
+                console.log(object);
+
                 duracloud.get_object(object, function (results) {
-                    // console.log(results);
+
+                    var recordObj = {};
+                    recordObj.pid = pid;
+                    recordObj.is_member_of_collection = object.is_member_of_collection;
+                    recordObj.sip_uuid = sip_uuid;
+                    recordObj.transfer_uuid = object.transfer_uuid;
+                    recordObj.file_name = results.file;
+                    recordObj.checksum = results.headers['content-md5'];
+                    recordObj.file_size = results.headers['content-length'];
+
+                    var tmp = shell.exec('file --mime-type ./tmp/' + results.file).stdout;
+                    var mimetypetmp = tmp.split(':');
+                    var mime_type = mimetypetmp[1].trim();
+
+                    // TODO: ... do PDFs get jpg thumbnails
+                    recordObj.mime_type = mime_type;
+                    // TODO: confirm that all TNs are .jpg
+                    recordObj.thumbnail = object.uuid + '.jpg';
+
+                    // TODO: save to DB (tbl_objects)
+                    console.log(recordObj);
+
                 });
 
-            }, 1000);
+            }, 3000);
 
             return null;
         })
@@ -237,9 +281,67 @@ var process_duracloud_queue = function (sip_uuid) {
         });
 };
 
+var process_duracloud_queue_xml = function (sip_uuid, pid) {
+
+    knex('tbl_duracloud_import_queue')
+        .select('*')
+        .where({
+            sip_uuid: sip_uuid,
+            type: 'xml',
+            status: 0
+        })
+        .then(function (data) {
+
+            var timer = setInterval(function () {
+
+                if (data.length === 0) {
+                    clearInterval(timer);
+                    // Update queue status
+                    knex('tbl_duracloud_import_queue')
+                        .where({
+                            status: 0,
+                            sip_uuid: sip_uuid,
+                            type: 'xml'
+                        })
+                        .update({
+                            status: 1
+                        })
+                        .then(function (data) {
+                            console.log(data);
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+                    return false;
+                }
+
+                var object = data.pop();
+
+                duracloud.get_object(object, function (results) {
+
+                    var recordObj = {};
+                    recordObj.pid = pid;
+
+                    // TODO: update record by pid
+                    // TODO: process xml
+                    console.log(results.file);
+                    console.log(recordObj);
+
+                });
+
+            }, 3000);
+
+            return null;
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
+};
+
+
+// TODO: move to lib
 var get_next_pid = function (namespace, callback) {
 
-    // TODO: move to lib
     request.post({
         url: config.apiUrl + '/api/admin/v1/repo/pid?namespace=' + namespace
     }, function (error, httpResponse, body) {
@@ -266,7 +368,6 @@ var create_handle = function (obj) {
 
 /*
  Import processes
- TODO: get xml from DIP
  */
 var process_xml = function (obj) {
 

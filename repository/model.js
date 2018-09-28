@@ -24,7 +24,7 @@ var client = new es.Client({
 
 exports.get_next_pid = function (req, callback) {
 
-    var namespace = config.namespace; //req.query.namespace;
+    var namespace = config.namespace;
 
     knex.transaction(function(trx) {
 
