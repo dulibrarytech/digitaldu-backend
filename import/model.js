@@ -35,7 +35,7 @@ var fs = require('fs'),
 /* TODO: rename get_transfers list files under a folder on the archivematica sftp server */
 exports.list = function (req, callback) {
 
-    var query = req.query.folder;
+    var query = req.query.collection;
 
     archivematica.list(query, function (results) {
 
@@ -60,34 +60,110 @@ exports.start_transfer = function (req, callback) {
         });
     }
 
-    var folder = req.body.folder;
+    var collection = req.body.collection, // string
+        objects = req.body.objects.split(','); // array
 
-    archivematica.start_tranfser(folder, function (results) {
+    var importObjects = objects.map(function (object) {
 
-        var json = JSON.parse(results);
-        var path = json.path;
-        var pathArr = path.split('/');
+        return {
+            is_member_of_collection: collection,
+            object: object
+        };
 
-        var arr = pathArr.filter(function (result) {
-            if (result.length !== 0) {
-                return result;
-            }
+    });
+
+    var chunkSize = importObjects.length;
+    knex.batchInsert('tbl_archivematica_transfer_queue', importObjects, chunkSize)
+        .then(function (data) {
+
+            // Start transferring objects
+            knex('tbl_archivematica_transfer_queue')
+                .select('id', 'is_member_of_collection', 'object')
+                .where({
+                    is_member_of_collection: collection,
+                    status: 0
+                })
+                .then(function (data) {
+
+                    var timer = setInterval(function () {
+
+                        if (data.length === 0) {
+                            console.log('Transfers completed.');
+                            clearInterval(timer);
+                            return false;
+                        }
+
+                        var object = data.pop();
+
+                        archivematica.start_tranfser(object, function (results) {
+
+                            var json = JSON.parse(results);
+                            var path = json.path;
+                            var pathArr = path.split('/');
+
+                            var arr = pathArr.filter(function (result) {
+                                if (result.length !== 0) {
+                                    return result;
+                                }
+                            });
+
+                            var transferFolder = arr.pop();
+
+                            archivematica.approve_transfer(transferFolder, function (results) {
+
+                                // TODO: get transfer uuid
+                                // {"message": "Approval successful.", "uuid": "bc90c9ac-85a1-4d75-aa80-e729f02e6b3a"}
+                                // TODO: update queue status?
+                                // console.log(object.id);
+                                // console.log(transferFolder);
+                                console.log(results);
+
+                                var json = JSON.parse(results);
+                                var transfer_uuid = json.uuid;
+
+                                // Update queue status
+                                knex('tbl_archivematica_transfer_queue')
+                                    .where({
+                                        id: object.id,
+                                        status: 0
+                                    })
+                                    .update({
+                                        status: 1,
+                                        transfer_uuid: transfer_uuid
+                                    })
+                                    .then(function (data) {
+                                        console.log(data);
+                                    })
+                                    .catch(function (error) {
+                                        console.log(error);
+                                    });
+
+                            });
+
+                        });
+
+                    }, 3000);
+
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+
+            return null;
+
+        })
+        .catch(function (error) {
+            console.log(error);
         });
 
-        var transferFolder = arr.pop();
-
-        archivematica.approve_transfer(transferFolder, function (results) {
-
-            callback({
-                status: 200,
-                content_type: {'Content-Type': 'application/json'},
-                message: 'Transfer started.',
-                data: results
-            });
-        });
+    callback({
+        status: 200,
+        content_type: {'Content-Type': 'application/json'},
+        message: 'Transfer started.'
     });
 };
 
+// TODO: check status in local queue?
 exports.get_transfer_status = function (req, callback) {
 
     var uuid = req.query.uuid,
@@ -98,6 +174,8 @@ exports.get_transfer_status = function (req, callback) {
         // TODO: automate (don't rely on client to initiate)
         if (results.status === 'COMPLETE' && results.sip_uuid !== undefined) {
 
+            console.log(results);
+
             knex('tbl_archivematica_import_queue')
                 .insert({
                     is_member_of_collection: folder.replace('_', ':'),
@@ -105,7 +183,6 @@ exports.get_transfer_status = function (req, callback) {
                     sip_uuid: results.sip_uuid
                 })
                 .then(function (data) {
-                    console.log(data);
 
                     callback({
                         status: 200,
@@ -178,16 +255,14 @@ exports.import_dip = function (req, callback) {
 
             duracloud.get_mets(data, function (results) {
 
+                // Extract values from DuraCloud METS.xml file
                 var metsResults = metslib.process_mets(results.sip_uuid, data[0].transfer_uuid, data[0].is_member_of_collection, results.mets);
-                // save to queue
+                // Save to queue
                 var chunkSize = metsResults.length;
                 knex.batchInsert('tbl_duracloud_import_queue', metsResults, chunkSize)
                     .then(function (data) {
-
-                        pids.get_next_pid(function (pid) {
-                            process_duracloud_queue_objects(results.sip_uuid, pid);
-                        });
-
+                        // Start processing XML
+                        process_duracloud_queue_xml(results.sip_uuid);
                     })
                     .catch(function (error) {
                         console.log(error);
@@ -207,12 +282,20 @@ exports.import_dip = function (req, callback) {
     });
 };
 
-var process_duracloud_queue_objects = function (sip_uuid, pid) {
+var process_duracloud_queue_objects = function (sip_uuid, pid, file) {
 
+    var tmpArr = file.split('.'),
+        file_id;
+
+    tmpArr.pop();
+    file_id = tmpArr.join('.');
+
+    // Get associated object
     knex('tbl_duracloud_import_queue')
         .select('*')
         .where({
             sip_uuid: sip_uuid,
+            file_id: file_id,
             type: 'object',
             status: 0
         })
@@ -227,6 +310,7 @@ var process_duracloud_queue_objects = function (sip_uuid, pid) {
                         .where({
                             status: 0,
                             sip_uuid: sip_uuid,
+                            file_id: file_id,
                             type: 'object'
                         })
                         .update({
@@ -239,37 +323,55 @@ var process_duracloud_queue_objects = function (sip_uuid, pid) {
                             console.log(error);
                         });
 
-                    process_duracloud_queue_xml(sip_uuid, pid);
-
                     return false;
                 }
 
                 var object = data.pop();
-                console.log(object);
 
                 duracloud.get_object(object, function (results) {
 
                     var recordObj = {};
                     recordObj.pid = pid;
-                    recordObj.is_member_of_collection = object.is_member_of_collection;
                     recordObj.sip_uuid = sip_uuid;
                     recordObj.transfer_uuid = object.transfer_uuid;
                     recordObj.file_name = results.file;
                     recordObj.checksum = results.headers['content-md5'];
                     recordObj.file_size = results.headers['content-length'];
 
+                    if (!fs.existsSync('./tmp/' + results.file)) {
+                        console.log('File ' + results.file + ' does not exist.');
+                        return false;
+                    }
+
                     var tmp = shell.exec('file --mime-type ./tmp/' + results.file).stdout;
                     var mimetypetmp = tmp.split(':');
-                    var mime_type = mimetypetmp[1].trim();
 
                     // TODO: ... do PDFs get jpg thumbnails
-                    recordObj.mime_type = mime_type;
+                    recordObj.mime_type = mimetypetmp[1].trim();
                     // TODO: confirm that all TNs are .jpg
                     recordObj.thumbnail = object.uuid + '.jpg';
 
-                    // TODO: save to DB (tbl_objects)
-                    console.log(recordObj);
-
+                    knex('tbl_objects')
+                        .where({
+                            pid: recordObj.pid,
+                            object_type: 'object'
+                        })
+                        .update({
+                            sip_uuid: recordObj.sip_uuid,
+                            transfer_uuid: recordObj.transfer_uuid,
+                            file_name: recordObj.file_name,
+                            checksum: recordObj.checksum,
+                            file_size: recordObj.file_size,
+                            mime_type: recordObj.mime_type,
+                            thumbnail: recordObj.thumbnail
+                        })
+                        .then(function (data) {
+                            console.log(data);
+                            recordObj = {};
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
                 });
 
             }, 3000);
@@ -281,7 +383,7 @@ var process_duracloud_queue_objects = function (sip_uuid, pid) {
         });
 };
 
-var process_duracloud_queue_xml = function (sip_uuid, pid) {
+var process_duracloud_queue_xml = function (sip_uuid) {
 
     knex('tbl_duracloud_import_queue')
         .select('*')
@@ -292,6 +394,7 @@ var process_duracloud_queue_xml = function (sip_uuid, pid) {
         })
         .then(function (data) {
 
+            var is_member_of_collection = data[0].is_member_of_collection;
             var timer = setInterval(function () {
 
                 if (data.length === 0) {
@@ -312,21 +415,36 @@ var process_duracloud_queue_xml = function (sip_uuid, pid) {
                         .catch(function (error) {
                             console.log(error);
                         });
+
                     return false;
                 }
 
                 var object = data.pop();
+                var file = object.file;
 
                 duracloud.get_object(object, function (results) {
 
-                    var recordObj = {};
-                    recordObj.pid = pid;
+                    // Get new PID and create DB record
+                    pids.get_next_pid(function (pid) {
 
-                    // TODO: update record by pid
-                    // TODO: process xml
-                    console.log(results.file);
-                    console.log(recordObj);
+                        var recordObj = {};
+                        recordObj.pid = pid;
+                        recordObj.is_member_of_collection = is_member_of_collection;
+                        // The xml file name will be overwritten by the object file name
+                        recordObj.file_name = file;
 
+                        knex('tbl_objects')
+                            .insert(recordObj)
+                            .then(function (data) {
+                                // Process xml (Extract mods, validate and save to DB)
+                                process_xml(recordObj);
+                                // Start processing object associated with XML record
+                                process_duracloud_queue_objects(sip_uuid, pid, file);
+                            })
+                            .catch(function (error) {
+                                console.log(error);
+                            });
+                    });
                 });
 
             }, 3000);
@@ -338,34 +456,6 @@ var process_duracloud_queue_xml = function (sip_uuid, pid) {
         });
 };
 
-
-// TODO: move to lib
-var get_next_pid = function (namespace, callback) {
-
-    request.post({
-        url: config.apiUrl + '/api/admin/v1/repo/pid?namespace=' + namespace
-    }, function (error, httpResponse, body) {
-
-        if (error) {
-            // TODO: log error and return callback
-            console.log(error);
-        }
-
-        if (httpResponse.statusCode === 200) {
-
-            var json = JSON.parse(body);
-            callback(json.pid);
-
-        } else {
-            // TODO: log error and return callback
-        }
-    });
-};
-
-var create_handle = function (obj) {
-    console.log('creating handle...');
-};
-
 /*
  Import processes
  */
@@ -373,22 +463,22 @@ var process_xml = function (obj) {
 
     console.log('processing xml...');
 
-    var folder = obj.is_member_of_collection.replace(':', '_'),
-        file = config.importPath + folder + '/' + obj.filename + '.xml',
+    var file = './tmp/' + obj.file_name,
         validate_xml_command = './libs/xsd-validator/xsdv.sh ./libs/xsd-validator/mods-3-6.xsd.xml ' + file;
 
     // check if object folder exists
     if (!fs.existsSync(file)) {
         // TODO: error
         // TODO: log
-        return false;
+        console.log('ERROR: File not found.');
+        // return false;
     }
 
     console.log('Validating ' + obj.pid + '...');
     shell.exec(validate_xml_command, function (code, stdout, stderr) {
 
         // TODO: log
-        console.log(stdout);
+        // console.log(stdout);
 
         if (code !== 0) {
             console.log(stderr);
@@ -405,21 +495,16 @@ var process_xml = function (obj) {
                 return false;
             }
 
-            var mods = modslib.process_mods(xml);
-
-            // TODO: validate processed mods as well
-            // TODO: write new mods to file and validate
+            var mods = modslib.process_mods(mods_original);
 
             console.log('Saving mods.');
             knex('tbl_objects')
                 .where({
-                    is_member_of_collection: obj.is_member_of_collection,
                     pid: obj.pid
                 })
                 .update({
                     mods: mods,
-                    mods_original: mods_original,
-                    mime_type: obj.mime_type
+                    mods_original: mods_original
                 })
                 .then(function (result) {
                     console.log('MODS saved. ', result);
@@ -427,11 +512,44 @@ var process_xml = function (obj) {
                 .catch(function (error) {
                     console.log(error);
                 });
+
         });
+
     });
 
     return false;
 };
+
+var create_handle = function (obj) {
+    console.log('creating handle...');
+};
+
+
+// TODO: move to lib
+/*
+ var get_next_pid = function (namespace, callback) {
+
+ request.post({
+ url: config.apiUrl + '/api/admin/v1/repo/pid?namespace=' + namespace
+ }, function (error, httpResponse, body) {
+
+ if (error) {
+ // TODO: log error and return callback
+ console.log(error);
+ }
+
+ if (httpResponse.statusCode === 200) {
+
+ var json = JSON.parse(body);
+ callback(json.pid);
+
+ } else {
+ // TODO: log error and return callback
+ }
+ });
+ };
+ */
+
 
 /*
  exports.get_import_admin_objects = function (req, callback) {

@@ -33,13 +33,13 @@ exports.list = function (folder, callback) {
 };
 
 // 1.)
-exports.start_tranfser = function (folder, callback) {
+exports.start_tranfser = function (transferObj, callback) {
 
     'use strict';
 
     var transferSource = config.archivematicaTransferSource,
         sftpPath = config.sftpRemotePath,
-        location = transferSource + ':' + sftpPath + '/' + folder,
+        location = transferSource + ':' + sftpPath + '/' + transferObj.is_member_of_collection + '/' + transferObj.object,
         buffer = new Buffer(location),
         encodedLocation = buffer.toString('base64'),
         apiUrl = config.archivematicaApi + 'transfer/start_transfer/?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
@@ -47,7 +47,7 @@ exports.start_tranfser = function (folder, callback) {
     request.post({
         url: apiUrl,
         form: {
-            'name': folder + '_transfer',
+            'name': transferObj.is_member_of_collection + '_' + transferObj.object + '_transfer',
             'type': 'standard',
             'accession': '',
             'paths[]': encodedLocation,
@@ -64,7 +64,7 @@ exports.start_tranfser = function (folder, callback) {
 };
 
 // 2.)
-exports.approve_transfer = function (folder, callback) {
+exports.approve_transfer = function (transferFolder, callback) {
 
     'use strict';
 
@@ -78,7 +78,7 @@ exports.approve_transfer = function (folder, callback) {
             url: apiUrl,
             form: {
                 'type': 'standard',
-                'directory': folder
+                'directory': transferFolder
             }
         }, function(error, httpResponse, body) {
 
@@ -89,7 +89,7 @@ exports.approve_transfer = function (folder, callback) {
             callback(body);
         });
 
-    }, 5000);
+    }, 2000);
 };
 
 // 3.)
@@ -120,7 +120,7 @@ exports.get_ingest_status = function (uuid, callback) {
 
     request.get({
         url: apiUrl
-    }, function(error, httpResponse, body){
+    }, function(error, httpResponse, body) {
 
         if (error) {
             console.log(error);

@@ -15,7 +15,12 @@ var importModule = (function () {
      */
     var renderImportObjects = function (data) {
 
-        var html = '';
+        var collection = helperModule.getParameterByName('collection'),
+            collectionObjects = [],
+            html = '';
+
+        // TODO: check for codu namespace in collection name
+        // TODO: return error message if codu namespace not found in collection name
 
         for (var i = 0; i < data.list.length; i++) {
 
@@ -25,19 +30,40 @@ var importModule = (function () {
 
                 // render folder or file
                 if (data.list[i].type === 'd') {
+
+                    if (collection !== null) {
+                        collectionObjects.push(data.list[i].name);
+                    }
+
                     html += '<td>';
-                    html += '<a class="btn btn-success btn-xs" onclick="importModule.transferObjects(\'' + data.list[i].name + '\')" href="#"><i class="fa fa-upload"></i>&nbsp;&nbsp;Import</a>';
-                    html += '&nbsp;&nbsp;&nbsp;<a href="/dashboard/import?folder=' + data.list[i].name + '"><i class="fa fa-folder"></i>&nbsp;&nbsp;' + data.list[i].name + '</a>';
+                    // html += '<a class="btn btn-success btn-xs" onclick="importModule.transferObjects(\'' + data.list[i].name + '\')" href="#"><i class="fa fa-upload"></i>&nbsp;&nbsp;Import</a>';
+                    // html += '&nbsp;&nbsp;&nbsp;<a href="/dashboard/import?collection=' + data.list[i].name + '"><i class="fa fa-folder"></i>&nbsp;&nbsp;' + data.list[i].name + '</a>';
+
+                    if (collection !== null) {
+                        html += '&nbsp;&nbsp;&nbsp;<i class="fa fa-folder"></i>&nbsp;&nbsp;' + data.list[i].name;
+                    } else {
+                        html += '&nbsp;&nbsp;&nbsp;<a href="/dashboard/import?collection=' + data.list[i].name + '"><i class="fa fa-folder"></i>&nbsp;&nbsp;' + data.list[i].name + '</a>';
+                    }
+
                     html += '</td>';
-                } else if (data.list[i].type === '-') {
+                }
+
+                /*
+                else if (data.list[i].type === '-') {
                     html += '<td>';
                     html += '<a type="button" class="btn btn-default btn-xs" disabled><i class="fa fa-ban"></i>&nbsp;&nbsp;Import</a>';
                     html += '&nbsp;&nbsp;&nbsp;<i class="fa fa-file"></i>&nbsp;&nbsp;' + data.list[i].name;
                     html += '</td>'
                 }
+                */
 
                 html += '</tr>';
             }
+        }
+
+        if (collection !== null && collectionObjects.length > 0) {
+            var button = '<a class="btn btn-success btn-xs" onclick="importModule.transferObjects(\'' + collectionObjects + '\')" href="#"><i class="fa fa-upload"></i>&nbsp;&nbsp;Import</a>';
+            $('#import-button').html(button);
         }
 
         $('#import-objects').html(html);
@@ -47,17 +73,28 @@ var importModule = (function () {
     /*
         Begins the Archivematica transfer/ingest process
     */
-    obj.transferObjects = function (folder) {
+    obj.transferObjects = function (objects) {
 
-        $('#message').html('<div class="alert alert-success">Transfer started...</div>');
-        $('#import-table').hide();
+        var collection = helperModule.getParameterByName('collection');
+
+        if (collection === null) {
+            $('#message').html('<div class="alert alert-danger">Unable to start transfer. Collection PID not found.</div>');
+            return false;
+        }
 
         $.ajax({
             url: api + '/api/admin/v1/import/start_transfer',
             type: 'post',
-            data: {folder: folder}
+            data: {collection: collection, objects: objects}
         }).done(function (data) {
 
+            // TODO: check payload
+            console.log(data);
+
+            $('#message').html('<div class="alert alert-success">Transfer started...</div>');
+            $('#import-table').hide();
+
+            /*
             var json = JSON.parse(data);
             console.log(json);
 
@@ -69,8 +106,9 @@ var importModule = (function () {
             // transfer approval message
             $('#message').html('<div class="alert alert-success">' + json.message + '...</div>');
 
-            // check transfer status
-            importModule.getTransferStatus(folder, json.uuid);
+            // TODO: check transfer status
+            // importModule.getTransferStatus(folder, json.uuid);
+            */
 
         }).fail(function () {
             renderError();
@@ -206,22 +244,22 @@ var importModule = (function () {
 
         $('#message').html('<p><strong>Loading...</strong></p>');
 
-        var folder = helperModule.getParameterByName('folder'),
-            url = api + '/api/admin/v1/import/list?folder=' + null,
+        var folder = helperModule.getParameterByName('collection'),
+            url = api + '/api/admin/v1/import/list?collection=' + null,
             foldersArr = [];
 
+        // TODO: render collection folder contents differently
         if (folder !== null) {
 
-            // TODO: implement back buttons
-            $('#back').html('<p><a href="#" class="btn btn-default" id="back"><i class="fa fa-arrow-left"></i> Back</a></p>');
-            back();
+            $('#back').html('<p><a href="/dashboard/import" class="btn btn-default" id="back"><i class="fa fa-arrow-left"></i> Back</a></p>');
+            // back();
 
             var folders = window.sessionStorage.getItem('folders');
 
             if (folders !== null) {
 
                 $('#back').html('<p><a href="#" class="btn btn-default"><i class="fa fa-arrow-left"></i> Back</a></p>');
-                back();
+                // back();
 
                 foldersArr = JSON.parse(folders);
 
@@ -241,7 +279,7 @@ var importModule = (function () {
                     window.sessionStorage.setItem('folders', JSON.stringify(foldersArr));
 
                     if (foldersArr.length > 1) {
-                        url = api + '/api/admin/v1/import/list?folder=' + foldersArr.toString();
+                        url = api + '/api/admin/v1/import/list?collection=' + foldersArr.toString();
                     }
 
                 }
@@ -250,7 +288,7 @@ var importModule = (function () {
 
                 window.sessionStorage.removeItem('folders');
                 foldersArr.push(folder);
-                url = api + '/api/admin/v1/import/list?folder=' + folder;
+                url = api + '/api/admin/v1/import/list?collection=' + folder;
                 window.sessionStorage.setItem('folders', JSON.stringify(foldersArr));
             }
 
@@ -267,7 +305,8 @@ var importModule = (function () {
             });
     };
 
-    // TODO:...
+    // TODO: NOT USED
+    /*
     var back = function () {
 
         $('#back').click(function () {
@@ -297,6 +336,7 @@ var importModule = (function () {
             }
         });
     };
+    */
 
     obj.init = function () {
         userModule.renderUserName();
