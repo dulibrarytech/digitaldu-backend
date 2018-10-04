@@ -111,15 +111,8 @@ exports.start_transfer = function (req, callback) {
 
                             archivematica.approve_transfer(transferFolder, function (results) {
 
-                                // TODO: get transfer uuid
-                                // {"message": "Approval successful.", "uuid": "bc90c9ac-85a1-4d75-aa80-e729f02e6b3a"}
-                                // TODO: update queue status?
-                                // console.log(object.id);
-                                // console.log(transferFolder);
-                                console.log(results);
-
-                                var json = JSON.parse(results);
-                                var transfer_uuid = json.uuid;
+                                var json = JSON.parse(results),
+                                    transfer_uuid = json.uuid;
 
                                 // Update queue status
                                 knex('tbl_archivematica_transfer_queue')
@@ -137,7 +130,6 @@ exports.start_transfer = function (req, callback) {
                                     .catch(function (error) {
                                         console.log(error);
                                     });
-
                             });
 
                         });
@@ -159,7 +151,8 @@ exports.start_transfer = function (req, callback) {
     callback({
         status: 200,
         content_type: {'Content-Type': 'application/json'},
-        message: 'Transfer started.'
+        message: 'Transfer started.',
+        data: {collection: collection}
     });
 };
 

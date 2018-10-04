@@ -107,8 +107,9 @@ var importModule = (function () {
             $('#message').html('<div class="alert alert-success">' + json.message + '...</div>');
 
             // TODO: check transfer status
-            // importModule.getTransferStatus(folder, json.uuid);
             */
+
+            importModule.getTransferStatus(collection);  // json.uuid
 
         }).fail(function () {
             renderError();
@@ -118,7 +119,7 @@ var importModule = (function () {
     /*
         Checks Archivematica transfer status Q1sec
      */
-    obj.getTransferStatus = function (folder, uuid) {
+    obj.getTransferStatus = function (folder) {  // , uuid
 
         var transferTimer = setInterval(function () {
 
