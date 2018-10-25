@@ -3,7 +3,7 @@
 var xmldoc = require('xmldoc'),
     _ = require('lodash');
 
-exports.process_mets = function (sip_uuid, transfer_uuid, is_member_of_collection, xml) {
+exports.process_mets = function (sip_uuid, dip_path, transfer_uuid, is_member_of_collection, xml) {
 
     var document = new xmldoc.XmlDocument(xml),
         Obj = {},
@@ -32,6 +32,7 @@ exports.process_mets = function (sip_uuid, transfer_uuid, is_member_of_collectio
                                 Obj.uuid = array[index].children[1].children[i].attr.ID.replace(/file-/g,'');
                                 Obj.sip_uuid = sip_uuid;
                                 Obj.transfer_uuid = transfer_uuid;
+                                Obj.dip_path = dip_path;
                                 Obj.is_member_of_collection = is_member_of_collection;
                                 Obj.file = array[index].children[1].children[i].children[k].attr['xlink:href'].replace(/objects\//g, '');
 

@@ -11,6 +11,9 @@ module.exports = function (app) {
     app.route('/api/admin/v1/import/start_transfer')
         .post(Import.start_transfer);
 
+    app.route('/api/admin/v1/import/status')
+        .get(Import.get_import_status);
+
     app.route('/api/admin/v1/import/transfer_status')
         .get(Import.get_transfer_status);
 
@@ -18,7 +21,7 @@ module.exports = function (app) {
         .get(Import.get_ingest_status);
 
     app.route('/api/admin/v1/import/import_dip')
-        .post(Import.import_dip);
+        .get(Import.import_dip);
 
     /*
     app.route('/api/admin/v1/import')

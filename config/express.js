@@ -10,7 +10,31 @@ var http = require('http'),
 module.exports = function () {
 
     var app = express(),
-        server = http.createServer(app);
+        server = http.createServer(app),
+        io = require('socket.io')(server);
+
+    // io.path('/api/admin/v1/import/status');
+    server.listen(8000);
+
+    // socket.io route
+    app.get('/', function (req, res) {});
+
+    // accepts client connections
+    io.on('connection', function(socket){
+        console.log('client connected to get transfer status');
+        // sends transfer status to client
+        socket.on('transfer_status', function(status) {
+            io.emit('transfer_status', status);
+        });
+    });
+
+    io.on('connection', function(socket){
+        console.log('client connected to get ingest status');
+        // sends ingest status to client
+        socket.on('ingest_status', function(status) {
+            io.emit('ingest_status', status);
+        });
+    });
 
     if (process.env.NODE_ENV === 'development') {
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;

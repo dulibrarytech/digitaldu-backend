@@ -21,7 +21,6 @@ var importModule = (function () {
 
         // TODO: check for codu namespace in collection name
         // TODO: return error message if codu namespace not found in collection name
-
         for (var i = 0; i < data.list.length; i++) {
 
             if (data.list[i].name.charAt(0) !== '.') {
@@ -49,7 +48,7 @@ var importModule = (function () {
                 }
 
                 /*
-                else if (data.list[i].type === '-') {
+                else if (collection !== null && data.list[i].type === '-') {
                     html += '<td>';
                     html += '<a type="button" class="btn btn-default btn-xs" disabled><i class="fa fa-ban"></i>&nbsp;&nbsp;Import</a>';
                     html += '&nbsp;&nbsp;&nbsp;<i class="fa fa-file"></i>&nbsp;&nbsp;' + data.list[i].name;
@@ -70,7 +69,7 @@ var importModule = (function () {
         $('#message').empty();
     };
 
-    /*
+    /* TODO: rename function name to "importObjects"
         Begins the Archivematica transfer/ingest process
     */
     obj.transferObjects = function (objects) {
@@ -91,8 +90,13 @@ var importModule = (function () {
             // TODO: check payload
             console.log(data);
 
-            $('#message').html('<div class="alert alert-success">Transfer started...</div>');
-            $('#import-table').hide();
+            $('#message').html('<div class="alert alert-success">Import process started...</div>');
+
+            setTimeout(function () {
+                $('#message').html('');
+            }, 5000);
+
+            // $('#import-table').hide();
 
             /*
             var json = JSON.parse(data);
@@ -106,17 +110,17 @@ var importModule = (function () {
             // transfer approval message
             $('#message').html('<div class="alert alert-success">' + json.message + '...</div>');
 
-            // TODO: check transfer status
+
             */
 
-            importModule.getTransferStatus(collection);  // json.uuid
+            // importModule.getTransferStatus(collection);  // json.uuid
 
         }).fail(function () {
             renderError();
         });
     };
 
-    /*
+    /* TODO: remove
         Checks Archivematica transfer status Q1sec
      */
     obj.getTransferStatus = function (folder) {  // , uuid
@@ -177,6 +181,7 @@ var importModule = (function () {
         }, 1000);
     };
 
+    // TODO: remove
     obj.getIngestStatus = function (folder, uuid) {
 
         var ingestTimer = setInterval(function () {

@@ -20,6 +20,12 @@ exports.get_transfer_status = function (req, res) {
     });
 };
 
+exports.get_import_status = function (req, res) {
+    Import.get_import_status(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
 exports.get_ingest_status = function (req, res) {
     Import.get_ingest_status(req, function (data) {
         res.status(data.status).send(data.data);

@@ -53,7 +53,7 @@ exports.start_tranfser = function (transferObj, callback) {
             'paths[]': encodedLocation,
             'rows_ids[]': '[""]'
         }
-    }, function(error, httpResponse, body){
+    }, function (error, httpResponse, body) {
 
         if (error) {
             console.log(error);
@@ -80,7 +80,7 @@ exports.approve_transfer = function (transferFolder, callback) {
                 'type': 'standard',
                 'directory': transferFolder
             }
-        }, function(error, httpResponse, body) {
+        }, function (error, httpResponse, body) {
 
             if (error) {
                 console.log(error);
@@ -101,7 +101,7 @@ exports.get_transfer_status = function (uuid, callback) {
 
     request.get({
         url: apiUrl
-    }, function(error, httpResponse, body){
+    }, function (error, httpResponse, body) {
 
         if (error) {
             console.log(error);
@@ -120,7 +120,7 @@ exports.get_ingest_status = function (uuid, callback) {
 
     request.get({
         url: apiUrl
-    }, function(error, httpResponse, body) {
+    }, function (error, httpResponse, body) {
 
         if (error) {
             console.log(error);
@@ -130,41 +130,38 @@ exports.get_ingest_status = function (uuid, callback) {
     });
 };
 
-exports.start_reingest = function () {
+// 5.) Constructs path to dip store in DuraCloud
+exports.get_dip_path = function (uuid, callback) {
 
     'use strict';
 
-    /* TODO:...
-     URL: /api/transfer/reingest
-     Verb: POST
-     Start a full reingest.
-     Parameters: JSON body
-     name: Name of the AIP. The AIP should also be found at %sharedDirectory%/tmp/<name>
-     uuid: UUID of the AIP to reingest
-     Response: JSON
-     message: "Approval successful."
-     reingest_uuid: UUID of the reingested transfer
-     */
-};
+    var apiUrl = config.archivematicaStorageApi + 'v2/file/' + uuid + '/?username=' + config.archivematicaStorageUsername + '&api_key=' + config.archivematicaStorageApiKey;
 
-exports.create_folder = function (folder, callback) {
+    request.get({
+        url: apiUrl
+    }, function (error, httpResponse, body) {
 
-    'use strict';
-    // TODO:...
+        if (error) {
+            console.log(error);
+        }
 
-    var sftp = new client();
+        var json = JSON.parse(body);
+        var dipuuidArr = json.related_packages[0].split('/');
+        var uuid = dipuuidArr.filter(function (result) {
+            return result;
+        });
 
-    sftp.connect({
+        var dipuuid = uuid[uuid.length - 1],
+            tmp = dipuuid.replace(/-/g, ''),
+            tmpuuid = tmp.match(/.{1,4}/g),
+            path = tmpuuid.join('/');
 
-        host: config.sftpHost,
-        port: '22',
-        username: config.sftpId,
-        password: config.sftpPwd
 
-    }).then(function () {
-        sftp.mkdir(config.sftpRemotePath + '/' + folder, true);
-        callback('done');
-    }).catch(function (err) {
-        console.log(err, 'catch error');
+        var folderArr = json.current_path.split('/'),
+            folderTmp = folderArr[folderArr.length -1],
+            folder = folderTmp.replace('.7z', ''),
+            dipPath = path + '/' + folder;
+
+        callback(dipPath);
     });
 };

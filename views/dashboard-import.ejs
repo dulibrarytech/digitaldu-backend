@@ -76,7 +76,8 @@
                             </div>
                             <div class="x_content">
                                 <div id="message"></div>
-                                <div id="back"></div>
+                                <div id="transfer-status"></div>
+                                <div id="ingest-status"></div>
                                 <!-- datatable-checkbox_ -->
                                 <table id="import-table" class="table table-striped table-bordered bulk_action">
                                     <thead>
@@ -123,6 +124,7 @@
     <script src="../../vendors/datatables.net-responsive/js/dataTables.responsive.min.js"></script>
 
     <script src="../../app/libs/ImageViewer/imageviewer.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.1/socket.io.js"></script>
 
     <!-- Custom Theme Scripts -->
     <script src="../../build/js/mediaelement-mediaelement-cc69163/build/mediaelement-and-player.min.js"></script>
@@ -137,5 +139,37 @@
         importModule.init();
         importModule.getImportObjects();
     </script>
+    <script>
+        // TODO: move to import module
+        var socket = io();
+
+        socket.on('transfer_status', function (data) {
+            console.log(data[0]);
+            if (data[0].message !== null && data[0].message !== 'TRANSFER_COMPLETE') {
+                $('#transfer-status').html('<div class="alert alert-info"><i class="fa fa-info-circle"></i> (Transfer) Collection: ' + data[0].is_member_of_collection.replace('_', ':') + ' - ' + data[0].message + ' - ' + data[0].microservice + '</div>');
+            } else if (data[0].message === 'TRANSFER_COMPLETE') {
+                setTimeout(function () {
+                    $('#transfer-status').html('');
+                }, 5000);
+            } else {
+                $('#transfer-status').html('');
+            }
+        });
+
+        socket.on('ingest_status', function (data) {
+            console.log(data[0]);
+            if (data[0].message !== null && data[0].message !== 'IMPORT_COMPLETE') {
+                $('#ingest-status').html('<div class="alert alert-info"><i class="fa fa-info-circle"></i> (Import) Collection: ' + data[0].is_member_of_collection.replace('_', ':') + ' - ' + data[0].message + ' - ' + data[0].microservice + '</div>');
+            } else if (data[0].message === 'IMPORT_COMPLETE') {
+                setTimeout(function () {
+                    $('#ingest-status').html('');
+                }, 5000);
+            } else {
+                $('#ingest-status').html('');
+            }
+        });
+
+    </script>
+
 </body>
 </html>
