@@ -6,6 +6,7 @@ var fs = require('fs'),
     modslib = require('../libs/mods/mods_init'),
     metslib = require('../libs/mets'),
     pids = require('../libs/next-pid'),
+    handles = require('../libs/handles'),
     archivematica = require('../libs/archivematica'),
     duracloud = require('../libs/duracloud'),
     uuid = require('uuid'),
@@ -539,12 +540,29 @@ var process_duracloud_queue_xml = function (sip_uuid) {
 
                 duracloud.get_object(object, function (results) {
 
-                    // TODO: get handle
-                    // Get new PID and create DB record
-                    pids.get_next_pid(function (pid) {
+                    function get_pid(callback) {
+                        pids.get_next_pid(function (pid) {
+                            console.log(pid);
+                            callback(null, {pid: pid});
+                        });
+                    }
+
+                    function get_handle(obj, callback) {
+                        handles.create_handle(obj.pid, function (handle) {
+                            console.log(handle);
+                            obj.handle = handle;
+                            callback(null, obj);
+                        });
+                    }
+
+                    async.waterfall([
+                        get_pid,
+                        get_handle
+                    ], function (err, results) {
 
                         var recordObj = {};
-                        recordObj.pid = pid;
+                        recordObj.pid = results.pid;
+                        recordObj.handle = results.handle;
                         recordObj.is_member_of_collection = is_member_of_collection;
                         // The xml file name will be overwritten by the object file name
                         recordObj.file_name = file;
@@ -555,11 +573,12 @@ var process_duracloud_queue_xml = function (sip_uuid) {
                                 // Process xml (Extract mods, validate and save to DB)
                                 process_xml(recordObj);
                                 // Start processing object associated with XML record
-                                process_duracloud_queue_objects(sip_uuid, pid, file);
+                                process_duracloud_queue_objects(sip_uuid, results.pid, file);
                             })
                             .catch(function (error) {
                                 console.log(error);
                             });
+
                     });
                 });
 
@@ -733,8 +752,4 @@ var process_xml = function (obj) {
     });
 
     return false;
-};
-
-var create_handle = function (obj) {
-    console.log('creating handle...');
 };

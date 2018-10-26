@@ -12,11 +12,11 @@ exports.create_handle = function (pid, callback) {
         handleTarget = config.handleTarget,
         handleServer = config.handleServer;
 
-    var handlUrl = handleHost + handlePrefix + '/' + encodeURIComponent(pid) + '?target=' + handleTarget + encodeURIComponent(pid),
+    var handleUrl = handleHost + '/' + handlePrefix + '/' + encodeURIComponent(pid) + '?target=' + handleTarget + encodeURIComponent(pid),
         auth = new Buffer(handleUser + ':' + handlePassword).toString('base64');
 
     var options = {
-        url: handlUrl,
+        url: handleUrl,
         method: 'POST',
         headers: {
             Authorization: 'Basic ' + auth
