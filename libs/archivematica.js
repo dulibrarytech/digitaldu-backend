@@ -68,28 +68,22 @@ exports.approve_transfer = function (transferFolder, callback) {
 
     'use strict';
 
-    // the delay ensures that the folder's move has completed before attempting to approve it.
-    // TODO: more testing required for large collections
-    setTimeout(function () {
+    var apiUrl = config.archivematicaApi + 'transfer/approve?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
 
-        var apiUrl = config.archivematicaApi + 'transfer/approve?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
+    request.post({
+        url: apiUrl,
+        form: {
+            'type': 'standard',
+            'directory': transferFolder
+        }
+    }, function (error, httpResponse, body) {
 
-        request.post({
-            url: apiUrl,
-            form: {
-                'type': 'standard',
-                'directory': transferFolder
-            }
-        }, function (error, httpResponse, body) {
+        if (error) {
+            console.log(error);
+        }
 
-            if (error) {
-                console.log(error);
-            }
-
-            callback(body);
-        });
-
-    }, 2000);
+        callback(body);
+    });
 };
 
 // 3.)
@@ -158,7 +152,7 @@ exports.get_dip_path = function (uuid, callback) {
 
 
         var folderArr = json.current_path.split('/'),
-            folderTmp = folderArr[folderArr.length -1],
+            folderTmp = folderArr[folderArr.length - 1],
             folder = folderTmp.replace('.7z', ''),
             dipPath = path + '/' + folder;
 

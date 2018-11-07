@@ -14,9 +14,16 @@ var fs = require('fs'),
     async = require('async'),
     socketclient = require('socket.io-client')(config.host),
     request = require('request'),
-    // es = require('elasticsearch'),
     shell = require('shelljs'),
-    // ignore = ['.svn', '.git', '.DS_Store', 'Thumbs.db'],
+    knexQ = require('knex')({
+        client: 'mysql2',
+        connection: {
+            host: config.dbQueueHost,
+            user: config.dbQueueUser,
+            password: config.dbQueuePassword,
+            database: config.dbQueueName
+        }
+    }),
     knex = require('knex')({
         client: 'mysql2',
         connection: {
@@ -26,6 +33,10 @@ var fs = require('fs'),
             database: config.dbName
         }
     });
+
+// ignore = ['.svn', '.git', '.DS_Store', 'Thumbs.db'],
+// es = require('elasticsearch'),
+
 
 /*
  var client = new es.Client({
@@ -37,13 +48,12 @@ var fs = require('fs'),
 // broadcasts transfer status
 socketclient.on('connect', function () {
 
-    var id = setInterval(function() {
+    var transfer_timer = 3000;
+    var id = setInterval(function () {
 
-        knex('tbl_archivematica_transfer_queue')
+        knexQ('tbl_archivematica_transfer_queue')
             .select('*')
-            .where({
-                status: 0
-            })
+            .whereRaw('DATE(created) = CURRENT_DATE')
             .then(function (data) {
 
                 if (data.length > 0) {
@@ -55,19 +65,18 @@ socketclient.on('connect', function () {
                 console.log(error);
             });
 
-    }, 1000);
+    }, transfer_timer);
 });
 
 // broadcasts ingest status
 socketclient.on('connect', function () {
 
-    var id = setInterval(function() {
+    var ingest_timer = 3000;
+    var id = setInterval(function () {
 
-        knex('tbl_archivematica_import_queue')
+        knexQ('tbl_archivematica_import_queue')
             .select('*')
-            .where({
-                status: 0
-            })
+            .whereRaw('DATE(created) = CURRENT_DATE')
             .then(function (data) {
 
                 if (data.length > 0) {
@@ -79,7 +88,7 @@ socketclient.on('connect', function () {
                 console.log(error);
             });
 
-    }, 1000);
+    }, ingest_timer);
 });
 
 /* TODO: rename get_transfers list files under a folder on the archivematica sftp server */
@@ -98,9 +107,12 @@ exports.list = function (req, callback) {
     });
 };
 
-// NOTE: Ingest begins automatically after a successful transfer
+// NOTE: Ingest begins automatically after a successful transfer and approval
 // 1.)
 exports.start_transfer = function (req, callback) {
+
+    var transfer_start_time = 45000,
+        transfer_approval_time = 30000;
 
     if (req.body === undefined) {
 
@@ -121,27 +133,29 @@ exports.start_transfer = function (req, callback) {
         return {
             is_member_of_collection: collection,
             object: object,
-            message: 'STARTING_TRANSFER',
-            microservice: 'Starting transfer microservice'
+            message: 'WAITING_FOR_TRANSFER',
+            microservice: 'Waiting for transfer microservice'
         };
 
     });
 
     // Save import objects to transfer queue
     var chunkSize = importObjects.length;
-    knex.batchInsert('tbl_archivematica_transfer_queue', importObjects, chunkSize)
+    knexQ.batchInsert('tbl_archivematica_transfer_queue', importObjects, chunkSize)
         .then(function (data) {
 
-            // Get transfer queue records
-            knex('tbl_archivematica_transfer_queue')
-                .select('id', 'is_member_of_collection', 'object')
-                .where({
-                    is_member_of_collection: collection,
-                    status: 0
-                })
-                .then(function (data) {
+            var timer = setInterval(function () {
 
-                    var timer = setInterval(function () {
+                // Get transfer queue records
+                knexQ('tbl_archivematica_transfer_queue')
+                    .select('id', 'is_member_of_collection', 'object')
+                    .where({
+                        is_member_of_collection: collection,
+                        message: 'WAITING_FOR_TRANSFER',
+                        status: 0
+                    })
+                    .limit(1)
+                    .then(function (data) {
 
                         if (data.length === 0) {
                             console.log('Transfers completed.');
@@ -151,10 +165,34 @@ exports.start_transfer = function (req, callback) {
 
                         var object = data.pop();
 
-                        // Initiate transfers using archivematica api Q3 sec.
+                        knexQ('tbl_archivematica_transfer_queue')
+                            .where({
+                                id: object.id,
+                                status: 0
+                            })
+                            .update({
+                                message: 'TRANSFER_STARTED',
+                                microservice: 'Starting transfer microservice'
+
+                            })
+                            .then(function (data) {
+                                console.log(data);
+
+                            })
+                            .catch(function (error) {
+                                console.log(error);
+                            });
+
+                        // Initiate transfers using archivematica api Q5 sec.
                         archivematica.start_tranfser(object, function (results) {
 
                             var json = JSON.parse(results);
+
+                            if (json.message !== 'Copy successful.') {
+                                console.log(json.message);
+                                return false;
+                            }
+
                             var path = json.path;
                             var pathArr = path.split('/');
 
@@ -166,50 +204,81 @@ exports.start_transfer = function (req, callback) {
 
                             var transferFolder = arr.pop();
 
-                            // Automatically approve transfer to allow it to proceed
-                            archivematica.approve_transfer(transferFolder, function (results) {
+                            setTimeout(function () {
 
-                                var json = JSON.parse(results),
-                                    transfer_uuid = json.uuid;
+                                // Automatically approve transfer to allow ingest to proceed
+                                archivematica.approve_transfer(transferFolder, function (results) {
 
-                                // Update queue status when the transfer is complete
-                                knex('tbl_archivematica_transfer_queue')
-                                    .where({
-                                        id: object.id,
-                                        status: 0
-                                    })
-                                    .update({
-                                        transfer_uuid: transfer_uuid,
-                                        message: 'TRANSFER_APPROVED'
-                                    })
-                                    .then(function (data) {
+                                    var json = JSON.parse(results);
 
-                                        // Initiate transfer status checks
-                                        request.get({
-                                            url: config.apiUrl + '/api/admin/v1/import/transfer_status?collection=' + collection
-                                        }, function(error, httpResponse, body) {
+                                    if (json.error === true) {
 
-                                            if (error) {
+                                        console.log('transfer_uuid is not present');
+                                        // Update queue status if the transfer approval fails
+                                        knexQ('tbl_archivematica_transfer_queue')
+                                            .where({
+                                                id: object.id,
+                                                status: 0
+                                            })
+                                            .update({
+                                                transfer_uuid: 'transfer_uuid is not present',
+                                                message: 'TRANSFER_NOT_APPROVED',
+                                                status: 1
+                                            })
+                                            .then(function (data) {
+                                                console.log(data);
+
+                                            })
+                                            .catch(function (error) {
                                                 console.log(error);
-                                            }
+                                            });
 
-                                            console.log(body);
-                                        });
+                                    } else {
 
-                                    })
-                                    .catch(function (error) {
-                                        console.log(error);
-                                    });
-                            });
+                                        var transfer_uuid = json.uuid;
+
+                                        // Update queue status when the transfer is complete
+                                        knexQ('tbl_archivematica_transfer_queue')
+                                            .where({
+                                                id: object.id,
+                                                status: 0
+                                            })
+                                            .update({
+                                                transfer_uuid: transfer_uuid,
+                                                message: 'TRANSFER_APPROVED'
+                                            })
+                                            .then(function (data) {
+
+                                                // Initiate transfer status checks
+                                                request.get({
+                                                    url: config.apiUrl + '/api/admin/v1/import/transfer_status?collection=' + collection + '&transfer_uuid=' + transfer_uuid
+                                                }, function (error, httpResponse, body) {
+
+                                                    if (error) {
+                                                        console.log(error);
+                                                    }
+
+                                                    console.log(body);
+                                                });
+
+                                            })
+                                            .catch(function (error) {
+                                                console.log(error);
+                                            });
+                                    }
+
+                                });
+
+                            }, transfer_approval_time);
 
                         });
 
-                    }, 5000);
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
 
-                })
-                .catch(function (error) {
-                    console.log(error);
-                });
+            }, transfer_start_time);
 
             return null;
 
@@ -229,14 +298,19 @@ exports.start_transfer = function (req, callback) {
 // 2.)
 exports.get_transfer_status = function (req, callback) {
 
-    var is_member_of_collection = req.query.collection;
+    var is_member_of_collection = req.query.collection,
+        transfer_uuid = req.query.transfer_uuid,
+        transfer_status_check = 3000,
+        ingest_status_start_timeout = 10000;
 
-    knex('tbl_archivematica_transfer_queue')
+    knexQ('tbl_archivematica_transfer_queue')
         .select('*')
         .where({
             is_member_of_collection: is_member_of_collection,
-            status: 0
+            transfer_uuid: transfer_uuid,
+            message: 'TRANSFER_APPROVED'
         })
+        .limit(1)
         .then(function (data) {
 
             var timer = setInterval(function () {
@@ -249,8 +323,10 @@ exports.get_transfer_status = function (req, callback) {
 
                         if (json.status === 'COMPLETE' && json.sip_uuid !== undefined) {
 
+                            clearInterval(timer);
+
                             // Flag transfer as COMPLETE in queue
-                            knex('tbl_archivematica_transfer_queue')
+                            knexQ('tbl_archivematica_transfer_queue')
                                 .where({
                                     is_member_of_collection: is_member_of_collection,
                                     transfer_uuid: json.uuid,
@@ -258,7 +334,80 @@ exports.get_transfer_status = function (req, callback) {
                                 })
                                 .update({
                                     message: 'TRANSFER_COMPLETE',
-                                    microservice: json.microservice
+                                    microservice: json.microservice,
+                                    status: 1
+                                })
+                                .then(function (data) {
+
+                                    // Check if transfer uuid already exist
+                                    knexQ('tbl_archivematica_import_queue')
+                                        .count('transfer_uuid as count')
+                                        .where({
+                                            transfer_uuid: json.uuid
+                                        })
+                                        .then(function (data) {
+
+                                            if (data[0].count === 1) {
+                                                return false;
+                                            }
+
+                                            // Save object information to import queue
+                                            knexQ('tbl_archivematica_import_queue')
+                                                .insert({
+                                                    is_member_of_collection: object.is_member_of_collection.replace('_', ':'),
+                                                    transfer_uuid: json.uuid,
+                                                    sip_uuid: json.sip_uuid,
+                                                    message: 'STARTING_IMPORT',
+                                                    microservice: 'Starting import microservice'
+                                                })
+                                                .then(function (data) {
+
+                                                    setTimeout(function () {
+
+                                                        console.log('Begin checking import status...');
+
+                                                        // Initiate ingest status checks
+                                                        request.get({
+                                                            url: config.apiUrl + '/api/admin/v1/import/ingest_status?sip_uuid=' + json.sip_uuid
+                                                        }, function (error, httpResponse, body) {
+
+                                                            if (error) {
+                                                                console.log(error);
+                                                            }
+
+                                                            console.log(body);
+                                                        });
+
+                                                    }, ingest_status_start_timeout);
+
+                                                })
+                                                .catch(function (error) {
+                                                    console.log(error);
+                                                });
+
+                                        })
+                                        .catch(function (error) {
+                                            console.log(error);
+                                        });
+
+                                })
+                                .catch(function (error) {
+                                    console.log(error);
+                                });
+
+                        } else if (json.status === 'FAILED' || json.status === 'USER_INPUT' || json.status === 'REJECTED') {
+
+                            // Update transfer status
+                            knexQ('tbl_archivematica_transfer_queue')
+                                .where({
+                                    is_member_of_collection: is_member_of_collection,
+                                    transfer_uuid: object.transfer_uuid,
+                                    status: 0
+                                })
+                                .update({
+                                    message: json.status,
+                                    microservice: json.microservice,
+                                    status: 1
                                 })
                                 .then(function (data) {
                                     // console.log(data);
@@ -267,61 +416,10 @@ exports.get_transfer_status = function (req, callback) {
                                     console.log(error);
                                 });
 
-                            // Save object information to import queue
-                            knex('tbl_archivematica_import_queue')
-                                .insert({
-                                    is_member_of_collection: object.is_member_of_collection.replace('_', ':'),
-                                    transfer_uuid: json.uuid,
-                                    sip_uuid: json.sip_uuid,
-                                    message: 'STARTING_IMPORT',
-                                    microservice: 'Starting ingest microservice'
-                                })
-                                .then(function (data) {
-
-                                    setTimeout(function () {
-                                        // update queue status
-                                        knex('tbl_archivematica_transfer_queue')
-                                            .where({
-                                                is_member_of_collection: is_member_of_collection,
-                                                transfer_uuid: json.uuid,
-                                                status: 0
-                                            })
-                                            .update({
-                                                status: 1
-                                            })
-                                            .then(function (data) {
-                                                // console.log(data);
-                                                console.log('Begin checking ingest status...');
-
-                                                // Initiate ingest status checks
-                                                request.get({
-                                                    url: config.apiUrl + '/api/admin/v1/import/ingest_status?sip_uuid=' + json.sip_uuid
-                                                }, function(error, httpResponse, body) {
-
-                                                    if (error) {
-                                                        console.log(error);
-                                                    }
-
-                                                    console.log(body);
-                                                });
-
-                                            })
-                                            .catch(function (error) {
-                                                console.log(error);
-                                            });
-                                    }, 2000);
-
-                                })
-                                .catch(function (error) {
-                                    console.log(error);
-                                });
-
-                            clearInterval(timer);
-
-                        } else {
+                        } else if (json.status === 'PROCESSING') {
 
                             // Update transfer status
-                            knex('tbl_archivematica_transfer_queue')
+                            knexQ('tbl_archivematica_transfer_queue')
                                 .where({
                                     is_member_of_collection: is_member_of_collection,
                                     transfer_uuid: object.transfer_uuid,
@@ -337,11 +435,32 @@ exports.get_transfer_status = function (req, callback) {
                                 .catch(function (error) {
                                     console.log(error);
                                 });
+
+                        } else {
+
+                            // Update transfer status
+                            knexQ('tbl_archivematica_transfer_queue')
+                                .where({
+                                    is_member_of_collection: is_member_of_collection,
+                                    transfer_uuid: object.transfer_uuid,
+                                    status: 0
+                                })
+                                .update({
+                                    message: json.status,
+                                    microservice: json.microservice,
+                                    status: 1
+                                })
+                                .then(function (data) {
+                                    console.log(data);
+                                })
+                                .catch(function (error) {
+                                    console.log(error);
+                                });
                         }
                     });
                 });
 
-            }, 1000);
+            }, transfer_status_check);
 
             return null;
         })
@@ -349,19 +468,26 @@ exports.get_transfer_status = function (req, callback) {
             console.log(error);
         });
 
-     callback({
+    callback({
         status: 200,
         content_type: {'Content-Type': 'application/json'},
         message: 'Updating transfer queue.'
-     });
+    });
 };
 
 // 3.)
 exports.get_ingest_status = function (req, callback) {
 
-    var sip_uuid = req.query.sip_uuid;
+    var sip_uuid = req.query.sip_uuid,
+        ingest_status_check_time = 3000,
+        duracloud_import_start_timeout = 5000;
 
     var timer = setInterval(function () {
+
+        if (sip_uuid === undefined) {
+            console.log('sip uuid problem');
+            return false;
+        }
 
         archivematica.get_ingest_status(sip_uuid, function (results) {
 
@@ -369,7 +495,7 @@ exports.get_ingest_status = function (req, callback) {
 
             if (json.status === 'COMPLETE') {
 
-                knex('tbl_archivematica_import_queue')
+                knexQ('tbl_archivematica_import_queue')
                     .where({
                         sip_uuid: json.uuid,
                         status: 0
@@ -382,7 +508,7 @@ exports.get_ingest_status = function (req, callback) {
 
                         setTimeout(function () {
                             // update queue status
-                            knex('tbl_archivematica_import_queue')
+                            knexQ('tbl_archivematica_import_queue')
                                 .where({
                                     sip_uuid: json.uuid,
                                     status: 0
@@ -391,13 +517,13 @@ exports.get_ingest_status = function (req, callback) {
                                     status: 1
                                 })
                                 .then(function (data) {
-                                    // console.log(data);
+
                                     console.log('Begin DuraCloud import...');
 
                                     // Initiate duraCloud import
                                     request.get({
                                         url: config.apiUrl + '/api/admin/v1/import/import_dip?sip_uuid=' + json.uuid
-                                    }, function(error, httpResponse, body) {
+                                    }, function (error, httpResponse, body) {
 
                                         if (error) {
                                             console.log(error);
@@ -411,7 +537,7 @@ exports.get_ingest_status = function (req, callback) {
                                     console.log(error);
                                 });
 
-                        }, 2000);
+                        }, duracloud_import_start_timeout);
 
                     })
                     .catch(function (error) {
@@ -420,9 +546,28 @@ exports.get_ingest_status = function (req, callback) {
 
                 clearInterval(timer);
 
-            } else {
+            } else if (json.status === 'FAILED' || json.status === 'REJECTED' || json.status === 'USER_INPUT') {
 
-                knex('tbl_archivematica_import_queue')
+                knexQ('tbl_archivematica_import_queue')
+                    .where({
+                        sip_uuid: json.uuid,
+                        status: 0
+                    })
+                    .update({
+                        message: json.status,
+                        microservice: json.microservice,
+                        status: 1
+                    })
+                    .then(function (data) {
+                        console.log(data);
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+
+            } else if (json.status === 'PROCESSING') {
+
+                knexQ('tbl_archivematica_import_queue')
                     .where({
                         sip_uuid: json.uuid,
                         status: 0
@@ -432,7 +577,27 @@ exports.get_ingest_status = function (req, callback) {
                         microservice: json.microservice
                     })
                     .then(function (data) {
-                        // console.log(data);
+                        console.log(data);
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+
+            } else {
+
+                // unknown error
+                knexQ('tbl_archivematica_import_queue')
+                    .where({
+                        sip_uuid: json.uuid,
+                        status: 0
+                    })
+                    .update({
+                        message: json.status,
+                        microservice: json.microservice,
+                        status: 1
+                    })
+                    .then(function (data) {
+                        console.log(data);
                     })
                     .catch(function (error) {
                         console.log(error);
@@ -440,7 +605,7 @@ exports.get_ingest_status = function (req, callback) {
             }
         });
 
-    }, 1000);
+    }, ingest_status_check_time);
 
     callback({
         status: 200,
@@ -456,7 +621,7 @@ exports.import_dip = function (req, callback) {
 
     archivematica.get_dip_path(sip_uuid, function (dip_path) {
 
-        knex('tbl_archivematica_import_queue')
+        knexQ('tbl_archivematica_import_queue')
             .select('*')
             .where({
                 sip_uuid: sip_uuid,
@@ -465,24 +630,47 @@ exports.import_dip = function (req, callback) {
             .limit(1)
             .then(function (data) {
 
-                data[0].dip_path = dip_path;
+                // Check if sip uuid already exist
+                knexQ('tbl_duracloud_import_queue')
+                    .count('sip_uuid as count')
+                    .where({
+                        sip_uuid: sip_uuid
+                    })
+                    .then(function (sipUuidCount) {
 
-                duracloud.get_mets(data, function (results) {
+                        if (sipUuidCount[0].count === 1) {
+                            return false;
+                        }
 
-                    // Extract values from DuraCloud METS.xml file
-                    var metsResults = metslib.process_mets(results.sip_uuid, data[0].dip_path, data[0].transfer_uuid, data[0].is_member_of_collection, results.mets);
+                        data[0].dip_path = dip_path;
 
-                    // Save to queue
-                    var chunkSize = metsResults.length;
-                    knex.batchInsert('tbl_duracloud_import_queue', metsResults, chunkSize)
-                        .then(function (data) {
-                            // Start processing XML
-                            process_duracloud_queue_xml(results.sip_uuid);
-                        })
-                        .catch(function (error) {
-                            console.log(error);
+                        duracloud.get_mets(data, function (results) {
+
+                            if (results.error === true) {
+
+                                // TODO: log and update queue
+
+                                return false;
+                            }
+
+                            // Extract values from DuraCloud METS.xml file
+                            var metsResults = metslib.process_mets(results.sip_uuid, data[0].dip_path, data[0].transfer_uuid, data[0].is_member_of_collection, results.mets);
+
+                            // Save to queue
+                            var chunkSize = metsResults.length;
+                            knexQ.batchInsert('tbl_duracloud_import_queue', metsResults, chunkSize)
+                                .then(function (data) {
+                                    // Start processing XML
+                                    process_duracloud_queue_xml(results.sip_uuid);
+                                })
+                                .catch(function (error) {
+                                    console.log(error);
+                                });
                         });
-                });
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
 
                 return null;
             })
@@ -501,7 +689,7 @@ exports.import_dip = function (req, callback) {
 // import helpers
 var process_duracloud_queue_xml = function (sip_uuid) {
 
-    knex('tbl_duracloud_import_queue')
+    knexQ('tbl_duracloud_import_queue')
         .select('*')
         .where({
             sip_uuid: sip_uuid,
@@ -510,13 +698,15 @@ var process_duracloud_queue_xml = function (sip_uuid) {
         })
         .then(function (data) {
 
-            var is_member_of_collection = data[0].is_member_of_collection;
+            var is_member_of_collection = data[0].is_member_of_collection,
+                get_object_timer = 3000;
+
             var timer = setInterval(function () {
 
                 if (data.length === 0) {
                     clearInterval(timer);
                     // Update queue status
-                    knex('tbl_duracloud_import_queue')
+                    knexQ('tbl_duracloud_import_queue')
                         .where({
                             status: 0,
                             sip_uuid: sip_uuid,
@@ -582,7 +772,7 @@ var process_duracloud_queue_xml = function (sip_uuid) {
                     });
                 });
 
-            }, 3000);
+            }, get_object_timer);
 
             return null;
         })
@@ -594,13 +784,14 @@ var process_duracloud_queue_xml = function (sip_uuid) {
 var process_duracloud_queue_objects = function (sip_uuid, pid, file) {
 
     var tmpArr = file.split('.'),
-        file_id;
+        file_id,
+        get_object_timer = 3000;
 
     tmpArr.pop();
     file_id = tmpArr.join('.');
 
     // Get associated object
-    knex('tbl_duracloud_import_queue')
+    knexQ('tbl_duracloud_import_queue')
         .select('*')
         .where({
             sip_uuid: sip_uuid,
@@ -615,7 +806,7 @@ var process_duracloud_queue_objects = function (sip_uuid, pid, file) {
                 if (data.length === 0) {
                     clearInterval(timer);
                     // Update queue status
-                    knex('tbl_duracloud_import_queue')
+                    knexQ('tbl_duracloud_import_queue')
                         .where({
                             status: 0,
                             sip_uuid: sip_uuid,
@@ -655,9 +846,7 @@ var process_duracloud_queue_objects = function (sip_uuid, pid, file) {
                     var tmp = shell.exec('file --mime-type ./tmp/' + results.file).stdout;
                     var mimetypetmp = tmp.split(':');
 
-                    // TODO: ... do PDFs get jpg thumbnails?
                     recordObj.mime_type = mimetypetmp[1].trim();
-                    // TODO: confirm that all TNs are .jpg
                     recordObj.thumbnail = object.uuid + '.jpg';
 
                     knex('tbl_objects')
@@ -675,7 +864,6 @@ var process_duracloud_queue_objects = function (sip_uuid, pid, file) {
                             thumbnail: recordObj.thumbnail
                         })
                         .then(function (data) {
-                            console.log(data);
                             recordObj = {};
                         })
                         .catch(function (error) {
@@ -683,7 +871,7 @@ var process_duracloud_queue_objects = function (sip_uuid, pid, file) {
                         });
                 });
 
-            }, 3000);
+            }, get_object_timer);
 
             return null;
         })

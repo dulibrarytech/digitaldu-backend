@@ -6,7 +6,6 @@ exports.get_mets = function (data, callback) {
 
     'use strict';
 
-    // pid = data[0].is_member_of_collection.replace(/:/g, '_'),
     var mets = 'METS.' + data[0].sip_uuid + '.xml',
         apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + data[0].dip_path + '/' + mets;
 
@@ -15,10 +14,31 @@ exports.get_mets = function (data, callback) {
     }, function(error, httpResponse, body) {
 
         if (error) {
-            console.log(error);
+
+            // TODO: log
+
+            callback({
+                error: true,
+                error_message: error
+            });
+
+            return false;
+        }
+
+        if (httpResponse.statusCode !== 200) {
+
+            // TODO: log
+
+            callback({
+                error: true,
+                error_message: body
+            });
+
+            return false;
         }
 
         callback({
+            error: false,
             mets: body,
             sip_uuid: data[0].sip_uuid
         });
@@ -29,15 +49,13 @@ exports.get_object = function (data, callback) {
 
     'use strict';
 
-    var pid = data.is_member_of_collection.replace(/:/g, '_'),
-        dip_path = data.dip_path;
+    var dip_path = data.dip_path;
 
     // TODO: ... change extension from tif to jp2 (There are no direct references to jp2 files)
     if (data.file.indexOf('tif') !== -1) {  //  || data.file.indexOf('tiff')
         data.file = data.file.replace('tif', 'jp2');
     }
 
-    // var apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + dip_path + '/' + pid + '_' + data.file_id + '_transfer-' + data.sip_uuid + '/objects/' + data.uuid + '-' + data.file;
     var apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + dip_path + '/objects/' + data.uuid + '-' + data.file;
 
     request.get({
@@ -45,7 +63,25 @@ exports.get_object = function (data, callback) {
     }, function(error, httpResponse, body) {
 
         if (error) {
-            console.log(error);
+
+            // TODO: log
+
+            callback({
+                error: true,
+                error_message: error
+            });
+        }
+
+        if (httpResponse.statusCode !== 200) {
+
+            // TODO: log
+
+            callback({
+                error: true,
+                error_message: body
+            });
+
+            return false;
         }
 
         var resp = {};
@@ -57,7 +93,12 @@ exports.get_object = function (data, callback) {
         fs.writeFile('./tmp/' + data.file, body, function(error) {
 
             if (error) {
-                throw error;
+
+                // TODO: log
+                callback({
+                    error: true,
+                    error_message: error
+                });
             }
 
             if (fs.existsSync('./tmp/' + data.file)) {

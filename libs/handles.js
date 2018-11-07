@@ -36,6 +36,7 @@ exports.create_handle = function (pid, callback) {
             callback(handle);
 
         } else if (response.statusCode === 409) {
+            // TODO: update
             console.log('Error: Handle already exists (conflict)');
         } else {
             console.log('Error: Unable to create new handle');
