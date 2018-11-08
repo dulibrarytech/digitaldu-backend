@@ -6,10 +6,10 @@ var configModule = (function () {
 
     obj.getApi = function () {
 
-        var api = 'http://localhost:8000';
+        var api = 'http://localhost:8080';
 
         if (document.domain !== 'localhost') {
-            api = 'https://' + document.domain;
+            api = location.protocol + '//' + document.domain;
         }
 
         return api;
