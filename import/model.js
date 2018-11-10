@@ -48,7 +48,7 @@ var fs = require('fs'),
 // broadcasts transfer status
 socketclient.on('connect', function () {
 
-    var transfer_timer = 3000;
+    var transfer_timer = 5000;
     var id = setInterval(function () {
 
         knexQ('tbl_archivematica_transfer_queue')
@@ -71,7 +71,7 @@ socketclient.on('connect', function () {
 // broadcasts ingest status
 socketclient.on('connect', function () {
 
-    var ingest_timer = 3000;
+    var ingest_timer = 5000;
     var id = setInterval(function () {
 
         knexQ('tbl_archivematica_import_queue')
@@ -89,6 +89,29 @@ socketclient.on('connect', function () {
             });
 
     }, ingest_timer);
+});
+
+// broadcasts duracloud import status
+socketclient.on('connect', function () {
+
+    var import_timer = 5000;
+    var id = setInterval(function () {
+
+        knexQ('tbl_duracloud_import_queue')
+            .select('*')
+            // .whereRaw('DATE(created) = CURRENT_DATE')
+            .then(function (data) {
+
+                if (data.length > 0) {
+                    socketclient.emit('import_status', data);
+                }
+
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+
+    }, import_timer);
 });
 
 /* TODO: rename get_transfers list files under a folder on the archivematica sftp server */
@@ -124,8 +147,9 @@ exports.start_transfer = function (req, callback) {
         });
     }
 
-    var collection = req.body.collection, // string
-        objects = req.body.objects.split(','); // array
+    var collection = req.body.collection,
+        objects = req.body.objects.split(','),
+        user = req.body.user;
 
     // Create array of objects.  Each object contains the collection PID and object filename
     var importObjects = objects.map(function (object) {
@@ -134,7 +158,8 @@ exports.start_transfer = function (req, callback) {
             is_member_of_collection: collection,
             object: object,
             message: 'WAITING_FOR_TRANSFER',
-            microservice: 'Waiting for transfer microservice'
+            microservice: 'Waiting for transfer microservice',
+            user: user
         };
 
     });
@@ -713,6 +738,7 @@ var process_duracloud_queue_xml = function (sip_uuid) {
                             type: 'xml'
                         })
                         .update({
+                            message: 'COMPLETE',
                             status: 1
                         })
                         .then(function (data) {
@@ -757,18 +783,37 @@ var process_duracloud_queue_xml = function (sip_uuid) {
                         // The xml file name will be overwritten by the object file name
                         recordObj.file_name = file;
 
-                        knex('tbl_objects')
-                            .insert(recordObj)
+                        // Update queue status
+                        knexQ('tbl_duracloud_import_queue')
+                            .where({
+                                sip_uuid: sip_uuid
+                            })
+                            .update({
+                                pid: recordObj.pid,
+                                handle: recordObj.handle
+                            })
                             .then(function (data) {
-                                // Process xml (Extract mods, validate and save to DB)
-                                process_xml(recordObj);
-                                // Start processing object associated with XML record
-                                process_duracloud_queue_objects(sip_uuid, results.pid, file);
+
+                                console.log(data);
+
+                                knex('tbl_objects')
+                                    .insert(recordObj)
+                                    .then(function (data) {
+                                        // Process xml (Extract mods, validate and save to DB)
+                                        process_xml(recordObj);
+                                        // Start processing object associated with XML record
+                                        process_duracloud_queue_objects(sip_uuid, results.pid, file);
+                                    })
+                                    .catch(function (error) {
+                                        console.log(error);
+                                    });
+
+                                return null;
+
                             })
                             .catch(function (error) {
                                 console.log(error);
                             });
-
                     });
                 });
 
@@ -785,7 +830,7 @@ var process_duracloud_queue_objects = function (sip_uuid, pid, file) {
 
     var tmpArr = file.split('.'),
         file_id,
-        get_object_timer = 3000;
+        get_object_timer = 5000;
 
     tmpArr.pop();
     file_id = tmpArr.join('.');
@@ -811,7 +856,8 @@ var process_duracloud_queue_objects = function (sip_uuid, pid, file) {
                             status: 0,
                             sip_uuid: sip_uuid,
                             file_id: file_id,
-                            type: 'object'
+                            type: 'object',
+                            message: 'COMPLETE'
                         })
                         .update({
                             status: 1

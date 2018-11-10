@@ -36,6 +36,14 @@ module.exports = function () {
         });
     });
 
+    io.on('connection', function(socket){
+        console.log('client connected to get import status');
+        // sends import status to client
+        socket.on('import_status', function(status) {
+            io.emit('import_status', status);
+        });
+    });
+
     if (process.env.NODE_ENV === 'development') {
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
     } else if (process.env.NODE_ENV === 'production') {

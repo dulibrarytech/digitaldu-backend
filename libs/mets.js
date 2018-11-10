@@ -34,7 +34,10 @@ exports.process_mets = function (sip_uuid, dip_path, transfer_uuid, is_member_of
                                 Obj.transfer_uuid = transfer_uuid;
                                 Obj.dip_path = dip_path;
                                 Obj.is_member_of_collection = is_member_of_collection;
+                                Obj.pid = '---';
+                                Obj.handle = '---';
                                 Obj.file = array[index].children[1].children[i].children[k].attr['xlink:href'].replace(/objects\//g, '');
+                                Obj.message = 'PROCESSING';
 
                                 if (ext === 'xml') {
                                     Obj.type = 'xml';

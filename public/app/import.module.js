@@ -35,8 +35,6 @@ var importModule = (function () {
                     }
 
                     html += '<td>';
-                    // html += '<a class="btn btn-success btn-xs" onclick="importModule.transferObjects(\'' + data.list[i].name + '\')" href="#"><i class="fa fa-upload"></i>&nbsp;&nbsp;Import</a>';
-                    // html += '&nbsp;&nbsp;&nbsp;<a href="/dashboard/import?collection=' + data.list[i].name + '"><i class="fa fa-folder"></i>&nbsp;&nbsp;' + data.list[i].name + '</a>';
 
                     if (collection !== null) {
                         html += '&nbsp;&nbsp;&nbsp;<i class="fa fa-folder"></i>&nbsp;&nbsp;' + data.list[i].name;
@@ -46,15 +44,6 @@ var importModule = (function () {
 
                     html += '</td>';
                 }
-
-                /*
-                else if (collection !== null && data.list[i].type === '-') {
-                    html += '<td>';
-                    html += '<a type="button" class="btn btn-default btn-xs" disabled><i class="fa fa-ban"></i>&nbsp;&nbsp;Import</a>';
-                    html += '&nbsp;&nbsp;&nbsp;<i class="fa fa-file"></i>&nbsp;&nbsp;' + data.list[i].name;
-                    html += '</td>'
-                }
-                */
 
                 html += '</tr>';
             }
@@ -84,7 +73,7 @@ var importModule = (function () {
         $.ajax({
             url: api + '/api/admin/v1/import/start_transfer',
             type: 'post',
-            data: {collection: collection, objects: objects}
+            data: {collection: collection, objects: objects, user: userModule.renderUserName()}
         }).done(function (data) {
 
             // TODO: check payload
@@ -95,7 +84,7 @@ var importModule = (function () {
             setTimeout(function () {
                 $('#message').html('');
                 window.location.replace('/dashboard/import/status');
-            }, 1000);
+            }, 3000);
 
         }).fail(function () {
             renderError();
@@ -169,105 +158,6 @@ var importModule = (function () {
     obj.init = function () {
         userModule.renderUserName();
     };
-
-    /*
-    obj.getImportObjectFiles = function () {
-
-        // TODO: sanitize
-        var object = helperModule.getParameterByName('object');
-
-        $.ajax(api + '/api/admin/v1/import/files?object=' + object)
-            .done(function (data) {
-                // console.log(data);
-                renderImportObjectFiles(data);
-            })
-            .fail(function () {
-                renderError();
-            });
-    };
-    */
-
-    /*
-     var renderImportObjectFiles = function (data) {
-
-     var html = '';
-
-     for (var i = 0; i < data.length; i++) {
-
-     html += '<tr>';
-
-     if (data[i].xmlFile !== undefined) {
-     html += '<td>' + data[i].xmlFile + '</td>';
-     }
-
-     if (data[i].objectFile !== undefined) {
-     html += '<td>' + data[i].objectFile + '</td>';
-     }
-
-     html += '<td>' + data[i].fileSize + '</td>';
-     html += '<td>' + data[i].mimeType + '</td>';
-     html += '</tr>';
-     }
-
-     $('#import-object-files').html(html);
-     $('.loading').html('');
-     };
-     */
-
-    /*
-     var checkQueue = function (data) {
-     var import_id = data.import_id;
-     var timer = setInterval(function () {
-     console.log('checking...');
-     console.log(import_id);
-
-     // TODO: call function to update DOM
-
-     }, 5000);
-     };
-     */
-
-    /*
-     var renderUnapprovedTransfers = function (data) {
-
-     console.log(data);
-
-     var html = '';
-
-     for (var i = 0; i < data.length; i++) {
-
-     html += '<tr>';
-
-     if (data[i].xmlFile !== undefined) {
-     html += '<td>' + data[i].xmlFile + '</td>';
-     }
-
-     if (data[i].objectFile !== undefined) {
-     html += '<td>' + data[i].objectFile + '</td>';
-     }
-
-     html += '<td>' + data[i].fileSize + '</td>';
-     html += '<td>' + data[i].mimeType + '</td>';
-     html += '</tr>';
-     }
-
-     $('#import-object-files').html(html);
-     $('.loading').html('');
-     };
-     */
-
-    /*
-     obj.getUnapprovedTransfers = function () {
-
-     $.ajax(api + '/api/admin/v1/import/unapproved_transfers')
-     .done(function (data) {
-     renderUnapprovedTransfers(data);
-     })
-     .fail(function () {
-     renderError();
-     });
-     };
-     */
 
     return obj;
 
