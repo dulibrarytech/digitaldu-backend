@@ -19,7 +19,7 @@ utils
 .env
 
 # shell scripts
-*.sh
+# *.sh
 .DS_store
 
 *.sql

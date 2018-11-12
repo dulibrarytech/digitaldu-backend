@@ -3,7 +3,7 @@
 var Repo = require('../repository/controller'),
     token = require('../libs/tokens');
 
-// TODO: apply api security.  i.e. API key (for discovery layer)
+// TODO: apply api security.  i.e. API key
 module.exports = function (app) {
 
     //--- Used by discovery layer ---//
@@ -19,7 +19,6 @@ module.exports = function (app) {
     app.route('/api/admin/v1/repo/objects')
         .get(token.verify, Repo.get_admin_objects);
 
-    // TODO: add "repo" to route path
     app.route('/api/admin/v1/repo/object')
         .get(token.verify, Repo.get_admin_object)
         .post(token.verify, Repo.save_admin_collection_object);
