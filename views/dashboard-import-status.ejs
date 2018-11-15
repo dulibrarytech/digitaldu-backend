@@ -72,9 +72,9 @@
                                         <th>Collection</th>
                                         <th>Object</th>
                                         <th>Transfer UUID</th>
-                                        <th>Message</th>
                                         <th>Microservice</th>
                                         <th>User</th>
+                                        <th>Message</th>
                                         <th>Date/Time</th>
                                     </tr>
                                     </thead>
@@ -86,10 +86,10 @@
                                     <thead>
                                     <tr>
                                         <th>Collection</th>
-                                        <th>Transfer UUID</th>
                                         <th>SIP UUID</th>
-                                        <th>Message</th>
                                         <th>Microservice</th>
+                                        <th>User</th>
+                                        <th>Message</th>
                                         <th>Date/Time</th>
                                     </tr>
                                     </thead>
@@ -101,29 +101,15 @@
                                     <thead>
                                     <tr>
                                         <th>Collection</th>
-                                        <th>SIP UUID</th>
                                         <th>PID</th>
                                         <th>Handle</th>
+                                        <th>SIP UUID</th>
                                         <th>File</th>
                                         <th>Message</th>
                                         <th>Date/Time</th>
                                     </tr>
                                     </thead>
                                     <tbody id="import-status"></tbody>
-                                </table>
-
-                                <h3>Errors</h3>
-                                <table id="import-errors" class="table table-striped table-bordered">
-                                    <thead>
-                                    <tr>
-                                        <th>Collection</th>
-                                        <th>Transfer UUID</th>
-                                        <th>SIP UUID</th>
-                                        <th>Message</th>
-                                        <th>Date/Time</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody id="import-errors"></tbody>
                                 </table>
 
                             </div>
@@ -178,6 +164,12 @@
     <script>
 
         // TODO: move to import module
+        if (helperModule.getParameterByName('import') === 'true') {
+            $('#message').html('<p>One Moment Please...</p>');
+        } else {
+            $('#message').html('');
+        }
+
         $('#transfer-status').html('<tr><td>No Transfers</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>');
         $('#ingest-status').html('<tr><td>No Ingests</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr></tr>');
         $('#import-status').html('<tr><td>No Imports</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr></tr>');
@@ -188,15 +180,19 @@
 
             var transferData = '';
 
+            if (data.length > 0) {
+                $('#message').html('');
+            }
+
             for (var i=0;i<data.length;i++) {
 
                 transferData += '<tr>';
                 transferData += '<td>' + data[i].is_member_of_collection + '</td>';
                 transferData += '<td>' + data[i].object + '</td>';
                 transferData += '<td>' + data[i].transfer_uuid + '</td>';
-                transferData += '<td>' + data[i].message + '</td>';
                 transferData += '<td>' + data[i].microservice + '</td>';
                 transferData += '<td>' + data[i].user + '</td>';
+                transferData += '<td>' + data[i].message + '</td>';
                 transferData += '<td>' + data[i].created + '</td>';
                 transferData += '</tr>';
             }
@@ -213,10 +209,10 @@
 
                 ingestData += '<tr>';
                 ingestData += '<td>' + data[i].is_member_of_collection + '</td>';
-                ingestData += '<td>' + data[i].transfer_uuid + '</td>';
                 ingestData += '<td>' + data[i].sip_uuid + '</td>';
-                ingestData += '<td>' + data[i].message + '</td>';
                 ingestData += '<td>' + data[i].microservice + '</td>';
+                ingestData += '<td>' + data[i].user + '</td>';
+                ingestData += '<td>' + data[i].message + '</td>';
                 ingestData += '<td>' + data[i].created + '</td>';
                 ingestData += '</tr>';
             }
@@ -233,9 +229,9 @@
 
                 importData += '<tr>';
                 importData += '<td>' + data[i].is_member_of_collection + '</td>';
-                importData += '<td>' + data[i].sip_uuid + '</td>';
                 importData += '<td>' + data[i].pid + '</td>';
                 importData += '<td>' + data[i].handle + '</td>';
+                importData += '<td>' + data[i].sip_uuid + '</td>';
                 importData += '<td>' + data[i].file + '</td>';
                 importData += '<td>' + data[i].message + '</td>';
                 importData += '<td>' + data[i].created + '</td>';

@@ -1,6 +1,6 @@
 'use strict';
 
-var fs = require('fs'),
+const fs = require('fs'),
     path = require('path'),
     config = require('../config/config'),
     modslib = require('../libs/mods/mods_init'),
@@ -32,28 +32,32 @@ var fs = require('fs'),
             password: config.dbPassword,
             database: config.dbName
         }
-    });
+    }),
+    TRANSFER_QUEUE = 'tbl_archivematica_transfer_queue',
+    INGEST_QUEUE = 'tbl_archivematica_ingest_queue',
+    IMPORT_QUEUE = 'tbl_duracloud_import_queue',
+    REPO_OBJECTS = 'tbl_objects',
+    TRANSFER_TIMER = 3000,                  // Transfer status is broadcast every 3 sec.
+    INGEST_TIMER = 4000,                    // Ingest status is broadcast every 4 sec.
+    IMPORT_TIMER = 5000,                    // Import status is broadcast every 5 sec.
+    TRANSFER_START_TIME = 45000,            // Object transfer starts every 45 sec. when the endpoint receives a request.
+    TRANSFER_APPROVAL_TIME = 30000,         // Transfer approval occurs 30 sec. after transfer  (Gives transfer process time to complete)
+    TRANSFER_STATUS_CHECK = 3000,           // Transfer status checks occur every 3 sec.
+    INGEST_STATUS_START_TIMEOUT = 10000,    // Ingest status checks begin 10 sec after the endpoint receives a request.
+    INGEST_STATUS_CHECK_TIME = 3000,        // Ingest status checks occur every 3 sec.
+    DURACLOUD_IMPORT_START_TIMEOUT = 5000;  // DuraCloud import begins 5 sec after the endpoint receives a request.
 
-// ignore = ['.svn', '.git', '.DS_Store', 'Thumbs.db'],
-// es = require('elasticsearch'),
-
-
-/*
- var client = new es.Client({
- host: config.elasticSearch
- // log: 'trace'
- });
+/**
+ * Broadcasts transfer status
  */
-
-// broadcasts transfer status
 socketclient.on('connect', function () {
 
-    var transfer_timer = 5000;
-    var id = setInterval(function () {
+    let id = setInterval(function () {
 
-        knexQ('tbl_archivematica_transfer_queue')
+        knexQ(TRANSFER_QUEUE)
             .select('*')
             .whereRaw('DATE(created) = CURRENT_DATE')
+            .orderBy('created', 'desc')
             .then(function (data) {
 
                 if (data.length > 0) {
@@ -63,20 +67,24 @@ socketclient.on('connect', function () {
             })
             .catch(function (error) {
                 console.log(error);
+                throw error;
             });
 
-    }, transfer_timer);
+    }, TRANSFER_TIMER);
 });
 
-// broadcasts ingest status
+/**
+ * Broadcasts ingest status
+ */
 socketclient.on('connect', function () {
 
-    var ingest_timer = 5000;
-    var id = setInterval(function () {
+    // const INGEST_TIMER = 4000;
+    let id = setInterval(function () {
 
-        knexQ('tbl_archivematica_import_queue')
+        knexQ(INGEST_QUEUE)
             .select('*')
             .whereRaw('DATE(created) = CURRENT_DATE')
+            .orderBy('created', 'desc')
             .then(function (data) {
 
                 if (data.length > 0) {
@@ -86,20 +94,25 @@ socketclient.on('connect', function () {
             })
             .catch(function (error) {
                 console.log(error);
+                throw error;
             });
 
-    }, ingest_timer);
+    }, INGEST_TIMER);
 });
 
-// broadcasts duracloud import status
+/**
+ * Broadcasts duracloud import status
+ */
 socketclient.on('connect', function () {
 
-    var import_timer = 5000;
-    var id = setInterval(function () {
+    // const IMPORT_TIMER = 5000;
+    let id = setInterval(function () {
 
-        knexQ('tbl_duracloud_import_queue')
+        knexQ(IMPORT_QUEUE)
             .select('*')
-            // .whereRaw('DATE(created) = CURRENT_DATE')
+            .whereRaw('DATE(created) = CURRENT_DATE')
+            .orderBy('created', 'desc')
+            .groupBy('sip_uuid')
             .then(function (data) {
 
                 if (data.length > 0) {
@@ -109,15 +122,20 @@ socketclient.on('connect', function () {
             })
             .catch(function (error) {
                 console.log(error);
+                throw error;
             });
 
-    }, import_timer);
+    }, IMPORT_TIMER);
 });
 
-/* TODO: rename get_transfers list files under a folder on the archivematica sftp server */
+/**
+ * Gets list of folders from Archivematica sftp server
+ * @param req (query.collection)
+ * @param callback
+ */
 exports.list = function (req, callback) {
 
-    var query = req.query.collection;
+    let query = req.query.collection;
 
     archivematica.list(query, function (results) {
 
@@ -130,12 +148,14 @@ exports.list = function (req, callback) {
     });
 };
 
-// NOTE: Ingest begins automatically after a successful transfer and approval
-// 1.)
+/**
+ * Starts the Archivematica transfer process
+ * NOTE: Ingest begins automatically after a successful transfer and approval
+ * STEP 1
+ * @param req (body.collection, body.objects, body.user)
+ * @param callback
+ */
 exports.start_transfer = function (req, callback) {
-
-    var transfer_start_time = 45000,
-        transfer_approval_time = 30000;
 
     if (req.body === undefined) {
 
@@ -152,11 +172,12 @@ exports.start_transfer = function (req, callback) {
         user = req.body.user;
 
     // Create array of objects.  Each object contains the collection PID and object filename
-    var importObjects = objects.map(function (object) {
+    let importObjects = objects.map(function (object) {
 
         return {
             is_member_of_collection: collection,
             object: object,
+            transfer_uuid: '---',
             message: 'WAITING_FOR_TRANSFER',
             microservice: 'Waiting for transfer microservice',
             user: user
@@ -165,14 +186,14 @@ exports.start_transfer = function (req, callback) {
     });
 
     // Save import objects to transfer queue
-    var chunkSize = importObjects.length;
-    knexQ.batchInsert('tbl_archivematica_transfer_queue', importObjects, chunkSize)
+    let chunkSize = importObjects.length;
+    knexQ.batchInsert(TRANSFER_QUEUE, importObjects, chunkSize)
         .then(function (data) {
 
-            var timer = setInterval(function () {
+            let timer = setInterval(function () {
 
-                // Get transfer queue records
-                knexQ('tbl_archivematica_transfer_queue')
+                // Get one transfer queue record
+                knexQ(TRANSFER_QUEUE)
                     .select('id', 'is_member_of_collection', 'object')
                     .where({
                         is_member_of_collection: collection,
@@ -190,44 +211,54 @@ exports.start_transfer = function (req, callback) {
 
                         var object = data.pop();
 
-                        knexQ('tbl_archivematica_transfer_queue')
-                            .where({
+                        if (object.id === undefined) {
+                            console.log('ERROR: object.id not found');
+                            throw 'ERROR: object.id not found';
+                        }
+
+                        let transferStartedObj = {
+                            table: TRANSFER_QUEUE,
+                            where: {
                                 id: object.id,
                                 status: 0
-                            })
-                            .update({
+                            },
+                            update: {
                                 message: 'TRANSFER_STARTED',
                                 microservice: 'Starting transfer microservice'
+                            },
+                            callback: function (data) {
+                                if (data !== 1) {
+                                    // TODO: log update error
+                                    console.log(data);
+                                    throw 'Database transfer queue error';
+                                }
+                            }
+                        };
 
-                            })
-                            .then(function (data) {
-                                console.log(data);
+                        // Update queue. Indicate to user that the transfer has started.
+                        updateQueue(transferStartedObj);
 
-                            })
-                            .catch(function (error) {
-                                console.log(error);
-                            });
-
-                        // Initiate transfers using archivematica api Q5 sec.
+                        // Initiate transfers using archivematica api
                         archivematica.start_tranfser(object, function (results) {
 
                             var json = JSON.parse(results);
 
                             if (json.message !== 'Copy successful.') {
                                 console.log(json.message);
+                                // TODO: update queue
                                 return false;
                             }
 
-                            var path = json.path;
-                            var pathArr = path.split('/');
+                            let path = json.path;
+                            let pathArr = path.split('/');
 
-                            var arr = pathArr.filter(function (result) {
+                            let arr = pathArr.filter(function (result) {
                                 if (result.length !== 0) {
                                     return result;
                                 }
                             });
 
-                            var transferFolder = arr.pop();
+                            let transferFolder = arr.pop();
 
                             setTimeout(function () {
 
@@ -239,40 +270,58 @@ exports.start_transfer = function (req, callback) {
                                     if (json.error === true) {
 
                                         console.log('transfer_uuid is not present');
-                                        // Update queue status if the transfer approval fails
-                                        knexQ('tbl_archivematica_transfer_queue')
-                                            .where({
+
+                                        if (object.id === undefined) {
+                                            console.log('ERROR: object.id not found');
+                                            // TODO: update queue
+                                            throw 'ERROR: object.id not found';
+                                        }
+
+                                        let transferNotApprovedObj = {
+                                            table: TRANSFER_QUEUE,
+                                            where: {
                                                 id: object.id,
                                                 status: 0
-                                            })
-                                            .update({
+                                            },
+                                            update: {
                                                 transfer_uuid: 'transfer_uuid is not present',
                                                 message: 'TRANSFER_NOT_APPROVED',
                                                 status: 1
-                                            })
-                                            .then(function (data) {
-                                                console.log(data);
+                                            },
+                                            callback: function (data) {
 
-                                            })
-                                            .catch(function (error) {
-                                                console.log(error);
-                                            });
+                                                if (data !== 1) {
+                                                    // TODO: log update error
+                                                    console.log(data);
+                                                    throw 'Database transfer queue error';
+                                                }
+                                            }
+                                        };
 
-                                    } else {
+                                        // Update queue and indicate that the transfer approval has failed
+                                        updateQueue(transferNotApprovedObj);
+
+                                    } else if (json.message === 'Approval successful.') {
 
                                         var transfer_uuid = json.uuid;
 
-                                        // Update queue status when the transfer is complete
-                                        knexQ('tbl_archivematica_transfer_queue')
-                                            .where({
+                                        let transferApprovedObj = {
+                                            table: TRANSFER_QUEUE,
+                                            where: {
                                                 id: object.id,
                                                 status: 0
-                                            })
-                                            .update({
+                                            },
+                                            update: {
                                                 transfer_uuid: transfer_uuid,
                                                 message: 'TRANSFER_APPROVED'
-                                            })
-                                            .then(function (data) {
+                                            },
+                                            callback: function (data) {
+
+                                                if (data !== 1) {
+                                                    // TODO: log update error
+                                                    console.log(data);
+                                                    throw 'Database transfer queue error';
+                                                }
 
                                                 // Initiate transfer status checks
                                                 request.get({
@@ -281,35 +330,75 @@ exports.start_transfer = function (req, callback) {
 
                                                     if (error) {
                                                         console.log(error);
+                                                        throw error;
+                                                    }
+
+                                                    if (httpResponse.statusCode !== 200) {
+
+                                                        // TODO: log
+                                                        throw 'Unable to start transfer status checks';
                                                     }
 
                                                     console.log(body);
                                                 });
 
-                                            })
-                                            .catch(function (error) {
-                                                console.log(error);
-                                            });
-                                    }
+                                                return null;
+                                            }
+                                        };
 
+                                        // Update queue and indicate that the transfer has been approved
+                                        updateQueue(transferApprovedObj);
+
+                                    } else if (json.uuid !== undefined) {
+
+                                        console.log('ERROR: json.uuid not found');
+
+                                        let transferApprovalFailedObj = {
+                                            table: TRANSFER_QUEUE,
+                                            where: {
+                                                id: object.id,
+                                                status: 0
+                                            },
+                                            update: {
+                                                transfer_uuid: 'uuid is not present',
+                                                message: 'TRANSFER_APPROVAL_FAILED',
+                                                status: 1
+                                            },
+                                            callback: function (data) {
+
+                                                if (data !== 1) {
+                                                    // TODO: log update error
+                                                    console.log(data);
+                                                    throw 'Database transfer queue error';
+                                                }
+                                            }
+                                        };
+
+                                        // Update queue and indicate that the transfer approval has failed
+                                        updateQueue(transferApprovalFailedObj);
+
+                                        return false;
+                                    }
                                 });
 
-                            }, transfer_approval_time);
-
+                            }, TRANSFER_APPROVAL_TIME);
                         });
-
                     })
                     .catch(function (error) {
                         console.log(error);
+                        throw error;
                     });
 
-            }, transfer_start_time);
+                return null;
+
+            }, TRANSFER_START_TIME);
 
             return null;
 
         })
         .catch(function (error) {
             console.log(error);
+            throw error;
         });
 
     callback({
@@ -320,15 +409,18 @@ exports.start_transfer = function (req, callback) {
     });
 };
 
-// 2.)
+/**
+ * Checks transfer status and updates queue based on stage of transfer
+ * STEP 2
+ * @param req
+ * @param callback
+ */
 exports.get_transfer_status = function (req, callback) {
 
     var is_member_of_collection = req.query.collection,
-        transfer_uuid = req.query.transfer_uuid,
-        transfer_status_check = 3000,
-        ingest_status_start_timeout = 10000;
+        transfer_uuid = req.query.transfer_uuid;
 
-    knexQ('tbl_archivematica_transfer_queue')
+    knexQ(TRANSFER_QUEUE)
         .select('*')
         .where({
             is_member_of_collection: is_member_of_collection,
@@ -338,7 +430,7 @@ exports.get_transfer_status = function (req, callback) {
         .limit(1)
         .then(function (data) {
 
-            var timer = setInterval(function () {
+            let timer = setInterval(function () {
 
                 data.forEach(function (object) {
 
@@ -350,40 +442,73 @@ exports.get_transfer_status = function (req, callback) {
 
                             clearInterval(timer);
 
-                            // Flag transfer as COMPLETE in queue
-                            knexQ('tbl_archivematica_transfer_queue')
-                                .where({
+                            let transferCompleteObj = {
+                                table: TRANSFER_QUEUE,
+                                where: {
                                     is_member_of_collection: is_member_of_collection,
                                     transfer_uuid: json.uuid,
                                     status: 0
-                                })
-                                .update({
+                                },
+                                update: {
                                     message: 'TRANSFER_COMPLETE',
                                     microservice: json.microservice,
                                     status: 1
-                                })
-                                .then(function (data) {
+                                },
+                                callback: function (data) {
+
+                                    if (data !== 1) {
+                                        // TODO: log update error
+                                        console.log(data);
+                                        throw 'Database transfer queue error';
+                                    }
+
+                                    if (json.sip_uuid === undefined) {
+
+                                        console.log('sip_uuid was not generated');
+
+                                        let errorObj = {
+                                            table: TRANSFER_QUEUE,
+                                            update: {
+                                                message: 'ERROR_SIP_UUID_NOT_CREATED',
+                                                microservice: json.microservice,
+                                                status: 1
+                                            },
+                                            callback: function (data) {
+
+                                                if (data !== 1) {
+                                                    // TODO: log update error
+                                                    console.log(data);
+                                                    throw 'Database transfer queue error';
+                                                }
+                                            }
+                                        };
+
+                                        updateQueue(errorObj);
+                                        return false;
+                                    }
 
                                     // Check if transfer uuid already exist
-                                    knexQ('tbl_archivematica_import_queue')
+                                    knexQ(INGEST_QUEUE)
                                         .count('transfer_uuid as count')
                                         .where({
                                             transfer_uuid: json.uuid
                                         })
                                         .then(function (data) {
 
+                                            // if the record exist, skip the next step
                                             if (data[0].count === 1) {
                                                 return false;
                                             }
 
                                             // Save object information to import queue
-                                            knexQ('tbl_archivematica_import_queue')
+                                            knexQ(INGEST_QUEUE)
                                                 .insert({
                                                     is_member_of_collection: object.is_member_of_collection.replace('_', ':'),
                                                     transfer_uuid: json.uuid,
                                                     sip_uuid: json.sip_uuid,
                                                     message: 'STARTING_IMPORT',
-                                                    microservice: 'Starting import microservice'
+                                                    microservice: 'Starting import microservice',
+                                                    user: object.user
                                                 })
                                                 .then(function (data) {
 
@@ -398,94 +523,120 @@ exports.get_transfer_status = function (req, callback) {
 
                                                             if (error) {
                                                                 console.log(error);
+                                                                throw error;
+                                                            }
+
+                                                            if (httpResponse.statusCode !== 200) {
+
+                                                                // TODO: log
+                                                                throw 'Unable to start ingest status checks';
                                                             }
 
                                                             console.log(body);
                                                         });
 
-                                                    }, ingest_status_start_timeout);
+                                                    }, INGEST_STATUS_START_TIMEOUT);
 
                                                 })
                                                 .catch(function (error) {
                                                     console.log(error);
+                                                    throw error;
                                                 });
+
+                                            return null;
 
                                         })
                                         .catch(function (error) {
                                             console.log(error);
+                                            throw error;
                                         });
 
-                                })
-                                .catch(function (error) {
-                                    console.log(error);
-                                });
+                                    return null;
+                                }
+                            };
+
+                            // Flag transfer as COMPLETE in queue
+                            updateQueue(transferCompleteObj);
 
                         } else if (json.status === 'FAILED' || json.status === 'USER_INPUT' || json.status === 'REJECTED') {
 
-                            // Update transfer status
-                            knexQ('tbl_archivematica_transfer_queue')
-                                .where({
+                            let transferFailedObj = {
+                                table: TRANSFER_QUEUE,
+                                where: {
                                     is_member_of_collection: is_member_of_collection,
                                     transfer_uuid: object.transfer_uuid,
                                     status: 0
-                                })
-                                .update({
+                                },
+                                update: {
                                     message: json.status,
                                     microservice: json.microservice,
                                     status: 1
-                                })
-                                .then(function (data) {
-                                    // console.log(data);
-                                })
-                                .catch(function (error) {
-                                    console.log(error);
-                                });
+                                },
+                                callback: function (data) {
+
+                                    if (data !== 1) {
+                                        // TODO: log update error
+                                        console.log(data);
+                                        throw 'Database transfer queue error';
+                                    }
+                                }
+                            };
+
+                            // Update transfer status
+                            updateQueue(transferFailedObj);
 
                         } else if (json.status === 'PROCESSING') {
 
-                            // Update transfer status
-                            knexQ('tbl_archivematica_transfer_queue')
-                                .where({
+                            let transferProcessingObj = {
+                                table: TRANSFER_QUEUE,
+                                where: {
                                     is_member_of_collection: is_member_of_collection,
                                     transfer_uuid: object.transfer_uuid,
                                     status: 0
-                                })
-                                .update({
+                                },
+                                update: {
                                     message: json.status,
                                     microservice: json.microservice
-                                })
-                                .then(function (data) {
-                                    // console.log(data);
-                                })
-                                .catch(function (error) {
-                                    console.log(error);
-                                });
+                                },
+                                callback: function (data) {
+
+                                    if (data !== 1) {
+                                        // TODO: log update error
+                                        console.log(data);
+                                        throw 'Database transfer queue error';
+                                    }
+                                }
+                            };
+
+                            // Update transfer status
+                            updateQueue(transferProcessingObj);
 
                         } else {
 
-                            // Update transfer status
-                            knexQ('tbl_archivematica_transfer_queue')
-                                .where({
-                                    is_member_of_collection: is_member_of_collection,
-                                    transfer_uuid: object.transfer_uuid,
-                                    status: 0
-                                })
-                                .update({
+                            let transferUnknownErrorObj = {
+                                table: TRANSFER_QUEUE,
+                                update: {
                                     message: json.status,
                                     microservice: json.microservice,
                                     status: 1
-                                })
-                                .then(function (data) {
-                                    console.log(data);
-                                })
-                                .catch(function (error) {
-                                    console.log(error);
-                                });
+                                },
+                                callback: function (data) {
+
+                                    if (data !== 1) {
+                                        // TODO: log update error
+                                        console.log(data);
+                                        throw 'Database transfer queue error';
+                                    }
+                                }
+                            };
+
+                            // Update transfer status
+                            updateQueue(transferUnknownErrorObj);
                         }
                     });
                 });
 
-            }, transfer_status_check);
+            }, TRANSFER_STATUS_CHECK);
 
             return null;
         })
@@ -500,14 +651,17 @@ exports.get_transfer_status = function (req, callback) {
     });
 };
 
-// 3.)
+/**
+ * Checks ingest status and updates queue based on stage of ingest
+ * STEP 3
+ * @param req
+ * @param callback
+ */
 exports.get_ingest_status = function (req, callback) {
 
-    var sip_uuid = req.query.sip_uuid,
-        ingest_status_check_time = 3000,
-        duracloud_import_start_timeout = 5000;
+    let sip_uuid = req.query.sip_uuid;
 
-    var timer = setInterval(function () {
+    let timer = setInterval(function () {
 
         if (sip_uuid === undefined) {
             console.log('sip uuid problem');
@@ -520,28 +674,42 @@ exports.get_ingest_status = function (req, callback) {
 
             if (json.status === 'COMPLETE') {
 
-                knexQ('tbl_archivematica_import_queue')
-                    .where({
+                let importCompleteQueue = {
+                    table: INGEST_QUEUE,
+                    where: {
                         sip_uuid: json.uuid,
                         status: 0
-                    })
-                    .update({
+                    },
+                    update: {
                         message: 'IMPORT_COMPLETE',
                         microservice: json.microservice
-                    })
-                    .then(function (data) {
+                    },
+                    callback: function (data) {
+
+                        if (data !== 1) {
+                            // TODO: log update error
+                            console.log(data);
+                            throw 'Database transfer queue error';
+                        }
 
                         setTimeout(function () {
-                            // update queue status
-                            knexQ('tbl_archivematica_import_queue')
-                                .where({
+
+                            let importStatusChange = {
+                                table: INGEST_QUEUE,
+                                where: {
                                     sip_uuid: json.uuid,
                                     status: 0
-                                })
-                                .update({
+                                },
+                                update: {
                                     status: 1
-                                })
-                                .then(function (data) {
+                                },
+                                callback: function (data) {
+
+                                    if (data !== 1) {
+                                        // TODO: log update error
+                                        console.log(data);
+                                        throw 'Database ingest queue error';
+                                    }
 
                                     console.log('Begin DuraCloud import...');
 
@@ -552,85 +720,111 @@ exports.get_ingest_status = function (req, callback) {
 
                                         if (error) {
                                             console.log(error);
+                                            throw error;
+                                        }
+
+                                        if (httpResponse.statusCode !== 200) {
+
+                                            // TODO: log
+                                            // TODO: update queue
+                                            throw 'Unable to start duracloud object imports';
                                         }
 
                                         console.log(body);
                                     });
+                                }
+                            };
 
-                                })
-                                .catch(function (error) {
-                                    console.log(error);
-                                });
+                            // Update queue status
+                            updateQueue(importStatusChange);
 
-                        }, duracloud_import_start_timeout);
+                        }, DURACLOUD_IMPORT_START_TIMEOUT);
 
-                    })
-                    .catch(function (error) {
-                        console.log(error);
-                    });
+                        return null;
+                    }
+                };
 
                 clearInterval(timer);
+                updateQueue(importCompleteQueue);
 
             } else if (json.status === 'FAILED' || json.status === 'REJECTED' || json.status === 'USER_INPUT') {
 
-                knexQ('tbl_archivematica_import_queue')
-                    .where({
+                let importFailed = {
+                    table: INGEST_QUEUE,
+                    where: {
                         sip_uuid: json.uuid,
                         status: 0
-                    })
-                    .update({
+                    },
+                    update: {
                         message: json.status,
                         microservice: json.microservice,
                         status: 1
-                    })
-                    .then(function (data) {
-                        console.log(data);
-                    })
-                    .catch(function (error) {
-                        console.log(error);
-                    });
+                    },
+                    callback: function (data) {
+
+                        if (data !== 1) {
+                            // TODO: log update error
+                            console.log(data);
+                            throw 'Database ingest queue error (importFailed)';
+                        }
+                    }
+                };
+
+                updateQueue(importFailed);
 
             } else if (json.status === 'PROCESSING') {
 
-                knexQ('tbl_archivematica_import_queue')
-                    .where({
+                let importProcessing = {
+                    table: INGEST_QUEUE,
+                    where: {
                         sip_uuid: json.uuid,
                         status: 0
-                    })
-                    .update({
+                    },
+                    update: {
                         message: json.status,
                         microservice: json.microservice
-                    })
-                    .then(function (data) {
-                        console.log(data);
-                    })
-                    .catch(function (error) {
-                        console.log(error);
-                    });
+                    },
+                    callback: function (data) {
+
+                        if (data !== 1) {
+                            // TODO: log update error
+                            console.log(data);
+                            throw 'Database ingest queue error (importProcessing)';
+                        }
+                    }
+                };
+
+                updateQueue(importProcessing);
 
             } else {
 
-                // unknown error
-                knexQ('tbl_archivematica_import_queue')
-                    .where({
+                let importUnknownError = {
+                    table: INGEST_QUEUE,
+                    where: {
                         sip_uuid: json.uuid,
                         status: 0
-                    })
-                    .update({
+                    },
+                    update: {
                         message: json.status,
                         microservice: json.microservice,
                         status: 1
-                    })
-                    .then(function (data) {
-                        console.log(data);
-                    })
-                    .catch(function (error) {
-                        console.log(error);
-                    });
+                    },
+                    callback: function (data) {
+
+                        if (data !== 1) {
+                            // TODO: log update error
+                            console.log(data);
+                            throw 'Database ingest queue error (importUnknownError)';
+                        }
+                    }
+                };
+
+                // unknown error
+                updateQueue(importUnknownError);
             }
         });
 
-    }, ingest_status_check_time);
+    }, INGEST_STATUS_CHECK_TIME);
 
     callback({
         status: 200,
@@ -639,14 +833,19 @@ exports.get_ingest_status = function (req, callback) {
     });
 };
 
-// 4.)
+/**
+ * Imports DuraCloud stored objects
+ * STEP 4
+ * @param req
+ * @param callback
+ */
 exports.import_dip = function (req, callback) {
 
     var sip_uuid = req.query.sip_uuid;
 
     archivematica.get_dip_path(sip_uuid, function (dip_path) {
 
-        knexQ('tbl_archivematica_import_queue')
+        knexQ(INGEST_QUEUE)
             .select('*')
             .where({
                 sip_uuid: sip_uuid,
@@ -656,7 +855,7 @@ exports.import_dip = function (req, callback) {
             .then(function (data) {
 
                 // Check if sip uuid already exist
-                knexQ('tbl_duracloud_import_queue')
+                knexQ(IMPORT_QUEUE)
                     .count('sip_uuid as count')
                     .where({
                         sip_uuid: sip_uuid
@@ -673,34 +872,60 @@ exports.import_dip = function (req, callback) {
 
                             if (results.error === true) {
 
-                                // TODO: log and update queue
+                                let importErrorObj = {
+                                    table: IMPORT_QUEUE,
+                                    where: {
+                                        status: 0,
+                                        sip_uuid: sip_uuid,
+                                        type: 'xml'
+                                    },
+                                    update: {
+                                        message: 'ERROR_UNABLE_TO_GET_OBJECT',
+                                        status: 1
+                                    },
+                                    callback: function (data) {
+
+                                        if (data !== 1) {
+                                            // TODO: log update error
+                                            console.log(data);
+                                            throw 'Database duracloud import queue error (importErrorObj)';
+                                        }
+                                    }
+                                };
+
+                                updateQueue(importErrorObj);
 
                                 return false;
                             }
 
                             // Extract values from DuraCloud METS.xml file
-                            var metsResults = metslib.process_mets(results.sip_uuid, data[0].dip_path, data[0].transfer_uuid, data[0].is_member_of_collection, results.mets);
+                            let metsResults = metslib.process_mets(results.sip_uuid, data[0].dip_path, data[0].transfer_uuid, data[0].is_member_of_collection, results.mets);
 
                             // Save to queue
-                            var chunkSize = metsResults.length;
-                            knexQ.batchInsert('tbl_duracloud_import_queue', metsResults, chunkSize)
+                            let chunkSize = metsResults.length;
+                            knexQ.batchInsert(IMPORT_QUEUE, metsResults, chunkSize)
                                 .then(function (data) {
                                     // Start processing XML
                                     process_duracloud_queue_xml(results.sip_uuid);
                                 })
                                 .catch(function (error) {
                                     console.log(error);
+                                    throw error;
                                 });
+
+                            return null;
                         });
                     })
                     .catch(function (error) {
                         console.log(error);
+                        throw error;
                     });
 
                 return null;
             })
             .catch(function (error) {
                 console.log(error);
+                throw error;
             });
     });
 
@@ -711,10 +936,14 @@ exports.import_dip = function (req, callback) {
     });
 };
 
-// import helpers
+/**
+ * Processes MODS XML record retrieved from DuraCloud
+ * import helpers
+ * @param sip_uuid
+ */
 var process_duracloud_queue_xml = function (sip_uuid) {
 
-    knexQ('tbl_duracloud_import_queue')
+    knexQ(IMPORT_QUEUE)
         .select('*')
         .where({
             sip_uuid: sip_uuid,
@@ -723,30 +952,37 @@ var process_duracloud_queue_xml = function (sip_uuid) {
         })
         .then(function (data) {
 
-            var is_member_of_collection = data[0].is_member_of_collection,
-                get_object_timer = 3000;
+            const GET_OBJECT_TIMER = 3000;
+            let is_member_of_collection = data[0].is_member_of_collection;
 
-            var timer = setInterval(function () {
+            let timer = setInterval(function () {
 
                 if (data.length === 0) {
                     clearInterval(timer);
-                    // Update queue status
-                    knexQ('tbl_duracloud_import_queue')
-                        .where({
+
+                    let importCompleteQueue = {
+                        table: IMPORT_QUEUE,
+                        where: {
                             status: 0,
                             sip_uuid: sip_uuid,
                             type: 'xml'
-                        })
-                        .update({
+                        },
+                        update: {
                             message: 'COMPLETE',
                             status: 1
-                        })
-                        .then(function (data) {
-                            console.log(data);
-                        })
-                        .catch(function (error) {
-                            console.log(error);
-                        });
+                        },
+                        callback: function (data) {
+
+                            if (data !== 1) {
+                                // TODO: log update error
+                                console.log(data);
+                                throw 'Database duracloud import queue error (importCompleteQueue)';
+                            }
+                        }
+                    };
+
+                    // Update queue status
+                    updateQueue(importCompleteQueue);
 
                     return false;
                 }
@@ -758,14 +994,12 @@ var process_duracloud_queue_xml = function (sip_uuid) {
 
                     function get_pid(callback) {
                         pids.get_next_pid(function (pid) {
-                            console.log(pid);
                             callback(null, {pid: pid});
                         });
                     }
 
                     function get_handle(obj, callback) {
                         handles.create_handle(obj.pid, function (handle) {
-                            console.log(handle);
                             obj.handle = handle;
                             callback(null, obj);
                         });
@@ -783,60 +1017,77 @@ var process_duracloud_queue_xml = function (sip_uuid) {
                         // The xml file name will be overwritten by the object file name
                         recordObj.file_name = file;
 
-                        // Update queue status
-                        knexQ('tbl_duracloud_import_queue')
-                            .where({
+                        let importObj = {
+                            table: IMPORT_QUEUE,
+                            where: {
                                 sip_uuid: sip_uuid
-                            })
-                            .update({
+                            },
+                            update: {
                                 pid: recordObj.pid,
                                 handle: recordObj.handle
-                            })
-                            .then(function (data) {
+                            },
+                            callback: function (data) {
 
-                                console.log(data);
+                                if (data < 1) {
+                                    // TODO: log update error
+                                    console.log(data);
+                                    throw 'Database duracloud import queue error (pid/handle)';
+                                }
 
-                                knex('tbl_objects')
+                                knex(REPO_OBJECTS)
                                     .insert(recordObj)
                                     .then(function (data) {
                                         // Process xml (Extract mods, validate and save to DB)
                                         process_xml(recordObj);
                                         // Start processing object associated with XML record
                                         process_duracloud_queue_objects(sip_uuid, results.pid, file);
+
+                                        return null;
                                     })
                                     .catch(function (error) {
                                         console.log(error);
+                                        throw error;
                                     });
 
                                 return null;
+                            }
+                        };
 
-                            })
-                            .catch(function (error) {
-                                console.log(error);
-                            });
+                        // Update queue status
+                        updateQueue(importObj);
+
+                        return null;
                     });
                 });
 
-            }, get_object_timer);
+            }, GET_OBJECT_TIMER);
 
             return null;
         })
         .catch(function (error) {
             console.log(error);
+            throw error;
         });
 };
 
+/**
+ * Processes objects retrieved from duraCloud
+ * @param sip_uuid
+ * @param pid
+ * @param file
+ * @returns {boolean}
+ */
 var process_duracloud_queue_objects = function (sip_uuid, pid, file) {
 
-    var tmpArr = file.split('.'),
-        file_id,
-        get_object_timer = 5000;
+    const GET_OBJECT_TIMER = 5000;
+    let tmpArr = file.split('.'),
+        file_id;
 
     tmpArr.pop();
     file_id = tmpArr.join('.');
 
     // Get associated object
-    knexQ('tbl_duracloud_import_queue')
+    knexQ(IMPORT_QUEUE)
         .select('*')
         .where({
             sip_uuid: sip_uuid,
@@ -846,30 +1097,38 @@ var process_duracloud_queue_objects = function (sip_uuid, pid, file) {
         })
         .then(function (data) {
 
-            var timer = setInterval(function () {
+            let timer = setInterval(function () {
 
                 if (data.length === 0) {
+
                     clearInterval(timer);
-                    // Update queue status
-                    knexQ('tbl_duracloud_import_queue')
-                        .where({
+
+                    var importObj = {
+                        table: IMPORT_QUEUE,
+                        where: {
                             status: 0,
                             sip_uuid: sip_uuid,
                             file_id: file_id,
-                            type: 'object',
+                            type: 'object'
+                        },
+                        update: {
+                            status: 1,
                             message: 'COMPLETE'
-                        })
-                        .update({
-                            status: 1
-                        })
-                        .then(function (data) {
-                            console.log(data);
-                        })
-                        .catch(function (error) {
-                            console.log(error);
-                        });
+                        },
+                        callback: function (data) {
 
-                    return false;
+                            if (data !== 1) {
+                                // TODO: log update error
+                                console.log(data);
+                                throw 'Database duracloud import queue error';
+                            }
+                        }
+                    };
+
+                    // Update queue status
+                    updateQueue(importObj);
+
+                    return null;
                 }
 
                 var object = data.pop();
@@ -880,22 +1139,22 @@ var process_duracloud_queue_objects = function (sip_uuid, pid, file) {
                     recordObj.pid = pid;
                     recordObj.sip_uuid = sip_uuid;
                     recordObj.transfer_uuid = object.transfer_uuid;
-                    recordObj.file_name = results.file;
+                    recordObj.file_name = object.dip_path + '/objects/' + object.uuid + '-' + results.file;
                     recordObj.checksum = results.headers['content-md5'];
                     recordObj.file_size = results.headers['content-length'];
 
                     if (!fs.existsSync('./tmp/' + results.file)) {
                         console.log('File ' + results.file + ' does not exist.');
-                        return false;
+                        throw 'File ' + results.file + ' does not exist.';
                     }
 
-                    var tmp = shell.exec('file --mime-type ./tmp/' + results.file).stdout;
-                    var mimetypetmp = tmp.split(':');
+                    let tmp = shell.exec('file --mime-type ./tmp/' + results.file).stdout;
+                    let mimetypetmp = tmp.split(':');
 
                     recordObj.mime_type = mimetypetmp[1].trim();
                     recordObj.thumbnail = object.uuid + '.jpg';
 
-                    knex('tbl_objects')
+                    knex(REPO_OBJECTS)
                         .where({
                             pid: recordObj.pid,
                             object_type: 'object'
@@ -907,33 +1166,44 @@ var process_duracloud_queue_objects = function (sip_uuid, pid, file) {
                             checksum: recordObj.checksum,
                             file_size: recordObj.file_size,
                             mime_type: recordObj.mime_type,
-                            thumbnail: recordObj.thumbnail
+                            thumbnail: object.dip_path + '/thumbnails/' + recordObj.thumbnail
                         })
                         .then(function (data) {
+
+                            if (data !== 1) {
+                                // TODO: log update error
+                                console.log(data);
+                                throw 'Database object queue error';
+                            }
+
                             recordObj = {};
                         })
                         .catch(function (error) {
                             console.log(error);
+                            throw error;
                         });
                 });
 
-            }, get_object_timer);
+            }, GET_OBJECT_TIMER);
 
             return null;
         })
         .catch(function (error) {
             console.log(error);
+            throw error;
         });
+
+    return false;
 };
 
-/*
- Import processes
+/**
+ * Processes MODS XML retrieved from DuraCloud
+ * @param obj
+ * @returns {boolean}
  */
 var process_xml = function (obj) {
 
-    console.log('processing xml...');
-
-    var file = './tmp/' + obj.file_name,
+    let file = './tmp/' + obj.file_name,
         validate_xml_command = './libs/xsd-validator/xsdv.sh ./libs/xsd-validator/mods-3-6.xsd.xml ' + file;
 
     // check if object folder exists
@@ -941,7 +1211,7 @@ var process_xml = function (obj) {
         // TODO: error
         // TODO: log
         console.log('ERROR: File not found.');
-        // return false;
+        throw 'ERROR: File not found.';
     }
 
     console.log('Validating ' + obj.pid + '...');
@@ -953,7 +1223,7 @@ var process_xml = function (obj) {
         if (code !== 0) {
             console.log(stderr);
             // TODO: log
-            return false;
+            throw stderr;
         }
 
         // read file content
@@ -962,13 +1232,14 @@ var process_xml = function (obj) {
             if (error) {
                 console.log(error);
                 // TODO: log
-                return false;
+                throw error;
             }
 
             var mods = modslib.process_mods(mods_original);
 
             console.log('Saving mods.');
-            knex('tbl_objects')
+
+            knex(REPO_OBJECTS)
                 .where({
                     pid: obj.pid
                 })
@@ -976,14 +1247,45 @@ var process_xml = function (obj) {
                     mods: mods,
                     mods_original: mods_original
                 })
-                .then(function (result) {
-                    console.log('MODS saved. ', result);
+                .then(function (data) {
+
+                    if (data !== 1) {
+                        // TODO: log update error
+                        console.log(data);
+                        throw 'Database MODS error';
+                    }
+
+                    console.log('MODS saved. ', data);
+
+                    return null;
+
                 })
                 .catch(function (error) {
                     console.log(error);
+                    throw error;
                 });
         });
     });
+
+    return false;
+};
+
+/**
+ * Updates queues
+ * @param obj
+ * @returns {null}
+ */
+var updateQueue = function (obj) {
+
+    knexQ(obj.table)
+        .where(obj.where)
+        .update(obj.update)
+        .then(obj.callback)
+        .catch(function (error) {
+            // TODO: log
+            console.log(error);
+            throw error;
+        });
 
     return false;
 };

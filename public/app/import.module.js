@@ -73,18 +73,18 @@ var importModule = (function () {
         $.ajax({
             url: api + '/api/admin/v1/import/start_transfer',
             type: 'post',
-            data: {collection: collection, objects: objects, user: userModule.renderUserName()}
+            data: {collection: collection, objects: objects, user: userModule.getUserFullName()}
         }).done(function (data) {
 
             // TODO: check payload
             console.log(data);
 
-            $('#message').html('<div class="alert alert-success">Import process starting...</div>');
+            $('#message').html('<div class="alert alert-info">Import process starting...</div>');
 
             setTimeout(function () {
                 $('#message').html('');
-                window.location.replace('/dashboard/import/status');
-            }, 3000);
+                window.location.replace('/dashboard/import/status?import=true');
+            }, 5000);
 
         }).fail(function () {
             renderError();
@@ -157,6 +157,7 @@ var importModule = (function () {
 
     obj.init = function () {
         userModule.renderUserName();
+        console.log(userModule.getUserFullName());
     };
 
     return obj;

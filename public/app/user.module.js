@@ -207,6 +207,11 @@ var userModule = (function () {
         return $('#user-form').serialize();
     };
 
+    obj.getUserFullName = function () {
+        var data = JSON.parse(window.sessionStorage.getItem('repo_user'));
+        return data.name;
+    };
+
     var addUser = function () {
 
         var message = '<div class="alert alert-info">Saving User...</div>';
