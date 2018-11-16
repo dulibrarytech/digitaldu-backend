@@ -1,13 +1,17 @@
-var config = require('../config/config'),
+const config = require('../config/config'),
     client = require('ssh2-sftp-client'),
     request = require('request');
 
-/* list the files and folders on the FTP server */
+/**
+ * List the files and folders on the FTP server
+ * @param folder
+ * @param callback
+ */
 exports.list = function (folder, callback) {
 
     'use strict';
 
-    var sftp = new client();
+    const sftp = new client();
 
     sftp.connect({
 
@@ -18,21 +22,33 @@ exports.list = function (folder, callback) {
 
     }).then(function () {
 
+        let remotePath = config.sftpRemotePath;
+
         if (folder !== 'null') {
-            var path = folder.replace(/,/g, '/');
-            return sftp.list(config.sftpRemotePath + '/' + path);
-        } else {
-            return sftp.list(config.sftpRemotePath);
+            let path = folder.replace(/,/g, '/');
+            remotePath = config.sftpRemotePath + '/' + path;
         }
+
+        return sftp.list(remotePath);
 
     }).then(function (data) {
         callback(data);
-    }).catch(function (err) {
-        console.log(err, 'catch error');
+    }).catch(function (error) {
+
+        callback({
+            error: true,
+            message: error
+        });
+
+        throw error;
     });
 };
 
-// 1.)
+/**
+ * Starts transfer
+ * @param transferObj
+ * @param callback
+ */
 exports.start_tranfser = function (transferObj, callback) {
 
     'use strict';
@@ -56,14 +72,29 @@ exports.start_tranfser = function (transferObj, callback) {
     }, function (error, httpResponse, body) {
 
         if (error) {
-            console.log(error);
+            callback({
+                error: true,
+                message: error
+            });
+        }
+
+        if (httpResponse.statusCode !== 201) {
+
+            callback({
+                error: true,
+                message: 'Error: Unable to start transfer'
+            });
         }
 
         callback(body);
     });
 };
 
-// 2.)
+/**
+ * Approves transfer
+ * @param transferFolder
+ * @param callback
+ */
 exports.approve_transfer = function (transferFolder, callback) {
 
     'use strict';
@@ -86,7 +117,11 @@ exports.approve_transfer = function (transferFolder, callback) {
     });
 };
 
-// 3.)
+/**
+ * Checks transfer status
+ * @param uuid
+ * @param callback
+ */
 exports.get_transfer_status = function (uuid, callback) {
 
     'use strict';
@@ -105,7 +140,11 @@ exports.get_transfer_status = function (uuid, callback) {
     });
 };
 
-// 4.)
+/**
+ * Check ingest status
+ * @param uuid
+ * @param callback
+ */
 exports.get_ingest_status = function (uuid, callback) {
 
     'use strict';
@@ -124,7 +163,11 @@ exports.get_ingest_status = function (uuid, callback) {
     });
 };
 
-// 5.) Constructs path to dip store in DuraCloud
+/**
+ * Constructs path to dip store in DuraCloud
+ * @param uuid
+ * @param callback
+ */
 exports.get_dip_path = function (uuid, callback) {
 
     'use strict';
@@ -149,7 +192,6 @@ exports.get_dip_path = function (uuid, callback) {
             tmp = dipuuid.replace(/-/g, ''),
             tmpuuid = tmp.match(/.{1,4}/g),
             path = tmpuuid.join('/');
-
 
         var folderArr = json.current_path.split('/'),
             folderTmp = folderArr[folderArr.length - 1],

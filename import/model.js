@@ -78,7 +78,6 @@ socketclient.on('connect', function () {
  */
 socketclient.on('connect', function () {
 
-    // const INGEST_TIMER = 4000;
     let id = setInterval(function () {
 
         knexQ(INGEST_QUEUE)
@@ -105,7 +104,6 @@ socketclient.on('connect', function () {
  */
 socketclient.on('connect', function () {
 
-    // const IMPORT_TIMER = 5000;
     let id = setInterval(function () {
 
         knexQ(IMPORT_QUEUE)
@@ -138,6 +136,17 @@ exports.list = function (req, callback) {
     let query = req.query.collection;
 
     archivematica.list(query, function (results) {
+
+        if (results.error !== undefined && results.error === true) {
+
+            callback({
+                status: 400,
+                content_type: {'Content-Type': 'application/json'},
+                message: results.message
+            });
+
+            return false;
+        }
 
         callback({
             status: 200,

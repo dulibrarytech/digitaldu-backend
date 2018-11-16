@@ -139,40 +139,5 @@
         importModule.init();
         importModule.getImportObjects();
     </script>
-    <script>
-        // TODO: move to import module
-
-        /*
-        var socket = io();
-
-        socket.on('transfer_status', function (data) {
-            console.log(data[0]);
-            if (data[0].message !== null && data[0].message !== 'TRANSFER_COMPLETE') {
-                $('#transfer-status').html('<div class="alert alert-info"><i class="fa fa-info-circle"></i> (Transfer) Collection: ' + data[0].is_member_of_collection.replace('_', ':') + ' - ' + data[0].message + ' - ' + data[0].microservice + '</div>');
-            } else if (data[0].message === 'TRANSFER_COMPLETE') {
-                setTimeout(function () {
-                    $('#transfer-status').html('');
-                }, 5000);
-            } else {
-                $('#transfer-status').html('');
-            }
-        });
-
-        socket.on('ingest_status', function (data) {
-            console.log(data[0]);
-            if (data[0].message !== null && data[0].message !== 'IMPORT_COMPLETE') {
-                $('#ingest-status').html('<div class="alert alert-info"><i class="fa fa-info-circle"></i> (Import) Collection: ' + data[0].is_member_of_collection.replace('_', ':') + ' - ' + data[0].message + ' - ' + data[0].microservice + '</div>');
-            } else if (data[0].message === 'IMPORT_COMPLETE') {
-                setTimeout(function () {
-                    $('#ingest-status').html('');
-                }, 5000);
-            } else {
-                $('#ingest-status').html('');
-            }
-        });
-        */
-
-    </script>
-
 </body>
 </html>

@@ -4,8 +4,8 @@ var importModule = (function () {
 
     var obj = {};
 
-    var renderError = function () {
-        $('#objects').html('Error: Unable to retrieve objects');
+    var renderError = function (message) {
+        $('#message').html(message);
     };
 
     var api = configModule.getApi();
@@ -79,14 +79,14 @@ var importModule = (function () {
             // TODO: check payload
             console.log(data);
 
-            $('#message').html('<div class="alert alert-info">Import process starting...</div>');
+            $('#message').html('<p>Import process starting...</p>');
 
             setTimeout(function () {
                 $('#message').html('');
                 window.location.replace('/dashboard/import/status?import=true');
             }, 5000);
 
-        }).fail(function () {
+        }).fail(function (jqXHR, textStatus) {
             renderError();
         });
     };
@@ -103,7 +103,7 @@ var importModule = (function () {
         // TODO: render collection folder contents differently
         if (folder !== null) {
 
-            $('#back').html('<p><a href="/dashboard/import" class="btn btn-default" id="back"><i class="fa fa-arrow-left"></i> Back</a></p>');
+            // $('#back').html('<p><a href="/dashboard/import" class="btn btn-default" id="back"><i class="fa fa-arrow-left"></i> Back</a></p>');
 
             var folders = window.sessionStorage.getItem('folders');
 
@@ -150,14 +150,18 @@ var importModule = (function () {
             .done(function (data) {
                 renderImportObjects(data);
             })
-            .fail(function () {
-                renderError();
+            .fail(function (jqXHR, textStatus) {
+
+                if (jqXHR.status !== 200) {
+                    var message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve object data from Archivematica SFTP server.</div>';
+                    renderError(message);
+                }
+
             });
     };
 
     obj.init = function () {
         userModule.renderUserName();
-        console.log(userModule.getUserFullName());
     };
 
     return obj;
