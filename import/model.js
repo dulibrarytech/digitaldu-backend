@@ -958,6 +958,7 @@ var process_duracloud_queue_xml = function (sip_uuid) {
             let timer = setInterval(function () {
 
                 if (data.length === 0) {
+
                     clearInterval(timer);
 
                     let importCompleteQueue = {
@@ -1050,12 +1051,13 @@ var process_duracloud_queue_xml = function (sip_uuid) {
                                     .then(function (data) {
 
                                         // if the record exist, skip the next step
-                                        if (data[0].count === 1) {
+                                        if (data[0].count > 0) {
 
                                             let pidErrorObj = {
                                                 table: IMPORT_QUEUE,
                                                 where: {
-                                                    pid: recordObj.pid
+                                                    pid: recordObj.pid,
+                                                    status: 0
                                                 },
                                                 update: {
                                                     message: 'ERROR_PID_ALREADY_EXIST_(conflict)',
@@ -1063,22 +1065,20 @@ var process_duracloud_queue_xml = function (sip_uuid) {
                                                 },
                                                 callback: function (data) {
 
-                                                    console.log('PID already exist');
-                                                    console.log(data);
+                                                    clearInterval(timer);
 
-                                                    /*
-                                                    if (data < 1) {
+                                                     if (data === 0) {
                                                         // TODO: log update error
                                                         console.log(data);
-                                                        throw 'Database duracloud import queue error';
-                                                    }
-                                                    */
+                                                        throw 'Database duracloud import queue error (PID conflict)';
+                                                     }
                                                 }
                                             };
 
                                             updateQueue(pidErrorObj);
 
                                             return false;
+
                                         }
 
                                         knex(REPO_OBJECTS)
