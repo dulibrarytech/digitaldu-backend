@@ -1000,6 +1000,13 @@ var process_duracloud_queue_xml = function (sip_uuid) {
 
                     function get_handle(obj, callback) {
                         handles.create_handle(obj.pid, function (handle) {
+
+                            if (handle.error !== undefined && handle.error === true) {
+                                obj.handle = handle.message;
+                                callback(null, obj);
+                                return false;
+                            }
+
                             obj.handle = handle;
                             callback(null, obj);
                         });
@@ -1034,15 +1041,61 @@ var process_duracloud_queue_xml = function (sip_uuid) {
                                     throw 'Database duracloud import queue error (pid/handle)';
                                 }
 
+                                // Check if pid already exist
                                 knex(REPO_OBJECTS)
-                                    .insert(recordObj)
+                                    .count('pid as count')
+                                    .where({
+                                        pid: recordObj.pid
+                                    })
                                     .then(function (data) {
-                                        // Process xml (Extract mods, validate and save to DB)
-                                        process_xml(recordObj);
-                                        // Start processing object associated with XML record
-                                        process_duracloud_queue_objects(sip_uuid, results.pid, file);
 
-                                        return null;
+                                        // if the record exist, skip the next step
+                                        if (data[0].count === 1) {
+
+                                            let pidErrorObj = {
+                                                table: IMPORT_QUEUE,
+                                                where: {
+                                                    pid: recordObj.pid
+                                                },
+                                                update: {
+                                                    message: 'ERROR_PID_ALREADY_EXIST_(conflict)',
+                                                    status: 1
+                                                },
+                                                callback: function (data) {
+
+                                                    console.log('PID already exist');
+                                                    console.log(data);
+
+                                                    /*
+                                                    if (data < 1) {
+                                                        // TODO: log update error
+                                                        console.log(data);
+                                                        throw 'Database duracloud import queue error';
+                                                    }
+                                                    */
+                                                }
+                                            };
+
+                                            updateQueue(pidErrorObj);
+
+                                            return false;
+                                        }
+
+                                        knex(REPO_OBJECTS)
+                                            .insert(recordObj)
+                                            .then(function (data) {
+                                                // Process xml (Extract mods, validate and save to DB)
+                                                process_xml(recordObj);
+                                                // Start processing object associated with XML record
+                                                process_duracloud_queue_objects(sip_uuid, results.pid, file);
+
+                                                return null;
+                                            })
+                                            .catch(function (error) {
+                                                console.log(error);
+                                                throw error;
+                                            });
+
                                     })
                                     .catch(function (error) {
                                         console.log(error);
