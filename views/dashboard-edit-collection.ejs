@@ -42,7 +42,7 @@
 
                 <div class="page-title">
                     <div class="title_left">
-                        <!--<h3> Media Gallery <small> gallery design</small> </h3>-->
+                        <h3> Edit Collection</h3>
                     </div>
 
                     <div class="title_right">
@@ -56,14 +56,13 @@
                     <div class="col-md-12">
                         <div class="x_panel">
                             <div class="x_title">
-                                <h2>Edit Collection</h2>
+                                <h2></h2>
                                 <div class="clearfix"></div>
                             </div>
                             <div class="x_content">
+                                <div id="message"></div>
+                                <div class="row" id="edit-collection"><!-- collection edit form is rendered here -->
 
-                                <div class="row" id="edit-collection"><!-- community edit form is rendered here -->
-
-                                    <div id="message"></div>
                                     <br />
 
                                     <form id="collection-form" class="form-horizontal form-label-left" novalidate>
@@ -141,21 +140,19 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.17.0/jquery.validate.min.js"></script>
 <!-- Bootstrap -->
 <script src="../../vendors/bootstrap/dist/js/bootstrap.min.js"></script>
-<!-- FastClick -->
-<script src="../../vendors/fastclick/lib/fastclick.js"></script>
 <!-- NProgress -->
 <script src="../../vendors/nprogress/nprogress.js"></script>
 <!-- app -->
-<script src="../../app/libs/helper.js"></script>
 <script src="../../app/libs/config.js"></script>
+<script src="../../app/libs/helper.js"></script>
 <script src="../../app/user.module.js"></script>
 <script src="../../app/collections.module.js"></script>
 <!-- Custom Theme Scripts -->
-<script src="../../build/js/custom.js"></script>
 <script>
-    collectionsModule.init();
-    collectionsModule.updateCollectionInit();
-    collectionsModule.getCollection();
+    window.alert('test');
+    // collectionsModule.init();
+    // collectionsModule.updateCollectionInit();
+    // collectionsModule.getCollection();
 </script>
 </body>
 </html>

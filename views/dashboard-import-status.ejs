@@ -41,11 +41,10 @@
 
                 <div class="page-title">
                     <div class="title_left">
-                        <!--<h3> Media Gallery <small> gallery design</small> </h3>-->
+                        <h3> Import Status</h3>
                     </div>
 
                     <div class="title_right">
-                        <!--<div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">-->
                         <% include partials/search.ejs %>
                     </div>
                 </div>
@@ -56,10 +55,8 @@
                     <div class="col-md-12">
                         <div class="x_panel">
                             <div class="x_title">
-                                <h2>Imports</h2>
-                                <ul class="nav navbar-right"><!-- panel_toolbox -->
-                                    <!--<li><a href="#"><i class="fa fa-plus"></i>&nbsp;Import All Objects</a></li>-->
-                                </ul>
+                                <h2></h2>
+                                <ul class="nav navbar-right"><!-- panel_toolbox --></ul>
                                 <div class="clearfix"></div>
                             </div>
                             <div class="x_content">
@@ -128,120 +125,23 @@
     <script src="../../vendors/jquery/dist/jquery.min.js"></script>
     <!-- Bootstrap -->
     <script src="../../vendors/bootstrap/dist/js/bootstrap.min.js"></script>
-    <!-- FastClick -->
-    <script src="../../vendors/fastclick/lib/fastclick.js"></script>
     <!-- NProgress -->
     <script src="../../vendors/nprogress/nprogress.js"></script>
-    <!-- Chart.js -->
-    <script src="../../vendors/Chart.js/dist/Chart.min.js"></script>
-    <!-- jQuery Sparklines -->
-    <script src="../../vendors/jquery-sparkline/dist/jquery.sparkline.min.js"></script>
-    <!-- DateJS -->
-    <script src="../../vendors/DateJS/build/date.js"></script>
     <!-- bootstrap-daterangepicker -->
     <script src="../../vendors/moment/min/moment.min.js"></script>
-    <script src="../../vendors/bootstrap-daterangepicker/daterangepicker.js"></script>
-
     <!-- Datatables -->
     <script src="../../vendors/datatables.net/js/jquery.dataTables.min.js"></script>
     <script src="../../vendors/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
     <script src="../../vendors/datatables.net-responsive/js/dataTables.responsive.min.js"></script>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.1/socket.io.js"></script>
-
     <!-- Custom Theme Scripts -->
-    <script src="../../build/js/mediaelement-mediaelement-cc69163/build/mediaelement-and-player.min.js"></script>
-    <script src="../../build/js/custom.js"></script>
-    <script src="../../js/historyjs/scripts/bundled/html4+html5/native.history.js"></script>
-    <script src="../../app/libs/helper.js"></script>
     <script src="../../app/libs/config.js"></script>
-    <script src="../../app/collections.module.js"></script>
+    <script src="../../app/libs/helper.js"></script>
     <script src="../../app/user.module.js"></script>
+    <script src="../../app/collections.module.js"></script>
     <script src="../../app/import.module.js"></script>
     <script>
-        importModule.init();
-    </script>
-    <script>
-
-        // TODO: move to import module
-        if (helperModule.getParameterByName('import') === 'true') {
-            $('#message').html('<p>One Moment Please...</p>');
-        } else {
-            $('#message').html('');
-        }
-
-        $('#transfer-status').html('<tr><td>No Transfers</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>');
-        $('#ingest-status').html('<tr><td>No Ingests</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr></tr>');
-        $('#import-status').html('<tr><td>No Imports</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr></tr>');
-
-        var socket = io();
-
-        socket.on('transfer_status', function (data) {
-
-            var transferData = '';
-
-            if (data.length > 0) {
-                $('#message').html('');
-            }
-
-            for (var i=0;i<data.length;i++) {
-
-                transferData += '<tr>';
-                transferData += '<td>' + data[i].is_member_of_collection + '</td>';
-                transferData += '<td>' + data[i].object + '</td>';
-                transferData += '<td>' + data[i].transfer_uuid + '</td>';
-                transferData += '<td>' + data[i].microservice + '</td>';
-                transferData += '<td>' + data[i].user + '</td>';
-                transferData += '<td>' + data[i].message + '</td>';
-                transferData += '<td>' + data[i].created + '</td>';
-                transferData += '</tr>';
-            }
-
-            $('#transfer-status').html(transferData);
-
-        });
-
-        socket.on('ingest_status', function (data) {
-
-            var ingestData = '';
-
-            for (var i=0;i<data.length;i++) {
-
-                ingestData += '<tr>';
-                ingestData += '<td>' + data[i].is_member_of_collection + '</td>';
-                ingestData += '<td>' + data[i].sip_uuid + '</td>';
-                ingestData += '<td>' + data[i].microservice + '</td>';
-                ingestData += '<td>' + data[i].user + '</td>';
-                ingestData += '<td>' + data[i].message + '</td>';
-                ingestData += '<td>' + data[i].created + '</td>';
-                ingestData += '</tr>';
-            }
-
-            $('#ingest-status').html(ingestData);
-
-        });
-
-        socket.on('import_status', function (data) {
-
-            var importData = '';
-
-            for (var i=0;i<data.length;i++) {
-
-                importData += '<tr>';
-                importData += '<td>' + data[i].is_member_of_collection + '</td>';
-                importData += '<td>' + data[i].pid + '</td>';
-                importData += '<td>' + data[i].handle + '</td>';
-                importData += '<td>' + data[i].sip_uuid + '</td>';
-                importData += '<td>' + data[i].file + '</td>';
-                importData += '<td>' + data[i].message + '</td>';
-                importData += '<td>' + data[i].created + '</td>';
-                importData += '</tr>';
-            }
-
-            $('#import-status').html(importData);
-
-        });
-
+        importModule.getImportStatus();
     </script>
 </body>
 </html>

@@ -4,8 +4,8 @@ var statsModule = (function () {
 
     var obj = {};
 
-    var renderError = function () {
-        $('#stats').html('Error: Unable to retrieve stats');
+    var renderError = function (message) {
+        $('#message').html(message);
     };
 
     var api = configModule.getApi();
@@ -38,8 +38,12 @@ var statsModule = (function () {
             .done(function(data) {
                 renderStats(data);
             })
-            .fail(function() {
-                renderError();
+            .fail(function(jqXHR, textStatus) {
+
+                if (jqXHR.status !== 200) {
+                    var message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve repository statistics.</div>';
+                    renderError(message);
+                }
             });
     };
 
@@ -50,3 +54,5 @@ var statsModule = (function () {
     return obj;
 
 }());
+
+statsModule.init();

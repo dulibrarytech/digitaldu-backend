@@ -4,12 +4,16 @@ var collectionsModule = (function () {
 
     var obj = {};
 
-    var renderError = function () {
-        $('#collections').html('Error: Unable to retrieve collections');
+    var renderError = function (message) {
+        $('#message').html(message);
     };
 
     var api = configModule.getApi();
 
+    /**
+     * Renders root collections
+     * @param data
+     */
     var renderRootCollections = function (data) {
 
         var html = '';
@@ -17,9 +21,7 @@ var collectionsModule = (function () {
         for (var i = 0; i < data.length; i++) {
 
             var record = JSON.parse(data[i].display_record);
-            // TODO: place domain in config
-            // TODO: route to local route
-            var tn = 'http://librepo01-vlp.du.edu:8080/fedora/objects/' + data[i].pid + '/datastreams/TN/content';
+            var tn = configModule.getTn(data[i].pid);
 
             html += '<div class="row">';
             html += '<div class="col-md-3"><img style="width: 45%; display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
@@ -56,11 +58,14 @@ var collectionsModule = (function () {
             html += '<hr>';
         }
 
-        // TODO: implement pagination
+        // TODO: implement pagination or infinite scrolling
         $('#collections').html(html);
         $('a').tooltip();
     };
 
+    /**
+     * Gets root collections
+     */
     obj.getRootCollections = function () {
 
         userModule.setHeaderUserToken();
@@ -79,11 +84,8 @@ var collectionsModule = (function () {
                 permissions.push(accessObj);
             }
 
-            console.log(permissions);
-
         } else {
-
-
+            // TODO
         }
 
         $.ajax({
@@ -94,11 +96,19 @@ var collectionsModule = (function () {
             .done(function (data) {
                 renderRootCollections(data);
             })
-            .fail(function () {
-                renderError();
+            .fail(function (jqXHR, textStatus) {
+
+                if (jqXHR.status !== 201) {
+                    var message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve collections.</div>';
+                    renderError(message);
+                }
             });
     };
 
+    /**
+     * Gets collection name
+     * @param pid
+     */
     obj.getCollectionName = function (pid) {
 
         if (pid === undefined) {
@@ -123,24 +133,36 @@ var collectionsModule = (function () {
 
                 $('#collection-name').html(title);
             })
-            .fail(function () {
-                renderError();
+            .fail(function (jqXHR, textStatus) {
+
+                if (jqXHR.status !== 200) {
+                    var message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve collection name.</div>';
+                    renderError(message);
+                }
             });
     };
 
-    // sets collection pid in collection form (hidden field)
+    /**
+     * Sets collection pid in collection form (hidden field)
+     */
     obj.getIsMemberOfCollection = function () {
         var is_member_of_collection = helperModule.getParameterByName('is_member_of_collection');
         $('#is-member-of-collection').val(is_member_of_collection);
     };
 
+    /**
+     * Gets collection form data
+     * @returns {*|jQuery}
+     */
     var getCollectionFormData = function () {
         return $('#collection-form').serialize();
     };
 
+    /**
+     * Adds collection
+     */
     var addCollection = function () {
 
-        // var saveButton = '#add-collection-button';
         var message = '<div class="alert alert-info">Saving Collection...</div>';
         $('#collection-form').hide();
         $('#message').html(message);
@@ -160,14 +182,20 @@ var collectionsModule = (function () {
 
             setTimeout(function () {
                 $('#message').html('');
-
             }, 3000);
 
-        }).fail(function () {
-            renderError();
+        }).fail(function (jqXHR, textStatus) {
+
+            if (jqXHR.status !== 201) {
+                var message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to add collection.</div>';
+                renderError(message);
+            }
         });
     };
 
+    /**
+     * Enables collection form validation
+     */
     obj.collectionFormValidation = function () {
 
         $(document).ready(function () {
@@ -179,10 +207,16 @@ var collectionsModule = (function () {
         });
     };
 
+    /**
+     * Invokes desired functions on every page load
+     */
     obj.init = function () {
         userModule.renderUserName();
+        collectionsModule.getRootCollections();
     };
 
     return obj;
 
 }());
+
+collectionsModule.init();

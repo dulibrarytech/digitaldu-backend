@@ -8,6 +8,9 @@ var homeModule = (function () {
         $('#message').html('Error: Unable to retrieve username');
     };
 
+    /**
+     * Invokes desired functions on every page load
+     */
     obj.init = function () {
 
         if (!userModule.checkUserData()) {
@@ -22,3 +25,5 @@ var homeModule = (function () {
     return obj;
 
 }());
+
+homeModule.init();

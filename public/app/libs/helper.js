@@ -4,6 +4,28 @@ var helperModule = (function () {
 
     var obj = {};
 
+    /**
+     * Renders progress bar and spinner when pages load
+     */
+    var npProgress = function () {
+
+        if (typeof NProgress != 'undefined') {
+            $(document).ready(function () {
+                NProgress.start();
+            });
+
+            $(window).load(function () {
+                NProgress.done();
+            });
+        }
+    };
+
+    /**
+     * Gets url parameter
+     * @param name
+     * @param url
+     * @returns {*}
+     */
     obj.getParameterByName = function (name, url) {
 
         if (!url) {
@@ -26,6 +48,12 @@ var helperModule = (function () {
         return decodeURIComponent(results[2].replace(/\+/g, " "));
     };
 
+    obj.init = function () {
+        npProgress();
+    };
+
     return obj;
 
 }());
+
+helperModule.init();

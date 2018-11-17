@@ -4,18 +4,8 @@ var userModule = (function () {
 
     var obj = {};
     var api = configModule.getApi();
-    var renderError = function () {
-        $('#home').html('Error: Unable to retrieve home dashboard data');
-    };
-
-    var getParameterByName = function (name, url) {
-        if (!url) url = window.location.href;
-        name = name.replace(/[\[\]]/g, "\\$&");
-        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-            results = regex.exec(url);
-        if (!results) return null;
-        if (!results[2]) return '';
-        return decodeURIComponent(results[2].replace(/\+/g, " "));
+    var renderError = function (message) {
+        $('#message').html(message);
     };
 
     obj.addUserToGroup = function (id) {
@@ -41,14 +31,20 @@ var userModule = (function () {
 
             }, 3000);
 
-        }).fail(function () {
-            var message = '<div class="alert alert-warning">User is already in this group</div>';
-            $('#message').html(message);
+        }).fail(function (jqXHR, textStatus) {
 
-            setTimeout(function () {
-                $('#message').html('');
+            if (jqXHR.status !== 201) {
 
-            }, 3000);
+                var message = '<div class="alert alert-warning"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. User is already in this group.</div>';
+
+                setTimeout(function () {
+                    $('#message').html('');
+
+                }, 3000);
+
+                renderError(message);
+            }
+
         });
     };
 
@@ -341,3 +337,5 @@ var userModule = (function () {
     return obj;
 
 }());
+
+userModule.init();
