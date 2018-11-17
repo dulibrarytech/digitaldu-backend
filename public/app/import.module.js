@@ -10,8 +10,9 @@ var importModule = (function () {
 
     var api = configModule.getApi();
 
-    /*
-        Renders the directory listing from the archivematica sftp server
+    /**
+     * Renders the directory listing from the Archivematica sftp server
+     * @param data
      */
     var renderImportObjects = function (data) {
 
@@ -58,9 +59,11 @@ var importModule = (function () {
         $('#message').empty();
     };
 
-    /* TODO: rename function name to "importObjects"
-        Begins the Archivematica transfer/ingest process
-    */
+    /**
+     * Starts the Archivematica transfer/ingest process
+     * @param objects
+     * @returns {boolean}
+     */
     obj.transferObjects = function (objects) {
 
         var collection = helperModule.getParameterByName('collection');
@@ -87,63 +90,25 @@ var importModule = (function () {
             }, 5000);
 
         }).fail(function (jqXHR, textStatus) {
+            // TODO:
             renderError();
         });
     };
 
-    /* gets directory listings from archivematica sftp server */
+    /**
+     * Gets directory listings from archivematica sftp server
+     */
     obj.getImportObjects = function () {
 
         $('#message').html('<p><strong>Loading...</strong></p>');
 
         var folder = helperModule.getParameterByName('collection'),
-            url = api + '/api/admin/v1/import/list?collection=' + null,
-            foldersArr = [];
+            url = api + '/api/admin/v1/import/list?collection=' + null;
 
-        // TODO: render collection folder contents differently
+        //
         if (folder !== null) {
-
-            // $('#back').html('<p><a href="/dashboard/import" class="btn btn-default" id="back"><i class="fa fa-arrow-left"></i> Back</a></p>');
-
-            var folders = window.sessionStorage.getItem('folders');
-
-            if (folders !== null) {
-
-                $('#back').html('<p><a href="#" class="btn btn-default"><i class="fa fa-arrow-left"></i> Back</a></p>');
-
-                foldersArr = JSON.parse(folders);
-
-                var result = foldersArr.find(function (value) {
-
-                    if (value === folder) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                });
-
-                // construct new path
-                if (result === undefined) {
-
-                    foldersArr.push(folder);
-                    window.sessionStorage.setItem('folders', JSON.stringify(foldersArr));
-
-                    if (foldersArr.length > 1) {
-                        url = api + '/api/admin/v1/import/list?collection=' + foldersArr.toString();
-                    }
-
-                }
-
-            } else {
-
-                window.sessionStorage.removeItem('folders');
-                foldersArr.push(folder);
-                url = api + '/api/admin/v1/import/list?collection=' + folder;
-                window.sessionStorage.setItem('folders', JSON.stringify(foldersArr));
-            }
-
-        } else {
-            window.sessionStorage.removeItem('folders');
+            $('#back').html('<p><a href="/dashboard/import" class="btn btn-default" id="back"><i class="fa fa-arrow-left"></i> Back</a></p>');
+            url = api + '/api/admin/v1/import/list?collection=' + folder;
         }
 
         $.ajax(url)
@@ -162,8 +127,11 @@ var importModule = (function () {
 
     obj.init = function () {
         userModule.renderUserName();
+        importModule.getImportObjects();
     };
 
     return obj;
 
 }());
+
+importModule.init();

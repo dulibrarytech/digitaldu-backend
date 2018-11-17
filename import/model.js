@@ -180,6 +180,8 @@ exports.start_transfer = function (req, callback) {
         objects = req.body.objects.split(','),
         user = req.body.user;
 
+    // TODO: check if collection exists.
+
     // Create array of objects.  Each object contains the collection PID and object filename
     let importObjects = objects.map(function (object) {
 
