@@ -78,12 +78,14 @@ exports.start_tranfser = function (transferObj, callback) {
             });
         }
 
-        if (httpResponse.statusCode !== 201) {
+        if (httpResponse.statusCode !== 200) {
 
             callback({
                 error: true,
                 message: 'Error: Unable to start transfer'
             });
+
+            return false;
         }
 
         callback(body);
@@ -111,6 +113,22 @@ exports.approve_transfer = function (transferFolder, callback) {
 
         if (error) {
             console.log(error);
+            callback({
+                error: true,
+                message: error
+            });
+
+            return false;
+        }
+
+        if (httpResponse.statusCode !== 200) {
+
+            callback({
+                error: true,
+                message: 'Error: Unable to approve transfer'
+            });
+
+            return false;
         }
 
         callback(body);
@@ -134,6 +152,22 @@ exports.get_transfer_status = function (uuid, callback) {
 
         if (error) {
             console.log(error);
+            callback({
+                error: true,
+                message: error
+            });
+
+            return false;
+        }
+
+        if (httpResponse.statusCode !== 200) {
+
+            callback({
+                error: true,
+                message: 'Error: Unable to get transfer status'
+            });
+
+            return false;
         }
 
         callback(body);
@@ -157,6 +191,22 @@ exports.get_ingest_status = function (uuid, callback) {
 
         if (error) {
             console.log(error);
+            callback({
+                error: true,
+                message: error
+            });
+
+            return false;
+        }
+
+        if (httpResponse.statusCode !== 200) {
+
+            callback({
+                error: true,
+                message: 'Error: Unable to get ingest status'
+            });
+
+            return false;
         }
 
         callback(body);
@@ -180,6 +230,22 @@ exports.get_dip_path = function (uuid, callback) {
 
         if (error) {
             console.log(error);
+            callback({
+                error: true,
+                message: error
+            });
+
+            return false;
+        }
+
+        if (httpResponse.statusCode !== 200) {
+
+            callback({
+                error: true,
+                message: 'Error: Unable to get dip path'
+            });
+
+            return false;
         }
 
         var json = JSON.parse(body);

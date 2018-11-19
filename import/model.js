@@ -252,11 +252,61 @@ exports.start_transfer = function (req, callback) {
                         // Initiate transfers using archivematica api
                         archivematica.start_tranfser(object, function (results) {
 
+                            if (results.error !== undefined && results.error === true) {
+
+                                let transferFailedObj = {
+                                    table: TRANSFER_QUEUE,
+                                    where: {
+                                        id: object.id,
+                                        status: 0
+                                    },
+                                    update: {
+                                        message: 'TRANSFER_FAILED',
+                                        microservice: 'Starting transfer microservice',
+                                        status: 1
+                                    },
+                                    callback: function (data) {
+                                        if (data !== 1) {
+                                            // TODO: log update error
+                                            console.log(data);
+                                            throw 'Database start transfer queue error';
+                                        }
+                                    }
+                                };
+
+                                // Update queue. Indicate to user that the transfer has failed.
+                                updateQueue(transferFailedObj);
+
+                                return false;
+                            }
+
                             var json = JSON.parse(results);
 
                             if (json.message !== 'Copy successful.') {
-                                console.log(json.message);
-                                // TODO: update queue
+
+                                let transferFailedObj = {
+                                    table: TRANSFER_QUEUE,
+                                    where: {
+                                        id: object.id,
+                                        status: 0
+                                    },
+                                    update: {
+                                        message: 'TRANSFER_FAILED',
+                                        microservice: 'Starting transfer microservice',
+                                        status: 1
+                                    },
+                                    callback: function (data) {
+                                        if (data !== 1) {
+                                            // TODO: log update error
+                                            console.log(data);
+                                            throw 'Database start transfer queue error';
+                                        }
+                                    }
+                                };
+
+                                // Update queue. Indicate to user that the transfer has failed.
+                                updateQueue(transferFailedObj);
+
                                 return false;
                             }
 
@@ -275,6 +325,34 @@ exports.start_transfer = function (req, callback) {
 
                                 // Automatically approve transfer to allow ingest to proceed
                                 archivematica.approve_transfer(transferFolder, function (results) {
+
+                                    if (results.error !== undefined && results.error === true) {
+
+                                        let transferApprovalFailedObj = {
+                                            table: TRANSFER_QUEUE,
+                                            where: {
+                                                id: object.id,
+                                                status: 0
+                                            },
+                                            update: {
+                                                message: 'TRANSFER_APPROVAL_FAILED',
+                                                microservice: 'Starting transfer microservice',
+                                                status: 1
+                                            },
+                                            callback: function (data) {
+                                                if (data !== 1) {
+                                                    // TODO: log update error
+                                                    console.log(data);
+                                                    throw 'Database transfer approval queue error';
+                                                }
+                                            }
+                                        };
+
+                                        // Update queue. Indicate to user that the transfer has failed.
+                                        updateQueue(transferApprovalFailedObj);
+
+                                        return false;
+                                    }
 
                                     var json = JSON.parse(results);
 
@@ -446,6 +524,34 @@ exports.get_transfer_status = function (req, callback) {
                 data.forEach(function (object) {
 
                     archivematica.get_transfer_status(object.transfer_uuid, function (results) {
+
+                        if (results.error !== undefined && results.error === true) {
+
+                            let transferStatusFailedObj = {
+                                table: TRANSFER_QUEUE,
+                                where: {
+                                    id: object.id,
+                                    status: 0
+                                },
+                                update: {
+                                    message: 'TRANSFER_STATUS_CHECK_FAILED',
+                                    microservice: 'Starting transfer microservice',
+                                    status: 1
+                                },
+                                callback: function (data) {
+                                    if (data !== 1) {
+                                        // TODO: log update error
+                                        console.log(data);
+                                        throw 'Database start transfer queue error';
+                                    }
+                                }
+                            };
+
+                            // Update queue. Indicate to user that the transfer status check has failed.
+                            updateQueue(transferStatusFailedObj);
+
+                            return false;
+                        }
 
                         var json = JSON.parse(results);
 
@@ -676,10 +782,38 @@ exports.get_ingest_status = function (req, callback) {
 
         if (sip_uuid === undefined) {
             console.log('sip uuid problem');
-            return false;
+            throw 'sip uuid undefined';
         }
 
         archivematica.get_ingest_status(sip_uuid, function (results) {
+
+            if (results.error !== undefined && results.error === true) {
+
+                let ingestStatusFailedObj = {
+                    table: TRANSFER_QUEUE,
+                    where: {
+                        sip_id: sip_uuid,
+                        status: 0
+                    },
+                    update: {
+                        message: 'INGEST_STATUS_CHECK_FAILED',
+                        microservice: 'Starting ingest microservice',
+                        status: 1
+                    },
+                    callback: function (data) {
+                        if (data !== 1) {
+                            // TODO: log update error
+                            console.log(data);
+                            throw 'Database ingest status queue error';
+                        }
+                    }
+                };
+
+                // Update queue. Indicate to user that the transfer has failed.
+                updateQueue(ingestStatusFailedObj);
+
+                return false;
+            }
 
             var json = JSON.parse(results);
 
@@ -855,6 +989,13 @@ exports.import_dip = function (req, callback) {
     var sip_uuid = req.query.sip_uuid;
 
     archivematica.get_dip_path(sip_uuid, function (dip_path) {
+
+        if (dip_path.error !== undefined && dip_path.error === true) {
+            console.log(dip_path);
+            throw dip_path.error.message;
+
+            // TODO: update queue
+        }
 
         knexQ(INGEST_QUEUE)
             .select('*')

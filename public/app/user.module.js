@@ -196,7 +196,13 @@ var userModule = (function () {
 
     obj.renderUserName = function () {
         var data = JSON.parse(window.sessionStorage.getItem('repo_user'));
-        $('.username').html('<strong>' + data.name + '</strong>');
+
+        if (data !== null) {
+            $('.username').html('<strong>' + data.name + '</strong>');
+        } else {
+            $('.username').html('<strong>User</strong>');
+        }
+
     };
 
     var getUserFormData = function () {
