@@ -3,7 +3,7 @@
 var xmldoc = require('xmldoc'),
     _ = require('lodash');
 
-exports.process_mets = function (sip_uuid, dip_path, transfer_uuid, is_member_of_collection, xml) {
+exports.process_mets = function (sip_uuid, dip_path, xml) {  // transfer_uuid, is_member_of_collection,
 
     var document = new xmldoc.XmlDocument(xml),
         Obj = {},
@@ -15,11 +15,11 @@ exports.process_mets = function (sip_uuid, dip_path, transfer_uuid, is_member_of
 
             if (array[index].children[1].name === 'mets:fileGrp') {
 
-                for (var i=0;i<array[index].children[1].children.length;i++) {
+                for (var i = 0; i < array[index].children[1].children.length; i++) {
 
                     if (array[index].children[1].children[i].name === 'mets:file') {
 
-                        for (var k=0;k<array[index].children[1].children[i].children.length;k++) {
+                        for (var k = 0; k < array[index].children[1].children[i].children.length; k++) {
                             // get file id and names
                             if (array[index].children[1].children[i].children[k].name === 'mets:FLocat') {
 
@@ -27,34 +27,33 @@ exports.process_mets = function (sip_uuid, dip_path, transfer_uuid, is_member_of
                                     file_id;
 
                                 var ext = tmpArr.pop();
+
                                 file_id = tmpArr.join('.');
 
-                                Obj.uuid = array[index].children[1].children[i].attr.ID.replace(/file-/g,'');
+                                Obj.uuid = array[index].children[1].children[i].attr.ID.replace(/file-/g, '');
                                 Obj.sip_uuid = sip_uuid;
-                                Obj.transfer_uuid = transfer_uuid;
+                                // Obj.transfer_uuid = transfer_uuid;
                                 Obj.dip_path = dip_path;
-                                Obj.is_member_of_collection = is_member_of_collection;
+                                // Obj.is_member_of_collection = is_member_of_collection;
                                 Obj.pid = '---';
                                 Obj.handle = '---';
                                 Obj.file = array[index].children[1].children[i].children[k].attr['xlink:href'].replace(/objects\//g, '');
-                                Obj.message = 'PROCESSING';
+                                Obj.message = 'PROCESSING_IMPORT';
+                                Obj.file_id = file_id;
 
-                                if (ext === 'xml') {
-                                    Obj.type = 'xml';
+                                if (ext === 'txt') {
+                                    Obj.type = 'txt';
                                 } else {
                                     Obj.type = 'object';
                                 }
-
-                                Obj.file_id = file_id;
-
                             }
                         }
-                   }
+                    }
 
-                   if (!_.isEmpty(Obj)) {
-                       Arr.push(Obj);
-                       Obj = {};
-                   }
+                    if (!_.isEmpty(Obj)) {
+                        Arr.push(Obj);
+                        Obj = {};
+                    }
 
                 }
             }

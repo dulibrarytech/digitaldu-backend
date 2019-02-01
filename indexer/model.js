@@ -15,7 +15,60 @@ var request = require('request'),
     client = new es.Client({
         host: Config.elasticSearch,
         log: 'trace'
-    });
+    }),
+    REPO_OBJECTS = 'tbl_objects';
+
+exports.index_record = function (req, callback) {
+
+    if (req.body.sip_uuid === undefined) {
+        callback({
+            status: 400,
+            content_type: {'Content-Type': 'application/json'},
+            message: 'missing sip uuid.'
+        });
+
+        return false;
+    }
+
+    var sip_uuid = req.body.sip_uuid;
+
+    knex(REPO_OBJECTS)
+        .select('display_record')
+        .where({
+            sip_uuid: sip_uuid
+        })
+        .then(function (data) {
+
+            var record = JSON.parse(data[0].display_record);
+            // TODO: test with authority value...
+            // delete record.display_record.language.authority;
+            record.display_record.t_language = record.display_record.language;
+            delete record.display_record.language;
+
+            client.index({
+                index: Config.elasticSearchIndex,
+                type: 'data',
+                id: record.pid.replace('codu:', ''),
+                body: record
+            }, function (err, response) {
+                if (err) {
+                    console.log(err);
+                }
+
+                callback({
+                    status: 200,
+                    content_type: {'Content-Type': 'application/json'},
+                    data: response,
+                    message: sip_uuid + ' record indexed'
+                });
+            });
+
+        })
+        .catch(function (error) {
+            console.log(error);
+            throw error;
+        });
+};
 
 exports.index_data = function (req, callback) {
 

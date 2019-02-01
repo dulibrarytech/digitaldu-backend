@@ -1,6 +1,6 @@
 'use strict';
 
-var Import = require('../import/model');
+var Import = require('../import/queue');
 
 exports.list = function (req, res) {
     Import.list(req, function (data) {
@@ -8,8 +8,20 @@ exports.list = function (req, res) {
     });
 };
 
+exports.queue_objects = function (req, res) {
+    Import.queue_objects(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
 exports.start_transfer = function (req, res) {
     Import.start_transfer(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.approve_transfer = function (req, res) {
+    Import.approve_transfer(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
@@ -34,6 +46,12 @@ exports.get_ingest_status = function (req, res) {
 
 exports.import_dip = function (req, res) {
     Import.import_dip(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.create_repo_record = function (req, res) {
+    Import.create_repo_record(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };

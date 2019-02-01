@@ -4,6 +4,7 @@ const fs = require('fs'),
     path = require('path'),
     config = require('../config/config'),
     modslib = require('../libs/mods/mods_init'),
+    modslibdisplay = require('../libs/mods/display-record'),
     metslib = require('../libs/mets'),
     pids = require('../libs/next-pid'),
     handles = require('../libs/handles'),
@@ -1051,12 +1052,14 @@ exports.import_dip = function (req, callback) {
                             }
 
                             // Extract values from DuraCloud METS.xml file
+                            // TODO: get archivespace txt file contining metadata id
                             let metsResults = metslib.process_mets(results.sip_uuid, data[0].dip_path, data[0].transfer_uuid, data[0].is_member_of_collection, results.mets);
 
                             // Save to queue
                             let chunkSize = metsResults.length;
                             knexQ.batchInsert(IMPORT_QUEUE, metsResults, chunkSize)
                                 .then(function (data) {
+                                    // TODO:  Refactor to make use of Archivespace API to get MODS record
                                     // Start processing XML
                                     process_duracloud_queue_xml(results.sip_uuid);
                                 })
@@ -1230,7 +1233,6 @@ var process_duracloud_queue_xml = function (sip_uuid) {
                                             updateQueue(pidErrorObj);
 
                                             return false;
-
                                         }
 
                                         knex(REPO_OBJECTS)
@@ -1340,6 +1342,7 @@ var process_duracloud_queue_objects = function (sip_uuid, pid, file) {
 
                 duracloud.get_object(object, function (results) {
 
+                    // TODO: Do we really need to download the object?  I don't think so...
                     var recordObj = {};
                     recordObj.pid = pid;
                     recordObj.sip_uuid = sip_uuid;
@@ -1380,6 +1383,9 @@ var process_duracloud_queue_objects = function (sip_uuid, pid, file) {
                                 console.log(data);
                                 throw 'Database object queue error';
                             }
+
+                            // Used to render repo records in front-end and back-end
+                            modslibdisplay.create_display_record(recordObj.pid);
 
                             recordObj = {};
                         })
@@ -1460,10 +1466,7 @@ var process_xml = function (obj) {
                         throw 'Database MODS error';
                     }
 
-                    console.log('MODS saved. ', data);
-
-                    return null;
-
+                    // console.log('MODS saved. ', data);
                 })
                 .catch(function (error) {
                     console.log(error);

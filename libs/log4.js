@@ -5,10 +5,17 @@ const log4js = require('log4js');
 log4js.configure({
     appenders: {
         out: { type: 'stdout' },
-        app: { type: 'file', filename: './logs/application.log' }
+        repo: {
+            type: 'dateFile',
+            filename: './logs/repo.log',
+            compress: true
+        }
     },
     categories: {
-        default: { appenders: [ 'out', 'app' ], level: 'debug' }
+        default: {
+            appenders: ['out', 'repo'],
+            level: 'debug'
+        }
     }
 });
 

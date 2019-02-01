@@ -82,6 +82,11 @@ var objectsModule = (function () {
 
         for (var i = 0; i < data.length; i++) {
 
+            if (data[i].display_record === null) {
+                $('#message').html('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i>&nbsp; Display record(s) is not available.</div>');
+                return false;
+            }
+
             var record = JSON.parse(data[i].display_record);
             var tn = 'http://librepo01-vlp.du.edu:8080/fedora/objects/' + data[i].pid + '/datastreams/TN/content';
 

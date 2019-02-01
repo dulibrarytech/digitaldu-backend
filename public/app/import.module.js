@@ -51,7 +51,7 @@ var importModule = (function () {
         }
 
         if (collection !== null && collectionObjects.length > 0) {
-            var button = '<a class="btn btn-success btn-xs" onclick="importModule.transferObjects(\'' + collectionObjects + '\')" href="#"><i class="fa fa-upload"></i>&nbsp;&nbsp;Import</a>';
+            var button = '<a class="btn btn-success btn-xs" onclick="importModule.queueTransferObjects(\'' + collectionObjects + '\')" href="#"><i class="fa fa-upload"></i>&nbsp;&nbsp;Import</a>';
             $('.import-button').html(button);
         }
 
@@ -64,7 +64,7 @@ var importModule = (function () {
      * @param objects
      * @returns {boolean}
      */
-    obj.transferObjects = function (objects) {
+    obj.queueTransferObjects = function (objects) {
 
         var collection = helperModule.getParameterByName('collection');
 
@@ -74,7 +74,7 @@ var importModule = (function () {
         }
 
         $.ajax({
-            url: api + '/api/admin/v1/import/start_transfer',
+            url: api + '/api/admin/v1/import/queue_objects',
             type: 'post',
             data: {collection: collection, objects: objects, user: userModule.getUserFullName()}
         }).done(function (data) {
@@ -147,6 +147,8 @@ var importModule = (function () {
         var socket = io();
 
         socket.on('transfer_status', function (data) {
+
+            console.log(data);
 
             var transferData = '';
 
