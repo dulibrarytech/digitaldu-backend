@@ -48,8 +48,8 @@ const fs = require('fs'),
     IMPORT_QUEUE = 'tbl_duracloud_import_queue',
     TRANSFER_TIMER = 3000,                  // Transfer status is broadcast every 3 sec.
     IMPORT_TIMER = 5000,                    // Import status is broadcast every 5 sec.
-    TRANSFER_INTERVAL_TIME = 10000,         // Object transfer starts every 45 sec. when the endpoint receives a request.
-    TRANSFER_APPROVAL_TIME = 10000,         // Transfer approval occurs 30 sec. after transfer  (Gives transfer process time to complete)
+    TRANSFER_INTERVAL_TIME = 45000,         // Object transfer starts every 45 sec. when the endpoint receives a request.
+    TRANSFER_APPROVAL_TIME = 30000,         // Transfer approval occurs 30 sec. after transfer  (Gives transfer process time to complete)
     TRANSFER_STATUS_CHECK_INTERVAL = 3000,  // Transfer status checks occur every 3 sec.
     INGEST_STATUS_CHECK_INTERVAL = 10000;   // Ingest status checks begin 10 sec after the endpoint receives a request.
 
@@ -63,7 +63,7 @@ socketclient.on('connect', function () {
         knexQ(TRANSFER_QUEUE)
             .select('*')
             .whereRaw('DATE(created) = CURRENT_DATE')
-            .orderBy('created', 'desc')
+            .orderBy('created', 'asc')
             .then(function (data) {
 
                 if (data.length > 0) {
@@ -107,7 +107,7 @@ socketclient.on('connect', function () {
 });
 */
 
-/** TODO: rethink this...
+/**
  * Broadcasts duracloud import status
  */
 socketclient.on('connect', function () {
@@ -128,7 +128,7 @@ socketclient.on('connect', function () {
             })
             .catch(function (error) {
                 logger.module().error('ERROR: import queue database error');
-                throw error;
+                throw 'ERROR: import queue database error ' + error;
             });
 
     }, IMPORT_TIMER);
@@ -176,8 +176,6 @@ exports.list = function (req, callback) {
  */
 exports.queue_objects = function (req, callback) {
 
-    logger.module().info('INFO: starting ingest process (queue_objects)');
-
     if (req.body === undefined) {
 
         logger.module().error('ERROR: missing payload body. unable to start ingest process (queue_objects)');
@@ -191,6 +189,10 @@ exports.queue_objects = function (req, callback) {
 
         return false;
     }
+
+    logger.module().info('INFO: starting ingest process (queue_objects)');
+
+    // TODO: flush redis queue if db queue is empty
 
     let transfer_data = req.body;
 
@@ -272,7 +274,6 @@ exports.start_transfer = function (req, callback) {
     logger.module().info('INFO: starting transfer (start_transfer)');
 
     let collection = req.body.collection;
-    console.log(collection);
 
     if (collection === undefined) {
 
@@ -804,6 +805,7 @@ exports.create_repo_record = function (req, callback) {
         if (fs.existsSync('./tmp/st.txt')) {
 
             // TODO: check file date/time
+           // console.log(fs.fstatSync('./tmp/st.txt'));
 
             fs.readFile('./tmp/st.txt', {encoding: 'utf-8'}, function(error, data) {
 
@@ -878,12 +880,14 @@ exports.create_repo_record = function (req, callback) {
             archivespace.get_mods(obj.mods_id, obj.session, function (response) {
 
                 // TODO: check response
+                console.log('get mods: ', response);
+
                 if (response.error !== undefined && response.error === true) {
                     logger.module().error('ERROR: unable to get mods ' + response.error_message);
                     // TODO: try again?
                     // TODO: flag queue record as failed?
-                    // obj.mods = null;
-                    // callback(null, obj);
+                    obj.mods = null;
+                    callback(null, obj);
                     // TODO: FATAL error...
                     return false;
                 }
@@ -927,6 +931,11 @@ exports.create_repo_record = function (req, callback) {
     // 11.)
     function create_display_record (obj, callback) {
 
+        if (obj.mods === null) {
+            callback(null, obj);
+            return false;
+        }
+
         logger.module().info('INFO: creating display record');
 
         modslibdisplay.create_display_record(obj, function (result) {
@@ -965,6 +974,11 @@ exports.create_repo_record = function (req, callback) {
 
     // 14.)
     function index(obj, callback) {
+
+        if (obj.mods === null) {
+            callback(null, obj);
+            return false;
+        }
 
         logger.module().info('INFO: indexing repository record');
 

@@ -140,9 +140,9 @@ var importModule = (function () {
             $('#message').html('');
         }
 
-        $('#transfer-status').html('<tr><td>No Transfers</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>');
-        $('#ingest-status').html('<tr><td>No Ingests</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr></tr>');
-        $('#import-status').html('<tr><td>No Imports</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr></tr>');
+        $('#transfer-status').html('<tr><td>No Ingests</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>');
+        // $('#ingest-status').html('<tr><td>No Ingests</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr></tr>');
+        $('#import-status').html('<tr><td>No Imports</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr></tr>');
 
         var socket = io();
 
@@ -152,9 +152,8 @@ var importModule = (function () {
 
             var transferData = '';
 
-            if (data.length > 0) {
-                $('#message').html('');
-            }
+            $('#message').html('');
+            $('#transfer-status').html('');
 
             for (var i=0;i<data.length;i++) {
 
@@ -173,6 +172,7 @@ var importModule = (function () {
 
         });
 
+        /*
         socket.on('ingest_status', function (data) {
 
             var ingestData = '';
@@ -192,17 +192,21 @@ var importModule = (function () {
             $('#ingest-status').html(ingestData);
 
         });
+        */
 
         socket.on('import_status', function (data) {
 
             var importData = '';
 
+            $('#message').html('');
+            $('#import-status').html('');
+
             for (var i=0;i<data.length;i++) {
 
                 importData += '<tr>';
-                importData += '<td>' + data[i].is_member_of_collection + '</td>';
-                importData += '<td>' + data[i].pid + '</td>';
-                importData += '<td>' + data[i].handle + '</td>';
+                // importData += '<td>' + data[i].is_member_of_collection + '</td>';
+                // importData += '<td>' + data[i].pid + '</td>';
+                // importData += '<td>' + data[i].handle + '</td>';
                 importData += '<td>' + data[i].sip_uuid + '</td>';
                 importData += '<td>' + data[i].file + '</td>';
                 importData += '<td>' + data[i].message + '</td>';

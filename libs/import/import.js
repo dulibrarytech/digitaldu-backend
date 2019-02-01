@@ -1,5 +1,6 @@
 const config = require('../../config/config'),
     queue = require('../../libs/import/db-queue'),
+    logger = require('../../libs/log4'),
     knexQ = require('knex')({
         client: 'mysql2',
         connection: {
@@ -38,7 +39,6 @@ exports.save_transfer_records = function (transfer_data, callback) {
 
     });
 
-    // TODO: move to db-queue lib
     // Save import objects to transfer queue
     let chunkSize = importObjects.length;
     knexQ.batchInsert(QUEUE, importObjects, chunkSize)
@@ -55,7 +55,7 @@ exports.save_transfer_records = function (transfer_data, callback) {
             callback(obj);
         })
         .catch(function (error) {
-            console.log(error);
+            logger.module().error('ERROR: unable batch insert queue data (batchInsert) ' + error);
             throw error;
         });
 };

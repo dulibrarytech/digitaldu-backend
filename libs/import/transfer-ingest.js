@@ -195,7 +195,6 @@ exports.confirm_transfer = function (response, id) {
 
         // Update queue. Indicate to user that the transfer has failed.
         queue.update(transferFailedObj);
-
         return false;
     }
 
@@ -284,17 +283,17 @@ exports.confirm_transfer_approval = function (response, object, callback) {
 
     'use strict';
 
-    // test
-    console.log('confirm transfer approval: ', response);
-    console.log(typeof response);
+    if (typeof response === 'object') {
+        logger.module().error('ERROR: unable to approve transfer (confirm_transfer_approval)');
+        return false;
+    }
 
     var json;
 
     try {
         json = JSON.parse(response);
     } catch (e) {
-        console.log(e);
-        // throw 'ERROR: unable to parse confirmation response ' + e;
+        logger.module().error('ERROR: unable to parse confirmation response (confirm_transfer_approval)');
         return false;
     }
 
@@ -653,7 +652,7 @@ exports.save_mods_id = function (mods_id, sip_uuid, callback) {
         },
         callback: function (data) {
 
-            console.log('SAVE MODS ID: ', data);
+            // console.log('SAVE MODS ID: ', data);
 
             /*
             if (data !== 1) {
@@ -691,7 +690,7 @@ exports.get_object = function (sip_uuid, callback) {
             callback(data);
         })
         .catch(function (error) {
-            console.log(error);
+            logger.module().error('ERROR: unable to get object (get_object) ' + error);
             throw error;
         });
 
@@ -714,12 +713,10 @@ exports.create_repo_record = function (obj, callback) {
     knex(REPO_OBJECTS)
         .insert(obj)
         .then(function (data) {
-            console.log(data);
-            // TODO: check data
             callback(true);
         })
         .catch(function (error) {
-            console.log(error);
+            logger.module().error('ERROR: unable to create repo record (create_repo_record) ' + error);
             throw error;
         });
 };
@@ -728,8 +725,6 @@ exports.cleanup = function (obj, callback) {
 
     'use strict';
 
-    console.log('Deleting ingest record record');
-
     knexQ(QUEUE)
         .where({
             sip_uuid: obj.sip_uuid
@@ -737,27 +732,23 @@ exports.cleanup = function (obj, callback) {
         .del()
         .then(function (data) {
 
-            console.log(data);
-
             knexQ(IMPORT_QUEUE)
                 .where({
                     sip_uuid: obj.sip_uuid
                 })
                 .del()
                 .then(function (data) {
-                    console.log(data);
-                    // TODO: check data
                     callback(true);
                 })
                 .catch(function (error) {
-                    console.log(error);
+                    logger.module().error('ERROR: unable to clean up queue (cleanup) ' + error);
                     throw error;
                 });
 
             return null;
         })
         .catch(function (error) {
-            console.log(error);
+            logger.module().error('ERROR: unable to clean up queue (cleanup) ' + error);
             throw error;
         });
 };

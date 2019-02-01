@@ -1,6 +1,7 @@
 const config = require('../config/config'),
     client = require('ssh2-sftp-client'),
-    request = require('request');
+    request = require('request'),
+    logger = require('../libs/log4');
 
 /**
  * List the files and folders on the FTP server
@@ -35,12 +36,14 @@ exports.list = function (folder, callback) {
         callback(data);
     }).catch(function (error) {
 
+        logger.module().error('ERROR: unable to list sftp folders ' + error);
+
         callback({
             error: true,
             message: error
         });
 
-        throw error;
+        throw 'ERROR: unable to list sftp folders ' + error;
     });
 };
 
@@ -72,23 +75,29 @@ exports.start_tranfser = function (transferObj, callback) {
     }, function (error, httpResponse, body) {
 
         if (error) {
+
+            logger.module().error('ERROR: unable to start transfer ' + error);
+
             callback({
                 error: true,
                 message: error
             });
         }
 
-        if (httpResponse.statusCode !== 200) {
+        if (httpResponse.statusCode === 200) {
+            callback(body);
+            return false;
+        } else {
+
+            logger.module().error('ERROR: unable to start transfer ' + error);
 
             callback({
                 error: true,
                 message: 'Error: Unable to start transfer'
             });
 
-            return false;
+            throw 'Error: Unable to start transfer';
         }
-
-        callback(body);
     });
 };
 
@@ -112,7 +121,9 @@ exports.approve_transfer = function (transferFolder, callback) {
     }, function (error, httpResponse, body) {
 
         if (error) {
-            console.log(error);
+
+            logger.module().error('ERROR: unable to approve transfer ' + error);
+
             callback({
                 error: true,
                 message: error
@@ -121,17 +132,18 @@ exports.approve_transfer = function (transferFolder, callback) {
             return false;
         }
 
-        if (httpResponse.statusCode !== 200) {
+        if (httpResponse.statusCode === 200) {
+            callback(body);
+            return false;
+        } else {
+
+            logger.module().error('ERROR: unable to approve transfer ' + body);
 
             callback({
                 error: true,
-                message: 'Error: Unable to approve transfer'
+                message: 'ERROR: Unable to approve transfer'
             });
-
-            return false;
         }
-
-        callback(body);
     });
 };
 
@@ -151,7 +163,9 @@ exports.get_transfer_status = function (uuid, callback) {
     }, function (error, httpResponse, body) {
 
         if (error) {
-            console.log(error);
+
+            logger.module().error('ERROR: unable to get transfer status ' + error);
+
             callback({
                 error: true,
                 message: error
@@ -160,17 +174,19 @@ exports.get_transfer_status = function (uuid, callback) {
             return false;
         }
 
-        if (httpResponse.statusCode !== 200) {
+        if (httpResponse.statusCode === 200) {
+            callback(body);
+            return false;
+
+        } else {
+
+            logger.module().error('ERROR: unable to get transfer status ' + body);
 
             callback({
                 error: true,
                 message: 'Error: Unable to get transfer status'
             });
-
-            return false;
         }
-
-        callback(body);
     });
 };
 
@@ -190,7 +206,9 @@ exports.get_ingest_status = function (uuid, callback) {
     }, function (error, httpResponse, body) {
 
         if (error) {
-            console.log(error);
+
+            logger.module().error('ERROR: unable to get ingest status ' + error);
+
             callback({
                 error: true,
                 message: error
@@ -199,7 +217,12 @@ exports.get_ingest_status = function (uuid, callback) {
             return false;
         }
 
-        if (httpResponse.statusCode !== 200) {
+        if (httpResponse.statusCode === 200) {
+            callback(body);
+            return false;
+        } else {
+
+            logger.module().error('ERROR: unable to get ingest status ' + error);
 
             callback({
                 error: true,
@@ -208,8 +231,6 @@ exports.get_ingest_status = function (uuid, callback) {
 
             return false;
         }
-
-        callback(body);
     });
 };
 
@@ -229,7 +250,9 @@ exports.get_dip_path = function (uuid, callback) {
     }, function (error, httpResponse, body) {
 
         if (error) {
-            console.log(error);
+
+            logger.module().error('ERROR: unable to get dip path ' + error);
+
             callback({
                 error: true,
                 message: error
@@ -239,6 +262,8 @@ exports.get_dip_path = function (uuid, callback) {
         }
 
         if (httpResponse.statusCode !== 200) {
+
+            logger.module().error('ERROR: unable to get dip path ' + body);
 
             callback({
                 error: true,

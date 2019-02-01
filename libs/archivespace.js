@@ -1,5 +1,6 @@
 const config = require('../config/config'),
-    request = require('request');
+    request = require('request'),
+    logger = require('../libs/log4');
 
 /**
  *
@@ -17,10 +18,12 @@ exports.get_mods = function (id, session, callback) {
         headers: {
             'X-ArchivesSpace-Session': session
         },
-        timeout: 60000
+        timeout: 45000
     }, function(error, httpResponse, body) {
 
         if (error) {
+
+            logger.module().error('ERROR: unable get archivespace mods ' + error);
 
             callback({
                 error: true,
@@ -32,6 +35,8 @@ exports.get_mods = function (id, session, callback) {
 
         if (httpResponse.statusCode === 200) {
 
+            logger.module().info('INFO: archivespace session token retrieved');
+
             callback({
                 error: false,
                 mods: body
@@ -40,6 +45,8 @@ exports.get_mods = function (id, session, callback) {
             return false;
 
         } else {
+
+            logger.module().error('ERROR: unable get archivespace mods ' + error);
 
             callback({
                 error: true,
@@ -66,12 +73,12 @@ exports.get_session_token = function (callback) {
         headers: {
             'Content-Type': 'application/json'
         },
-        timeout: 60000
+        timeout: 45000
     }, function(error, httpResponse, body) {
 
         if (error) {
 
-            // TODO: log
+            logger.module().error('ERROR: unable get archivespace session token ' + error);
 
             callback({
                 error: true,
@@ -83,7 +90,7 @@ exports.get_session_token = function (callback) {
 
         if (httpResponse.statusCode === 200) {
 
-            // TODO: check payload for api error code
+            logger.module().info('INFO: archivespace session token retrieved');
 
             callback({
                 error: false,
@@ -91,6 +98,8 @@ exports.get_session_token = function (callback) {
             });
 
         } else {
+
+            logger.module().error('ERROR: unable get archivespace session token ' + error);
 
             callback({
                 error: true,
