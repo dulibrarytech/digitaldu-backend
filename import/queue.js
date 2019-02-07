@@ -4,7 +4,7 @@ const fs = require('fs'),
     path = require('path'),
     config = require('../config/config'),
     modslib = require('../libs/mods/mods_init'),
-    modslibdisplay = require('../libs/mods/display-record'),
+    modslibdisplay = require('../libs/display-record'),
     metslib = require('../libs/mets'),
     importlib = require('../libs/import/transfer-ingest'),
     pids = require('../libs/next-pid'),
@@ -15,11 +15,14 @@ const fs = require('fs'),
     uuid = require('uuid'),
     crypto = require('crypto'),
     async = require('async'),
+    moment = require('moment'),
     logger = require('../libs/log4'),
     socketclient = require('socket.io-client')(config.host),
     request = require('request'),
     shell = require('shelljs'),
     queue = require('bull'),
+    redislib = require('redis'),
+    redisclient = redislib.createClient(),
     knexQ = require('knex')({
         client: 'mysql2',
         connection: {
@@ -49,7 +52,7 @@ const fs = require('fs'),
     TRANSFER_TIMER = 3000,                  // Transfer status is broadcast every 3 sec.
     IMPORT_TIMER = 5000,                    // Import status is broadcast every 5 sec.
     TRANSFER_INTERVAL_TIME = 45000,         // Object transfer starts every 45 sec. when the endpoint receives a request.
-    TRANSFER_APPROVAL_TIME = 30000,         // Transfer approval occurs 30 sec. after transfer  (Gives transfer process time to complete)
+    TRANSFER_APPROVAL_TIME = 35000,         // Transfer approval occurs 30 sec. after transfer  (Gives transfer process time to complete)
     TRANSFER_STATUS_CHECK_INTERVAL = 3000,  // Transfer status checks occur every 3 sec.
     INGEST_STATUS_CHECK_INTERVAL = 10000;   // Ingest status checks begin 10 sec after the endpoint receives a request.
 
@@ -83,29 +86,29 @@ socketclient.on('connect', function () {
  * Broadcasts ingest status
  */
 /*
-socketclient.on('connect', function () {
+ socketclient.on('connect', function () {
 
-    let id = setInterval(function () {
+ let id = setInterval(function () {
 
-        knexQ(INGEST_QUEUE)
-            .select('*')
-            .whereRaw('DATE(created) = CURRENT_DATE')
-            .orderBy('created', 'desc')
-            .then(function (data) {
+ knexQ(INGEST_QUEUE)
+ .select('*')
+ .whereRaw('DATE(created) = CURRENT_DATE')
+ .orderBy('created', 'desc')
+ .then(function (data) {
 
-                if (data.length > 0) {
-                    socketclient.emit('ingest_status', data);
-                }
+ if (data.length > 0) {
+ socketclient.emit('ingest_status', data);
+ }
 
-            })
-            .catch(function (error) {
-                console.log(error);
-                throw error;
-            });
+ })
+ .catch(function (error) {
+ console.log(error);
+ throw error;
+ });
 
-    }, INGEST_TIMER);
-});
-*/
+ }, INGEST_TIMER);
+ });
+ */
 
 /**
  * Broadcasts duracloud import status
@@ -190,9 +193,52 @@ exports.queue_objects = function (req, callback) {
         return false;
     }
 
-    logger.module().info('INFO: starting ingest process (queue_objects)');
+    function check_db_queue(callback) {
 
-    // TODO: flush redis queue if db queue is empty
+        let obj = {};
+        obj.flush = false;
+
+        knexQ(TRANSFER_QUEUE)
+            .count('id as count')
+            .then(function (data) {
+
+                if (data[0].count === 0) {
+                    obj.flush = true;
+                    callback(null, obj);
+                    return false;
+                }
+
+                callback(null, obj);
+            })
+            .catch(function (error) {
+                throw 'FATAL: queue check failed (queue_objects) ' + error;
+            });
+    }
+
+    function flush_queue(obj, callback) {
+
+        if (obj.flush === false) {
+            callback(null, obj);
+            return false;
+        }
+
+        redisclient.send_command('flushall', function (result) {
+            console.log(result);
+            callback(null, obj);
+        });
+    }
+
+    async.waterfall([
+        check_db_queue,
+        flush_queue
+    ], function (error, results) {
+
+        if (error) {
+            logger.module().error('ERROR: async (queue_objects)');
+        }
+    });
+
+    logger.module().info('INFO: starting ingest process (queue_objects)');
 
     let transfer_data = req.body;
 
@@ -555,7 +601,6 @@ exports.get_ingest_status = function (req, callback) {
 
                 if (result.error !== undefined && result.error === true) {
                     logger.module().error('ERROR: unable to update ingest status (get_ingest_status)');
-                    clearInterval(timer);
                     return false;
                 }
 
@@ -642,30 +687,32 @@ exports.import_dip = function (req, callback) {
 
             let metsResults = metslib.process_mets(sip_uuid, dip_path, response.mets);
 
+            // console.log('METS after process_mets', metsResults);
+
             // TODO: look into why two records are saved to queue sometimes
             // TODO: check if record already exists here...
             importlib.save_mets_data(metsResults, function (result) {
 
-               if (result === 'done') {
+                if (result === 'done') {
 
-                   request.get({
-                       url: config.apiUrl + '/api/admin/v1/import/create_repo_record?sip_uuid=' + sip_uuid
-                   }, function (error, httpResponse, body) {
+                    request.get({
+                        url: config.apiUrl + '/api/admin/v1/import/create_repo_record?sip_uuid=' + sip_uuid
+                    }, function (error, httpResponse, body) {
 
-                       if (error) {
-                           logger.module().fatal('FATAL: create repo record request error ' + error + ' (import_dip)');
-                           throw 'FATAL:  create repo record request error' + error + ' (import_dip)';
-                       }
+                        if (error) {
+                            logger.module().fatal('FATAL: create repo record request error ' + error + ' (import_dip)');
+                            throw 'FATAL:  create repo record request error' + error + ' (import_dip)';
+                        }
 
-                       if (httpResponse.statusCode === 200) {
-                           logger.module().info('INFO: create repo record request');
-                           return false;
-                       } else {
-                           logger.module().fatal('FATAL: http create repo record request error ' + body + ' (import_dip)');
-                           throw 'FATAL: http create repo record request error ' + body + ' (import_dip)';
-                       }
-                   });
-               }
+                        if (httpResponse.statusCode === 200) {
+                            logger.module().info('INFO: create repo record request');
+                            return false;
+                        } else {
+                            logger.module().fatal('FATAL: http create repo record request error ' + body + ' (import_dip)');
+                            throw 'FATAL: http create repo record request error ' + body + ' (import_dip)';
+                        }
+                    });
+                }
             });
         });
     });
@@ -700,7 +747,7 @@ exports.create_repo_record = function (req, callback) {
     }
 
     // 1.) get collection record from queue using sip_uuid
-    function get_collection (callback) {
+    function get_collection(callback) {
 
         logger.module().info('INFO: getting collection');
 
@@ -732,20 +779,20 @@ exports.create_repo_record = function (req, callback) {
     }
 
     // 3.)
-    function get_object_uri_data (obj, callback) {
+    function get_object_uri_data(obj, callback) {
 
         logger.module().info('INFO: getting object uri data');
 
         duracloud.get_object(obj, function (response) {
 
             let uriArr = response.split('/');
-            obj.mods_id = uriArr[uriArr.length-1].trim();
+            obj.mods_id = uriArr[uriArr.length - 1].trim();
             callback(null, obj);
         });
     }
 
     // 4.)
-    function save_mods_id (obj, callback) {
+    function save_mods_id(obj, callback) {
 
         logger.module().info('INFO: saving mods id');
 
@@ -773,7 +820,7 @@ exports.create_repo_record = function (req, callback) {
     }
 
     // 6.)
-    function get_object_file_data (obj, callback) {
+    function get_object_file_data(obj, callback) {
 
         logger.module().info('INFO: getting object file data');
 
@@ -798,76 +845,129 @@ exports.create_repo_record = function (req, callback) {
     }
 
     // 7.)
-    function get_token (obj, callback) {
+    function get_token(obj, callback) {
 
         logger.module().info('INFO: getting session token');
 
         if (fs.existsSync('./tmp/st.txt')) {
 
-            // TODO: check file date/time
-           // console.log(fs.fstatSync('./tmp/st.txt'));
+            console.log('st file exists');
 
-            fs.readFile('./tmp/st.txt', {encoding: 'utf-8'}, function(error, data) {
+            let st_file = fs.statSync('./tmp/st.txt'),
+                now = moment().startOf('day'),
+                st_created_date_time = moment(st_file.birthtime),
+                st_expire_date_time = st_created_date_time.clone().add(5, 'days');
 
-                if (error) {
-                    logger.module().error('ERROR: unable to save session token to file ' + error);
-                    return false;
-                }
+            if (st_expire_date_time.isBefore(now)) {
 
-                obj.session = data;
-                callback(null, obj);
+                console.log('st file exists and is expired');
 
-            });
+                let fileObj = {
+                    file: 'st.txt'
+                };
 
-            return false;
-        }
-
-        archivespace.get_session_token(function (response) {
-
-            // TODO: catch error here...
-            let data = response.data,
-                token;
-
-            try {
-
-                token = JSON.parse(data);
-                obj.session = token.session;
-
-                fs.writeFile('./tmp/st.txt', obj.session, function(error) {
-
-                    if (error) {
-                        logger.module().error('ERROR: unable to save session token to file');
-                        callback({
-                            error: true,
-                            error_message: error
-                        });
-                    }
-
-                    if (!fs.existsSync('./tmp/st.txt')) {
-                        logger.module().error('ERROR: st.txt does not exist');
-                        throw 'ERROR: st.txt does not exist';
-                    }
-
-                    if (token === undefined) {
-                        logger.module().error('ERROR: session token is undefined');
-                        throw 'ERROR: session token is undefined';
-                    }
-
-                    if (token.error === true) {
-                        logger.module().error('ERROR: session token error' + token.error_message);
-                        throw 'ERROR: session token error' + token.error_message;
-                    }
-
-                    callback(null, obj);
-                    return false;
-
+                delete_file(fileObj, function (result) {
+                    console.log(result);
+                    console.log('st.txt deleted');
+                    new_token();
                 });
 
-            } catch (e) {
-                logger.module().error('ERROR: session token error ' + e);
-                throw e;
+            } else if (st_expire_date_time.isAfter(now)) {
+
+                console.log('st file exists and is valid');
+
+                fs.readFile('./tmp/st.txt', {encoding: 'utf-8'}, function (error, data) {
+
+                    if (error) {
+                        logger.module().error('ERROR: unable to read session token file ' + error);
+                        return false;
+                    }
+
+                    obj.session = data;
+                    callback(null, obj);
+                    return false;
+                });
             }
-        });
+
+        } else {
+            new_token();
+        }
+
+        /**
+         *
+         */
+        function new_token () {
+
+            archivespace.get_session_token(function (response) {
+
+                console.log('getting new token...');
+
+                // TODO: catch error here...
+                let data = response.data,
+                    token;
+
+                try {
+
+                    token = JSON.parse(data);
+                    obj.session = token.session;
+
+                    fs.writeFile('./tmp/st.txt', obj.session, function (error) {
+
+                        if (error) {
+                            logger.module().error('ERROR: unable to save session token to file');
+                            callback({
+                                error: true,
+                                error_message: error
+                            });
+                        }
+
+                        if (!fs.existsSync('./tmp/st.txt')) {
+                            logger.module().error('ERROR: st.txt does not exist');
+                            throw 'ERROR: st.txt does not exist';
+                        }
+
+                        if (token === undefined) {
+                            logger.module().error('ERROR: session token is undefined');
+                            throw 'ERROR: session token is undefined';
+                        }
+
+                        if (token.error === true) {
+                            logger.module().error('ERROR: session token error' + token.error_message);
+                            throw 'ERROR: session token error' + token.error_message;
+                        }
+
+                        callback(null, obj);
+                        return false;
+
+                    });
+
+                } catch (e) {
+                    logger.module().error('ERROR: session token error ' + e);
+                    throw e;
+                }
+            });
+        }
+
+        // console.log('session status: ', session);
+
+        /*
+         if (fs.existsSync('./tmp/st.txt') && session === true) {
+
+         fs.readFile('./tmp/st.txt', {encoding: 'utf-8'}, function(error, data) {
+
+         if (error) {
+         logger.module().error('ERROR: unable to read session token file ' + error);
+         return false;
+         }
+
+         obj.session = data;
+         callback(null, obj);
+
+         });
+
+         return false;
+         }
+         */
     }
 
     // 8.)
@@ -879,16 +979,10 @@ exports.create_repo_record = function (req, callback) {
 
             archivespace.get_mods(obj.mods_id, obj.session, function (response) {
 
-                // TODO: check response
-                console.log('get mods: ', response);
-
                 if (response.error !== undefined && response.error === true) {
                     logger.module().error('ERROR: unable to get mods ' + response.error_message);
-                    // TODO: try again?
-                    // TODO: flag queue record as failed?
                     obj.mods = null;
                     callback(null, obj);
-                    // TODO: FATAL error...
                     return false;
                 }
 
@@ -899,7 +993,7 @@ exports.create_repo_record = function (req, callback) {
     }
 
     // 9.)
-    function get_pid (obj, callback) {
+    function get_pid(obj, callback) {
 
         logger.module().info('INFO: getting pid');
 
@@ -910,7 +1004,7 @@ exports.create_repo_record = function (req, callback) {
     }
 
     // 10.)
-    function get_handle (obj, callback) {
+    function get_handle(obj, callback) {
 
         logger.module().info('INFO: getting handle');
 
@@ -929,7 +1023,7 @@ exports.create_repo_record = function (req, callback) {
     }
 
     // 11.)
-    function create_display_record (obj, callback) {
+    function create_display_record(obj, callback) {
 
         if (obj.mods === null) {
             callback(null, obj);
@@ -946,14 +1040,14 @@ exports.create_repo_record = function (req, callback) {
     }
 
     // 12.)
-    function delete_file (obj, callback) {
+    function delete_file(obj, callback) {
 
         logger.module().info('INFO: deleting object file');
 
         fs.unlink('./tmp/' + obj.file, function (error) {
 
             if (error) {
-                logger.module().error('ERROR: handle error ' + error);
+                logger.module().error('ERROR: file delete error ' + error);
             }
 
             callback(null, obj);
@@ -991,7 +1085,7 @@ exports.create_repo_record = function (req, callback) {
 
             if (error) {
                 logger.module().fatal('FATAL: indexer error ' + error + ' (create_repo_record)');
-                throw 'FATAL: indexer error ' + error + ' (create_repo_record)';
+                return false;
             }
 
             if (httpResponse.statusCode === 200) {
@@ -1000,7 +1094,7 @@ exports.create_repo_record = function (req, callback) {
                 return false;
             } else {
                 logger.module().fatal('FATAL: http error ' + body + ' (create_repo_record)');
-                throw 'FATAL: http error ' + body + ' (create_repo_record)'
+                return false;
             }
         });
     }

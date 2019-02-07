@@ -91,6 +91,7 @@ exports.start_transfer = function (obj, callback) {
             message: 'WAITING_FOR_TRANSFER',
             transfer_status: 0
         })
+        .orderBy('created', 'asc')
         .limit(1)
         .then(function (data) {
 
@@ -165,6 +166,10 @@ exports.confirm_transfer = function (response, id) {
         // Update queue. Indicate to user that the transfer has failed.
         queue.update(transferFailedObj);
 
+        return false;
+    }
+
+    if (typeof response === 'object') {
         return false;
     }
 
@@ -313,12 +318,9 @@ exports.confirm_transfer_approval = function (response, object, callback) {
             },
             callback: function (data) {
 
-                console.log('confirming approval', data);
-
                 if (data !== 1) {
-                    // TODO: log update error
-                    console.log(data);
-                    throw 'Database transfer queue error';
+                    logger.module().error('ERROR: unable to update database queue (confirm_transfer_approval)');
+                    return false;
                 }
             }
         };
@@ -345,6 +347,10 @@ exports.confirm_transfer_approval = function (response, object, callback) {
 exports.update_transfer_status = function (response, callback) {
 
     'use strict';
+
+    if (typeof response === 'object') {
+        return false;
+    }
 
     var json = JSON.parse(response);
 
@@ -373,22 +379,17 @@ exports.update_transfer_status = function (response, callback) {
                         },
                         callback: function (data) {
 
-                            console.log(data);
-
-                            /*
                             if (data !== 1) {
-                                // TODO: log update error
-                                console.log(data);
-                                throw 'Database transfer status check queue error';
+                                logger.module().error('ERROR: updated more than one record in database queue (update_transfer_status)');
+                                throw 'ERROR: updated more than one record in database queue (update_transfer_status)';
                             }
-                            */
+
                         }
                     };
 
                     // Flag transfer as COMPLETE in queue
                     queue.update(transferCompleteObj);
 
-                    // callback('done');
                     callback({
                         complete: true,
                         sip_uuid: json.sip_uuid
@@ -396,7 +397,8 @@ exports.update_transfer_status = function (response, callback) {
                 }
             })
             .catch(function (error) {
-                console.log(error);
+                logger.module().error('ERROR: database queue error (update_transfer_status) ' + error);
+                throw 'ERROR: database queue error (update_transfer_status) ' + error;
             });
 
         return false;
@@ -417,9 +419,8 @@ exports.update_transfer_status = function (response, callback) {
             callback: function (data) {
 
                 if (data !== 1) {
-                    // TODO: log update error
-                    console.log(data);
-                    throw 'Database transfer queue error';
+                    logger.module().error('ERROR: database queue error (update_transfer_status)');
+                    throw 'ERROR: database queue error (update_transfer_status)';
                 }
             }
         };
@@ -433,7 +434,6 @@ exports.update_transfer_status = function (response, callback) {
         });
 
         return false;
-
     }
 };
 
@@ -447,6 +447,10 @@ exports.update_transfer_status = function (response, callback) {
 exports.update_ingest_status = function (response, sip_uuid, callback) {
 
     'use strict';
+
+    if (typeof response === 'object') {
+        return false;
+    }
 
     var json = JSON.parse(response);
 
@@ -468,9 +472,8 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
             callback: function (data) {
 
                 if (data !== 1) {
-                    // TODO: log update error
-                    console.log(data);
-                    throw 'Database ingest queue error';
+                    logger.module().error('ERROR: database queue error (update_ingest_status) ' + json.status);
+                    throw 'ERROR: database queue error (update_ingest_status)';
                 }
             }
         };
@@ -501,9 +504,8 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
             callback: function (data) {
 
                 if (data !== 1) {
-                    // TODO: log update error
-                    console.log(data);
-                    throw 'Database ingest queue error (importFailed)';
+                    logger.module().error('ERROR: database queue error (update_ingest_status) ' + json.status);
+                    throw 'ERROR: database queue error (update_ingest_status)';
                 }
             }
         };
@@ -535,9 +537,8 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
             callback: function (data) {
 
                 if (data !== 1) {
-                    // TODO: log update error
-                    console.log(data);
-                    throw 'Database ingest queue error (importProcessing)';
+                    logger.module().error('ERROR: database queue error (update_ingest_status) ' + json.status);
+                    throw 'ERROR: database queue error (update_ingest_status)';
                 }
             }
         };
@@ -562,18 +563,44 @@ exports.save_mets_data = function (obj, callback) {
 
     'use strict';
 
-    let chunkSize = obj.length;
-    knexQ.batchInsert(IMPORT_QUEUE, obj, chunkSize)
-        .then(function (data) {
+    knexQ(IMPORT_QUEUE)
+        .count('sip_uuid as count')
+        .where({
+            sip_uuid: obj[0].sip_uuid
+        })
+        .then(function (result) {
 
-            // TODO: check for duplicates?
+            if (result[0].count !== 2) {
 
-            console.log(data);
-            callback('done');
+                knexQ(IMPORT_QUEUE)
+                    .insert(obj)
+                    .then(function (data) {
+                        console.log('METS saved: ', data);
+                        callback('done');
+                    })
+                    .catch(function (error) {
+                        logger.module().error('ERROR: unable to save mets (save_mets_data) ' + error);
+                        throw 'ERROR: unable to save mets (save_mets_data) ' + error;
+                    });
+
+                /*
+                let chunkSize = obj.length;
+                knexQ.batchInsert(IMPORT_QUEUE, obj, chunkSize)
+                    .then(function (data) {
+
+                        console.log('METS saved: ', data);
+                        callback('done');
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                        throw error;
+                    });
+                    */
+            }
         })
         .catch(function (error) {
-            console.log(error);
-            throw error;
+            logger.module().error('ERROR: unable to save mets (save_mets_data) ' + error);
+            throw 'ERROR: unable to save mets (save_mets_data) ' + error;
         });
 
     return false;
@@ -600,10 +627,9 @@ exports.get_uri_txt = function (sip_uuid, callback) {
             callback(data);
         })
         .catch(function (error) {
-            console.log(error);
-            throw error;
+            logger.module().error('ERROR: unable to get uri txt file (get_uri_txt) ' + error);
+            throw 'ERROR: unable to get uri txt file (get_uri_txt) ' + error;
         });
-
 };
 
 /**
@@ -624,8 +650,8 @@ exports.get_collection = function (sip_uuid, callback) {
             callback(data[0].is_member_of_collection.replace('_', ':'));
         })
         .catch(function (error) {
-            console.log(error);
-            throw error;
+            logger.module().error('ERROR: unable to get collection (get_collection) ' + error);
+            throw 'ERROR: unable to get collection (get_collection) ' + error;
         });
 };
 
@@ -639,8 +665,6 @@ exports.save_mods_id = function (mods_id, sip_uuid, callback) {
 
     'use strict';
 
-    // TODO: check if id already exists
-
     let importProcessing = {
         table: IMPORT_QUEUE,
         where: {
@@ -652,15 +676,10 @@ exports.save_mods_id = function (mods_id, sip_uuid, callback) {
         },
         callback: function (data) {
 
-            // console.log('SAVE MODS ID: ', data);
-
-            /*
             if (data !== 1) {
-                // TODO: log update error  ... saving multiple copies of same record
-                console.log(data);
-                throw 'Database import queue error (importProcessingModsID)';
+                logger.module().error('ERROR: unable to save mods id (save_mods_id)');
+                throw 'ERROR: unable to save mods id (save_mods_id)';
             }
-            */
 
             callback(true);
         }
@@ -691,7 +710,7 @@ exports.get_object = function (sip_uuid, callback) {
         })
         .catch(function (error) {
             logger.module().error('ERROR: unable to get object (get_object) ' + error);
-            throw error;
+            throw 'ERROR: unable to get object (get_object) ' + error;
         });
 
 };
@@ -717,7 +736,7 @@ exports.create_repo_record = function (obj, callback) {
         })
         .catch(function (error) {
             logger.module().error('ERROR: unable to create repo record (create_repo_record) ' + error);
-            throw error;
+            throw 'ERROR: unable to create repo record (create_repo_record) ' + error;
         });
 };
 
@@ -742,13 +761,13 @@ exports.cleanup = function (obj, callback) {
                 })
                 .catch(function (error) {
                     logger.module().error('ERROR: unable to clean up queue (cleanup) ' + error);
-                    throw error;
+                    throw 'ERROR: unable to clean up queue (cleanup) ' + error;
                 });
 
             return null;
         })
         .catch(function (error) {
             logger.module().error('ERROR: unable to clean up queue (cleanup) ' + error);
-            throw error;
+            throw 'ERROR: unable to clean up queue (cleanup) ' + error;
         });
 };

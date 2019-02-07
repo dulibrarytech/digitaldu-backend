@@ -32,6 +32,8 @@ module.exports = function (app) {
     app.route('/api/admin/v1/import/status')
         .get(Import.get_import_status);
 
+    // TODO: create restart import route
+
     /*
     app.route('/api/admin/v1/import/queue')
         .post(Import.start_queue);

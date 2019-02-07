@@ -3,13 +3,18 @@
 var xmldoc = require('xmldoc'),
     _ = require('lodash');
 
-exports.process_mets = function (sip_uuid, dip_path, xml) {  // transfer_uuid, is_member_of_collection,
+exports.process_mets = function (sip_uuid, dip_path, xml) {
 
     var document = new xmldoc.XmlDocument(xml),
         Obj = {},
         Arr = [];
 
+
+    // console.log('METS DOC: ', document.children);
+
     document.eachChild(function (child, index, array) {
+
+        // console.log(array[index].name);
 
         if (array[index].name === 'mets:fileSec') {
 
@@ -32,9 +37,7 @@ exports.process_mets = function (sip_uuid, dip_path, xml) {  // transfer_uuid, i
 
                                 Obj.uuid = array[index].children[1].children[i].attr.ID.replace(/file-/g, '');
                                 Obj.sip_uuid = sip_uuid;
-                                // Obj.transfer_uuid = transfer_uuid;
                                 Obj.dip_path = dip_path;
-                                // Obj.is_member_of_collection = is_member_of_collection;
                                 Obj.pid = '---';
                                 Obj.handle = '---';
                                 Obj.file = array[index].children[1].children[i].children[k].attr['xlink:href'].replace(/objects\//g, '');
@@ -59,6 +62,8 @@ exports.process_mets = function (sip_uuid, dip_path, xml) {  // transfer_uuid, i
             }
         }
     });
+
+    console.log('METS in mets.js', Arr);
 
     return Arr;
 };
