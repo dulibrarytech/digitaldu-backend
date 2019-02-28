@@ -1,4 +1,5 @@
 const config = require('../config/config'),
+    logger = require('../libs/log4'),
     request = require('request'),
     HANDLE_HOST = config.handleHost,
     HANDLE_PREFIX = config.handlePrefix,
@@ -17,6 +18,8 @@ exports.create_handle = function (pid, callback) {
     'use strict';
 
     if (pid === undefined) {
+
+        logger.module().error('ERROR: Unable to create handle. (pid is undefined)');
 
         callback({
             error: true,
@@ -39,7 +42,9 @@ exports.create_handle = function (pid, callback) {
     request(options, function (error, response, body) {
 
         if (error) {
-            console.log(error);
+
+            logger.module().error('ERROR: Unable to create handle. ' + error);
+
             callback({
                 error: true,
                 message: error
@@ -50,20 +55,24 @@ exports.create_handle = function (pid, callback) {
 
         if (response.statusCode === 201) {
 
-            console.log('Handle for object: ' + pid + ' had been created.');
+            logger.module().info('INFO: Handle for object: ' + pid + ' had been created.');
+
             let handle = HANDLE_SERVER + HANDLE_PREFIX + '/' + pid;
             callback(handle);
 
         } else if (response.statusCode === 409) {
 
-            console.log('Error: Handle already exists (conflict)');
+            logger.module().error('ERROR: Handle already exists (conflict)');
+
             callback({
                 error: true,
                 message: 'Error: Handle already exists (conflict)'
             });
 
         } else {
-            console.log('Error: Unable to create new handle');
+
+            logger.module().error('ERROR: Unable to create new handle');
+
             callback({
                 error: true,
                 message: 'Error: Unable to create new handle'
@@ -82,6 +91,8 @@ exports.update_handle = function (pid, callback) {
     'use strict';
 
     if (pid === undefined) {
+
+        logger.module().error('ERROR: Unable to create handle. (pid is undefined)');
 
         callback({
             error: true,
@@ -104,7 +115,9 @@ exports.update_handle = function (pid, callback) {
     request(options, function (error, response, body) {
 
         if (error) {
-            console.log(error);
+
+            logger.module().error('ERROR: Unable to create handle. ' + error);
+
             callback({
                 error: true,
                 message: error
@@ -115,12 +128,15 @@ exports.update_handle = function (pid, callback) {
 
         if (response.statusCode === 204) {
 
-            console.log('Handle for object: ' + pid + ' had been updated.');
+            logger.module().info('INFO: Handle for object: ' + pid + ' had been updated.');
+
             let handle = HANDLE_SERVER + HANDLE_PREFIX + '/' + pid;
             callback(handle);
 
         } else {
-            console.log('Error: Unable to update handle');
+
+            logger.module().error('ERROR: Unable to update handle.');
+
             callback({
                 error: true,
                 message: 'Error: Unable to update handle'

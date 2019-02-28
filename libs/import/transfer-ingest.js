@@ -125,6 +125,8 @@ exports.start_transfer = function (obj, callback) {
 
             // Update queue. Indicate to user that the transfer has started.
             queue.update(transferStartedObj);
+
+            return null;
         })
         .catch(function (error) {
             logger.module().error('FATAL: database transfer queue error (start transfer) ' + error );
@@ -139,35 +141,6 @@ exports.start_transfer = function (obj, callback) {
 exports.confirm_transfer = function (response, id) {
 
     'use strict';
-
-    // Handle error response
-    if (response.error !== undefined && response.error === true) {
-
-        let transferFailedObj = {
-            table: QUEUE,
-            where: {
-                id: id,
-                transfer_status: 0
-            },
-            update: {
-                message: 'TRANSFER_FAILED',
-                microservice: 'Transfer microservice',
-                transfer_status: 1
-            },
-            callback: function (data) {
-                if (data !== 1) {
-                    // TODO: log update error
-                    logger.module().fatal('FATAL: database transfer queue error (confirm_transfer)');
-                    throw 'FATAL: database transfer queue error (confirm_transfer)';
-                }
-            }
-        };
-
-        // Update queue. Indicate to user that the transfer has failed.
-        queue.update(transferFailedObj);
-
-        return false;
-    }
 
     if (typeof response === 'object') {
         return false;
@@ -191,9 +164,8 @@ exports.confirm_transfer = function (response, id) {
             },
             callback: function (data) {
                 if (data !== 1) {
-                    // TODO: log update error
-                    console.log(data);
-                    throw 'Database start transfer queue error';
+                    logger.module().fatal('FATAL: database transfer queue error (confirm_transfer)');
+                    throw 'FATAL: database transfer queue error (confirm_transfer)';
                 }
             }
         };
@@ -230,9 +202,8 @@ exports.confirm_transfer = function (response, id) {
         },
         callback: function (data) {
             if (data !== 1) {
-                // TODO: log update error
-                console.log(data);
-                throw 'Database start transfer queue error';
+                logger.module().fatal('FATAL: database transfer queue error (confirm_transfer)');
+                throw 'FATAL: database transfer queue error (confirm_transfer)';
             }
         }
     };
@@ -263,17 +234,18 @@ exports.get_transferred_record = function (collection, callback) {
         .then(function (data) {
 
             if (data.length === 0) {
-                console.log('Transfers approved.');
                 callback('done');
                 return false;
             }
 
             let object = data.pop();
             callback(object);
+
+            return null;
         })
         .catch(function (error) {
-            console.log(error);
-            throw error;
+            logger.module().fatal('FATAL: database transfer queue error (get_transferred_record) ' + error);
+            throw 'FATAL: database transfer queue error (get_transferred_record) ' + error;
         });
 };
 
@@ -289,7 +261,6 @@ exports.confirm_transfer_approval = function (response, object, callback) {
     'use strict';
 
     if (typeof response === 'object') {
-        logger.module().error('ERROR: unable to approve transfer (confirm_transfer_approval)');
         return false;
     }
 
@@ -456,6 +427,8 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
 
     if (json.status === 'COMPLETE') {
 
+        // TODO: might be trying to update multiple times?
+
         let importCompleteQueue = {
             table: QUEUE,
             where: {
@@ -471,10 +444,14 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
             },
             callback: function (data) {
 
+                console.log('ingest with status of COMPLETE: ', data);
+
+                /*
                 if (data !== 1) {
                     logger.module().error('ERROR: database queue error (update_ingest_status) ' + json.status);
                     throw 'ERROR: database queue error (update_ingest_status)';
                 }
+                */
             }
         };
 
@@ -758,6 +735,7 @@ exports.cleanup = function (obj, callback) {
                 .del()
                 .then(function (data) {
                     callback(true);
+                    return null;
                 })
                 .catch(function (error) {
                     logger.module().error('ERROR: unable to clean up queue (cleanup) ' + error);

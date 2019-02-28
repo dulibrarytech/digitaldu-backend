@@ -63,7 +63,5 @@ exports.process_mets = function (sip_uuid, dip_path, xml) {
         }
     });
 
-    console.log('METS in mets.js', Arr);
-
     return Arr;
 };

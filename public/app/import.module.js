@@ -20,6 +20,18 @@ var importModule = (function () {
             collectionObjects = [],
             html = '';
 
+        if (data.list.length === 0) {
+            html += '<tr>';
+            html += '<td>';
+            html += '<div class="alert alert-info"><i class="fa fa-exclamation-triangle"></i> <strong>Import in progress.  Please try again after current import has completed.</strong></div>';
+            html += '</td>';
+            html += '</tr>';
+            $('.import-instruction').hide();
+            $('#import-objects').html(html);
+            $('#message').empty();
+            return false;
+        }
+
         // TODO: check for codu namespace in collection name
         // TODO: return error message if codu namespace not found in collection name
         for (var i = 0; i < data.list.length; i++) {
@@ -140,82 +152,65 @@ var importModule = (function () {
             $('#message').html('');
         }
 
-        $('#transfer-status').html('<tr><td>No Ingests</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>');
-        // $('#ingest-status').html('<tr><td>No Ingests</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr></tr>');
-        $('#import-status').html('<tr><td>No Imports</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr></tr>');
-
         var socket = io();
 
         socket.on('transfer_status', function (data) {
 
-            console.log(data);
-
             var transferData = '';
 
             $('#message').html('');
-            $('#transfer-status').html('');
 
-            for (var i=0;i<data.length;i++) {
+            if (data.length > 0) {
 
-                transferData += '<tr>';
-                transferData += '<td>' + data[i].is_member_of_collection + '</td>';
-                transferData += '<td>' + data[i].object + '</td>';
-                transferData += '<td>' + data[i].transfer_uuid + '</td>';
-                transferData += '<td>' + data[i].microservice + '</td>';
-                transferData += '<td>' + data[i].user + '</td>';
-                transferData += '<td>' + data[i].message + '</td>';
-                transferData += '<td>' + data[i].created + '</td>';
-                transferData += '</tr>';
+                for (var i=0;i<data.length;i++) {
+
+                   transferData += '<tr>';
+                   transferData += '<td>' + data[i].is_member_of_collection + '</td>';
+                   transferData += '<td>' + data[i].object + '</td>';
+                   transferData += '<td>' + data[i].transfer_uuid + '</td>';
+                   transferData += '<td>' + data[i].microservice + '</td>';
+                   transferData += '<td>' + data[i].user + '</td>';
+                   transferData += '<td>' + data[i].message + '</td>';
+                   transferData += '<td>' + data[i].created + '</td>';
+                   transferData += '</tr>';
+
+                }
+
+                $('#transfer-status').html(transferData);
+
+            } else {
+
+                $('#transfer-status').html('<tr><td>No ingests in progress</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>');
+
             }
 
-            $('#transfer-status').html(transferData);
-
         });
-
-        /*
-        socket.on('ingest_status', function (data) {
-
-            var ingestData = '';
-
-            for (var i=0;i<data.length;i++) {
-
-                ingestData += '<tr>';
-                ingestData += '<td>' + data[i].is_member_of_collection + '</td>';
-                ingestData += '<td>' + data[i].sip_uuid + '</td>';
-                ingestData += '<td>' + data[i].microservice + '</td>';
-                ingestData += '<td>' + data[i].user + '</td>';
-                ingestData += '<td>' + data[i].message + '</td>';
-                ingestData += '<td>' + data[i].created + '</td>';
-                ingestData += '</tr>';
-            }
-
-            $('#ingest-status').html(ingestData);
-
-        });
-        */
 
         socket.on('import_status', function (data) {
 
             var importData = '';
 
             $('#message').html('');
-            $('#import-status').html('');
 
-            for (var i=0;i<data.length;i++) {
+            if (data.length > 0) {
 
-                importData += '<tr>';
-                // importData += '<td>' + data[i].is_member_of_collection + '</td>';
-                // importData += '<td>' + data[i].pid + '</td>';
-                // importData += '<td>' + data[i].handle + '</td>';
-                importData += '<td>' + data[i].sip_uuid + '</td>';
-                importData += '<td>' + data[i].file + '</td>';
-                importData += '<td>' + data[i].message + '</td>';
-                importData += '<td>' + data[i].created + '</td>';
-                importData += '</tr>';
+                for (var i=0;i<data.length;i++) {
+
+                    importData += '<tr>';
+                    importData += '<td>' + data[i].sip_uuid + '</td>';
+                    importData += '<td>' + data[i].file + '</td>';
+                    importData += '<td>' + data[i].message + '</td>';
+                    importData += '<td>' + data[i].created + '</td>';
+                    importData += '</tr>';
+                }
+
+                $('#import-status').html(importData);
+
+            } else {
+
+                $('#import-status').html('<tr><td>No imports in progress</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr></tr>');
+
             }
-
-            $('#import-status').html(importData);
-
         });
     };
 

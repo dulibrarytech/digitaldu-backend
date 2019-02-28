@@ -57,7 +57,7 @@ const fs = require('fs'),
     INGEST_STATUS_CHECK_INTERVAL = 10000;   // Ingest status checks begin 10 sec after the endpoint receives a request.
 
 /**
- * Broadcasts transfer status
+ * Broadcasts archivematica transfer/ingest status
  */
 socketclient.on('connect', function () {
 
@@ -67,12 +67,9 @@ socketclient.on('connect', function () {
             .select('*')
             .whereRaw('DATE(created) = CURRENT_DATE')
             .orderBy('created', 'asc')
+            .limit(4)
             .then(function (data) {
-
-                if (data.length > 0) {
-                    socketclient.emit('transfer_status', data);
-                }
-
+                socketclient.emit('transfer_status', data);
             })
             .catch(function (error) {
                 logger.module().error('ERROR: transfer queue database error');
@@ -81,34 +78,6 @@ socketclient.on('connect', function () {
 
     }, TRANSFER_TIMER);
 });
-
-/** TODO: test, then remove
- * Broadcasts ingest status
- */
-/*
- socketclient.on('connect', function () {
-
- let id = setInterval(function () {
-
- knexQ(INGEST_QUEUE)
- .select('*')
- .whereRaw('DATE(created) = CURRENT_DATE')
- .orderBy('created', 'desc')
- .then(function (data) {
-
- if (data.length > 0) {
- socketclient.emit('ingest_status', data);
- }
-
- })
- .catch(function (error) {
- console.log(error);
- throw error;
- });
-
- }, INGEST_TIMER);
- });
- */
 
 /**
  * Broadcasts duracloud import status
@@ -123,11 +92,7 @@ socketclient.on('connect', function () {
             .orderBy('created', 'desc')
             .groupBy('sip_uuid')
             .then(function (data) {
-
-                if (data.length > 0) {
-                    socketclient.emit('import_status', data);
-                }
-
+                socketclient.emit('import_status', data);
             })
             .catch(function (error) {
                 logger.module().error('ERROR: import queue database error');
@@ -144,30 +109,54 @@ socketclient.on('connect', function () {
  */
 exports.list = function (req, callback) {
 
-    let query = req.query.collection;
+    knexQ(TRANSFER_QUEUE)
+        .count('id as count')
+        .then(function (data) {
 
-    archivematica.list(query, function (results) {
+            if (data[0].count === 0) {
 
-        if (results.error !== undefined && results.error === true) {
+                let query = req.query.collection;
 
-            logger.module().fatal('FATAL: unable to get files from Archivematica SFTP server');
+                archivematica.list(query, function (results) {
 
-            callback({
-                status: 400,
-                content_type: {'Content-Type': 'application/json'},
-                message: results.message
-            });
+                    if (results.error !== undefined && results.error === true) {
 
-            return false;
-        }
+                        logger.module().fatal('FATAL: unable to get files from Archivematica SFTP server');
 
-        callback({
-            status: 200,
-            content_type: {'Content-Type': 'application/json'},
-            message: 'list',
-            data: {list: results}
+                        callback({
+                            status: 400,
+                            content_type: {'Content-Type': 'application/json'},
+                            message: results.message
+                        });
+
+                        return false;
+                    }
+
+                    callback({
+                        status: 200,
+                        content_type: {'Content-Type': 'application/json'},
+                        message: 'list',
+                        data: {list: results}
+                    });
+                });
+
+                return false;
+
+            } else {
+
+                callback({
+                    status: 200,
+                    content_type: {'Content-Type': 'application/json'},
+                    message: 'import in progress',
+                    data: {list: []}
+                });
+
+            }
+        })
+        .catch(function (error) {
+            logger.module().fatal('FATAL: queue progress check failed (list) ' + error);
+            throw 'FATAL: queue progress check failed (list) ' + error;
         });
-    });
 };
 
 /**
@@ -353,6 +342,10 @@ exports.start_transfer = function (req, callback) {
                 // Initiates file transfer on Archivematica service
                 archivematica.start_tranfser(object, function (response) {
 
+                    // TODO:
+                    console.log('start transfer object: ', object);
+                    console.log('(archivematica.start_transfer) transfer response: ', response);
+
                     if (response.error !== undefined && response.error === true) {
                         logger.module().fatal('FATAL: transfer error ' + response + ' (start_transfer)');
                         // TODO: Tries again if response fails?
@@ -456,6 +449,10 @@ exports.approve_transfer = function (req, callback) {
 
             archivematica.approve_transfer(object.transfer_folder, function (response) {
 
+                // TODO:
+                console.log('transfer folder: ', object.transfer_folder);
+                console.log('(archivematica.approve_transfer) approve transfer response: ', response);
+
                 importlib.confirm_transfer_approval(response, object, function (result) {
 
                     if (result.error !== undefined && result.error === true) {
@@ -502,8 +499,6 @@ exports.approve_transfer = function (req, callback) {
  * @param callback
  */
 exports.get_transfer_status = function (req, callback) {
-
-    logger.module().info('INFO: getting transfer status');
 
     var is_member_of_collection = req.query.collection,
         transfer_uuid = req.query.transfer_uuid;
@@ -578,8 +573,6 @@ exports.get_transfer_status = function (req, callback) {
  */
 exports.get_ingest_status = function (req, callback) {
 
-    logger.module().info('INFO: getting ingest status');
-
     let sip_uuid = req.query.sip_uuid;
 
     if (sip_uuid === undefined) {
@@ -596,6 +589,10 @@ exports.get_ingest_status = function (req, callback) {
     let timer = setInterval(function () {
 
         archivematica.get_ingest_status(sip_uuid, function (response) {
+
+            // TODO:
+            console.log('sip_uuid: ', sip_uuid);
+            console.log('ingest status response: ', response);
 
             importlib.update_ingest_status(response, sip_uuid, function (result) {
 
@@ -687,10 +684,6 @@ exports.import_dip = function (req, callback) {
 
             let metsResults = metslib.process_mets(sip_uuid, dip_path, response.mets);
 
-            // console.log('METS after process_mets', metsResults);
-
-            // TODO: look into why two records are saved to queue sometimes
-            // TODO: check if record already exists here...
             importlib.save_mets_data(metsResults, function (result) {
 
                 if (result === 'done') {
@@ -860,8 +853,6 @@ exports.create_repo_record = function (req, callback) {
 
             if (st_expire_date_time.isBefore(now)) {
 
-                console.log('st file exists and is expired');
-
                 let fileObj = {
                     file: 'st.txt'
                 };
@@ -894,13 +885,11 @@ exports.create_repo_record = function (req, callback) {
         }
 
         /**
-         *
+         * Makes request to archivespace to generate new session token
          */
         function new_token () {
 
             archivespace.get_session_token(function (response) {
-
-                console.log('getting new token...');
 
                 // TODO: catch error here...
                 let data = response.data,
@@ -947,27 +936,6 @@ exports.create_repo_record = function (req, callback) {
                 }
             });
         }
-
-        // console.log('session status: ', session);
-
-        /*
-         if (fs.existsSync('./tmp/st.txt') && session === true) {
-
-         fs.readFile('./tmp/st.txt', {encoding: 'utf-8'}, function(error, data) {
-
-         if (error) {
-         logger.module().error('ERROR: unable to read session token file ' + error);
-         return false;
-         }
-
-         obj.session = data;
-         callback(null, obj);
-
-         });
-
-         return false;
-         }
-         */
     }
 
     // 8.)
