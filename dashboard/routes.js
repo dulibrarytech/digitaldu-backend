@@ -39,6 +39,9 @@ module.exports = function (app) {
     app.route('/dashboard/import/status')
         .get(Dashboard.get_dashboard_import_status);
 
+    app.route('/dashboard/import/incomplete')
+        .get(Dashboard.get_dashboard_import_incomplete);
+
     /* users */
     app.route('/dashboard/users')
         .get(Dashboard.get_dashboard_users);

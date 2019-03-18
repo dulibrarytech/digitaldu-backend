@@ -1,6 +1,7 @@
 'use strict';
 
-var Import = require('../import/queue');
+var Import = require('../import/queue'),
+    Model = require('../import/model');
 
 exports.list = function (req, res) {
     Import.list(req, function (data) {
@@ -56,43 +57,8 @@ exports.create_repo_record = function (req, res) {
     });
 };
 
-/*
-exports.get_unapproved_transfers = function (req, res) {
-    Import.get_unapproved_transfers(req, function (data) {
-        res.status(data.status).send(data.data)
-    });
-};
-*/
-
-/* imports object(s) for administrators */
-/*
-exports.get_import_admin_objects = function (req, res) {
-    Import.get_import_admin_objects(req, function (data) {
+exports.get_import_incomplete = function (req, res) {
+    Model.get_import_incomplete(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
-
-exports.get_import_admin_object_files = function (req, res) {
-    Import.get_import_admin_objects_files(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.import_xml = function (req, res) {
-    Import.import_xml(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.upload = function (req, res) {
-    Import.upload(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.create_folder = function (req, res) {
-    Import.create_folder(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-    */

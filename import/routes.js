@@ -2,7 +2,7 @@
 
 var Import = require('../import/controller');
 
-// TODO: apply api security.  i.e. API key (for discovery layer)
+// TODO: apply api security.  i.e. API key
 module.exports = function (app) {
 
     app.route('/api/admin/v1/import/list')
@@ -31,6 +31,9 @@ module.exports = function (app) {
 
     app.route('/api/admin/v1/import/status')
         .get(Import.get_import_status);
+
+    app.route('/api/admin/v1/import/incomplete')
+        .get(Import.get_import_incomplete);
 
     // TODO: create restart import route
 

@@ -9,12 +9,7 @@ exports.process_mets = function (sip_uuid, dip_path, xml) {
         Obj = {},
         Arr = [];
 
-
-    // console.log('METS DOC: ', document.children);
-
     document.eachChild(function (child, index, array) {
-
-        // console.log(array[index].name);
 
         if (array[index].name === 'mets:fileSec') {
 
@@ -38,8 +33,6 @@ exports.process_mets = function (sip_uuid, dip_path, xml) {
                                 Obj.uuid = array[index].children[1].children[i].attr.ID.replace(/file-/g, '');
                                 Obj.sip_uuid = sip_uuid;
                                 Obj.dip_path = dip_path;
-                                Obj.pid = '---';
-                                Obj.handle = '---';
                                 Obj.file = array[index].children[1].children[i].children[k].attr['xlink:href'].replace(/objects\//g, '');
                                 Obj.message = 'PROCESSING_IMPORT';
                                 Obj.file_id = file_id;
@@ -57,7 +50,6 @@ exports.process_mets = function (sip_uuid, dip_path, xml) {
                         Arr.push(Obj);
                         Obj = {};
                     }
-
                 }
             }
         }

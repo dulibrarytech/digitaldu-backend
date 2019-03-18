@@ -72,6 +72,42 @@ var importModule = (function () {
     };
 
     /**
+     * Renders the directory listing from the Archivematica sftp server
+     * @param data
+     */
+    var renderIncompleteRecords = function (data) {
+
+        var html = '';
+
+        for (var i = 0; i < data.length; i++) {
+
+            html += '<tr>';
+            html += '<td>' + data[i].is_member_of_collection + '</td>';
+            html += '<td>' + data[i].pid + '</td>';
+
+            if (data[i].mods_id === null) {
+                html += '<td>ArchivespaceID not found </td>';
+            } else {
+                html += '<td>' + data[i].mods_id + ' [<a href="?id=' + data[i].id + '">Import MODS</a>]</td>';
+            }
+
+            html += '<td>' + data[i].created + '</td>';
+            html += '<td>actions here</td>';
+            html += '</tr>';
+        }
+
+        /*
+        if (collection !== null && collectionObjects.length > 0) {
+            var button = '<a class="btn btn-success btn-xs" onclick="importModule.queueTransferObjects(\'' + collectionObjects + '\')" href="#"><i class="fa fa-upload"></i>&nbsp;&nbsp;Import</a>';
+            $('.import-button').html(button);
+        }
+        */
+
+        $('#incomplete-records').html(html);
+        $('#message').empty();
+    };
+
+    /**
      * Starts the Archivematica transfer/ingest process
      * @param objects
      * @returns {boolean}
@@ -183,7 +219,6 @@ var importModule = (function () {
                 $('#transfer-status').html('<tr><td>No ingests in progress</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>');
 
             }
-
         });
 
         socket.on('import_status', function (data) {
@@ -213,6 +248,30 @@ var importModule = (function () {
             }
         });
     };
+
+    /**
+     * Gets incomplete import records
+     */
+    obj.getIncompleteImportRecords = function () {
+
+        $('#message').html('<p><strong>Loading...</strong></p>');
+
+        var url = api + '/api/admin/v1/import/incomplete';
+
+        $.ajax(url)
+            .done(function (data) {
+                renderIncompleteRecords(data);
+            })
+            .fail(function (jqXHR, textStatus) {
+
+                if (jqXHR.status !== 200) {
+                    var message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve object data from Archivematica SFTP server.</div>';
+                    renderError(message);
+                }
+
+            });
+    };
+
 
     obj.init = function () {
         userModule.renderUserName();

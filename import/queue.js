@@ -12,11 +12,11 @@ const fs = require('fs'),
     archivematica = require('../libs/archivematica'),
     duracloud = require('../libs/duracloud'),
     archivespace = require('../libs/archivespace'),
+    logger = require('../libs/log4'),
     uuid = require('uuid'),
     crypto = require('crypto'),
     async = require('async'),
     moment = require('moment'),
-    logger = require('../libs/log4'),
     socketclient = require('socket.io-client')(config.host),
     request = require('request'),
     shell = require('shelljs'),
@@ -212,7 +212,6 @@ exports.queue_objects = function (req, callback) {
         }
 
         redisclient.send_command('flushall', function (result) {
-            console.log(result);
             callback(null, obj);
         });
     }
@@ -729,6 +728,7 @@ exports.create_repo_record = function (req, callback) {
     var sip_uuid = req.query.sip_uuid;
 
     if (sip_uuid === undefined) {
+        // no need to move forward if sip_uuid is missing
         logger.module().error('ERROR: sip uuid undefined (create_repo_record)');
         callback({
             status: 400,
@@ -746,6 +746,10 @@ exports.create_repo_record = function (req, callback) {
 
         importlib.get_collection(sip_uuid, function (result) {
 
+            // TODO: confirm that collection pid was returned
+            // TODO: if pid was not returned set collection to null?
+            // TODO: save sip_uuid to error table?
+
             let obj = {};
             obj.sip_uuid = sip_uuid;
             obj.is_member_of_collection = result;
@@ -760,7 +764,17 @@ exports.create_repo_record = function (req, callback) {
 
         importlib.get_uri_txt(obj.sip_uuid, function (data) {
 
-            // TODO: check array length, if zero, uri.txt not present; Update queue db with error
+            // uri.txt is not present
+            if (data.length === 0) {
+
+                obj.sip_uuid = sip_uuid;
+                obj.dip_path = null;
+                obj.file = null;
+                obj.uuid = null;
+                callback(null, obj);
+                return false;
+            }
+
             // gets uri data from db
             let dc_data = data.pop();
             obj.sip_uuid = sip_uuid;
@@ -774,6 +788,13 @@ exports.create_repo_record = function (req, callback) {
     // 3.)
     function get_object_uri_data(obj, callback) {
 
+        // no need to assign mods id if dip_path is not available
+        if (obj.dip_path === null) {
+            obj.mods_id = null;
+            callback(null, obj);
+            return false;
+        }
+
         logger.module().info('INFO: getting object uri data');
 
         duracloud.get_object(obj, function (response) {
@@ -786,6 +807,11 @@ exports.create_repo_record = function (req, callback) {
 
     // 4.)
     function save_mods_id(obj, callback) {
+
+        if (obj.mods_id === null) {
+            callback(null, obj);
+            return false;
+        }
 
         logger.module().info('INFO: saving mods id');
 
@@ -802,7 +828,15 @@ exports.create_repo_record = function (req, callback) {
 
         importlib.get_object(obj.sip_uuid, function (data) {
 
-            // TODO: check array length
+            if (data.length === 0) {
+
+                obj.dip_path = null;
+                obj.file = null;
+                obj.uuid = null;
+                callback(null, obj);
+                return false;
+            }
+
             // gets object data from db
             let dc_data = data.pop();
             obj.dip_path = dc_data.dip_path;
@@ -814,6 +848,16 @@ exports.create_repo_record = function (req, callback) {
 
     // 6.)
     function get_object_file_data(obj, callback) {
+
+        if (obj.dip_path === null) {
+            obj.checksum = null;
+            obj.file_size = null;
+            obj.file_name = null;
+            obj.thumbnail = null;
+            obj.mime_type = null;
+            callback(null, obj);
+            return false;
+        }
 
         logger.module().info('INFO: getting object file data');
 
@@ -844,8 +888,6 @@ exports.create_repo_record = function (req, callback) {
 
         if (fs.existsSync('./tmp/st.txt')) {
 
-            console.log('st file exists');
-
             let st_file = fs.statSync('./tmp/st.txt'),
                 now = moment().startOf('day'),
                 st_created_date_time = moment(st_file.birthtime),
@@ -858,14 +900,12 @@ exports.create_repo_record = function (req, callback) {
                 };
 
                 delete_file(fileObj, function (result) {
-                    console.log(result);
-                    console.log('st.txt deleted');
+                    // console.log(result);
+                    // console.log('st.txt deleted');
                     new_token();
                 });
 
             } else if (st_expire_date_time.isAfter(now)) {
-
-                console.log('st file exists and is valid');
 
                 fs.readFile('./tmp/st.txt', {encoding: 'utf-8'}, function (error, data) {
 
@@ -898,7 +938,6 @@ exports.create_repo_record = function (req, callback) {
                 try {
 
                     token = JSON.parse(data);
-                    obj.session = token.session;
 
                     fs.writeFile('./tmp/st.txt', obj.session, function (error) {
 
@@ -910,21 +949,25 @@ exports.create_repo_record = function (req, callback) {
                             });
                         }
 
-                        if (!fs.existsSync('./tmp/st.txt')) {
-                            logger.module().error('ERROR: st.txt does not exist');
-                            throw 'ERROR: st.txt does not exist';
-                        }
-
                         if (token === undefined) {
                             logger.module().error('ERROR: session token is undefined');
-                            throw 'ERROR: session token is undefined';
+                            obj.session = null;
+                            callback(null, obj);
+                            return false;
                         }
 
                         if (token.error === true) {
                             logger.module().error('ERROR: session token error' + token.error_message);
-                            throw 'ERROR: session token error' + token.error_message;
+                            obj.session = null;
+                            callback(null, obj);
+                            return false;
                         }
 
+                        if (!fs.existsSync('./tmp/st.txt')) {
+                            logger.module().error('ERROR: st.txt was not created');
+                        }
+
+                        obj.session = token.session;
                         callback(null, obj);
                         return false;
 
@@ -940,6 +983,13 @@ exports.create_repo_record = function (req, callback) {
 
     // 8.)
     function get_mods(obj, callback) {
+
+        // skip mods retrieval if session is not available
+        if (obj.session === null) {
+            obj.mods = null;
+            callback(null, obj);
+            return false;
+        }
 
         logger.module().info('INFO: getting mods');
 
@@ -963,6 +1013,14 @@ exports.create_repo_record = function (req, callback) {
     // 9.)
     function get_pid(obj, callback) {
 
+        // TODO: at this point check how many props are null
+        // TODO: if dip_path and mods are both null skip the pids and handles
+        if (obj.mods === null && obj.dip_path === null) {
+            obj.pid = null;
+            callback(null, obj);
+            return false;
+        }
+
         logger.module().info('INFO: getting pid');
 
         pids.get_next_pid(function (pid) {
@@ -973,6 +1031,12 @@ exports.create_repo_record = function (req, callback) {
 
     // 10.)
     function get_handle(obj, callback) {
+
+        if (obj.pid === null) {
+            obj.handle = null;
+            callback(null, obj);
+            return false;
+        }
 
         logger.module().info('INFO: getting handle');
 
@@ -994,6 +1058,7 @@ exports.create_repo_record = function (req, callback) {
     function create_display_record(obj, callback) {
 
         if (obj.mods === null) {
+            logger.module().info('INFO: display record not created because we were not able to get MODS from archivespace');
             callback(null, obj);
             return false;
         }
@@ -1001,7 +1066,6 @@ exports.create_repo_record = function (req, callback) {
         logger.module().info('INFO: creating display record');
 
         modslibdisplay.create_display_record(obj, function (result) {
-
             obj.display_record = result;
             callback(null, obj);
         });
@@ -1009,6 +1073,11 @@ exports.create_repo_record = function (req, callback) {
 
     // 12.)
     function delete_file(obj, callback) {
+
+        if (obj.dip_path === null) {
+            callback(null, obj);
+            return false;
+        }
 
         logger.module().info('INFO: deleting object file');
 
@@ -1025,6 +1094,13 @@ exports.create_repo_record = function (req, callback) {
     // 13.)
     function create_repo_record(obj, callback) {
 
+        if (obj.mods === null && obj.dip_path === null) {
+            // TODO: I need some way to indicate that this record could not be created during the import process.
+            // TODO: update DB?
+            callback(null, obj);
+            return false;
+        }
+
         logger.module().info('INFO: saving repository record to db');
 
         importlib.create_repo_record(obj, function (result) {
@@ -1038,11 +1114,10 @@ exports.create_repo_record = function (req, callback) {
     function index(obj, callback) {
 
         if (obj.mods === null) {
+            logger.module().info('INFO: display record not indexed because we were not able to get MODS from archivespace');
             callback(null, obj);
             return false;
         }
-
-        logger.module().info('INFO: indexing repository record');
 
         request.post({
             url: config.apiUrl + '/api/admin/v1/indexer',
@@ -1057,6 +1132,7 @@ exports.create_repo_record = function (req, callback) {
             }
 
             if (httpResponse.statusCode === 200) {
+                logger.module().info('INFO: repository record indexed');
                 obj.indexed = true;
                 callback(null, obj);
                 return false;
@@ -1107,12 +1183,17 @@ exports.create_repo_record = function (req, callback) {
         }
 
         logger.module().info('INFO: record imported');
-        // console.log('repoObj: ', results);
+        // TODO: create import error page to show incomplete imports and what specifically is missing from the record. i.e. mods, object.
+        // TODO: provide ability to ingest mods only
+        // TODO: provide ability to ingest object only
+        // TODO: provide ability to index data only?...
+        console.log('repoObj: ', results);
+        // TODO:
     });
 
     callback({
         status: 200,
         content_type: {'Content-Type': 'application/json'},
-        message: 'Processing MODS.'
+        message: 'Importing object.'
     });
 };

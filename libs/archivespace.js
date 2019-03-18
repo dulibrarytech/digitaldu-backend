@@ -23,7 +23,7 @@ exports.get_mods = function (id, session, callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: unable get archivespace mods ' + error);
+            logger.module().error('ERROR: request to archivespace failed ' + error);
 
             callback({
                 error: true,
@@ -35,7 +35,7 @@ exports.get_mods = function (id, session, callback) {
 
         if (httpResponse.statusCode === 200) {
 
-            logger.module().info('INFO: archivespace session token retrieved');
+            logger.module().info('INFO: archivespace mods retrieved');
 
             callback({
                 error: false,
@@ -46,7 +46,7 @@ exports.get_mods = function (id, session, callback) {
 
         } else {
 
-            logger.module().error('ERROR: unable get archivespace mods ' + error);
+            logger.module().error('ERROR: request to archivespace failed ' + error);
 
             callback({
                 error: true,
