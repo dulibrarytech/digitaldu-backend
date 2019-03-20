@@ -23,11 +23,10 @@ const config = require('../config/config'),
 exports.get_import_incomplete = function (req, callback) {
 
     knex('tbl_objects')
-        .select('id', 'is_member_of_collection', 'pid', 'mods_id', 'display_record', 'created')
+        .select('id', 'sip_uuid', 'is_member_of_collection', 'pid', 'handle', 'mods_id', 'mods', 'display_record', 'thumbnail', 'file_name', 'mime_type', 'created')
         .where({
-            object_type: 'object',
-            mods: null
-            // incomplete flag
+            is_complete: 0,
+            object_type: 'object'
         })
         .then(function (data) {
 

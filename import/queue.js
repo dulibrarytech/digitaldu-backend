@@ -590,8 +590,8 @@ exports.get_ingest_status = function (req, callback) {
         archivematica.get_ingest_status(sip_uuid, function (response) {
 
             // TODO:
-            console.log('sip_uuid: ', sip_uuid);
-            console.log('ingest status response: ', response);
+            // console.log('sip_uuid: ', sip_uuid);
+            // console.log('ingest status response: ', response);
 
             importlib.update_ingest_status(response, sip_uuid, function (result) {
 
@@ -1183,12 +1183,21 @@ exports.create_repo_record = function (req, callback) {
         }
 
         logger.module().info('INFO: record imported');
+
+        // look for null values in object as it indicates that the record is incomplete
+        for (let i in results) {
+            if (results[i] === null) {
+                importlib.flag_incomplete_record(results);
+                logger.module().info('INFO:' + results.sip_uuid + ' is incomplete');
+                break;
+            }
+        }
+
         // TODO: create import error page to show incomplete imports and what specifically is missing from the record. i.e. mods, object.
         // TODO: provide ability to ingest mods only
         // TODO: provide ability to ingest object only
         // TODO: provide ability to index data only?...
-        console.log('repoObj: ', results);
-        // TODO:
+        // console.log('repoObj: ', results);
     });
 
     callback({

@@ -79,29 +79,64 @@ var importModule = (function () {
 
         var html = '';
 
+        // TODO: provide ability to fix incomplete record.
+        // TODO: add styles to css
+        var alignTd = 'style="text-align: center; vertical-align: middle"';
+
         for (var i = 0; i < data.length; i++) {
 
-            html += '<tr>';
-            html += '<td>' + data[i].is_member_of_collection + '</td>';
-            html += '<td>' + data[i].pid + '</td>';
+            console.log(data[i]);
 
-            if (data[i].mods_id === null) {
-                html += '<td>ArchivespaceID not found </td>';
+            html += '<tr>';
+
+            // determine what is missing from the record
+            // TODO: how allow user to add missing collection pid
+            if (data[i].is_member_of_collection === null) {
+                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing Collection PID"><i class="fa fa-exclamation-circle"></i></a></td>';
             } else {
-                html += '<td>' + data[i].mods_id + ' [<a href="?id=' + data[i].id + '">Import MODS</a>]</td>';
+                html += '<td ' + alignTd + '><a class="btn btn-xs btn-success" href="#" title="' + data[i].is_member_of_collection + '"><i class="fa fa-check-circle"></i></a></td>';
             }
 
-            html += '<td>' + data[i].created + '</td>';
-            html += '<td>actions here</td>';
+            if (data[i].pid === null) {
+                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing PID"><i class="fa fa-exclamation-circle"></i></a></td>';
+            } else {
+                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-success" href="#" title="' + data[i].pid + '"><i class="fa fa-check-circle"></i></a></td>';
+            }
+
+            if (data[i].handle === null) {
+                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing Handle"><i class="fa fa-exclamation-circle"></i></a></td>';
+            } else {
+                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-success" href="#" title="' + data[i].handle + '"><i class="fa fa-check-circle"></i></a></td>';
+            }
+
+            if (data[i].mods_id === null || data[i].mods === null) {
+                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing Mods"><i class="fa fa-exclamation-circle"></i></a></td>';
+            } else {
+                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-success" href="#" title="Add user to group"><i class="fa fa-check-circle"></i></a></td>';
+            }
+
+            if (data[i].thumbnail === null) {
+                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing Thumbnail"><i class="fa fa-exclamation-circle"></i></a></td>';
+            } else {
+                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-success" href="#" title="Add user to group"><i class="fa fa-check-circle"></i></a></td>';
+            }
+
+            if (data[i].file_name === null) {
+                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing Master Object"><i class="fa fa-exclamation-circle"></i></a></td>';
+            } else {
+                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-success" href="#" title="Add user to group"><i class="fa fa-check-circle"></i></a></td>';
+            }
+
+            if (data[i].mime_type === null) {
+                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing Mime Type"><i class="fa fa-exclamation-circle"></i></a></td>';
+            } else {
+                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-success" href="#" title="Add user to group"><i class="fa fa-check-circle"></i></a></td>';
+            }
+
+            // TODO: format date
+            html += '<td style="text-align: center; vertical-align: middle">' + data[i].created + '</td>';
             html += '</tr>';
         }
-
-        /*
-        if (collection !== null && collectionObjects.length > 0) {
-            var button = '<a class="btn btn-success btn-xs" onclick="importModule.queueTransferObjects(\'' + collectionObjects + '\')" href="#"><i class="fa fa-upload"></i>&nbsp;&nbsp;Import</a>';
-            $('.import-button').html(button);
-        }
-        */
 
         $('#incomplete-records').html(html);
         $('#message').empty();

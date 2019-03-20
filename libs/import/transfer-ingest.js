@@ -749,3 +749,28 @@ exports.cleanup = function (obj, callback) {
             throw 'ERROR: unable to clean up queue (cleanup) ' + error;
         });
 };
+
+/**
+ *
+ * @param obj
+ */
+exports.flag_incomplete_record = function (obj) {
+
+    'use strict';
+
+    knex(REPO_OBJECTS)
+        .where({
+            sip_uuid: obj.sip_uuid
+        })
+        .update({
+            is_complete: 0
+        })
+        .then(function (data) {
+            console.log(data);
+        })
+        .catch(function (error) {
+            logger.module().error('ERROR: unable to flag incomplete record ' + error);
+            throw 'ERROR: unable to flag incomplete record ' + error;
+        });
+
+};
