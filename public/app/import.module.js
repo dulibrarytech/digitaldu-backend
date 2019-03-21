@@ -89,52 +89,54 @@ var importModule = (function () {
 
             html += '<tr>';
 
+            html += '<td ' + alignTd + '>' + data[i].sip_uuid + '</td>';
+
             // determine what is missing from the record
-            // TODO: how allow user to add missing collection pid
+            // TODO: how allow user to add missing parts of a record
             if (data[i].is_member_of_collection === null) {
                 html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing Collection PID"><i class="fa fa-exclamation-circle"></i></a></td>';
             } else {
-                html += '<td ' + alignTd + '><a class="btn btn-xs btn-success" href="#" title="' + data[i].is_member_of_collection + '"><i class="fa fa-check-circle"></i></a></td>';
+                html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
             if (data[i].pid === null) {
-                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing PID"><i class="fa fa-exclamation-circle"></i></a></td>';
+                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing PID"><i class="fa fa-exclamation-circle"></i></a></td>';
             } else {
-                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-success" href="#" title="' + data[i].pid + '"><i class="fa fa-check-circle"></i></a></td>';
+                html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
             if (data[i].handle === null) {
-                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing Handle"><i class="fa fa-exclamation-circle"></i></a></td>';
+                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing Handle"><i class="fa fa-exclamation-circle"></i></a></td>';
             } else {
-                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-success" href="#" title="' + data[i].handle + '"><i class="fa fa-check-circle"></i></a></td>';
+                html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
             if (data[i].mods_id === null || data[i].mods === null) {
-                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing Mods"><i class="fa fa-exclamation-circle"></i></a></td>';
+                html += '<td ' + alignTd + '><a href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing Mods"><i class="fa fa-exclamation"></i></a></td>';
             } else {
-                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-success" href="#" title="Add user to group"><i class="fa fa-check-circle"></i></a></td>';
+                html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
             if (data[i].thumbnail === null) {
-                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing Thumbnail"><i class="fa fa-exclamation-circle"></i></a></td>';
+                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing Thumbnail"><i class="fa fa-exclamation-circle"></i></a></td>';
             } else {
-                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-success" href="#" title="Add user to group"><i class="fa fa-check-circle"></i></a></td>';
+                html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
             if (data[i].file_name === null) {
-                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing Master Object"><i class="fa fa-exclamation-circle"></i></a></td>';
+                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing Master Object"><i class="fa fa-exclamation-circle"></i></a></td>';
             } else {
-                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-success" href="#" title="Add user to group"><i class="fa fa-check-circle"></i></a></td>';
+                html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
             if (data[i].mime_type === null) {
-                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing Mime Type"><i class="fa fa-exclamation-circle"></i></a></td>';
+                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing Mime Type"><i class="fa fa-exclamation-circle"></i></a></td>';
             } else {
-                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-success" href="#" title="Add user to group"><i class="fa fa-check-circle"></i></a></td>';
+                html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
             // TODO: format date
-            html += '<td style="text-align: center; vertical-align: middle">' + data[i].created + '</td>';
+            html += '<td ' + alignTd + '>' + data[i].created + '</td>';
             html += '</tr>';
         }
 

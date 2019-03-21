@@ -28,7 +28,7 @@ var collectionsModule = (function () {
             html += '<div class="col-md-6" style="padding: 5px">';
 
             if (record.title !== undefined) {
-                html += '<h4><a href="' + api + '/dashboard/objects/?pid=' + data[i].pid + '">' + record.title[0] + '</a></h4>';
+                html += '<h4><a href="' + api + '/dashboard/objects/?pid=' + data[i].pid + '">' + record.title + '</a></h4>';
             } else {
                 html += '<h4>No Title</h4>';
             }

@@ -5,8 +5,13 @@ var fs = require('fs'),
     config = require('../config/config'),
     pid = require('../libs/next-pid'),
     permissions = require('../libs/object-permissions'),
+    async = require('async'),
+    pids = require('../libs/next-pid'),
+    handles = require('../libs/handles'),
+    modslibdisplay = require('../libs/display-record'),
+    logger = require('../libs/log4'),
     es = require('elasticsearch'),
-    shell = require('shelljs'),
+    // shell = require('shelljs'),
     knex = require('knex')({
         client: 'mysql2',
         connection: {
@@ -17,16 +22,17 @@ var fs = require('fs'),
         }
     });
 
+/*
 var client = new es.Client({
     host: config.elasticSearch
-    // log: 'trace'
 });
+*/
 
 exports.get_next_pid = function (req, callback) {
 
     var namespace = config.namespace;
 
-    knex.transaction(function(trx) {
+    knex.transaction(function (trx) {
 
         return knex('tbl_pid_gen')
             .select('namespace', 'current_pid')
@@ -35,7 +41,7 @@ exports.get_next_pid = function (req, callback) {
             })
             .limit(1)
             .transacting(trx)
-            .then(function(data) {
+            .then(function (data) {
 
                 // increment pid
                 var new_id = (parseInt(data[0].current_pid) + 1),
@@ -60,7 +66,7 @@ exports.get_next_pid = function (req, callback) {
             .then(trx.commit)
             .catch(trx.rollback);
     })
-        .then(function(pid) {
+        .then(function (pid) {
 
             callback({
                 status: 200,
@@ -69,7 +75,7 @@ exports.get_next_pid = function (req, callback) {
                 message: 'PID retrieved.'
             });
         })
-        .catch(function(error) {
+        .catch(function (error) {
             console.error(error);
         });
 };
@@ -129,16 +135,16 @@ exports.get_admin_objects = function (req, callback) {
     // TODO: implement permission check
 
     var pid = req.query.pid;
-        // user_permissions = JSON.parse(req.headers['x-access-permissions']); // TODO: sanitize
+    // user_permissions = JSON.parse(req.headers['x-access-permissions']); // TODO: sanitize
 
     // var resources = permissions.check_access(user_permissions);
     /*
-    var is_admin = resources.indexOf('*');
+     var is_admin = resources.indexOf('*');
 
-    if (is_admin !== 1) {
+     if (is_admin !== 1) {
 
-    }
-    */
+     }
+     */
 
     knex('tbl_objects')
         .select('is_member_of_collection', 'pid', 'object_type', 'display_record', 'mime_type', 'is_compound', 'is_published', 'created')
@@ -184,6 +190,12 @@ exports.get_admin_object = function (req, callback) {
         });
 };
 
+/**
+ * Creates repository collection
+ * @param req
+ * @param callback
+ * @returns {boolean}
+ */
 exports.save_admin_collection_object = function (req, callback) {
 
     var data = req.body;
@@ -200,134 +212,113 @@ exports.save_admin_collection_object = function (req, callback) {
         return false;
     }
 
-    pid.get_next_pid(function (pid) {
+    function create_record_object(callback) {
 
-        construct_mods(data, function (results) {
+        var obj = {};
 
-            // TODO: create display record
+        obj.is_member_of_collection = data.is_member_of_collection;
 
-            var recordObj = {};
+        // TODO: more fields for collection record?
+        var modsObj = {
+            title: data.mods_title,
+            abstract: data.mods_abstract
+        };
 
-            if (data.object_type !== undefined || data.object_type.length !== 0) {
-                recordObj.object_type = data.object_type;
-            }
+        obj.mods = JSON.stringify(modsObj);
+        obj.object_type = data.object_type;
 
-            recordObj.is_member_of_collection = data.is_member_of_collection;
-            recordObj.pid = pid;
-            recordObj.mods = results.mods;
-            recordObj.display_record = results.display_record;
+        callback(null, obj);
+    }
 
-            knex('tbl_objects')
-                .insert(recordObj)
-                .then(function (data) {
-                    callback({
-                        status: 201,
-                        content_type: {'Content-Type': 'application/json'},
-                        data: [{'pid': pid}],
-                        message: 'Object created.'
-                    });
-                })
-                .catch(function (error) {
-                    console.log(error);
-                    callback({
-                        status: 500,
-                        content_type: {'Content-Type': 'application/json'},
-                        message: 'Database error occurred.'
-                    });
-                });
+    function get_pid(obj, callback) {
+
+        logger.module().info('INFO: getting pid');
+
+        pids.get_next_pid(function (pid) {
+            obj.pid = pid;
+            callback(null, obj);
         });
-    });
-};
-
-var construct_mods = function (data, callback) {
-
-    var results = {};
-    var mods = '<mods xmlns="http://www.loc.gov/mods/v3" xmlns:mods="http://www.loc.gov/mods/v3" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">';
-
-    for (var prop in data) {
-
-        if (prop === 'mods_title') {
-            mods += '<titleInfo><title>' + data.mods_title + '</title></titleInfo>';
-        }
-
-        if (prop === 'mods_abstract') {
-            mods += '<abstract>' + data.mods_abstract + '</abstract>';
-        }
-
-        // TODO: more fields for collection mods?
     }
 
-    mods += '</mods>';
+    function get_handle(obj, callback) {
 
-    results.display_record = '{"title":["' + data.mods_title + '"],"abstract":"' + data.mods_abstract + '"}';
-
-    var modsTmp = Math.round(new Date().getTime()/1000);
-    var file = config.tempPath + modsTmp + '_mods.xml';
-    fs.writeFileSync(file, mods);
-
-    if (!fs.existsSync(file)) {
-        // TODO: error
-        // TODO: log
-        return false;
-    }
-
-    var validate_xml_command = './libs/xsd-validator/xsdv.sh ./libs/xsd-validator/mods-3-6.xsd.xml ' + file;
-    shell.exec(validate_xml_command, function(code, stdout, stderr) {
-
-        // TODO: log
-        console.log(stdout);
-
-        if (code !== 0) {
-            console.log(stderr);
-            // TODO: log
+        if (obj.pid === null) {
+            obj.handle = null;
+            callback(null, obj);
             return false;
         }
 
-        // read file content
-        fs.readFile(file, {encoding: 'utf-8'}, function(error, xml) {
+        logger.module().info('INFO: getting handle');
 
-            if (error) {
-                console.log(error);
-                // TODO: log
+        handles.create_handle(obj.pid, function (handle) {
+
+            if (handle.error !== undefined && handle.error === true) {
+                logger.module().error('ERROR: handle error');
+                obj.handle = handle.message;
+                callback(null, obj);
                 return false;
             }
 
-            results.mods = xml;
+            obj.handle = handle;
+            callback(null, obj);
+        });
+    }
 
-            fs.unlink(file, function (error) {
-                if (error) {
-                    console.log(error);
-                }
-                console.log(file + ' was deleted');
+    function create_display_record(obj, callback) {
+
+        modslibdisplay.create_display_record(obj, function (result) {
+            obj.display_record = result;
+            callback(null, obj);
+        });
+    }
+
+    function save_record(obj, callback) {
+
+        knex('tbl_objects')
+            .insert(obj)
+            .then(function (data) {
+                callback(null, obj);
+            })
+            .catch(function (error) {
+                logger.module().error('ERROR: unable to save collection record ' + error);
+                obj.error = 'ERROR: unable to save collection record ' + error;
+                callback(null, obj);
+            });
+    }
+
+    async.waterfall([
+        create_record_object,
+        get_pid,
+        get_handle,
+        create_display_record,
+        save_record
+    ], function (error, results) {
+
+        if (error) {
+            logger.module().error('ERROR: async (save_admin_collection_object)');
+        }
+
+        logger.module().info('INFO: collection record saved');
+        // console.log('collectionObj: ', results);
+
+        if (results.error === undefined) {
+
+            callback({
+                status: 201,
+                content_type: {'Content-Type': 'application/json'},
+                data: [{'pid': results.pid}],
+                message: 'Object created.'
             });
 
-            callback(results);
-        });
+        } else {
+
+            callback({
+                status: 500,
+                content_type: {'Content-Type': 'application/json'},
+                data: [{'pid': 'no pid'}],
+                message: 'A database error occurred. ' + error
+            });
+
+        }
     });
 };
-
-/*
-exports.do_search = function (req, callback) {
-
-    var q = req.query.q;
-
-    client.search({
-        // from: 0, // search.from,
-        // size: 40, // search.size,
-        index: Config.elasticSearchIndex,
-        q: q
-    }).then(function (body) {
-        // console.log(body.hits.hits);
-        // callback(body.hits.hits);
-
-        callback({
-            status: 200,
-            data: body.hits.hits,
-            message: 'Search Results'
-        });
-
-    }, function (error) {
-       // callback(error);
-    });
-};
-    */
