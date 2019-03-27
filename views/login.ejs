@@ -1,84 +1,45 @@
 <% include partials/header.ejs %>
 
 <body class="login">
-<div>
-    <a class="hiddenanchor" id="signup"></a>
-    <a class="hiddenanchor" id="signin"></a>
 
-    <div class="login_wrapper">
-        <div class="animate form login_form">
-            <section class="login_content">
-                <form action="/login" method="post">
-                    <h1>Login</h1>
-                    <div>
-                        <input name="username" type="text" class="form-control" placeholder="DU ID" required="" />
-                    </div>
-                    <div>
-                        <input name="password" type="password" class="form-control" placeholder="Passcode" required="" />
-                    </div>
-                    <div>
-                        <input class="btn btn-default submit" type="submit" value="Log in">
-                    </div>
+<div class="login_wrapper">
+    <div class="animate form login_form">
+        <section class="login_content">
+            <form action="/login" method="post">
+                <h1>Login</h1>
+                <div>
+                    <input name="username" type="text" class="form-control" placeholder="DU ID" required=""/>
+                </div>
+                <div>
+                    <input name="password" type="password" class="form-control" placeholder="Passcode" required=""/>
+                </div>
+                <div>
+                    <input class="btn btn-default submit" type="submit" value="Log in">
+                </div>
 
-                    <div class="clearfix"></div>
+                <div class="clearfix"></div>
 
-                    <div class="separator">
-                        <!--
-                        <p class="change_link">New to site?
-                          <a href="#signup" class="to_register"> Create Account </a>
-                        </p>
-                        -->
-                        <div class="clearfix"></div>
-                        <br />
-
-                        <div>
-                            <h1><i class="fa fa-archive"></i> DU Repository</h1>
-                            <p>©2018 University of Denver <br>University Libraries</p>
-                        </div>
-                    </div>
-                </form>
-            </section>
-        </div>
-
-        <div id="register" class="animate form registration_form">
-            <section class="login_content">
-                <form>
-                    <h1>Create Account</h1>
-                    <div>
-                        <input type="text" class="form-control" placeholder="Username" required="" />
-                    </div>
-                    <div>
-                        <input type="email" class="form-control" placeholder="Email" required="" />
-                    </div>
-                    <div>
-                        <input type="password" class="form-control" placeholder="Password" required="" />
-                    </div>
-                    <div>
-                        <a class="btn btn-default submit" href="index.html">Submit</a>
-                    </div>
+                <div class="separator">
 
                     <div class="clearfix"></div>
+                    <br/>
 
-                    <div class="separator">
-                        <p class="change_link">Already a member ?
-                            <a href="#signin" class="to_register"> Log in </a>
-                        </p>
-
-                        <div class="clearfix"></div>
-                        <br />
-
-                        <div>
-                            <h1><i class="fa fa-archive"></i> DU Repository</h1>
-                            <p>©2017 University of Denver - University Libraries</p>
-                        </div>
+                    <div>
+                        <h1><i class="fa fa-archive"></i> DU Repository</h1>
+                        <p>©<span id="cdate"></span> University of Denver <br>University Libraries</p>
                     </div>
-                </form>
-            </section>
-        </div>
+                </div>
+            </form>
+        </section>
     </div>
 </div>
+
+<!-- jQuery -->
+<script src="../vendors/jquery/dist/jquery.min.js"></script>
 <script src="app/libs/config.js"></script>
+<script src="app/libs/helper.js"></script>
 <script src="app/user.module.js"></script>
 <script>userModule.reset();</script>
+<script>helperModule.getCurrentYear();</script>
 </body>
 </html>

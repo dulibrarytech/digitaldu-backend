@@ -124,7 +124,7 @@ var collectionsModule = (function () {
                 var title = 'No title.';
 
                 if (record.title !== undefined) {
-                    title = record.title[0];
+                    title = record.title;
                 }
 
                 if (data.length === 0) {

@@ -48,6 +48,11 @@ var helperModule = (function () {
         return decodeURIComponent(results[2].replace(/\+/g, " "));
     };
 
+    obj.getCurrentYear = function () {
+        var cdate = new Date().getFullYear();
+        document.querySelector('#cdate').innerHTML = cdate;
+    };
+
     obj.init = function () {
         npProgress();
     };
