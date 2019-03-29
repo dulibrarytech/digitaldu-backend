@@ -29,7 +29,6 @@ const objectsModule = (function () {
     const renderObjectEditForm = function (data) {
 
         if (data.length > 1) {
-            // no more than one collection should be in the payload
             // TODO: display error
             return false;
         }
@@ -38,21 +37,25 @@ const objectsModule = (function () {
         $('#object-type').html(data[0].object_type);
 
         let modsForm = '';
+            modsForm += '<p><strong>Handle:</strong> ' + data[0].handle + '</p>';
             modsForm += '<p><strong>Pid:</strong> ' + data[0].pid + '</p>';
 
         for (let i = 0;i<data.length;i++) {
 
             let display_record = JSON.parse(data[i].display_record);
 
-            modsForm += '<input name="is_member_of_collection" type="hidden" id="is-member-of-collection">';
+            modsForm += '';
+            modsForm += '<input name="is_member_of_collection" type="hidden" id="is_member_of_collection" value="' + display_record.is_member_of_collection + '">';
+            modsForm += '<input name="pid" type="hidden" id="pid" value="' + display_record.pid + '">';
+            modsForm += '<input name="handle" type="hidden" id="handle" value="' + display_record.handle + '">';
             modsForm += '<input name="object_type" type="hidden" id="object-type" value="collection">';
             modsForm += '<div class="form-group">';
             modsForm += '<label for="mods_title">* Title:</label>';
-            modsForm += '<input name="mods_title" type="text" class="form-control" id="mods_title" value="' + display_record.display_record.title + '" required>';
+            modsForm += '<input name="title" type="text" class="form-control" id="mods_title" value="' + display_record.display_record.title + '" required>';
             modsForm += '</div>';
             modsForm += '<div class="form-group">';
             modsForm += '<label for="mods_abstract">Abstract:</label>';
-            modsForm += '<textarea name="mods_abstract" class="form-control" id="mods_abstract" rows="7">' + display_record.display_record.abstract + '</textarea>';
+            modsForm += '<textarea name="abstract" class="form-control" id="mods_abstract" rows="7">' + display_record.display_record.abstract + '</textarea>';
             modsForm += '</div>';
             modsForm += '<br>';
             modsForm += '<button type="submit" class="btn btn-primary" id="update-collection-button"><i class="fa fa-save"></i>&nbsp;Save</button>';
@@ -60,7 +63,7 @@ const objectsModule = (function () {
             modsForm += '<button type="button" class="btn btn-default"><i class="fa fa-times"></i>&nbsp;Cancel</button>';
         }
 
-        $('#object-edit-form').html(modsForm);
+        $('#collection-edit-form').html(modsForm);
     };
 
     const renderObjects = function (data) {
@@ -84,7 +87,7 @@ const objectsModule = (function () {
             }
 
             let record = JSON.parse(data[i].display_record);
-            let tn = 'http://librepo01-vlp.du.edu:8080/fedora/objects/' + data[i].pid + '/datastreams/TN/content';
+            let tn = configModule.getTn(data[i].pid);
 
             html += '<div class="row">';
             html += '<div class="col-md-3"><img style="width: 40%; display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';

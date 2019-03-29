@@ -10,7 +10,7 @@ var fs = require('fs'),
     handles = require('../libs/handles'),
     modslibdisplay = require('../libs/display-record'),
     logger = require('../libs/log4'),
-    es = require('elasticsearch'),
+    // es = require('elasticsearch'),
     // shell = require('shelljs'),
     knex = require('knex')({
         client: 'mysql2',
@@ -132,22 +132,10 @@ exports.get_object = function (req, callback) {
 
 exports.get_admin_objects = function (req, callback) {
 
-    // TODO: implement permission check
-
     var pid = req.query.pid;
-    // user_permissions = JSON.parse(req.headers['x-access-permissions']); // TODO: sanitize
-
-    // var resources = permissions.check_access(user_permissions);
-    /*
-     var is_admin = resources.indexOf('*');
-
-     if (is_admin !== 1) {
-
-     }
-     */
 
     knex('tbl_objects')
-        .select('is_member_of_collection', 'pid', 'object_type', 'display_record', 'mime_type', 'is_compound', 'is_published', 'created')
+        .select('id', 'is_member_of_collection', 'pid', 'object_type', 'display_record', 'mime_type', 'is_compound', 'is_published', 'created')
         .where({
             is_member_of_collection: pid,
             is_active: 1
@@ -171,7 +159,8 @@ exports.get_admin_object = function (req, callback) {
     var pid = req.query.pid;  // TODO: sanitize
 
     knex('tbl_objects')
-        .select('is_member_of_collection', 'pid', 'object_type', 'mods', 'display_record', 'mime_type', 'is_published', 'is_compound', 'created')
+        // .select('is_member_of_collection', 'pid', 'object_type', 'mods', 'display_record', 'mime_type', 'is_published', 'is_compound', 'created')
+        .select('is_member_of_collection', 'pid', 'handle', 'object_type', 'display_record', 'is_published', 'created')
         .where({
             pid: pid,
             is_active: 1
@@ -188,6 +177,60 @@ exports.get_admin_object = function (req, callback) {
             // TODO: add error callback
             console.log(error);
         });
+};
+
+/**
+ *
+ * @param req
+ * @param callback
+ */
+exports.update_admin_collection_object = function (req, callback) {
+
+    var data = req.body;
+
+    if (data.is_member_of_collection === undefined || data.is_member_of_collection.length === 0) {
+
+        callback({
+            status: 400,
+            content_type: {'Content-Type': 'application/json'},
+            data: [],
+            message: 'Missing collection PID.'
+        });
+
+        return false;
+    }
+
+    var mods = {
+        title: data.title,
+        abstract: data.abstract
+    };
+
+    var obj = {};
+        obj.pid = data.pid;
+        obj.is_member_of_collection = data.is_member_of_collection;
+        obj.object_type = data.object_type;
+        obj.handle = data.handle;
+        obj.mods = JSON.stringify(mods);
+
+    modslibdisplay.create_display_record(obj, function (display_record) {
+
+        knex('tbl_objects')
+            .where({
+                is_member_of_collection: data.is_member_of_collection,
+                pid: data.pid
+            })
+            .update({
+                mods: JSON.stringify(mods),
+                display_record: display_record
+            })
+            .then(function (data) {
+                console.log('update: ' + data);
+                // TODO: callback here
+            })
+            .catch(function (error) {
+                logger.module().error('ERROR: unable to save collection record ' + error);
+            });
+    });
 };
 
 /**

@@ -22,12 +22,7 @@
                 <!-- /sidebar menu -->
 
                 <!-- /menu footer buttons -->
-                <div class="sidebar-footer hidden-small">
-                    <a data-toggle="tooltip" data-placement="top" title="Logout" href="login.html">
-                        <span class="glyphicon glyphicon-off" aria-hidden="true"></span>
-                    </a>
-
-                </div>
+                <% include partials/sidebar-footer.ejs %>
                 <!-- /menu footer buttons -->
             </div>
         </div>
@@ -81,13 +76,13 @@
 <script src="../../vendors/jquery/dist/jquery.min.js"></script>
 <script src="../../vendors/bootstrap/dist/js/bootstrap.min.js"></script>
 <script src="../../vendors/nprogress/nprogress.js"></script>
+<script src="../../assets/js/custom.js"></script>
 <script src="../../app/libs/config.js"></script>
 <script src="../../app/libs/helper.js"></script>
 <script src="../../app/user.module.js"></script>
 <script src="../../app/collections.module.js"></script>
 <script src="../../app/objects.module.js"></script>
 <script src="../../app/search.module.js"></script>
-<script src="../../assets/js/custom.js"></script>
 <script>objectsModule.getObjects();</script>
 </body>
 </html>

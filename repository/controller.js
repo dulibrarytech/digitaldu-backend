@@ -37,6 +37,12 @@ exports.save_admin_collection_object = function (req, res) {
     });
 };
 
+exports.update_admin_collection_object = function (req, res) {
+    Repo.update_admin_collection_object(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
 /* imports object(s) for administrators */
 exports.get_import_admin_objects = function (req, res) {
     Repo.get_import_admin_objects(req, function (data) {

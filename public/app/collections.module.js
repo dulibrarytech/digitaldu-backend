@@ -159,6 +159,14 @@ const collectionsModule = (function () {
     };
 
     /**
+     * Gets collection edit form data
+     * @returns {*|jQuery}
+     */
+    const getCollectionEditFormData = function () {
+        return $('#collection-edit-form').serialize();
+    };
+
+    /**
      * Adds collection
      */
     const addCollection = function () {
@@ -199,21 +207,21 @@ const collectionsModule = (function () {
     const updateCollection = function () {
 
         let message = '<div class="alert alert-info">Updating Collection...</div>';
-        $('#collection-form').hide();
+        $('#object-edit-form').hide();
         $('#message').html(message);
 
         userModule.setHeaderUserToken();
 
         $.ajax({
             url: api + '/api/admin/v1/repo/object',
-            type: 'post',
-            data: getCollectionFormData()
+            type: 'put',
+            data: getCollectionEditFormData()
         }).done(function (data) {
 
             let message = '<div class="alert alert-success">Collection updated (' + data[0].pid + ')</div>';
             $('#message').html(message);
-            $('#collection-form').show();
-            $('#collection-form')[0].reset();
+            $('#collection-edit-form').show();
+            $('#collection-edit-form')[0].reset();
 
             setTimeout(function () {
                 $('#message').html('');
@@ -230,7 +238,21 @@ const collectionsModule = (function () {
     };
 
     /**
-     * Enables collection form validation
+     * Enables collection update form validation
+     */
+    obj.collectionUpdateFormValidation = function () {
+
+        $(document).ready(function () {
+            $('#collection-edit-form').validate({
+                submitHandler: function () {
+                    updateCollection();
+                }
+            });
+        });
+    };
+
+    /**
+     * Enable validation on add collection form
      */
     obj.collectionFormValidation = function () {
 

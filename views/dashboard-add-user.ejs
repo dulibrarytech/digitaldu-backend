@@ -22,11 +22,7 @@
                 <!-- /sidebar menu -->
 
                 <!-- /menu footer buttons -->
-                <div class="sidebar-footer hidden-small">
-                    <a data-toggle="tooltip" data-placement="top" title="Logout" href="login.html">
-                        <span class="glyphicon glyphicon-off" aria-hidden="true"></span>
-                    </a>
-                </div>
+                <% include partials/sidebar-footer.ejs %>
                 <!-- /menu footer buttons -->
             </div>
         </div>
@@ -62,7 +58,7 @@
                             <div class="x_content">
                                 <div id="message"></div>
                                 <div class="row" id="user-details">
-                                    <div class="col-xs-6">
+                                    <div class="col-xs-12">
 
                                         <form name="user-form" id="user-form">
                                             <div class="form-group">
@@ -89,10 +85,6 @@
 
                                     </div>
 
-                                    <div class="col-xs-6">
-                                        <p>Important text here?</p>
-                                    </div>
-
                                 </div>
                             </div>
                         </div>
@@ -107,24 +99,16 @@
         <!-- /footer content -->
     </div>
 
-    <!-- jQuery -->
     <script src="../../vendors/jquery/dist/jquery.min.js"></script>
-    <!-- Form Validation -->
     <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.17.0/dist/jquery.validate.js"></script>
-    <!-- Bootstrap -->
     <script src="../../vendors/bootstrap/dist/js/bootstrap.min.js"></script>
-    <!-- FastClick -->
-    <script src="../../vendors/fastclick/lib/fastclick.js"></script>
-    <!-- NProgress -->
+    <script src="../../assets/js/custom.js"></script>
     <script src="../../vendors/nprogress/nprogress.js"></script>
-    <!-- Custom Theme Scripts -->
     <script src="../../app/libs/config.js"></script>
     <script src="../../app/libs/helper.js"></script>
     <script src="../../app/user.module.js"></script>
     <script src="../../app/collections.module.js"></script>
     <script src="../../app/groups.module.js"></script>
-    <script>
-        userModule.userFormValidation();
-    </script>
+    <script>userModule.userFormValidation();</script>
 </body>
 </html>

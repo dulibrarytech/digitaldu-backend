@@ -22,11 +22,7 @@
                 <!-- /sidebar menu -->
 
                 <!-- /menu footer buttons -->
-                <div class="sidebar-footer hidden-small">
-                    <a data-toggle="tooltip" data-placement="top" title="Logout" href="login.html">
-                        <span class="glyphicon glyphicon-off" aria-hidden="true"></span>
-                    </a>
-                </div>
+                <% include partials/sidebar-footer.ejs %>
                 <!-- /menu footer buttons -->
             </div>
         </div>
@@ -40,10 +36,9 @@
             <div class="">
 
                 <div class="page-title">
-                    <div class="title_left">
-                        <!--<h3> Media Gallery <small> gallery design</small> </h3>-->
-                    </div>
-
+                    <!--
+                    <div class="title_left"></div>
+                    -->
                     <div class="title_right">
                         <!--<div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">-->
                         <% include partials/search.ejs %>
@@ -78,14 +73,10 @@
         <!-- /footer content -->
     </div>
 
-    <!-- jQuery -->
     <script src="../../vendors/jquery/dist/jquery.min.js"></script>
-    <!-- Bootstrap -->
     <script src="../../vendors/bootstrap/dist/js/bootstrap.min.js"></script>
-    <!-- NProgress -->
     <script src="../../vendors/nprogress/nprogress.js"></script>
     <script src="../../vendors/moment/min/moment.min.js"></script>
-    <!-- Custom Theme Scripts -->
     <script src="../../assets/js/custom.js"></script>
     <script src="../../app/libs/helper.js"></script>
     <script src="../../app/libs/config.js"></script>
