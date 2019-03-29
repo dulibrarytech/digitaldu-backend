@@ -1,26 +1,23 @@
-var objectsModule = (function () {
+const objectsModule = (function () {
 
     'use strict';
 
-    var obj = {};
+    let obj = {};
 
-    var renderError = function () {
+    let renderError = function () {
         $('#objects').html('Error: Unable to retrieve objects');
     };
 
-    var api = configModule.getApi();
+    let api = configModule.getApi();
 
     obj.editObject = function () {
 
-        var pid = helperModule.getParameterByName('pid');
+        let pid = helperModule.getParameterByName('pid');
 
         userModule.setHeaderUserToken();
 
         $.ajax(api + '/api/admin/v1/repo/object?pid=' + pid)
             .done(function (data) {
-
-                // var modsXml = $.parseXML(data[0].mods);
-                // var xml = $(modsXml);
                 renderObjectEditForm(data);
             })
             .fail(function () {
@@ -29,47 +26,46 @@ var objectsModule = (function () {
 
     };
 
-    var renderObjectEditForm = function (data) {
+    const renderObjectEditForm = function (data) {
 
-        $('#object-type').html('Edit ' + data[0].object_type);
-        var modsXml = $.parseXML(data[0].mods);
-        var xml = $(modsXml);
-
-        //TODO: Implement MODS spec
-        var modsForm = '';
-
-        //==================TITLEINFO============================//
-        modsForm = getModsTitleInfo(xml);
-        //=======================================================//
-        modsForm += '<br><br><br><br>';
-
-        /* name */
-        var name = xml.find('name');
-
-        /* mods > abstract */
-        var abstract = xml.find('abstract');
-
-        if (abstract.text().length !== 0) {
-            modsForm += '<fieldset>';
-            modsForm += '<legend>Abstract</legend>';
-
-            modsForm += '<label for="mods_abstract">Mods > Abstract</label>';
-            modsForm += '<textarea id="mods_abstract" class="form-control col-xs-6" name="mods_abstract" rows="7">' + abstract.text() + '</textarea>';
-
-            modsForm += '</fieldset>';
+        if (data.length > 1) {
+            // no more than one collection should be in the payload
+            // TODO: display error
+            return false;
         }
 
+        $('#is-member-of-collection').html('<strong>Is member of collection:</strong> ' + data[0].is_member_of_collection);
+        $('#object-type').html(data[0].object_type);
+
+        let modsForm = '';
+            modsForm += '<p><strong>Pid:</strong> ' + data[0].pid + '</p>';
+
+        for (let i = 0;i<data.length;i++) {
+
+            let display_record = JSON.parse(data[i].display_record);
+
+            modsForm += '<input name="is_member_of_collection" type="hidden" id="is-member-of-collection">';
+            modsForm += '<input name="object_type" type="hidden" id="object-type" value="collection">';
+            modsForm += '<div class="form-group">';
+            modsForm += '<label for="mods_title">* Title:</label>';
+            modsForm += '<input name="mods_title" type="text" class="form-control" id="mods_title" value="' + display_record.display_record.title + '" required>';
+            modsForm += '</div>';
+            modsForm += '<div class="form-group">';
+            modsForm += '<label for="mods_abstract">Abstract:</label>';
+            modsForm += '<textarea name="mods_abstract" class="form-control" id="mods_abstract" rows="7">' + display_record.display_record.abstract + '</textarea>';
+            modsForm += '</div>';
+            modsForm += '<br>';
+            modsForm += '<button type="submit" class="btn btn-primary" id="update-collection-button"><i class="fa fa-save"></i>&nbsp;Save</button>';
+            modsForm += '&nbsp;&nbsp;';
+            modsForm += '<button type="button" class="btn btn-default"><i class="fa fa-times"></i>&nbsp;Cancel</button>';
+        }
 
         $('#object-edit-form').html(modsForm);
-
-        $('#titleInfoAttrsLink').on('click', function () {
-            $('#titleInfoAttrs').toggle();
-        });
     };
 
-    var renderObjects = function (data) {
+    const renderObjects = function (data) {
 
-        var is_member_of_collection = helperModule.getParameterByName('pid'),
+        let is_member_of_collection = helperModule.getParameterByName('pid'),
             html = '';
 
         $('#current-collection').prop('href', '/dashboard/collections/add?is_member_of_collection=' + is_member_of_collection);
@@ -80,15 +76,15 @@ var objectsModule = (function () {
             return false;
         }
 
-        for (var i = 0; i < data.length; i++) {
+        for (let i = 0; i < data.length; i++) {
 
             if (data[i].display_record === null) {
                 $('#message').html('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i>&nbsp; Display record(s) is not available.</div>');
                 return false;
             }
 
-            var record = JSON.parse(data[i].display_record);
-            var tn = 'http://librepo01-vlp.du.edu:8080/fedora/objects/' + data[i].pid + '/datastreams/TN/content';
+            let record = JSON.parse(data[i].display_record);
+            let tn = 'http://librepo01-vlp.du.edu:8080/fedora/objects/' + data[i].pid + '/datastreams/TN/content';
 
             html += '<div class="row">';
             html += '<div class="col-md-3"><img style="width: 40%; display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
@@ -97,9 +93,9 @@ var objectsModule = (function () {
             if (record.title !== undefined) {
 
                 if (data[i].object_type === 'collection') {
-                    html += '<h4><a href="' + api + '/dashboard/objects/?pid=' + data[i].pid + '">' + record.title[0] + '</a></h4>';
+                    html += '<h4><a href="' + api + '/dashboard/objects/?pid=' + data[i].pid + '">' + record.title + '</a></h4>';
                 } else if (data[i].object_type === 'object') {
-                    html += '<h4><a href="' + api + '/dashboard/object/?pid=' + data[i].pid + '">' + record.title[0] + '</a></h4>';
+                    html += '<h4><a href="' + api + '/dashboard/object/?pid=' + data[i].pid + '">' + record.title + '</a></h4>';
                 }
 
             } else {
@@ -183,16 +179,16 @@ var objectsModule = (function () {
         $('a').tooltip();
     };
 
-    var renderObjectDetail = function (data) {
+    const renderObjectDetail = function (data) {
 
-        var html = '';
+        let html = '';
 
-        for (var i = 0; i < data.length; i++) {
+        for (let i = 0; i < data.length; i++) {
 
             collectionsModule.getCollectionName(data[i].pid);
-            var record = JSON.parse(data[i].display_record);
+            let record = JSON.parse(data[i].display_record);
             // TODO: place domain in config
-            var tn = 'http://librepo01-vlp.du.edu:8080/fedora/objects/' + data[i].pid + '/datastreams/TN/content';
+            let tn = 'http://librepo01-vlp.du.edu:8080/fedora/objects/' + data[i].pid + '/datastreams/TN/content';
 
             html += '<div class="row">';
             // TODO: check mime type here
@@ -203,7 +199,7 @@ var objectsModule = (function () {
 
                 if (data[i].object_type === 'object') {
                     // html += '<h3>' + record.title[0] + '</h3>';
-                    $('#object-title').html(record.title[0]);
+                    $('#object-title').html(record.title);
                 }
 
             } else {
@@ -278,7 +274,7 @@ var objectsModule = (function () {
 
     obj.getObjects = function () {
 
-        var pid = helperModule.getParameterByName('pid'); // TODO: sanitize
+        let pid = helperModule.getParameterByName('pid'); // TODO: sanitize
 
         collectionsModule.getCollectionName(pid);
 
@@ -295,7 +291,7 @@ var objectsModule = (function () {
 
     obj.getObjectDetail = function () {
 
-        var pid = helperModule.getParameterByName('pid');
+        let pid = helperModule.getParameterByName('pid');
 
         userModule.setHeaderUserToken();
 

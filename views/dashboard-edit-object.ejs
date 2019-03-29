@@ -41,7 +41,7 @@
 
                 <div class="page-title">
                     <div class="title_left">
-                        <h3> Edit Object</h3>
+                        <h3> Edit <span id="object-type"></span></h3>
                     </div>
 
                     <div class="title_right">
@@ -55,18 +55,14 @@
                     <div class="col-md-12">
                         <div class="x_panel">
                             <div class="x_title">
-                                <h2 id="object-type"></h2>
-                                <ul class="nav navbar-right"><!-- panel_toolbox -->
-                                    <!--<li><a href="#"><i class="fa fa-plus"></i>&nbsp;Add object</a></li>-->
+                                <h2 id="is-member-of-collection"></h2>
+                                <ul class="nav navbar-right">
                                 </ul>
                                 <div class="clearfix"></div>
                             </div>
                             <div class="x_content">
                                 <div id="message"></div>
-                                <!--<div class="row" id="object-data"></div>-->
-                                <form id="object-edit-form">
-                                    <!-- TODO: render edit form with data here... -->
-                                </form>
+                                <form id="object-edit-form"></form>
                             </div>
                         </div>
                     </div>
@@ -79,23 +75,18 @@
         <!-- /footer content -->
     </div>
 
-    <!-- jQuery -->
     <script src="../../vendors/jquery/dist/jquery.min.js"></script>
-    <!-- Bootstrap -->
     <script src="../../vendors/bootstrap/dist/js/bootstrap.min.js"></script>
-    <!-- NProgress -->
     <script src="../../vendors/nprogress/nprogress.js"></script>
-    <!-- Custom Theme Scripts -->
+    <script src="../../assets/js/custom.js"></script>
     <script src="../../app/libs/config.js"></script>
     <script src="../../app/libs/helper.js"></script>
     <script src="../../app/user.module.js"></script>
     <script src="../../app/collections.module.js"></script>
     <script src="../../app/objects.module.js"></script>
-    <script src="../../app/libs/mods/title-info.js"></script>
     <script>
         objectsModule.init();
         objectsModule.editObject();
-        // objectsModule.getObjectDetail();
     </script>
 </body>
 </html>

@@ -1,16 +1,16 @@
-var userModule = (function () {
+const userModule = (function () {
 
     'use strict';
 
-    var obj = {};
-    var api = configModule.getApi();
-    var renderError = function (message) {
+    let obj = {};
+    let api = configModule.getApi();
+    const renderError = function (message) {
         $('#message').html(message);
     };
 
     obj.addUserToGroup = function (id) {
 
-        var user_id = id,
+        let user_id = id,
             group_id = helperModule.getParameterByName('id'),
             message = '<div class="alert alert-info">Adding user to group...</div>';
 
@@ -48,11 +48,11 @@ var userModule = (function () {
         });
     };
 
-    var renderUsersForGroups = function (data) {
+    const renderUsersForGroups = function (data) {
 
-        var html = '';
+        let html = '';
 
-        for (var i = 0; i < data.length; i++) {
+        for (let i = 0; i < data.length; i++) {
 
             if (data[i].status === 1) {
                 html += '<tr>';
@@ -68,11 +68,11 @@ var userModule = (function () {
         $('.loading').html('');
     };
 
-    var renderUsers = function (data) {
+    const renderUsers = function (data) {
 
-        var html = '';
+        let html = '';
 
-        for (var i = 0; i < data.length; i++) {
+        for (let i = 0; i < data.length; i++) {
 
             html += '<tr>';
             html += '<td>' + data[i].first_name + '</td>';
@@ -97,10 +97,10 @@ var userModule = (function () {
         $('.loading').html('');
     };
 
-    var renderUserDetails = function (data) {
+    const renderUserDetails = function (data) {
 
-        var html = '';
-        for (var i = 0; i < data.length; i++) {
+        let html = '';
+        for (let i = 0; i < data.length; i++) {
 
             $('#user-name').html(data[i].first_name + ' ' + data[i].last_name);
 
@@ -116,7 +116,7 @@ var userModule = (function () {
             html += '<hr>';
 
             if (data[i].groups !== undefined) {
-                for (var j = 0; j < data[i].groups.length; j++) {
+                for (let j = 0; j < data[i].groups.length; j++) {
                     html += '<p><strong>User group:</strong> ' + data[i].groups[j].group_name + '</p>';
                 }
             }
@@ -169,7 +169,7 @@ var userModule = (function () {
     obj.getUserDetails = function () {
 
         // TODO: sanitize
-        var id = getParameterByName('id');
+        let id = getParameterByName('id');
 
         userModule.setHeaderUserToken();
 

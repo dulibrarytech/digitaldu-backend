@@ -1,16 +1,16 @@
-var statsModule = (function () {
+const statsModule = (function () {
 
     'use strict';
 
-    var obj = {};
+    let obj = {};
 
-    var renderError = function (message) {
+    const renderError = function (message) {
         $('#message').html(message);
     };
 
-    var api = configModule.getApi();
+    let api = configModule.getApi();
 
-    var renderStats = function (data) {
+    const renderStats = function (data) {
 
         $('#published-collection-count').html(data.published_collection_count.toLocaleString('en'));
         $('#total-collection-count').html(data.total_collection_count.toLocaleString('en'));

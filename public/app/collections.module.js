@@ -1,27 +1,27 @@
-var collectionsModule = (function () {
+const collectionsModule = (function () {
 
     'use strict';
 
-    var obj = {};
+    let obj = {};
 
-    var renderError = function (message) {
+    const renderError = function (message) {
         $('#message').html(message);
     };
 
-    var api = configModule.getApi();
+    let api = configModule.getApi();
 
     /**
      * Renders root collections
      * @param data
      */
-    var renderRootCollections = function (data) {
+    const renderRootCollections = function (data) {
 
-        var html = '';
+        let html = '';
 
-        for (var i = 0; i < data.length; i++) {
+        for (let i = 0; i < data.length; i++) {
 
-            var record = JSON.parse(data[i].display_record);
-            var tn = configModule.getTn(data[i].pid);
+            let record = JSON.parse(data[i].display_record);
+            let tn = configModule.getTn(data[i].pid);
 
             html += '<div class="row">';
             html += '<div class="col-md-3"><img style="width: 45%; display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
@@ -69,15 +69,15 @@ var collectionsModule = (function () {
     obj.getRootCollections = function () {
 
         userModule.setHeaderUserToken();
-        var userPermissions = userModule.getHeaderUserPermissions(),
+        let userPermissions = userModule.getHeaderUserPermissions(),
             permissions = [];
 
-        // TODO: move to lib
+        // TODO: REMOVE //move to lib
         if (userPermissions.length > 1) {
 
-            for (var i=0;i<userPermissions.length;i++) {
+            for (let i=0;i<userPermissions.length;i++) {
 
-                var accessObj = {};
+                let accessObj = {};
                 accessObj.group = userPermissions[i].group_name;
                 accessObj.permissions = userPermissions[i].permissions;
                 accessObj.resources = userPermissions[i].resources;
@@ -99,7 +99,7 @@ var collectionsModule = (function () {
             .fail(function (jqXHR, textStatus) {
 
                 if (jqXHR.status !== 201) {
-                    var message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve collections.</div>';
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve collections.</div>';
                     renderError(message);
                 }
             });
@@ -112,7 +112,7 @@ var collectionsModule = (function () {
     obj.getCollectionName = function (pid) {
 
         if (pid === undefined) {
-            var pid = helperModule.getParameterByName('pid');
+            let pid = helperModule.getParameterByName('pid');
         }
 
         userModule.setHeaderUserToken();
@@ -120,8 +120,8 @@ var collectionsModule = (function () {
         $.ajax(api + '/api/admin/v1/repo/object/?pid=' + pid)
             .done(function (data) {
 
-                var record = JSON.parse(data[0].display_record);
-                var title = 'No title.';
+                let record = JSON.parse(data[0].display_record);
+                let title = 'No title.';
 
                 if (record.title !== undefined) {
                     title = record.title;
@@ -136,7 +136,7 @@ var collectionsModule = (function () {
             .fail(function (jqXHR, textStatus) {
 
                 if (jqXHR.status !== 200) {
-                    var message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve collection name.</div>';
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve collection name.</div>';
                     renderError(message);
                 }
             });
@@ -146,7 +146,7 @@ var collectionsModule = (function () {
      * Sets collection pid in collection form (hidden field)
      */
     obj.getIsMemberOfCollection = function () {
-        var is_member_of_collection = helperModule.getParameterByName('is_member_of_collection');
+        let is_member_of_collection = helperModule.getParameterByName('is_member_of_collection');
         $('#is-member-of-collection').val(is_member_of_collection);
     };
 
@@ -154,16 +154,16 @@ var collectionsModule = (function () {
      * Gets collection form data
      * @returns {*|jQuery}
      */
-    var getCollectionFormData = function () {
+    const getCollectionFormData = function () {
         return $('#collection-form').serialize();
     };
 
     /**
      * Adds collection
      */
-    var addCollection = function () {
+    const addCollection = function () {
 
-        var message = '<div class="alert alert-info">Saving Collection...</div>';
+        let message = '<div class="alert alert-info">Saving Collection...</div>';
         $('#collection-form').hide();
         $('#message').html(message);
 
@@ -175,7 +175,7 @@ var collectionsModule = (function () {
             data: getCollectionFormData()
         }).done(function (data) {
 
-            var message = '<div class="alert alert-success">Collection created (' + data[0].pid + ')</div>';
+            let message = '<div class="alert alert-success">Collection created (' + data[0].pid + ')</div>';
             $('#message').html(message);
             $('#collection-form').show();
             $('#collection-form')[0].reset();
@@ -187,10 +187,46 @@ var collectionsModule = (function () {
         }).fail(function (jqXHR, textStatus) {
 
             if (jqXHR.status !== 201) {
-                var message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to add collection.</div>';
+                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to add collection.</div>';
                 renderError(message);
             }
         });
+    };
+
+    /**
+     * Updates collection
+     */
+    const updateCollection = function () {
+
+        let message = '<div class="alert alert-info">Updating Collection...</div>';
+        $('#collection-form').hide();
+        $('#message').html(message);
+
+        userModule.setHeaderUserToken();
+
+        $.ajax({
+            url: api + '/api/admin/v1/repo/object',
+            type: 'post',
+            data: getCollectionFormData()
+        }).done(function (data) {
+
+            let message = '<div class="alert alert-success">Collection updated (' + data[0].pid + ')</div>';
+            $('#message').html(message);
+            $('#collection-form').show();
+            $('#collection-form')[0].reset();
+
+            setTimeout(function () {
+                $('#message').html('');
+            }, 3000);
+
+        }).fail(function (jqXHR, textStatus) {
+
+            if (jqXHR.status !== 201) {
+                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to add collection.</div>';
+                renderError(message);
+            }
+        });
+
     };
 
     /**

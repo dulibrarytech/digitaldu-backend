@@ -1,13 +1,13 @@
-var helperModule = (function () {
+const helperModule = (function () {
 
     'use strict';
 
-    var obj = {};
+    let obj = {};
 
     /**
      * Renders progress bar and spinner when pages load
      */
-    var npProgress = function () {
+    const npProgress = function () {
 
         if (typeof NProgress != 'undefined') {
             $(document).ready(function () {
@@ -34,7 +34,7 @@ var helperModule = (function () {
 
         name = name.replace(/[\[\]]/g, "\\$&");
 
-        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        let regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
             results = regex.exec(url);
 
         if (!results) {
@@ -49,7 +49,7 @@ var helperModule = (function () {
     };
 
     obj.getCurrentYear = function () {
-        var cdate = new Date().getFullYear();
+        let cdate = new Date().getFullYear();
         document.querySelector('#cdate').innerHTML = cdate;
     };
 

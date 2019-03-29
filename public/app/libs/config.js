@@ -1,8 +1,8 @@
-var configModule = (function () {
+const configModule = (function () {
 
     'use strict';
 
-    var obj = {};
+    let obj = {};
 
     /**
      * Resolves repo api url

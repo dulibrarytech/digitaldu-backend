@@ -1,22 +1,22 @@
-var importModule = (function () {
+const importModule = (function () {
 
     'use strict';
 
-    var obj = {};
+    let obj = {};
 
-    var renderError = function (message) {
+    let renderError = function (message) {
         $('#message').html(message);
     };
 
-    var api = configModule.getApi();
+    let api = configModule.getApi();
 
     /**
      * Renders the directory listing from the Archivematica sftp server
      * @param data
      */
-    var renderImportObjects = function (data) {
+    const renderImportObjects = function (data) {
 
-        var collection = helperModule.getParameterByName('collection'),
+        let collection = helperModule.getParameterByName('collection'),
             collectionObjects = [],
             html = '';
 
@@ -34,7 +34,7 @@ var importModule = (function () {
 
         // TODO: check for codu namespace in collection name
         // TODO: return error message if codu namespace not found in collection name
-        for (var i = 0; i < data.list.length; i++) {
+        for (let i = 0; i < data.list.length; i++) {
 
             if (data.list[i].name.charAt(0) !== '.') {
 
@@ -63,7 +63,7 @@ var importModule = (function () {
         }
 
         if (collection !== null && collectionObjects.length > 0) {
-            var button = '<a class="btn btn-success btn-xs" onclick="importModule.queueTransferObjects(\'' + collectionObjects + '\')" href="#"><i class="fa fa-upload"></i>&nbsp;&nbsp;Import</a>';
+            let button = '<a class="btn btn-success btn-xs" onclick="importModule.queueTransferObjects(\'' + collectionObjects + '\')" href="#"><i class="fa fa-upload"></i>&nbsp;&nbsp;Import</a>';
             $('.import-button').html(button);
         }
 
@@ -75,15 +75,15 @@ var importModule = (function () {
      * Renders the directory listing from the Archivematica sftp server
      * @param data
      */
-    var renderIncompleteRecords = function (data) {
+    const renderIncompleteRecords = function (data) {
 
-        var html = '';
+        let html = '';
 
         // TODO: provide ability to fix incomplete record.
         // TODO: add styles to css
-        var alignTd = 'style="text-align: center; vertical-align: middle"';
+        let alignTd = 'style="text-align: center; vertical-align: middle"';
 
-        for (var i = 0; i < data.length; i++) {
+        for (let i = 0; i < data.length; i++) {
 
             console.log(data[i]);
 
@@ -151,7 +151,7 @@ var importModule = (function () {
      */
     obj.queueTransferObjects = function (objects) {
 
-        var collection = helperModule.getParameterByName('collection');
+        let collection = helperModule.getParameterByName('collection');
 
         if (collection === null) {
             $('#message').html('<div class="alert alert-danger">Unable to start transfer. Collection PID not found.</div>');
@@ -207,7 +207,7 @@ var importModule = (function () {
             .fail(function (jqXHR, textStatus) {
 
                 if (jqXHR.status !== 200) {
-                    var message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve object data from Archivematica SFTP server.</div>';
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve object data from Archivematica SFTP server.</div>';
                     renderError(message);
                 }
 
@@ -235,7 +235,7 @@ var importModule = (function () {
 
             if (data.length > 0) {
 
-                for (var i=0;i<data.length;i++) {
+                for (let i=0;i<data.length;i++) {
 
                    transferData += '<tr>';
                    transferData += '<td>' + data[i].is_member_of_collection + '</td>';
@@ -260,13 +260,13 @@ var importModule = (function () {
 
         socket.on('import_status', function (data) {
 
-            var importData = '';
+            let importData = '';
 
             $('#message').html('');
 
             if (data.length > 0) {
 
-                for (var i=0;i<data.length;i++) {
+                for (let i=0;i<data.length;i++) {
 
                     importData += '<tr>';
                     importData += '<td>' + data[i].sip_uuid + '</td>';
@@ -293,7 +293,7 @@ var importModule = (function () {
 
         $('#message').html('<p><strong>Loading...</strong></p>');
 
-        var url = api + '/api/admin/v1/import/incomplete';
+        let url = api + '/api/admin/v1/import/incomplete';
 
         $.ajax(url)
             .done(function (data) {
@@ -302,7 +302,7 @@ var importModule = (function () {
             .fail(function (jqXHR, textStatus) {
 
                 if (jqXHR.status !== 200) {
-                    var message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve object data from Archivematica SFTP server.</div>';
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve object data from Archivematica SFTP server.</div>';
                     renderError(message);
                 }
 

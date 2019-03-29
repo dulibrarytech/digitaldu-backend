@@ -1,12 +1,10 @@
-var homeModule = (function () {
+const homeModule = (function () {
 
     'use strict';
 
-    var obj = {};
-    var api = configModule.getApi();
-    var renderError = function () {
-        $('#message').html('Error: Unable to retrieve username');
-    };
+    // dependencies: userModule
+
+    let obj = {};
 
     /**
      * Invokes desired functions on every page load
