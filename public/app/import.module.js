@@ -63,7 +63,7 @@ const importModule = (function () {
         }
 
         if (collection !== null && collectionObjects.length > 0) {
-            let button = '<a class="btn btn-success btn-xs" onclick="importModule.queueTransferObjects(\'' + collectionObjects + '\')" href="#"><i class="fa fa-upload"></i>&nbsp;&nbsp;Import</a>';
+            let button = '<a class="btn btn-success btn-xs import-btn" onclick="importModule.queueTransferObjects(\'' + collectionObjects + '\')" href="#"><i class="fa fa-upload"></i>&nbsp;&nbsp;Import</a>';
             $('.import-button').html(button);
         }
 
@@ -71,7 +71,7 @@ const importModule = (function () {
         $('#message').empty();
     };
 
-    /**
+    /** TODO: ...
      * Renders the directory listing from the Archivematica sftp server
      * @param data
      */
@@ -85,10 +85,7 @@ const importModule = (function () {
 
         for (let i = 0; i < data.length; i++) {
 
-            console.log(data[i]);
-
             html += '<tr>';
-
             html += '<td ' + alignTd + '>' + data[i].sip_uuid + '</td>';
 
             // determine what is missing from the record
@@ -167,12 +164,13 @@ const importModule = (function () {
             // TODO: check payload
             console.log(data);
 
+            $('.import-button').hide();
             $('#message').html('<p>Import process starting...</p>');
 
             setTimeout(function () {
                 $('#message').html('');
                 window.location.replace('/dashboard/import/status?import=true');
-            }, 5000);
+            }, 6000);
 
         }).fail(function (jqXHR, textStatus) {
 
@@ -308,7 +306,6 @@ const importModule = (function () {
 
             });
     };
-
 
     obj.init = function () {
         userModule.renderUserName();

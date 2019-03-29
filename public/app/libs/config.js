@@ -24,7 +24,20 @@ const configModule = (function () {
      * @param pid
      * @returns {string}
      */
-    obj.getTn = function (pid) {
+    obj.getTn = function (tn, pid) {
+
+        if (tn === null) {
+            return 'http://librepo01-vlp.du.edu:8080/fedora/objects/' + pid + '/datastreams/TN/content';
+        }
+        return 'https://archivesdu.duracloud.org/durastore/dip-store/dip-store/' + tn;
+    };
+
+    /** Temporary
+     * Resolves Fedora repo thumbnails
+     * @param pid
+     * @returns {string}
+     */
+    obj.getFedoraTn = function (pid) {
         return 'http://librepo01-vlp.du.edu:8080/fedora/objects/' + pid + '/datastreams/TN/content';
     };
 

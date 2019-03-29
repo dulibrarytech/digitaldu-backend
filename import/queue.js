@@ -939,7 +939,7 @@ exports.create_repo_record = function (req, callback) {
 
                     token = JSON.parse(data);
 
-                    fs.writeFile('./tmp/st.txt', obj.session, function (error) {
+                    fs.writeFile('./tmp/st.txt', token.session, function (error) {
 
                         if (error) {
                             logger.module().error('ERROR: unable to save session token to file');
@@ -949,7 +949,7 @@ exports.create_repo_record = function (req, callback) {
                             });
                         }
 
-                        if (token === undefined) {
+                        if (token.session === undefined) {
                             logger.module().error('ERROR: session token is undefined');
                             obj.session = null;
                             callback(null, obj);

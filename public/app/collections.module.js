@@ -21,7 +21,7 @@ const collectionsModule = (function () {
         for (let i = 0; i < data.length; i++) {
 
             let record = JSON.parse(data[i].display_record);
-            let tn = configModule.getTn(data[i].pid);
+            let tn = configModule.getTn(data[i].thumbnail, data[i].pid);
 
             html += '<div class="row">';
             html += '<div class="col-md-3"><img style="width: 45%; display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
@@ -218,7 +218,9 @@ const collectionsModule = (function () {
             data: getCollectionEditFormData()
         }).done(function (data) {
 
-            let message = '<div class="alert alert-success">Collection updated (' + data[0].pid + ')</div>';
+            objectsModule.editObject(data[0].pid);
+
+            let message = '<div class="alert alert-success">Collection updated</div>';
             $('#message').html(message);
             $('#collection-edit-form').show();
             $('#collection-edit-form')[0].reset();
@@ -234,7 +236,6 @@ const collectionsModule = (function () {
                 renderError(message);
             }
         });
-
     };
 
     /**

@@ -85,7 +85,7 @@ exports.get_objects = function (req, callback) {
     var pid = req.query.pid; // TODO: sanitize
 
     knex('tbl_objects')
-        .select('is_member_of_collection', 'pid', 'object_type', 'display_record', 'mime_type', 'is_compound', 'created')
+        .select('is_member_of_collection', 'pid', 'object_type', 'display_record', 'thumbnail', 'mime_type', 'is_compound', 'created')
         .where({
             is_member_of_collection: pid,
             is_active: 1,
@@ -135,7 +135,7 @@ exports.get_admin_objects = function (req, callback) {
     var pid = req.query.pid;
 
     knex('tbl_objects')
-        .select('id', 'is_member_of_collection', 'pid', 'object_type', 'display_record', 'mime_type', 'is_compound', 'is_published', 'created')
+        .select('id', 'is_member_of_collection', 'pid', 'object_type', 'display_record', 'thumbnail', 'mime_type', 'is_compound', 'is_published', 'created')
         .where({
             is_member_of_collection: pid,
             is_active: 1
@@ -224,8 +224,12 @@ exports.update_admin_collection_object = function (req, callback) {
                 display_record: display_record
             })
             .then(function (data) {
-                console.log('update: ' + data);
-                // TODO: callback here
+                callback({
+                    status: 201,
+                    content_type: {'Content-Type': 'application/json'},
+                    data: [{'pid': obj.pid}],
+                    message: 'Object updated.'
+                });
             })
             .catch(function (error) {
                 logger.module().error('ERROR: unable to save collection record ' + error);
@@ -342,7 +346,6 @@ exports.save_admin_collection_object = function (req, callback) {
         }
 
         logger.module().info('INFO: collection record saved');
-        // console.log('collectionObj: ', results);
 
         if (results.error === undefined) {
 

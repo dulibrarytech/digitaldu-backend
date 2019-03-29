@@ -36,13 +36,40 @@ const objectsModule = (function () {
         $('#is-member-of-collection').html('<strong>Is member of collection:</strong> ' + data[0].is_member_of_collection);
         $('#object-type').html(data[0].object_type);
 
+        let handle = '';
+
+        if (data[0].handle === null) {
+            handle = 'A handle has not been assigned to this object';
+        } else {
+            handle = data[0].handle;
+        }
+
         let modsForm = '';
-            modsForm += '<p><strong>Handle:</strong> ' + data[0].handle + '</p>';
+            modsForm += '<p><strong>Handle:</strong> ' + handle + '</p>';
             modsForm += '<p><strong>Pid:</strong> ' + data[0].pid + '</p>';
 
         for (let i = 0;i<data.length;i++) {
 
             let display_record = JSON.parse(data[i].display_record);
+            let title = '';
+            let abstract = '';
+
+            // TODO: refactor after all display records have been standardized
+            if (display_record.title !== undefined && display_record.title.length > 0) {
+                title = display_record.title[0];
+            } else {
+                title = display_record.display_record.title;
+            }
+
+            if (display_record.abstract !== undefined) {
+                abstract = display_record.abstract;
+            } else if (display_record.abstract == undefined) {
+                abstract = '';
+            } else if (display_record.display_record.abstract === undefined) {
+                abstract = '';
+            } else if (display_record.display_record.abstract !== undefined) {
+                abstract = display_record.display_record.abstract;
+            }
 
             modsForm += '';
             modsForm += '<input name="is_member_of_collection" type="hidden" id="is_member_of_collection" value="' + display_record.is_member_of_collection + '">';
@@ -51,11 +78,11 @@ const objectsModule = (function () {
             modsForm += '<input name="object_type" type="hidden" id="object-type" value="collection">';
             modsForm += '<div class="form-group">';
             modsForm += '<label for="mods_title">* Title:</label>';
-            modsForm += '<input name="title" type="text" class="form-control" id="mods_title" value="' + display_record.display_record.title + '" required>';
+            modsForm += '<input name="title" type="text" class="form-control" id="mods_title" value="' + title + '" required>';
             modsForm += '</div>';
             modsForm += '<div class="form-group">';
             modsForm += '<label for="mods_abstract">Abstract:</label>';
-            modsForm += '<textarea name="abstract" class="form-control" id="mods_abstract" rows="7">' + display_record.display_record.abstract + '</textarea>';
+            modsForm += '<textarea name="abstract" class="form-control" id="mods_abstract" rows="7">' + abstract + '</textarea>';
             modsForm += '</div>';
             modsForm += '<br>';
             modsForm += '<button type="submit" class="btn btn-primary" id="update-collection-button"><i class="fa fa-save"></i>&nbsp;Save</button>';
@@ -87,7 +114,7 @@ const objectsModule = (function () {
             }
 
             let record = JSON.parse(data[i].display_record);
-            let tn = configModule.getTn(data[i].pid);
+            let tn = configModule.getTn(data[i].thumbnail, data[i].pid);
 
             html += '<div class="row">';
             html += '<div class="col-md-3"><img style="width: 40%; display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
