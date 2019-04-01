@@ -56,14 +56,13 @@ exports.get_stats = function (req, callback) {
             .then(function (data) {
 
                 callback(null, data[0]);
+                return null;
 
             })
             .catch(function (error) {
                 // TODO: add error callback
                 console.log(error);
             });
-
-        return null;
     }
 
     function getPublishedObjectCount(results, callback) {
@@ -80,14 +79,12 @@ exports.get_stats = function (req, callback) {
 
                 results.published_object_count = data[0].published_object_count;
                 callback(null, results);
-
+                return null;
             })
             .catch(function (error) {
                 // TODO: add error callback
                 console.log(error);
             });
-
-        return null;
     }
 
     function getTotalCollectionCount(results, callback) {
@@ -103,14 +100,12 @@ exports.get_stats = function (req, callback) {
 
                 results.total_collection_count = data[0].total_collection_count;
                 callback(null, results);
-
+                return null;
             })
             .catch(function (error) {
                 // TODO: add error callback
                 console.log(error);
             });
-
-        return null;
     }
 
     function getTotalObjectCount(results, callback) {
@@ -126,14 +121,12 @@ exports.get_stats = function (req, callback) {
 
                 results.total_object_count = data[0].total_object_count;
                 callback(null, results);
-
+                return null;
             })
             .catch(function (error) {
                 // TODO: add error callback
                 console.log(error);
             });
-
-        return null;
     }
 
     function getTotalImageCount(results, callback) {
@@ -156,14 +149,12 @@ exports.get_stats = function (req, callback) {
 
                 results.total_image_count = data[0].total_image_count;
                 callback(null, results);
-
+                return null;
             })
             .catch(function (error) {
                 // TODO: add error callback
                 console.log(error);
             });
-
-        return null;
     }
 
     function getTotalPdfCount(results, callback) {
@@ -178,14 +169,12 @@ exports.get_stats = function (req, callback) {
 
                 results.total_pdf_count = data[0].total_pdf_count;
                 callback(null, results);
-
+                return null;
             })
             .catch(function (error) {
                 // TODO: add error callback
                 console.log(error);
             });
-
-        return null;
     }
 
     function getTotalAudioCount(results, callback) {
@@ -200,14 +189,12 @@ exports.get_stats = function (req, callback) {
 
                 results.total_audio_count = data[0].total_audio_count;
                 callback(null, results);
-
+                return null;
             })
             .catch(function (error) {
                 // TODO: add error callback
                 console.log(error);
             });
-
-        return null;
     }
 
     function getTotalVideoCount(results, callback) {
@@ -222,24 +209,19 @@ exports.get_stats = function (req, callback) {
 
                 results.total_video_count = data[0].total_video_count;
                 callback(null, results);
-
+                return null;
             })
             .catch(function (error) {
                 // TODO: add error callback
                 console.log(error);
             });
-
-        return null;
     }
 
     function getTotalUserCount(callback) {
         // arg1 now equals 'three'
         callback(null, results);
-
         return null;
     }
-
-    return null;
 };
 
 /*
