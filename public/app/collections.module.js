@@ -24,7 +24,7 @@ const collectionsModule = (function () {
             let tn = configModule.getTn(data[i].thumbnail, data[i].pid);
 
             html += '<div class="row">';
-            html += '<div class="col-md-3"><img style="width: 45%; display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
+            html += '<div class="col-md-3"><img display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
             html += '<div class="col-md-6" style="padding: 5px">';
 
             if (record.title !== undefined) {

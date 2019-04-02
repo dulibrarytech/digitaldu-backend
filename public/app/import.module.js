@@ -91,43 +91,43 @@ const importModule = (function () {
             // determine what is missing from the record
             // TODO: how allow user to add missing parts of a record
             if (data[i].is_member_of_collection === null) {
-                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing Collection PID"><i class="fa fa-exclamation-circle"></i></a></td>';
+                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-danger" href="#" onclick="importModule.addToCollection(' + data[i].id + '); return false;" title="Missing Collection PID"><i class="fa fa-exclamation-circle"></i></a></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
             if (data[i].pid === null) {
-                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing PID"><i class="fa fa-exclamation-circle"></i></a></td>';
+                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="objectsModule.addPid(' + data[i].id + '); return false;" title="Missing PID"><i class="fa fa-exclamation-circle"></i></a></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
             if (data[i].handle === null) {
-                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing Handle"><i class="fa fa-exclamation-circle"></i></a></td>';
+                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addHandle(' + data[i].id + '); return false;" title="Missing Handle"><i class="fa fa-exclamation-circle"></i></a></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
             if (data[i].mods_id === null || data[i].mods === null) {
-                html += '<td ' + alignTd + '><a href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing Mods"><i class="fa fa-exclamation"></i></a></td>';
+                html += '<td ' + alignTd + '><a href="#" onclick="objectsModule.addMods(' + data[i].id + '); return false;" title="Missing Mods"><i class="fa fa-exclamation"></i></a></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
             if (data[i].thumbnail === null) {
-                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing Thumbnail"><i class="fa fa-exclamation-circle"></i></a></td>';
+                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="objectsModule.addThumbnail(' + data[i].id + '); return false;" title="Missing Thumbnail"><i class="fa fa-exclamation-circle"></i></a></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
             if (data[i].file_name === null) {
-                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing Master Object"><i class="fa fa-exclamation-circle"></i></a></td>';
+                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="objectsModule.addMaster(' + data[i].id + '); return false;" title="Missing Master Object"><i class="fa fa-exclamation-circle"></i></a></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
             if (data[i].mime_type === null) {
-                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Missing Mime Type"><i class="fa fa-exclamation-circle"></i></a></td>';
+                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="objectsModule.addMimeType(' + data[i].id + '); return false;" title="Missing Mime Type"><i class="fa fa-exclamation-circle"></i></a></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
