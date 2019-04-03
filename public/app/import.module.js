@@ -91,43 +91,43 @@ const importModule = (function () {
             // determine what is missing from the record
             // TODO: how allow user to add missing parts of a record
             if (data[i].is_member_of_collection === null) {
-                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-danger" href="#" onclick="importModule.addToCollection(' + data[i].id + '); return false;" title="Missing Collection PID"><i class="fa fa-exclamation-circle"></i></a></td>';
+                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-danger" href="#" onclick="importModule.addToCollection(' + data[i].pid + '); return false;" title="Missing Collection PID"><i class="fa fa-exclamation-circle"></i></a></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
-            if (data[i].pid === null) {
-                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="objectsModule.addPid(' + data[i].id + '); return false;" title="Missing PID"><i class="fa fa-exclamation-circle"></i></a></td>';
+            if (data[i].pid === null || data[i].pid.length === 0) {
+                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="importModule.addPid(); return false;" title="Missing PID"><i class="fa fa-exclamation-circle"></i></a></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
-            if (data[i].handle === null) {
-                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="userModule.addHandle(' + data[i].id + '); return false;" title="Missing Handle"><i class="fa fa-exclamation-circle"></i></a></td>';
+            if (data[i].handle === null || data[i].handle.length === 0) {
+                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="importModule.addHandle(' + data[i].pid + '); return false;" title="Missing Handle"><i class="fa fa-exclamation-circle"></i></a></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
-            if (data[i].mods_id === null || data[i].mods === null) {
-                html += '<td ' + alignTd + '><a href="#" onclick="objectsModule.addMods(' + data[i].id + '); return false;" title="Missing Mods"><i class="fa fa-exclamation"></i></a></td>';
+            if (data[i].mods_id === null || data[i].mods === null || data[i].mods_id.length === 0 || data[i].mods.length === 0) {
+                html += '<td ' + alignTd + '><a href="#" onclick="importModule.addMods(' + data[i].mods_id + ', \'' + data[i].sip_uuid + '\'); return false;" title="Missing Mods"><i class="fa fa-exclamation"></i></a></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
-            if (data[i].thumbnail === null) {
-                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="objectsModule.addThumbnail(' + data[i].id + '); return false;" title="Missing Thumbnail"><i class="fa fa-exclamation-circle"></i></a></td>';
+            if (data[i].thumbnail === null || data[i].thumbnail.length === 0) {
+                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="importModule.addThumbnail(' + data[i].id + '); return false;" title="Missing Thumbnail"><i class="fa fa-exclamation-circle"></i></a></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
-            if (data[i].file_name === null) {
-                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="objectsModule.addMaster(' + data[i].id + '); return false;" title="Missing Master Object"><i class="fa fa-exclamation-circle"></i></a></td>';
+            if (data[i].file_name === null || data[i].file_name.length === 0) {
+                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="importModule.addMaster(' + data[i].sip_uuid + '); return false;" title="Missing Master Object"><i class="fa fa-exclamation-circle"></i></a></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
-            if (data[i].mime_type === null) {
-                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="objectsModule.addMimeType(' + data[i].id + '); return false;" title="Missing Mime Type"><i class="fa fa-exclamation-circle"></i></a></td>';
+            if (data[i].mime_type === null || data[i].mime_type.length === 0) {
+                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="importModule.addMimeType(' + data[i].sip_uuid + '); return false;" title="Missing Mime Type"><i class="fa fa-exclamation-circle"></i></a></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
@@ -244,7 +244,6 @@ const importModule = (function () {
                    transferData += '<td>' + data[i].message + '</td>';
                    transferData += '<td>' + data[i].created + '</td>';
                    transferData += '</tr>';
-
                 }
 
                 $('#transfer-status').html(transferData);
@@ -305,6 +304,62 @@ const importModule = (function () {
                 }
 
             });
+    };
+
+    obj.addPids = function () {
+        alert('add pid');
+    };
+
+    obj.addHandle = function (pid) {
+        alert(pid);
+    };
+
+    obj.addMods = function (mods_id, sip_uuid) {
+
+        // TODO: check mods id
+
+        $('#message').html('<p><strong>Importing MODS...</strong></p>');
+
+        $.ajax({
+            url: api + '/api/admin/v1/import/mods',
+            type: 'post',
+            data: {mods_id: mods_id, sip_uuid: sip_uuid}
+        }).done(function (data) {
+
+            // TODO: check payload
+            alert('TEST!');
+            console.log('payload: ', data);
+
+            $('#message').html('<div class="alert alert-success">MODS added to repository record</div>');
+
+            importModule.getIncompleteImportRecords();
+
+            setTimeout(function () {
+                $('#message').html('');
+            }, 4000);
+
+            // TODO: reload import imcomplete data
+
+        }).fail(function (jqXHR, textStatus) {
+
+            if (jqXHR.status !== 200) {
+                var message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to import MODS.</div>';
+                renderError(message);
+            }
+
+        });
+    };
+
+    obj.addThumbnail = function (id) {
+        alert(id);
+    };
+
+    obj.addMaster = function (id) {
+        alert(id);
+    };
+
+    obj.addMimeType = function (id) {
+        alert(id);
     };
 
     obj.init = function () {

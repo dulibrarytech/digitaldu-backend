@@ -530,6 +530,9 @@ exports.get_transfer_status = function (req, callback) {
                     clearInterval(timer);
                     logger.module().info('INFO: transfer interval done (get_transfer_status)');
 
+                    // TODO: clear out archivematica transfer queue
+                    // /api/transfer/<transfer UUID>/delete/
+
                     // Start ingest status checks
                     request.get({
                         url: config.apiUrl + '/api/admin/v1/import/ingest_status?sip_uuid=' + result.sip_uuid
@@ -589,10 +592,6 @@ exports.get_ingest_status = function (req, callback) {
 
         archivematica.get_ingest_status(sip_uuid, function (response) {
 
-            // TODO:
-            // console.log('sip_uuid: ', sip_uuid);
-            // console.log('ingest status response: ', response);
-
             importlib.update_ingest_status(response, sip_uuid, function (result) {
 
                 if (result.error !== undefined && result.error === true) {
@@ -605,6 +604,8 @@ exports.get_ingest_status = function (req, callback) {
                     clearInterval(timer);
 
                     logger.module().info('INFO: ingest interval complete (get_ingest_status)');
+
+                    // TODO: clear out archivematica transfer queue
 
                     request.get({
                         url: config.apiUrl + '/api/admin/v1/import/import_dip?sip_uuid=' + result.sip_uuid
@@ -900,8 +901,6 @@ exports.create_repo_record = function (req, callback) {
                 };
 
                 delete_file(fileObj, function (result) {
-                    // console.log(result);
-                    // console.log('st.txt deleted');
                     new_token();
                 });
 
@@ -1006,8 +1005,9 @@ exports.create_repo_record = function (req, callback) {
 
                 obj.mods = response.mods;
                 callback(null, obj);
-            }, 4000);
-        });
+            });
+
+        }, 4000);
     }
 
     // 9.)

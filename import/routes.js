@@ -35,10 +35,8 @@ module.exports = function (app) {
     app.route('/api/admin/v1/import/incomplete')
         .get(Import.get_import_incomplete);
 
-    // TODO: create restart import route
+    app.route('/api/admin/v1/import/mods')
+        .post(Import.import_mods);
 
-    /*
-    app.route('/api/admin/v1/import/queue')
-        .post(Import.start_queue);
-    */
+    // TODO: create restart import route
 };

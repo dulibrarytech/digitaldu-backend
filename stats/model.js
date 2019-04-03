@@ -32,9 +32,8 @@ exports.get_stats = function (req, callback) {
         getTotalPdfCount,
         getTotalAudioCount,
         getTotalVideoCount
-        // getTotalUserCount
     ], function (err, results) {
-        // console.log(results);
+        // TODO: add logging
         callback({
             status: 200,
             content_type: {'Content-Type': 'application/json'},

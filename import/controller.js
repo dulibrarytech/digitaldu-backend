@@ -62,3 +62,9 @@ exports.get_import_incomplete = function (req, res) {
         res.status(data.status).send(data.data);
     });
 };
+
+exports.import_mods = function (req, res) {
+    Model.import_mods(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
