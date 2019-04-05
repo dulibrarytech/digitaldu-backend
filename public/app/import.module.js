@@ -5,7 +5,7 @@ const importModule = (function () {
     let obj = {};
 
     let renderError = function (message) {
-        $('#message').html(message);
+        dom.appendById('message', message);
     };
 
     let api = configModule.getApi();
@@ -27,7 +27,8 @@ const importModule = (function () {
             html += '</td>';
             html += '</tr>';
             $('.import-instruction').hide();
-            $('#import-objects').html(html);
+            // $('#import-objects').html(html);
+            dom.appendById('import-objects', html);
             $('#message').empty();
             return false;
         }
@@ -68,6 +69,8 @@ const importModule = (function () {
         }
 
         $('#import-objects').html(html);
+        // TODO: generates error
+        // dom.appendById('import-objects', html);
         $('#message').empty();
     };
 
@@ -103,31 +106,36 @@ const importModule = (function () {
             }
 
             if (data[i].handle === null || data[i].handle.length === 0) {
-                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="importModule.addHandle(' + data[i].pid + '); return false;" title="Missing Handle"><i class="fa fa-exclamation-circle"></i></a></td>';
+                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="importModule.addHandle(' + data[i].pid + '); return false;" title="Missing Handle"><i class="fa fa-exclamation"></i></a></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
             if (data[i].mods_id === null || data[i].mods === null || data[i].mods_id.length === 0 || data[i].mods.length === 0) {
+
+                if (data[i].mods_id.length === 0) {
+                    data[i].mods_id = null;
+                }
+
                 html += '<td ' + alignTd + '><a href="#" onclick="importModule.addMods(' + data[i].mods_id + ', \'' + data[i].sip_uuid + '\'); return false;" title="Missing Mods"><i class="fa fa-exclamation"></i></a></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
             if (data[i].thumbnail === null || data[i].thumbnail.length === 0) {
-                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="importModule.addThumbnail(' + data[i].id + '); return false;" title="Missing Thumbnail"><i class="fa fa-exclamation-circle"></i></a></td>';
+                html += '<td ' + alignTd + '><a href="#" onclick="importModule.addThumbnail(\'' + data[i].sip_uuid + '\'); return false;" title="Missing Thumbnail"><i class="fa fa-exclamation"></i></a></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
             if (data[i].file_name === null || data[i].file_name.length === 0) {
-                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="importModule.addMaster(' + data[i].sip_uuid + '); return false;" title="Missing Master Object"><i class="fa fa-exclamation-circle"></i></a></td>';
+                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="importModule.addMaster(' + data[i].sip_uuid + '); return false;" title="Missing Master Object"><i class="fa fa-exclamation"></i></a></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
             if (data[i].mime_type === null || data[i].mime_type.length === 0) {
-                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="importModule.addMimeType(' + data[i].sip_uuid + '); return false;" title="Missing Mime Type"><i class="fa fa-exclamation-circle"></i></a></td>';
+                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="importModule.addMimeType(' + data[i].sip_uuid + '); return false;" title="Missing Mime Type"><i class="fa fa-exclamation"></i></a></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
@@ -137,7 +145,8 @@ const importModule = (function () {
             html += '</tr>';
         }
 
-        $('#incomplete-records').html(html);
+        // $('#incomplete-records').html(html);
+        dom.appendById('incomplete-records', html);
         $('#message').empty();
     };
 
@@ -233,17 +242,17 @@ const importModule = (function () {
 
             if (data.length > 0) {
 
-                for (let i=0;i<data.length;i++) {
+                for (let i = 0; i < data.length; i++) {
 
-                   transferData += '<tr>';
-                   transferData += '<td>' + data[i].is_member_of_collection + '</td>';
-                   transferData += '<td>' + data[i].object + '</td>';
-                   transferData += '<td>' + data[i].transfer_uuid + '</td>';
-                   transferData += '<td>' + data[i].microservice + '</td>';
-                   transferData += '<td>' + data[i].user + '</td>';
-                   transferData += '<td>' + data[i].message + '</td>';
-                   transferData += '<td>' + data[i].created + '</td>';
-                   transferData += '</tr>';
+                    transferData += '<tr>';
+                    transferData += '<td>' + data[i].is_member_of_collection + '</td>';
+                    transferData += '<td>' + data[i].object + '</td>';
+                    transferData += '<td>' + data[i].transfer_uuid + '</td>';
+                    transferData += '<td>' + data[i].microservice + '</td>';
+                    transferData += '<td>' + data[i].user + '</td>';
+                    transferData += '<td>' + data[i].message + '</td>';
+                    transferData += '<td>' + data[i].created + '</td>';
+                    transferData += '</tr>';
                 }
 
                 $('#transfer-status').html(transferData);
@@ -263,7 +272,7 @@ const importModule = (function () {
 
             if (data.length > 0) {
 
-                for (let i=0;i<data.length;i++) {
+                for (let i = 0; i < data.length; i++) {
 
                     importData += '<tr>';
                     importData += '<td>' + data[i].sip_uuid + '</td>';
@@ -314,40 +323,131 @@ const importModule = (function () {
         alert(pid);
     };
 
+    /**
+     * Enable validation on add mods id form
+     */
+    obj.modsIdFormValidation = function () {
+
+        $(document).ready(function () {
+            $('#id-form').validate({
+                submitHandler: function () {
+
+                    let sip_uuid = document.querySelector('#sip-uuid').value.trim(),
+                        mods_id = document.querySelector('#mods-id').value.trim();
+
+                    importModule.addModsId(mods_id, sip_uuid);
+
+                    setTimeout(function () {
+                        importModule.addMods(mods_id, sip_uuid);
+                    }, 4000);
+
+                    $('#mods-id-form').empty();
+                }
+            });
+        });
+    };
+
+    /**
+     * saves missing mods id to repository record
+     * @param sip_uuid
+     * @param mods_id
+     */
+    obj.addModsId = function (mods_id, sip_uuid) {
+
+        $('#message').empty();
+
+        let url = api + '/api/admin/v1/import/mods_id',
+            request = new Request(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({mods_id: mods_id, sip_uuid: sip_uuid}),
+                mode: 'cors'
+            });
+
+        fetch(request)
+            .then(function (response) {
+
+                if (response.status !== 201) {
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '. Unable to import MODS.</div>';
+                    renderError(message);
+                }
+            });
+    };
+
+    /**
+     * Renders form that allows users to enter archivespace id
+     * @param sip_uuid
+     * @returns {boolean}
+     */
+    obj.createModsIdForm = function (sip_uuid) {
+
+        let message,
+            html;
+
+        message = '<div class="alert alert-danger">Please enter an Archivespace ID in order to retrieve MODS record</div>';
+        dom.appendById('message', message);
+
+        html = '<form id="id-form">';
+        html += '<input id="sip-uuid" name="sip_uuid" type="hidden" value="' + sip_uuid + '">';
+        html += '<div class="form-group row col-lg-3">';
+        html += '<label for="mods-id">* Archivespace ID:</label>';
+        html += '<input name="mods_id" type="text" class="form-control form-control-sm" id="mods-id" required><br>';
+        html += '<p><button type="submit" class="btn btn-primary" id="add-mods"><i class="fa fa-download"></i>&nbsp;Import</button></p>';
+        html += '</div>';
+        html += '</form>';
+
+        dom.appendById('mods-id-form', html);
+        importModule.modsIdFormValidation();
+
+        return false;
+    };
+
+    /**
+     * Imports MODS metadata
+     * @param mods_id
+     * @param sip_uuid
+     * @returns {boolean}
+     */
     obj.addMods = function (mods_id, sip_uuid) {
 
-        // TODO: check mods id
+        if (mods_id === null) {
+            importModule.createModsIdForm(sip_uuid);
+            return false;
+        }
 
-        $('#message').html('<p><strong>Importing MODS...</strong></p>');
+        let message = '<p><strong>Importing MODS...</strong></p>';
+        dom.appendById('message', message);
 
-        $.ajax({
-            url: api + '/api/admin/v1/import/mods',
-            type: 'post',
-            data: {mods_id: mods_id, sip_uuid: sip_uuid}
-        }).done(function (data) {
-
-            // TODO: check payload
-            alert('TEST!');
-            console.log('payload: ', data);
-
-            $('#message').html('<div class="alert alert-success">MODS added to repository record</div>');
-
-            importModule.getIncompleteImportRecords();
-
-            setTimeout(function () {
-                $('#message').html('');
-            }, 4000);
-
-            // TODO: reload import imcomplete data
-
-        }).fail(function (jqXHR, textStatus) {
-
-            if (jqXHR.status !== 200) {
-                var message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to import MODS.</div>';
-                renderError(message);
-            }
-
+        let url = api + '/api/admin/v1/import/mods',
+            request = new Request(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({mods_id: mods_id, sip_uuid: sip_uuid}),
+            mode: 'cors'
         });
+
+        fetch(request)
+            .then(function (response) {
+
+                if (response.status === 200) {
+
+                    let message = '<div class="alert alert-success">MODS added to repository record</div>';
+                    dom.appendById('message', message);
+
+                    importModule.getIncompleteImportRecords();
+
+                    setTimeout(function () {
+                        $('#message').html('');
+                    }, 4000);
+                } else {
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '. Unable to import MODS.</div>';
+                    renderError(message);
+                }
+            });
     };
 
     obj.addThumbnail = function (id) {

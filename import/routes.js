@@ -38,5 +38,7 @@ module.exports = function (app) {
     app.route('/api/admin/v1/import/mods')
         .post(Import.import_mods);
 
-    // TODO: create restart import route
+    app.route('/api/admin/v1/import/mods_id')
+        .post(Import.import_mods_id);
+
 };

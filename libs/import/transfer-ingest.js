@@ -559,20 +559,6 @@ exports.save_mets_data = function (obj, callback) {
                         logger.module().error('ERROR: unable to save mets (save_mets_data) ' + error);
                         throw 'ERROR: unable to save mets (save_mets_data) ' + error;
                     });
-
-                /*
-                let chunkSize = obj.length;
-                knexQ.batchInsert(IMPORT_QUEUE, obj, chunkSize)
-                    .then(function (data) {
-
-                        console.log('METS saved: ', data);
-                        callback('done');
-                    })
-                    .catch(function (error) {
-                        console.log(error);
-                        throw error;
-                    });
-                    */
             }
         })
         .catch(function (error) {

@@ -1193,10 +1193,6 @@ exports.create_repo_record = function (req, callback) {
             }
         }
 
-        // TODO: create import error page to show incomplete imports and what specifically is missing from the record. i.e. mods, object.
-        // TODO: provide ability to ingest mods only
-        // TODO: provide ability to ingest object only
-        // TODO: provide ability to index data only?...
         // console.log('repoObj: ', results);
     });
 

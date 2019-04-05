@@ -26,7 +26,7 @@ const config = require('../config/config'),
  */
 exports.get_import_incomplete = function (req, callback) {
 
-    knex('tbl_objects')
+    knex(REPO_OBJECTS)
         .select('id', 'sip_uuid', 'is_member_of_collection', 'pid', 'handle', 'mods_id', 'mods', 'display_record', 'thumbnail', 'file_name', 'mime_type', 'created')
         .where({
             is_complete: 0,
@@ -44,7 +44,61 @@ exports.get_import_incomplete = function (req, callback) {
             return null;
         })
         .catch(function (error) {
-            console.log(error);
+            logger.module().error('ERROR: unable to get incomplete records ' + error);
+        });
+};
+
+
+/**
+ * Saves missing mods id to repository record
+ * @param req
+ * @param callback
+ */
+exports.import_mods_id = function (req, callback) {
+
+    let sip_uuid = req.body.sip_uuid,
+        mods_id = req.body.mods_id;
+
+    if (sip_uuid === undefined || mods_id === undefined) {
+        callback({
+            status: 400,
+            message: 'Bad Request'
+        });
+    }
+
+    knex(REPO_OBJECTS)
+        .where({
+            sip_uuid: sip_uuid,
+            is_complete: 0
+        })
+        .update({
+            mods_id: mods_id
+        })
+        .then(function (data) {
+
+            console.log(data);
+
+            if (data === 0) {
+
+                callback({
+                    status: 500,
+                    // content_type: {'Content-Type': 'application/json'},
+                    message: 'MODS ID NOT imported.'
+                });
+
+                return false;
+            }
+
+            callback({
+                status: 201,
+                // content_type: {'Content-Type': 'application/json'},
+                message: 'MODS ID imported.'
+            });
+
+            return null;
+        })
+        .catch(function (error) {
+            logger.module().error('ERROR: unable to save mods id ' + error);
         });
 };
 
@@ -55,10 +109,13 @@ exports.get_import_incomplete = function (req, callback) {
  */
 exports.import_mods = function (req, callback) {
 
+    // b1487cea-3bb4-4c39-ba09-1c40426dc5f0
+    // 8886/7d01/8e6b/49c4/85eb/f168/f648/d4dd/codu_109608_clarion_v32_i34_19560224_transfer_1-b1487cea-3bb4-4c39-ba09-1c40426dc5f0/thumbnails/ae142ca2-c0a5-47c0-86e7-541d451e93d7.jpg
+
     let mods_id = req.body.mods_id,
         sip_uuid = req.body.sip_uuid;
 
-    if (mods_id === undefined || sip_uuid === undefined) {
+    if (sip_uuid === undefined || mods_id === undefined || mods_id === null) {
         callback({
             status: 400,
             message: 'Bad Request'
@@ -149,37 +206,40 @@ exports.import_mods = function (req, callback) {
                     });
                 }
 
-                if (missing.length > 0) {
-
-                    callback({
-                        status: 200,
-                        content_type: {'Content-Type': 'application/json'},
-                        message: 'MODS imported. There are other record components missing.',
-                        data: missing
-                    });
-
-                    return false;
-                }
-
                 let mods = obj.mods,
                     record = {};
+
+                if (data[0].mods_id.length === 0) {
+                    record.mods_id = null;
+                }
+
                 record.pid = data[0].pid;
                 record.is_member_of_collection = data[0].is_member_of_collection;
                 record.object_type = data.object_type;
                 record.handle = data[0].handle;
                 record.mods = mods;
 
+                if (missing.length > 0) {
+                    record.missing = missing;
+                }
+
                 modslibdisplay.create_display_record(record, function (display_record) {
+
+                    let modsUpdateObj = {};
+                        modsUpdateObj.mods = mods;
+                        modsUpdateObj.display_record = display_record;
+
+                        if (record.mods_id === null) {
+                            modsUpdateObj.is_complete = 0;
+                        } else {
+                            modsUpdateObj.is_complete = 1;
+                        }
 
                     knex(REPO_OBJECTS)
                         .where({
                             sip_uuid: obj.sip_uuid
                         })
-                        .update({
-                            mods: mods,
-                            display_record: display_record,
-                            is_complete: 1
-                        })
+                        .update(modsUpdateObj)
                         .then(function (data) {
                             return null;
                         })
@@ -207,6 +267,8 @@ exports.import_mods = function (req, callback) {
         }
 
         logger.module().info('INFO: mods imported');
+
+        // TODO: if missing items, include message in response and render in client.
 
         callback({
             status: 200,
