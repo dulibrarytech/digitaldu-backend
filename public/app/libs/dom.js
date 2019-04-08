@@ -11,7 +11,20 @@ const dom = (function () {
         }
 
         let el = document.querySelector('#' + id);
+        // TODO: replace innerHTML
         el.innerHTML = data;
+
+        return false;
+    };
+
+    obj.emptyById = function (id) {
+
+        if (id === undefined) {
+            return false;
+        }
+
+        let el = document.querySelector('#' + id);
+        el.innerHTML = '';
 
         return false;
     };

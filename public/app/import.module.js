@@ -29,7 +29,8 @@ const importModule = (function () {
             $('.import-instruction').hide();
             // $('#import-objects').html(html);
             dom.appendById('import-objects', html);
-            $('#message').empty();
+            dom.emptyById('message');
+            // $('#message').empty();
             return false;
         }
 
@@ -68,10 +69,10 @@ const importModule = (function () {
             $('.import-button').html(button);
         }
 
-        $('#import-objects').html(html);
-        // TODO: generates error
-        // dom.appendById('import-objects', html);
-        $('#message').empty();
+        // $('#import-objects').html(html);
+        dom.appendById('import-objects', html);
+        // $('#message').empty();
+        dom.emptyById('message');
     };
 
     /** TODO: ...
@@ -82,7 +83,6 @@ const importModule = (function () {
 
         let html = '';
 
-        // TODO: provide ability to fix incomplete record.
         // TODO: add styles to css
         let alignTd = 'style="text-align: center; vertical-align: middle"';
 
@@ -147,7 +147,8 @@ const importModule = (function () {
 
         // $('#incomplete-records').html(html);
         dom.appendById('incomplete-records', html);
-        $('#message').empty();
+        dom.emptyById('message');
+        // $('#message').empty();
     };
 
     /**
@@ -299,20 +300,29 @@ const importModule = (function () {
 
         $('#message').html('<p><strong>Loading...</strong></p>');
 
-        let url = api + '/api/admin/v1/import/incomplete';
+        let url = api + '/api/admin/v1/import/incomplete',
+        request = new Request(url, {
+            method: 'GET',
+            mode: 'cors'
+        });
 
-        $.ajax(url)
-            .done(function (data) {
-                renderIncompleteRecords(data);
-            })
-            .fail(function (jqXHR, textStatus) {
+        const callback = function (response) {
 
-                if (jqXHR.status !== 200) {
-                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve object data from Archivematica SFTP server.</div>';
-                    renderError(message);
-                }
+            if (response.status === 200) {
 
-            });
+                response.json().then(function (data) {
+                    renderIncompleteRecords(data);
+                });
+
+            } else {
+
+                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '. Unable to get incomplete records.</div>';
+                renderError(message);
+            }
+
+        };
+
+        http.req(request, callback);
     };
 
     obj.addPids = function () {
@@ -430,28 +440,58 @@ const importModule = (function () {
             mode: 'cors'
         });
 
-        fetch(request)
-            .then(function (response) {
+        const callback = function (response) {
 
-                if (response.status === 200) {
+            if (response.status === 201) {
 
-                    let message = '<div class="alert alert-success">MODS added to repository record</div>';
-                    dom.appendById('message', message);
+                let message = '<div class="alert alert-success">MODS added to repository record</div>';
+                dom.appendById('message', message);
 
-                    importModule.getIncompleteImportRecords();
+                importModule.getIncompleteImportRecords();
 
-                    setTimeout(function () {
-                        $('#message').html('');
-                    }, 4000);
-                } else {
-                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '. Unable to import MODS.</div>';
-                    renderError(message);
-                }
-            });
+                setTimeout(function () {
+                    $('#message').html('');
+                }, 4000);
+            } else {
+                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '. Unable to import MODS.</div>';
+                renderError(message);
+            }
+        };
+
+        http.req(request, callback);
     };
 
-    obj.addThumbnail = function (id) {
-        alert(id);
+    obj.addThumbnail = function (sip_uuid) {
+
+        let url = api + '/api/admin/v1/import/thumbnail',
+            request = new Request(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({sip_uuid: sip_uuid}),
+                mode: 'cors'
+            });
+
+        const callback = function (response) {
+
+            if (response.status === 201) {
+
+                let message = '<div class="alert alert-success">Thumbnail added to repository record</div>';
+                dom.appendById('message', message);
+
+                importModule.getIncompleteImportRecords();
+
+                setTimeout(function () {
+                    dom.emptyById('message');
+                }, 4000);
+            } else {
+                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '. Unable to import MODS.</div>';
+                renderError(message);
+            }
+        };
+
+        http.req(request, callback);
     };
 
     obj.addMaster = function (id) {
@@ -464,7 +504,6 @@ const importModule = (function () {
 
     obj.init = function () {
         userModule.renderUserName();
-        importModule.getImportObjects();
     };
 
     return obj;

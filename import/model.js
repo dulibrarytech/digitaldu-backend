@@ -3,7 +3,9 @@
 const config = require('../config/config'),
     archivematica = require('../libs/archivematica'),
     archivespace = require('../libs/archivespace'),
+    duracloud = require('../libs/duracloud'),
     modslibdisplay = require('../libs/display-record'),
+    metslib = require('../libs/mets'),
     logger = require('../libs/log4'),
     uuid = require('uuid'),
     async = require('async'),
@@ -76,13 +78,10 @@ exports.import_mods_id = function (req, callback) {
         })
         .then(function (data) {
 
-            console.log(data);
-
             if (data === 0) {
 
                 callback({
                     status: 500,
-                    // content_type: {'Content-Type': 'application/json'},
                     message: 'MODS ID NOT imported.'
                 });
 
@@ -91,7 +90,6 @@ exports.import_mods_id = function (req, callback) {
 
             callback({
                 status: 201,
-                // content_type: {'Content-Type': 'application/json'},
                 message: 'MODS ID imported.'
             });
 
@@ -229,7 +227,7 @@ exports.import_mods = function (req, callback) {
                         modsUpdateObj.mods = mods;
                         modsUpdateObj.display_record = display_record;
 
-                        if (record.mods_id === null) {
+                        if (record.mods_id === null || record.missing !== undefined) {
                             modsUpdateObj.is_complete = 0;
                         } else {
                             modsUpdateObj.is_complete = 1;
@@ -271,9 +269,117 @@ exports.import_mods = function (req, callback) {
         // TODO: if missing items, include message in response and render in client.
 
         callback({
-            status: 200,
-            content_type: {'Content-Type': 'application/json'},
+            status: 201,
             message: 'MODS imported.'
+        });
+    });
+};
+
+/**
+ * Imports missing thumbnail
+ * @param req
+ * @param callback
+ */
+exports.import_thumbnail = function (req, callback) {
+
+    let sip_uuid = req.body.sip_uuid;
+
+    archivematica.get_dip_path(sip_uuid, function (dip_path) {
+
+        if (dip_path.error !== undefined && dip_path.error === true) {
+            logger.module().error('ERROR: dip path error ' + dip_path.error.message + ' (import_dip)');
+            throw 'ERROR: dip path error ' + dip_path.error.message + ' (import_dip)';
+        }
+
+        let data = {
+            sip_uuid: sip_uuid,
+            dip_path: dip_path
+        };
+
+        duracloud.get_mets(data, function (response) {
+
+            if (response.error !== undefined && response.error === true) {
+                logger.module().error('ERROR: unable to get mets (import_dip)');
+                throw 'ERROR: unable to get mets (import_dip)';
+            }
+
+            let metsResults = metslib.process_mets(sip_uuid, dip_path, response.mets),
+                thumbnail = metsResults[0].dip_path + '/thumbnails/' + metsResults[0].uuid + '.jpg';
+
+            knex(REPO_OBJECTS)
+                .select('sip_uuid', 'is_member_of_collection', 'pid', 'handle', 'mods_id', 'mods', 'display_record', 'thumbnail', 'file_name', 'mime_type')
+                .where({
+                    sip_uuid: sip_uuid
+                })
+                .then(function (data) {
+
+                    let missing = [];
+
+                    if (data[0].is_member_of_collection.length === 0) {
+                        missing.push({
+                            message: 'Missing collection PID'
+                        });
+                    }
+
+                    if (data[0].pid.length === 0) {
+                        missing.push({
+                            message: 'Missing object PID'
+                        });
+                    }
+
+                    if (data[0].handle.length === 0) {
+                        missing.push({
+                            message: 'Missing handle'
+                        });
+                    }
+
+                    if (data[0].file_name.length === 0) {
+                        missing.push({
+                            message: 'Missing master object'
+                        });
+                    }
+
+                    if (data[0].mime_type.length === 0) {
+                        missing.push({
+                            message: 'Missing mime type'
+                        });
+                    }
+
+                    if (data[0].mods_id.length === 0) {
+                        missing.push({
+                            message: 'Missing mods id'
+                        });
+                    }
+
+                    let record = {};
+                    record.thumbnail = thumbnail;
+
+                    if (missing.length === 0) {
+                        record.is_complete = 1;
+                    }
+
+                    knex(REPO_OBJECTS)
+                        .where({
+                            sip_uuid: sip_uuid
+                        })
+                        .update(record)
+                        .then(function (data) {
+
+                            callback({
+                                status: 201,
+                                message: 'Thumbnail imported.'
+                            });
+
+                            return null;
+                        })
+                        .catch(function (error) {
+                            logger.module().error('ERROR: unable to save record ' + error);
+                        });
+
+                })
+                .catch(function (error) {
+                    logger.module().error('ERROR: unable to save record ' + error);
+                });
         });
     });
 };

@@ -74,3 +74,9 @@ exports.import_mods_id = function (req, res) {
         res.status(data.status).send(data.data);
     });
 };
+
+exports.import_thumbnail = function (req, res) {
+    Model.import_thumbnail(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};

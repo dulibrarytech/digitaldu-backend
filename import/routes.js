@@ -41,4 +41,7 @@ module.exports = function (app) {
     app.route('/api/admin/v1/import/mods_id')
         .post(Import.import_mods_id);
 
+    app.route('/api/admin/v1/import/thumbnail')
+        .post(Import.import_thumbnail);
+
 };
