@@ -11,7 +11,7 @@ const dom = (function () {
         }
 
         let el = document.querySelector('#' + id);
-        // TODO: replace innerHTML
+        // el.append(data);
         el.innerHTML = data;
 
         return false;

@@ -5,7 +5,7 @@ const importModule = (function () {
     let obj = {};
 
     let renderError = function (message) {
-        dom.appendById('message', message);
+        $('#message').html(message);
     };
 
     let api = configModule.getApi();
@@ -27,10 +27,8 @@ const importModule = (function () {
             html += '</td>';
             html += '</tr>';
             $('.import-instruction').hide();
-            // $('#import-objects').html(html);
-            dom.appendById('import-objects', html);
-            dom.emptyById('message');
-            // $('#message').empty();
+            $('#import-objects').html(html);
+            $('#message').html('');
             return false;
         }
 
@@ -69,10 +67,8 @@ const importModule = (function () {
             $('.import-button').html(button);
         }
 
-        // $('#import-objects').html(html);
-        dom.appendById('import-objects', html);
-        // $('#message').empty();
-        dom.emptyById('message');
+        $('#import-objects').html(html);
+        $('#message').html('');
     };
 
     /** TODO: ...
@@ -81,32 +77,31 @@ const importModule = (function () {
      */
     const renderIncompleteRecords = function (data) {
 
-        let html = '';
-
-        // TODO: add styles to css
-        let alignTd = 'style="text-align: center; vertical-align: middle"';
+        let html = '',
+            // TODO: add styles to css
+            alignTd = 'style="text-align: center; vertical-align: middle"';
 
         for (let i = 0; i < data.length; i++) {
 
             html += '<tr>';
+            html += '<td  ' + alignTd + '><a href="#" onclick="importModule.import(\'' + data[i].sip_uuid + '\', \'' + data[i].pid + '\', ' + data[i].mods_id + '); return false;" title="Import missing record components"><i class="fa fa-download"></i></a></td>';
             html += '<td ' + alignTd + '>' + data[i].sip_uuid + '</td>';
 
             // determine what is missing from the record
-            // TODO: how allow user to add missing parts of a record
             if (data[i].is_member_of_collection === null) {
-                html += '<td style="text-align: center; vertical-align: middle"><a class="btn btn-xs btn-danger" href="#" onclick="importModule.addToCollection(' + data[i].pid + '); return false;" title="Missing Collection PID"><i class="fa fa-exclamation-circle"></i></a></td>';
+                html += '<td ' + alignTd + '><i class="fa fa-exclamation"></i></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
             if (data[i].pid === null || data[i].pid.length === 0) {
-                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="importModule.addPid(); return false;" title="Missing PID"><i class="fa fa-exclamation-circle"></i></a></td>';
+                html += '<td ' + alignTd + '><i class="fa fa-exclamation"></i></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
             if (data[i].handle === null || data[i].handle.length === 0) {
-                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="importModule.addHandle(' + data[i].pid + '); return false;" title="Missing Handle"><i class="fa fa-exclamation"></i></a></td>';
+                html += '<td ' + alignTd + '><i class="fa fa-exclamation"></i></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
@@ -117,25 +112,29 @@ const importModule = (function () {
                     data[i].mods_id = null;
                 }
 
-                html += '<td ' + alignTd + '><a href="#" onclick="importModule.addMods(' + data[i].mods_id + ', \'' + data[i].sip_uuid + '\'); return false;" title="Missing Mods"><i class="fa fa-exclamation"></i></a></td>';
+                // <a href="#" onclick="importModule.addMods(' + data[i].mods_id + ', \'' + data[i].sip_uuid + '\'); return false;" title="Missing Mods"></a>
+                html += '<td ' + alignTd + '><i class="fa fa-exclamation"></i></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
             if (data[i].thumbnail === null || data[i].thumbnail.length === 0) {
-                html += '<td ' + alignTd + '><a href="#" onclick="importModule.addThumbnail(\'' + data[i].sip_uuid + '\'); return false;" title="Missing Thumbnail"><i class="fa fa-exclamation"></i></a></td>';
+                // <a href="#" onclick="importModule.addThumbnail(\'' + data[i].sip_uuid + '\'); return false;" title="Missing Thumbnail"></a>
+                html += '<td ' + alignTd + '><i class="fa fa-exclamation"></i></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
             if (data[i].file_name === null || data[i].file_name.length === 0) {
-                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="importModule.addMaster(' + data[i].sip_uuid + '); return false;" title="Missing Master Object"><i class="fa fa-exclamation"></i></a></td>';
+                // <a class="btn btn-xs btn-danger" href="#" onclick="importModule.addMaster(' + data[i].sip_uuid + '); return false;" title="Missing Master Object"></a>
+                html += '<td ' + alignTd + '><i class="fa fa-exclamation"></i></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
             if (data[i].mime_type === null || data[i].mime_type.length === 0) {
-                html += '<td ' + alignTd + '><a class="btn btn-xs btn-danger" href="#" onclick="importModule.addMimeType(' + data[i].sip_uuid + '); return false;" title="Missing Mime Type"><i class="fa fa-exclamation"></i></a></td>';
+                // <a class="btn btn-xs btn-danger" href="#" onclick="importModule.addMimeType(' + data[i].sip_uuid + '); return false;" title="Missing Mime Type"></a>
+                html += '<td ' + alignTd + '><i class="fa fa-exclamation"></i></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
@@ -145,10 +144,8 @@ const importModule = (function () {
             html += '</tr>';
         }
 
-        // $('#incomplete-records').html(html);
-        dom.appendById('incomplete-records', html);
-        dom.emptyById('message');
-        // $('#message').empty();
+        $('#incomplete-records').html(html);
+        $('#message').html('');
     };
 
     /**
@@ -301,10 +298,10 @@ const importModule = (function () {
         $('#message').html('<p><strong>Loading...</strong></p>');
 
         let url = api + '/api/admin/v1/import/incomplete',
-        request = new Request(url, {
-            method: 'GET',
-            mode: 'cors'
-        });
+            request = new Request(url, {
+                method: 'GET',
+                mode: 'cors'
+            });
 
         const callback = function (response) {
 
@@ -325,12 +322,22 @@ const importModule = (function () {
         http.req(request, callback);
     };
 
-    obj.addPids = function () {
-        alert('add pid');
+    obj.import = function (sip_uuid, pid, mods_id) {
+
+        importModule.importPid(sip_uuid);
+        importModule.importThumbnail(sip_uuid);
+        importModule.importMods(sip_uuid, mods_id);
+        importModule.importHandle(sip_uuid, pid);
+        importModule.importCollection(sip_uuid, pid);
     };
 
-    obj.addHandle = function (pid) {
-        alert(pid);
+    obj.importPid = function (sip_uuid) {
+        // console.log('import pid: ', sip_uuid);
+    };
+
+    obj.importHandle = function (sip_uuid, pid) {
+        // console.log('import handle: ', sip_uuid);
+        // console.log('import handle: ', pid);
     };
 
     /**
@@ -345,13 +352,13 @@ const importModule = (function () {
                     let sip_uuid = document.querySelector('#sip-uuid').value.trim(),
                         mods_id = document.querySelector('#mods-id').value.trim();
 
-                    importModule.addModsId(mods_id, sip_uuid);
+                    importModule.importModsId(mods_id, sip_uuid);
 
                     setTimeout(function () {
-                        importModule.addMods(mods_id, sip_uuid);
+                        importModule.importMods(mods_id, sip_uuid);
                     }, 4000);
 
-                    $('#mods-id-form').empty();
+                    $('#mods-id-form').html('');
                 }
             });
         });
@@ -362,9 +369,9 @@ const importModule = (function () {
      * @param sip_uuid
      * @param mods_id
      */
-    obj.addModsId = function (mods_id, sip_uuid) {
+    obj.importModsId = function (sip_uuid, mods_id) {
 
-        $('#message').empty();
+        $('#message').html('');
 
         let url = api + '/api/admin/v1/import/mods_id',
             request = new Request(url, {
@@ -376,14 +383,23 @@ const importModule = (function () {
                 mode: 'cors'
             });
 
-        fetch(request)
-            .then(function (response) {
+        const callback = function (response) {
 
-                if (response.status !== 201) {
-                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '. Unable to import MODS.</div>';
-                    renderError(message);
-                }
-            });
+            let message;
+
+            if (response.status === 201) {
+                // message = '<div class="alert alert-success">MODS added to repository record</div>';
+                // $('#message').html(message);
+                let message = document.getElementById('message');
+                message.innerHTML = '<div class="alert alert-success">MODS added to repository record</div>';
+
+            } else {
+                message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '. Unable to import MODS.</div>';
+                renderError(message);
+            }
+        };
+
+        http.req(request, callback);
     };
 
     /**
@@ -396,8 +412,11 @@ const importModule = (function () {
         let message,
             html;
 
-        message = '<div class="alert alert-danger">Please enter an Archivespace ID in order to retrieve MODS record</div>';
-        dom.appendById('message', message);
+        // message = '<div class="alert alert-danger">Please enter an Archivespace ID in order to retrieve MODS record</div>';
+        // $('#message').html(message);
+
+        message = document.getElementById('message');
+        message.innerHTML = '<div class="alert alert-danger">Please enter an Archivespace ID in order to retrieve MODS record</div>';
 
         html = '<form id="id-form">';
         html += '<input id="sip-uuid" name="sip_uuid" type="hidden" value="' + sip_uuid + '">';
@@ -408,7 +427,7 @@ const importModule = (function () {
         html += '</div>';
         html += '</form>';
 
-        dom.appendById('mods-id-form', html);
+        $('#message').html(html);
         importModule.modsIdFormValidation();
 
         return false;
@@ -420,7 +439,7 @@ const importModule = (function () {
      * @param sip_uuid
      * @returns {boolean}
      */
-    obj.addMods = function (mods_id, sip_uuid) {
+    obj.importMods = function (sip_uuid, mods_id) {
 
         if (mods_id === null) {
             importModule.createModsIdForm(sip_uuid);
@@ -428,30 +447,31 @@ const importModule = (function () {
         }
 
         let message = '<p><strong>Importing MODS...</strong></p>';
-        dom.appendById('message', message);
+        $('#message').html(message);
 
         let url = api + '/api/admin/v1/import/mods',
             request = new Request(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({mods_id: mods_id, sip_uuid: sip_uuid}),
-            mode: 'cors'
-        });
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({mods_id: mods_id, sip_uuid: sip_uuid}),
+                mode: 'cors'
+            });
 
         const callback = function (response) {
 
             if (response.status === 201) {
 
-                let message = '<div class="alert alert-success">MODS added to repository record</div>';
-                dom.appendById('message', message);
-
+                let responses = document.getElementById('responses');
+                responses.innerHTML = '<p><strong>MODS added to repository record</strong></p>';
                 importModule.getIncompleteImportRecords();
 
                 setTimeout(function () {
-                    $('#message').html('');
-                }, 4000);
+                    $('#responses').html('');
+                }, 5000);
+
+
             } else {
                 let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '. Unable to import MODS.</div>';
                 renderError(message);
@@ -461,7 +481,16 @@ const importModule = (function () {
         http.req(request, callback);
     };
 
-    obj.addThumbnail = function (sip_uuid) {
+    /**
+     * Imports missing thumbnail
+     * @param sip_uuid
+     */
+    obj.importThumbnail = function (sip_uuid) {
+
+        if (sip_uuid === undefined) {
+            // TODO: render message
+            return false;
+        }
 
         let url = api + '/api/admin/v1/import/thumbnail',
             request = new Request(url, {
@@ -477,14 +506,15 @@ const importModule = (function () {
 
             if (response.status === 201) {
 
-                let message = '<div class="alert alert-success">Thumbnail added to repository record</div>';
-                dom.appendById('message', message);
-
+                let responses = document.getElementById('responses');
+                responses.innerHTML = '<p><strong>Thumbnail added to repository record</strong></p>';
                 importModule.getIncompleteImportRecords();
 
+
                 setTimeout(function () {
-                    dom.emptyById('message');
-                }, 4000);
+                    $('#responses').html('');
+                }, 5000);
+
             } else {
                 let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '. Unable to import MODS.</div>';
                 renderError(message);
@@ -494,12 +524,17 @@ const importModule = (function () {
         http.req(request, callback);
     };
 
-    obj.addMaster = function (id) {
-        alert(id);
+    obj.importCollection = function (sip_uuid, pid) {
+        // console.log('import collection: ', sip_uuid);
+        // console.log('import collection: ', pid);
     };
 
-    obj.addMimeType = function (id) {
-        alert(id);
+    obj.importMaster = function (sip_uuid) {
+        // console.log('import master: ', sip_uuid);
+    };
+
+    obj.importMimeType = function (sip_uuid) {
+        // console.log('import mime type: ', sip_uuid);
     };
 
     obj.init = function () {

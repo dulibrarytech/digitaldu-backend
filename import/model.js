@@ -107,7 +107,6 @@ exports.import_mods_id = function (req, callback) {
  */
 exports.import_mods = function (req, callback) {
 
-    // b1487cea-3bb4-4c39-ba09-1c40426dc5f0
     // 8886/7d01/8e6b/49c4/85eb/f168/f648/d4dd/codu_109608_clarion_v32_i34_19560224_transfer_1-b1487cea-3bb4-4c39-ba09-1c40426dc5f0/thumbnails/ae142ca2-c0a5-47c0-86e7-541d451e93d7.jpg
 
     let mods_id = req.body.mods_id,
@@ -144,10 +143,17 @@ exports.import_mods = function (req, callback) {
 
     function get_mods(obj, callback) {
 
+        if (obj.mods === null) {
+            callback(null, obj);
+            return false;
+        }
+
         archivespace.get_mods(obj.mods_id, obj.token, function (response) {
 
             if (response.error !== undefined && response.error === true) {
                 logger.module().error('ERROR: unable to get mods ' + response.error_message);
+                obj.mods = null;
+                callback(null, obj);
                 return false;
             }
 
@@ -158,6 +164,11 @@ exports.import_mods = function (req, callback) {
     }
 
     function create_display_record(obj, callback) {
+
+        if (obj.mods === null) {
+            callback(null, obj);
+            return false;
+        }
 
         knex(REPO_OBJECTS)
             .select('sip_uuid', 'is_member_of_collection', 'pid', 'handle', 'mods_id', 'mods', 'display_record', 'thumbnail', 'file_name', 'mime_type')
@@ -264,9 +275,17 @@ exports.import_mods = function (req, callback) {
             logger.module().error('ERROR: async (import mods)');
         }
 
-        logger.module().info('INFO: mods imported');
+        if (results.mods === null) {
 
-        // TODO: if missing items, include message in response and render in client.
+            callback({
+                status: 201,
+                message: 'Unable to import MODS.'
+            });
+
+            return false;
+        }
+
+        logger.module().info('INFO: mods imported');
 
         callback({
             status: 201,
@@ -348,6 +367,12 @@ exports.import_thumbnail = function (req, callback) {
                     if (data[0].mods_id.length === 0) {
                         missing.push({
                             message: 'Missing mods id'
+                        });
+                    }
+
+                    if (data[0].mods.length === 0) {
+                        missing.push({
+                            message: 'Missing mods record'
                         });
                     }
 
