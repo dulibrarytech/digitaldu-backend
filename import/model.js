@@ -136,14 +136,16 @@ exports.import_mods = function (req, callback) {
                 callback(null, obj);
             } catch (e) {
                 logger.module().error('ERROR: session token error ' + e);
-                throw e;
+                obj.token = null;
+                callback(null, obj);
             }
         });
     }
 
     function get_mods(obj, callback) {
 
-        if (obj.mods === null) {
+        if (obj.token === null) {
+            obj.mods = null;
             callback(null, obj);
             return false;
         }
@@ -278,7 +280,7 @@ exports.import_mods = function (req, callback) {
         if (results.mods === null) {
 
             callback({
-                status: 201,
+                status: 418,
                 message: 'Unable to import MODS.'
             });
 

@@ -51,8 +51,8 @@ const fs = require('fs'),
     IMPORT_QUEUE = 'tbl_duracloud_import_queue',
     TRANSFER_TIMER = 3000,                  // Transfer status is broadcast every 3 sec.
     IMPORT_TIMER = 5000,                    // Import status is broadcast every 5 sec.
-    TRANSFER_INTERVAL_TIME = 45000,         // Object transfer starts every 45 sec. when the endpoint receives a request.
-    TRANSFER_APPROVAL_TIME = 35000,         // Transfer approval occurs 30 sec. after transfer  (Gives transfer process time to complete)
+    TRANSFER_INTERVAL_TIME = 55000,         // Object transfer starts every 45 sec. when the endpoint receives a request.
+    TRANSFER_APPROVAL_TIME = 45000,         // Transfer approval occurs 30 sec. after transfer  (Gives transfer process time to complete)
     TRANSFER_STATUS_CHECK_INTERVAL = 3000,  // Transfer status checks occur every 3 sec.
     INGEST_STATUS_CHECK_INTERVAL = 10000;   // Ingest status checks begin 10 sec after the endpoint receives a request.
 
@@ -67,7 +67,7 @@ socketclient.on('connect', function () {
             .select('*')
             .whereRaw('DATE(created) = CURRENT_DATE')
             .orderBy('created', 'asc')
-            .limit(4)
+            // .limit(10)
             .then(function (data) {
                 socketclient.emit('transfer_status', data);
             })
@@ -863,6 +863,11 @@ exports.create_repo_record = function (req, callback) {
         logger.module().info('INFO: getting object file data');
 
         duracloud.get_object(obj, function (response) {
+
+            if (response.error === true) {
+                logger.module().error('ERROR: Unable to get object ' + response.error_message);
+                return false;
+            }
 
             obj.checksum = response.headers['content-md5'];
             obj.file_size = response.headers['content-length'];

@@ -1,4 +1,5 @@
 var config = require('../config/config'),
+    logger = require('../libs/log4'),
     fs = require('fs'),
     request = require('request');
 
@@ -15,7 +16,7 @@ exports.get_mets = function (data, callback) {
 
         if (error) {
 
-            // TODO: log
+            logger.module().error('ERROR: Unable to get METS ' + error);
 
             callback({
                 error: true,
@@ -28,7 +29,7 @@ exports.get_mets = function (data, callback) {
         // TODO: modify
         if (httpResponse.statusCode !== 200) {
 
-            // TODO: log
+            logger.module().error('ERROR: Unable to get METS: status code: ' + httpResponse.statusCode);
 
             callback({
                 error: true,
@@ -66,7 +67,7 @@ exports.get_object = function (data, callback) {
 
         if (error) {
 
-            // TODO: log
+            logger.module().error('ERROR: Unable to get duracloud object ' + error);
 
             callback({
                 error: true,
@@ -91,7 +92,8 @@ exports.get_object = function (data, callback) {
 
                 if (error) {
 
-                    // TODO: log
+                    logger.module().error('ERROR: Unable to write to tmp folder ' + error);
+
                     callback({
                         error: true,
                         error_message: error
@@ -99,7 +101,6 @@ exports.get_object = function (data, callback) {
                 }
 
                 if (fs.existsSync('./tmp/' + data.file)) {
-                    // console.log('File ' + data.file + ' saved.');
                     callback(resp);
                     return false;
                 }
@@ -107,6 +108,8 @@ exports.get_object = function (data, callback) {
             });
 
         } else {
+
+            logger.module().error('ERROR: Unable to get duracloud object ' + body);
 
             callback({
                 error: true,
