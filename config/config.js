@@ -43,6 +43,8 @@ module.exports = {
     handlePwd: process.env.HANDLE_PWD,
     handleTarget: process.env.HANDLE_TARGET,
     handleServer: process.env.HANDLE_SERVER,
+    redisHost: process.env.REDIS_HOST,
+    redisPort: process.env.REDIS_PORT,
     smtp: process.env.SMTP,
     fromEmail: process.env.FROM_EMAIL,
     emailSubject: process.env.SUBJECT,
