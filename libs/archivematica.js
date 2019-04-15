@@ -56,7 +56,7 @@ exports.start_tranfser = function (transferObj, callback) {
 
     'use strict';
 
-    var transferSource = config.archivematicaTransferSource,
+    let transferSource = config.archivematicaTransferSource,
         sftpPath = config.sftpRemotePath,
         location = transferSource + ':' + sftpPath + '/' + transferObj.is_member_of_collection + '/' + transferObj.object,
         buffer = new Buffer(location),
@@ -110,7 +110,7 @@ exports.approve_transfer = function (transferFolder, callback) {
 
     'use strict';
 
-    var apiUrl = config.archivematicaApi + 'transfer/approve?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
+    let apiUrl = config.archivematicaApi + 'transfer/approve?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
 
     request.post({
         url: apiUrl,
@@ -156,7 +156,7 @@ exports.get_transfer_status = function (uuid, callback) {
 
     'use strict';
 
-    var apiUrl = config.archivematicaApi + 'transfer/status/' + uuid + '/?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
+    let apiUrl = config.archivematicaApi + 'transfer/status/' + uuid + '/?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
 
     request.get({
         url: apiUrl
@@ -199,7 +199,7 @@ exports.get_ingest_status = function (uuid, callback) {
 
     'use strict';
 
-    var apiUrl = config.archivematicaApi + 'ingest/status/' + uuid + '/?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
+    let apiUrl = config.archivematicaApi + 'ingest/status/' + uuid + '/?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
 
     request.get({
         url: apiUrl
@@ -243,7 +243,7 @@ exports.get_dip_path = function (uuid, callback) {
 
     'use strict';
 
-    var apiUrl = config.archivematicaStorageApi + 'v2/file/' + uuid + '/?username=' + config.archivematicaStorageUsername + '&api_key=' + config.archivematicaStorageApiKey;
+    let apiUrl = config.archivematicaStorageApi + 'v2/file/' + uuid + '/?username=' + config.archivematicaStorageUsername + '&api_key=' + config.archivematicaStorageApiKey;
 
     request.get({
         url: apiUrl
@@ -273,22 +273,90 @@ exports.get_dip_path = function (uuid, callback) {
             return false;
         }
 
-        var json = JSON.parse(body);
-        var dipuuidArr = json.related_packages[0].split('/');
-        var uuid = dipuuidArr.filter(function (result) {
+        let json = JSON.parse(body),
+            dipuuidArr = json.related_packages[0].split('/');
+
+        let uuid = dipuuidArr.filter(function (result) {
             return result;
         });
 
-        var dipuuid = uuid[uuid.length - 1],
+        let dipuuid = uuid[uuid.length - 1],
             tmp = dipuuid.replace(/-/g, ''),
             tmpuuid = tmp.match(/.{1,4}/g),
             path = tmpuuid.join('/');
 
-        var folderArr = json.current_path.split('/'),
+        let folderArr = json.current_path.split('/'),
             folderTmp = folderArr[folderArr.length - 1],
             folder = folderTmp.replace('.7z', ''),
             dipPath = path + '/' + folder;
 
         callback(dipPath);
+    });
+};
+
+/**
+ * clears archivematica transfer queue
+ * @param uuid
+ */
+exports.clear_transfer = function (uuid) {
+
+    'use strict';
+
+    let apiUrl = config.archivematicaApi + 'transfer/' + uuid + '/delete/?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
+
+    console.log('clear transfer ');
+    console.log(apiUrl);
+
+    request.delete({
+        url: apiUrl
+    }, function (error, httpResponse, body) {
+
+        if (error) {
+            logger.module().error('ERROR: unable to clear transfer queue ' + error);
+            return false;
+        }
+
+        console.log(body);
+        console.log(httpResponse.statusCode);
+
+        if (httpResponse.statusCode === 200) {
+            logger.module().info('INFO: transfer ' + uuid + ' has been cleared.');
+            return false;
+        } else {
+            logger.module().error('ERROR: unable to clear transfer queue ' + error);
+            return false;
+        }
+    });
+};
+
+/**
+ * clears archivematica ingest queue
+ * @param uuid
+ */
+exports.clear_ingest = function (uuid) {
+
+    'use strict';
+
+    let apiUrl = config.archivematicaApi + 'ingest/' + uuid + '/delete/?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
+
+    request.delete({
+        url: apiUrl
+    }, function (error, httpResponse, body) {
+
+        if (error) {
+            logger.module().error('ERROR: unable to clear ingest ' + error);
+            return false;
+        }
+
+        console.log(body);
+        console.log(httpResponse.statusCode);
+
+        if (httpResponse.statusCode === 200) {
+            logger.module().info('INFO: ingest ' + uuid + ' has been cleared.');
+            return false;
+        } else {
+            logger.module().error('ERROR: unable to clear ingest ' + error);
+            return false;
+        }
     });
 };

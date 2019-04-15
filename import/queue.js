@@ -328,6 +328,9 @@ exports.start_transfer = function (req, callback) {
 
         let timer = setInterval(function () {
 
+            // TODO: check job.data for duplicates during ingests
+            console.log('job data: ', job.data);
+
             importlib.start_transfer(job.data, function (object) {
 
                 if (object === 'done') {
@@ -341,14 +344,11 @@ exports.start_transfer = function (req, callback) {
                 // Initiates file transfer on Archivematica service
                 archivematica.start_tranfser(object, function (response) {
 
-                    // TODO:
-                    console.log('start transfer object: ', object);
-                    console.log('(archivematica.start_transfer) transfer response: ', response);
-
                     if (response.error !== undefined && response.error === true) {
                         logger.module().fatal('FATAL: transfer error ' + response + ' (start_transfer)');
-                        // TODO: Tries again if response fails?
-                        throw 'FATAL: transfer error ' + response + ' (start_transfer)';
+                        // TODO: test and update queue with FAILED message
+                        // throw 'FATAL: transfer error ' + response + ' (start_transfer)';
+                        return false;
                     }
 
                     logger.module().info('INFO: transfer started and confirming transfer (start_transfer)');
@@ -449,8 +449,8 @@ exports.approve_transfer = function (req, callback) {
             archivematica.approve_transfer(object.transfer_folder, function (response) {
 
                 // TODO:
-                console.log('transfer folder: ', object.transfer_folder);
-                console.log('(archivematica.approve_transfer) approve transfer response: ', response);
+                // console.log('transfer folder: ', object.transfer_folder);
+                // console.log('(archivematica.approve_transfer) approve transfer response: ', response);
 
                 importlib.confirm_transfer_approval(response, object, function (result) {
 
@@ -530,9 +530,6 @@ exports.get_transfer_status = function (req, callback) {
                     clearInterval(timer);
                     logger.module().info('INFO: transfer interval done (get_transfer_status)');
 
-                    // TODO: clear out archivematica transfer queue
-                    // /api/transfer/<transfer UUID>/delete/
-
                     // Start ingest status checks
                     request.get({
                         url: config.apiUrl + '/api/admin/v1/import/ingest_status?sip_uuid=' + result.sip_uuid
@@ -544,6 +541,7 @@ exports.get_transfer_status = function (req, callback) {
                         }
 
                         if (httpResponse.statusCode === 200) {
+                            archivematica.clear_transfer(transfer_uuid);
                             logger.module().info('INFO: ingest status request');
                             return false;
                         } else {
@@ -602,10 +600,7 @@ exports.get_ingest_status = function (req, callback) {
                 if (result.complete !== undefined && result.complete === true) {
 
                     clearInterval(timer);
-
                     logger.module().info('INFO: ingest interval complete (get_ingest_status)');
-
-                    // TODO: clear out archivematica transfer queue
 
                     request.get({
                         url: config.apiUrl + '/api/admin/v1/import/import_dip?sip_uuid=' + result.sip_uuid
@@ -617,6 +612,7 @@ exports.get_ingest_status = function (req, callback) {
                         }
 
                         if (httpResponse.statusCode === 200) {
+                            archivematica.clear_ingest(sip_uuid);
                             logger.module().info('INFO: import dip request');
                             return false;
                         } else {
@@ -647,6 +643,8 @@ exports.get_ingest_status = function (req, callback) {
  * @param callback
  */
 exports.import_dip = function (req, callback) {
+
+    // TODO: figure out why audio is not generating dip
 
     logger.module().info('INFO: importing dip information');
 

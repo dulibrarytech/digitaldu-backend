@@ -58,7 +58,15 @@ exports.get_object = function (data, callback) {
         data.file = data.file.replace('tif', 'jp2');
     }
 
+    if (data.file.indexOf('wav') !== -1) {
+        data.file = data.file.replace('wav', 'mp3');
+    }
+
     var apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + dip_path + '/objects/' + data.uuid + '-' + data.file;
+
+    console.log('get object function: ');
+    console.log(data);
+    console.log(apiUrl);
 
     request.get({
         url: apiUrl,
