@@ -49,12 +49,12 @@ const fs = require('fs'),
     },
     TRANSFER_QUEUE = 'tbl_archivematica_queue',
     IMPORT_QUEUE = 'tbl_duracloud_import_queue',
-    TRANSFER_TIMER = 3000,                  // Transfer status is broadcast every 3 sec.
-    IMPORT_TIMER = 5000,                    // Import status is broadcast every 5 sec.
-    TRANSFER_INTERVAL_TIME = 55000,         // Object transfer starts every 45 sec. when the endpoint receives a request.
-    TRANSFER_APPROVAL_TIME = 45000,         // Transfer approval occurs 30 sec. after transfer  (Gives transfer process time to complete)
-    TRANSFER_STATUS_CHECK_INTERVAL = 3000,  // Transfer status checks occur every 3 sec.
-    INGEST_STATUS_CHECK_INTERVAL = 10000;   // Ingest status checks begin 10 sec after the endpoint receives a request.
+    TRANSFER_TIMER = 10000,                  // Transfer status is broadcast every 3 sec.
+    IMPORT_TIMER = 10000,                    // Import status is broadcast every 5 sec.
+    TRANSFER_INTERVAL_TIME = 60000,         // Object transfer starts every 60 sec. when the endpoint receives a request.
+    TRANSFER_APPROVAL_TIME = 45000,         // Transfer approval occurs 60 sec. after transfer  (Gives transfer process time to complete)
+    TRANSFER_STATUS_CHECK_INTERVAL = 30000,  // Transfer status checks occur every 3 sec.
+    INGEST_STATUS_CHECK_INTERVAL = 30000;   // Ingest status checks begin 10 sec after the endpoint receives a request.
 
 /**
  * Broadcasts archivematica transfer/ingest status
@@ -326,15 +326,12 @@ exports.start_transfer = function (req, callback) {
 
     start_transfer.process(function (job, done) {
 
-        let timer = setInterval(function () {
-
-            // TODO: check job.data for duplicates during ingests
-            console.log('job data: ', job.data);
+        // let timer = setInterval(function () {
 
             importlib.start_transfer(job.data, function (object) {
 
                 if (object === 'done') {
-                    clearInterval(timer);
+                    // clearInterval(timer);
                     logger.module().info('INFO: transfer process complete (start_transfer)');
                     start_transfer.close();
                     done(null, object);
@@ -347,8 +344,8 @@ exports.start_transfer = function (req, callback) {
                     if (response.error !== undefined && response.error === true) {
                         logger.module().fatal('FATAL: transfer error ' + response + ' (start_transfer)');
                         // TODO: test and update queue with FAILED message
-                        // throw 'FATAL: transfer error ' + response + ' (start_transfer)';
-                        return false;
+                        throw 'FATAL: transfer error ' + response + ' (start_transfer)';
+                        // return false;
                     }
 
                     logger.module().info('INFO: transfer started and confirming transfer (start_transfer)');
@@ -356,7 +353,7 @@ exports.start_transfer = function (req, callback) {
                 });
             });
 
-        }, TRANSFER_INTERVAL_TIME);
+        // }, TRANSFER_INTERVAL_TIME);
     });
 
     start_transfer.on('failed', function (job, error) {
@@ -448,10 +445,6 @@ exports.approve_transfer = function (req, callback) {
 
             archivematica.approve_transfer(object.transfer_folder, function (response) {
 
-                // TODO:
-                // console.log('transfer folder: ', object.transfer_folder);
-                // console.log('(archivematica.approve_transfer) approve transfer response: ', response);
-
                 importlib.confirm_transfer_approval(response, object, function (result) {
 
                     if (result.error !== undefined && result.error === true) {
@@ -472,6 +465,7 @@ exports.approve_transfer = function (req, callback) {
 
                         if (httpResponse.statusCode === 200) {
                             logger.module().info('INFO: transfer status request (approve_transfer)');
+
                             return false;
                         } else {
                             logger.module().fatal('ERROR: http error ' + body + ' (approve_transfer)');
@@ -541,8 +535,10 @@ exports.get_transfer_status = function (req, callback) {
                         }
 
                         if (httpResponse.statusCode === 200) {
-                            archivematica.clear_transfer(transfer_uuid);
                             logger.module().info('INFO: ingest status request');
+                            setTimeout(function () {
+                                archivematica.clear_transfer(transfer_uuid);
+                            }, 5000);
                             return false;
                         } else {
                             logger.module().error('ERROR: http error ' + body + ' (get_transfer_status)');
@@ -552,7 +548,6 @@ exports.get_transfer_status = function (req, callback) {
 
                     return false;
                 }
-
             });
         });
 
@@ -612,7 +607,6 @@ exports.get_ingest_status = function (req, callback) {
                         }
 
                         if (httpResponse.statusCode === 200) {
-                            archivematica.clear_ingest(sip_uuid);
                             logger.module().info('INFO: import dip request');
                             return false;
                         } else {
@@ -643,8 +637,6 @@ exports.get_ingest_status = function (req, callback) {
  * @param callback
  */
 exports.import_dip = function (req, callback) {
-
-    // TODO: figure out why audio is not generating dip
 
     logger.module().info('INFO: importing dip information');
 
@@ -728,6 +720,7 @@ exports.create_repo_record = function (req, callback) {
 
     if (sip_uuid === undefined) {
         // no need to move forward if sip_uuid is missing
+        // TODO: update queue as failed
         logger.module().error('ERROR: sip uuid undefined (create_repo_record)');
         callback({
             status: 400,
@@ -746,8 +739,14 @@ exports.create_repo_record = function (req, callback) {
         importlib.get_collection(sip_uuid, function (result) {
 
             // TODO: confirm that collection pid was returned
-            // TODO: if pid was not returned set collection to null?
+            // TODO: if pid was not returned set collection to null? or try again
             // TODO: save sip_uuid to error table?
+
+            if (result === null || result === undefined) {
+                console.log('Unable to get collection');
+                get_collection(callback);
+                return false;
+            }
 
             let obj = {};
             obj.sip_uuid = sip_uuid;
@@ -860,29 +859,43 @@ exports.create_repo_record = function (req, callback) {
 
         logger.module().info('INFO: getting object file data');
 
-        duracloud.get_object(obj, function (response) {
+        setTimeout(function () {
 
-            if (response.error === true) {
-                logger.module().error('ERROR: Unable to get object ' + response.error_message);
-                return false;
-            }
+            duracloud.get_object(obj, function (response) {
 
-            obj.checksum = response.headers['content-md5'];
-            obj.file_size = response.headers['content-length'];
-            obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
-            obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
+                if (response.error === true) {
+                    logger.module().error('ERROR: Unable to get object ' + response.error_message);
+                    return false;
+                }
 
-            if (!fs.existsSync('./tmp/' + obj.file)) {
-                logger.module().error('ERROR: file ' + obj.file + ' does not exist');
-                throw 'File ' + obj.file + ' does not exist.';
-            }
+                obj.checksum = response.headers['content-md5'];
+                obj.file_size = response.headers['content-length'];
+                obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
+                obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
 
-            let tmp = shell.exec('file --mime-type ./tmp/' + obj.file).stdout;
-            let mimetypetmp = tmp.split(':');
-            obj.mime_type = mimetypetmp[1].trim();
+                if (!fs.existsSync('./tmp/' + obj.file)) {
+                    logger.module().error('ERROR: file ' + obj.file + ' does not exist');
+                    throw 'File ' + obj.file + ' does not exist.';
+                }
 
-            callback(null, obj);
-        });
+                let tmp = shell.exec('file --mime-type ./tmp/' + obj.file).stdout;
+                let mimetypetmp = tmp.split(':');
+
+                // if unable to detect mime type correctly, use file extension
+                if (mimetypetmp[1].trim() === 'application/octet-stream') {
+
+                    if (obj.file.indexOf('mp3') !== -1) {
+                        obj.mime_type = 'audio/x-wav';
+                    }
+
+                } else {
+                    obj.mime_type = mimetypetmp[1].trim();
+                }
+
+                callback(null, obj);
+            });
+
+        }, 5000);
     }
 
     // 7.)
@@ -1010,7 +1023,7 @@ exports.create_repo_record = function (req, callback) {
                 callback(null, obj);
             });
 
-        }, 4000);
+        }, 5000);
     }
 
     // 9.)
@@ -1151,6 +1164,8 @@ exports.create_repo_record = function (req, callback) {
 
         logger.module().info('INFO: cleaning up queue ' + obj.sip_uuid);
 
+        archivematica.clear_ingest(obj.sip_uuid);
+
         importlib.cleanup(obj, function (result) {
 
             if (result !== true) {
@@ -1195,6 +1210,38 @@ exports.create_repo_record = function (req, callback) {
                 break;
             }
         }
+
+        // get queue record count for current collection
+        importlib.check_queue(results.is_member_of_collection, function (result) {
+
+            console.log(result);
+
+            if (result.status === 0) {
+                return false;
+            }
+
+            request.post({
+                url: config.apiUrl + '/api/admin/v1/import/start_transfer',
+                form: {
+                    'collection': results.is_member_of_collection
+                }
+            }, function (error, httpResponse, body) {
+
+                if (error) {
+                    logger.module().fatal('FATAL: unable to begin transfer ' + error + ' (async)');
+                    throw 'ERROR: unable to begin transfer ' + error + ' (async)';
+                }
+
+                if (httpResponse.statusCode === 200) {
+                    logger.module().info('INFO: sending request to start next transfer (async)');
+                    return false;
+                } else {
+                    logger.module().fatal('FATAL: unable to begin next transfer ' + body + ' (async)');
+                    throw 'FATAL: unable to begin next transfer ' + body + ' (async)';
+                }
+            });
+
+        });
 
         // console.log('repoObj: ', results);
     });

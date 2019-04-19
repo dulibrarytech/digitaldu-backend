@@ -11,7 +11,7 @@ exports.get_mods = function (id, session, callback) {
 
     'use strict';
 
-    var apiUrl = config.archivespaceHost + '/repositories/' + config.archivespaceRepositoryid + '/archival_objects/' + id + '/repository';
+    let apiUrl = config.archivespaceHost + '/repositories/' + config.archivespaceRepositoryid + '/archival_objects/' + id + '/repository';
 
     request.get({
         url: apiUrl,
@@ -66,7 +66,7 @@ exports.get_session_token = function (callback) {
 
     'use strict';
 
-    var apiUrl = config.archivespaceHost + '/users/' + config.archivespaceUser + '/login?password=' + config.archivespacePassword + '&expiring=false';
+    let apiUrl = config.archivespaceHost + '/users/' + config.archivespaceUser + '/login?password=' + config.archivespacePassword + '&expiring=false';
 
     request.post({
         url: apiUrl,

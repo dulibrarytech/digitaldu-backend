@@ -552,7 +552,7 @@ exports.save_mets_data = function (obj, callback) {
                 knexQ(IMPORT_QUEUE)
                     .insert(obj)
                     .then(function (data) {
-                        console.log('METS saved: ', data);
+                        // console.log('METS saved: ', data);
                         callback('done');
                     })
                     .catch(function (error) {
@@ -759,4 +759,40 @@ exports.flag_incomplete_record = function (obj) {
             throw 'ERROR: unable to flag incomplete record ' + error;
         });
 
+};
+
+exports.check_queue = function (is_member_of_collection, callback) {
+
+    'use strict';
+
+    knexQ(QUEUE)
+        .count('is_member_of_collection as count')
+        .where({
+            is_member_of_collection: is_member_of_collection
+        })
+        .then(function (result) {
+
+            let obj;
+
+            if (result[0].count !== 0) {
+
+                obj = {
+                    status: 1
+                };
+
+            } else {
+
+                obj = {
+                    status: 0
+                };
+            }
+
+            callback(obj);
+
+            return null;
+        })
+        .catch(function (error) {
+            logger.module().error('ERROR: unable to save mets (save_mets_data) ' + error);
+            throw 'ERROR: unable to save mets (save_mets_data) ' + error;
+        });
 };

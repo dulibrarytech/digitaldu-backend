@@ -63,6 +63,11 @@ exports.start_tranfser = function (transferObj, callback) {
         encodedLocation = buffer.toString('base64'),
         apiUrl = config.archivematicaApi + 'transfer/start_transfer/?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
 
+    console.log(transferSource);
+    console.log(sftpPath);
+    console.log(location);
+    console.log(apiUrl);
+
     request.post({
         url: apiUrl,
         form: {
@@ -73,6 +78,8 @@ exports.start_tranfser = function (transferObj, callback) {
             'rows_ids[]': '[""]'
         }
     }, function (error, httpResponse, body) {
+
+        console.log(body);
 
         if (error) {
 
@@ -117,7 +124,8 @@ exports.approve_transfer = function (transferFolder, callback) {
         form: {
             'type': 'standard',
             'directory': transferFolder
-        }
+        },
+        timeout: 55000
     }, function (error, httpResponse, body) {
 
         if (error) {
@@ -159,7 +167,8 @@ exports.get_transfer_status = function (uuid, callback) {
     let apiUrl = config.archivematicaApi + 'transfer/status/' + uuid + '/?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
 
     request.get({
-        url: apiUrl
+        url: apiUrl,
+        timeout: 55000
     }, function (error, httpResponse, body) {
 
         if (error) {
@@ -202,7 +211,8 @@ exports.get_ingest_status = function (uuid, callback) {
     let apiUrl = config.archivematicaApi + 'ingest/status/' + uuid + '/?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
 
     request.get({
-        url: apiUrl
+        url: apiUrl,
+        timeout: 55000
     }, function (error, httpResponse, body) {
 
         if (error) {
@@ -246,7 +256,8 @@ exports.get_dip_path = function (uuid, callback) {
     let apiUrl = config.archivematicaStorageApi + 'v2/file/' + uuid + '/?username=' + config.archivematicaStorageUsername + '&api_key=' + config.archivematicaStorageApiKey;
 
     request.get({
-        url: apiUrl
+        url: apiUrl,
+        timeout: 55000
     }, function (error, httpResponse, body) {
 
         if (error) {
@@ -304,11 +315,9 @@ exports.clear_transfer = function (uuid) {
 
     let apiUrl = config.archivematicaApi + 'transfer/' + uuid + '/delete/?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
 
-    console.log('clear transfer ');
-    console.log(apiUrl);
-
     request.delete({
-        url: apiUrl
+        url: apiUrl,
+        timeout: 55000
     }, function (error, httpResponse, body) {
 
         if (error) {
@@ -316,10 +325,8 @@ exports.clear_transfer = function (uuid) {
             return false;
         }
 
-        console.log(body);
-        console.log(httpResponse.statusCode);
-
         if (httpResponse.statusCode === 200) {
+            console.log(body);
             logger.module().info('INFO: transfer ' + uuid + ' has been cleared.');
             return false;
         } else {
@@ -340,7 +347,8 @@ exports.clear_ingest = function (uuid) {
     let apiUrl = config.archivematicaApi + 'ingest/' + uuid + '/delete/?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
 
     request.delete({
-        url: apiUrl
+        url: apiUrl,
+        timeout: 55000
     }, function (error, httpResponse, body) {
 
         if (error) {
@@ -348,10 +356,8 @@ exports.clear_ingest = function (uuid) {
             return false;
         }
 
-        console.log(body);
-        console.log(httpResponse.statusCode);
-
         if (httpResponse.statusCode === 200) {
+            console.log(body);
             logger.module().info('INFO: ingest ' + uuid + ' has been cleared.');
             return false;
         } else {

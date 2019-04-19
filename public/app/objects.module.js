@@ -101,7 +101,7 @@ const objectsModule = (function () {
         $('#current-collection').prop('href', '/dashboard/collections/add?is_member_of_collection=' + is_member_of_collection);
 
         if (data.length === 0) {
-            html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp;There are no objects in this collection.</strong></div>';
+            html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; There are no objects in this collection.</strong></div>';
             $('#objects').html(html);
             return false;
         }
@@ -120,49 +120,115 @@ const objectsModule = (function () {
             html += '<div class="col-md-3"><img display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
             html += '<div class="col-md-6" style="padding: 5px">';
 
-            console.log(record);
-
-            if (record.title !== undefined) {
+            if (record.display_record.title !== undefined) {
 
                 if (data[i].object_type === 'collection') {
-                    html += '<h4><a href="' + api + '/dashboard/objects/?pid=' + data[i].pid + '">' + record.title + '</a></h4>';
+                    html += '<h4><a href="' + api + '/dashboard/objects/?pid=' + data[i].pid + '">' + record.display_record.title + '</a></h4>';
                 } else if (data[i].object_type === 'object') {
-                    html += '<h4><a href="' + api + '/dashboard/object/?pid=' + data[i].pid + '">' + record.title + '</a></h4>';
+                    html += '<h4>' + record.display_record.title + '</h4>';
                 }
 
             } else {
                 html += '<h4>No Title</h4>';
             }
 
-            // TODO: display more metadata
             if (data[i].object_type === 'object') {
-                // console.log(record);
-                // TODO: check if value is defined and if is_array before rendering
+
                 html += '<ul>';
-                html += '<li><small><strong>pid:</strong>&nbsp;' + data[i].pid + '</small></li>';
+                html += '<li><small><strong>Pid:</strong>&nbsp;<a target="_blank" href="' + record.handle + '">' + record.pid + '</a>&nbsp;&nbsp;<i class="fa fa-external-link"></i></small></li>';
+                html += '<li><small><strong>Uri:</strong>&nbsp;' + record.display_record.uri + '</small></li>';
 
-                if (record.identifier !== undefined) {
-                    html += '<li><small><strong>Identifier:</strong>&nbsp;' + record.identifier + '</small></li>';
+                if (record.display_record.dates !== undefined && record.display_record.dates.length !== 0) {
+
+                    html += '<li><small><strong>Dates:</strong></small></li>';
+                    html += '<ul>';
+
+                    for (let i = 0; i < record.display_record.dates.length; i++) {
+                        html += '<li><small>' + record.display_record.dates[i].expression + ' ( ' + record.display_record.dates[i].type + '</a> )</small></li>';
+                    }
+
+                    html += '</ul>';
                 }
 
-                if (record.typeOfResource !== undefined) {
-                    html += '<li><small><strong>TypeOfResource:</strong>&nbsp;' + record.typeOfResource + '</small></li>';
+                if (record.display_record.extents !== undefined && record.display_record.extents.length !== 0) {
+
+                    html += '<li><small><strong>Extents:</strong></small></li>';
+                    html += '<ul>';
+
+                    for (let i = 0; i < record.display_record.extents.length; i++) {
+                        html += '<li><small>' + record.display_record.extents[i] + '</small></li>';
+                    }
+
+                    html += '</ul>';
                 }
 
-                if (record.language !== undefined) {
-                    html += '<li><small><strong>Language:</strong>&nbsp;' + record.language + '</small></li>';
+                if (record.display_record.identifiers !== undefined && record.display_record.identifiers.length !== 0) {
+
+                    html += '<li><small><strong>Identifiers:</strong></small></li>';
+                    html += '<ul>';
+
+                    for (let i = 0; i < record.display_record.identifiers.length; i++) {
+                        html += '<li><small>' + record.display_record.identifiers[i].identifier + ' ( ' + record.display_record.identifiers[i].type + ' )</small></li>';
+                    }
+
+                    html += '</ul>';
                 }
 
-                if (record.accessCondition !== undefined) {
-                    html += '<li><small><strong>AccessCondition:</strong>&nbsp;' + record.accessCondition + '</small></li>';
+                if (record.display_record.language !== undefined && record.display_record.language.length !== 0) {
+
+                    for (let i = 0; i < record.display_record.language.length; i++) {
+                        html += '<li><small><strong>Language:</strong> ' + record.display_record.language[i].text + ' ( ' + record.display_record.language[i].authority + ' )</small></li>';
+                    }
                 }
 
-                if (record.abstract !== undefined) {
-                    html += '<li><small><strong>Abstract:</strong>&nbsp;' + record.abstract + '</small></li>';
+                if (record.display_record.names !== undefined && record.display_record.names.length !== 0) {
+
+                    html += '<li><small><strong>Names:</strong></small></li>';
+                    html += '<ul>';
+
+                    for (let i = 0; i < record.display_record.names.length; i++) {
+                        html += '<li><small>' + record.display_record.names[i].title + ' ( ' + record.display_record.names[i].source + ' )</small></li>';
+                    }
+
+                    html += '</ul>';
                 }
 
-                if (record.location !== undefined) {
-                    html += '<li><small><strong>Handle:</strong>&nbsp;' + record.location[0].url + '</small></li>';
+                if (record.display_record.notes !== undefined && record.display_record.notes.length !== 0) {
+
+                    html += '<li><small><strong>Notes:</strong></small></li>';
+                    html += '<ul>';
+
+                    for (let i = 0; i < record.display_record.notes.length; i++) {
+                        html += '<li><small>' + record.display_record.notes[i].content + ' ( ' + record.display_record.notes[i].type + ' )</small></li>';
+                    }
+
+                    html += '</ul>';
+                }
+
+                if (record.display_record.parts !== undefined && record.display_record.parts.length !== 0) {
+
+                    html += '<li><small><strong>Parts:</strong></small></li>';
+                    html += '<ul>';
+
+                    for (let i = 0; i < record.display_record.parts.length; i++) {
+                        html += '<li><small>' + record.display_record.parts[i].title + ' ( ' + record.display_record.parts[i].type + ' ) order: ' + record.display_record.parts[i].order + '</small></li>';
+                    }
+                }
+
+                if (record.display_record.subjects !== undefined && record.display_record.subjects.length !== 0) {
+
+                    html += '<li><small><strong>Subjects:</strong></small></li>';
+                    html += '<ul>';
+
+                    for (let i = 0; i < record.display_record.subjects.length; i++) {
+                        if (record.display_record.subjects[i].authority_id !== undefined) {
+                            html += '<li><small>' + record.display_record.subjects[i].title + ' ( <a target="_blank" href="' + record.display_record.subjects[i].authority_id + '">' + record.display_record.subjects[i].authority + '</a> )</small></li>';
+                        } else {
+                            html += '<li><small>' + record.display_record.subjects[i].title + ' ( ' + record.display_record.subjects[i].authority + ' )</small></li>';
+                        }
+                    }
+
+                    html += '</ul>';
                 }
 
                 html += '</ul>';
@@ -190,15 +256,15 @@ const objectsModule = (function () {
                 html += '<p><a href="#"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
             }
 
-            if (data[i].object_type === 'object') {
-                html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '"><i class="fa fa-download"></i>&nbsp;Download object</a></p>';
-            }
-
             if (data[i].object_type === 'collection') {
                 html += '<p><a href="' + api + '/dashboard/object/edit?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Edit collection</a></p>';
             } else if (data[i].object_type === 'object') {
-                html += '<p><a href="' + api + '/dashboard/object/edit?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Edit object</a></p>';
+                html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=tn"><i class="fa fa-code"></i>&nbsp;Technical Metadata</a></p>';
+                html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=mods"><i class="fa fa-code"></i>&nbsp;MODS</a></p>';
+            }
 
+            if (data[i].object_type === 'object') {
+                html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=object"><i class="fa fa-download"></i>&nbsp;Download object</a></p>';
             }
 
             html += '</div>';
@@ -211,6 +277,7 @@ const objectsModule = (function () {
         $('a').tooltip();
     };
 
+    // TODO: NOT USED remove
     const renderObjectDetail = function (data) {
 
         let html = '';

@@ -7,7 +7,7 @@ exports.get_mets = function (data, callback) {
 
     'use strict';
 
-    var mets = 'METS.' + data.sip_uuid + '.xml',
+    let mets = 'METS.' + data.sip_uuid + '.xml',
         apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + data.dip_path + '/' + mets;
 
     request.get({
@@ -26,7 +26,6 @@ exports.get_mets = function (data, callback) {
             return false;
         }
 
-        // TODO: modify
         if (httpResponse.statusCode !== 200) {
 
             logger.module().error('ERROR: Unable to get METS: status code: ' + httpResponse.statusCode);
@@ -51,7 +50,7 @@ exports.get_object = function (data, callback) {
 
     'use strict';
 
-    var dip_path = data.dip_path;
+    let dip_path = data.dip_path;
 
     // change extension from tif to jp2 (There are no direct references to jp2 files in Duracloud)
     if (data.file.indexOf('tif') !== -1) {
@@ -62,11 +61,7 @@ exports.get_object = function (data, callback) {
         data.file = data.file.replace('wav', 'mp3');
     }
 
-    var apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + dip_path + '/objects/' + data.uuid + '-' + data.file;
-
-    console.log('get object function: ');
-    console.log(data);
-    console.log(apiUrl);
+    let apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + dip_path + '/objects/' + data.uuid + '-' + data.file;
 
     request.get({
         url: apiUrl,
