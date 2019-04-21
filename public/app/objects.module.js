@@ -259,12 +259,12 @@ const objectsModule = (function () {
             if (data[i].object_type === 'collection') {
                 html += '<p><a href="' + api + '/dashboard/object/edit?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Edit collection</a></p>';
             } else if (data[i].object_type === 'object') {
-                html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=tn"><i class="fa fa-code"></i>&nbsp;Technical Metadata</a></p>';
-                html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=mods"><i class="fa fa-code"></i>&nbsp;MODS</a></p>';
+                // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=tn"><i class="fa fa-code"></i>&nbsp;Technical Metadata</a></p>';
+                // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=mods"><i class="fa fa-code"></i>&nbsp;MODS</a></p>';
             }
 
             if (data[i].object_type === 'object') {
-                html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=object"><i class="fa fa-download"></i>&nbsp;Download object</a></p>';
+                html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '"><i class="fa fa-download"></i>&nbsp;Download AIP</a></p>';
             }
 
             html += '</div>';
@@ -274,100 +274,6 @@ const objectsModule = (function () {
 
         // TODO: implement pagination or infinite scroll
         $('#objects').html(html);
-        $('a').tooltip();
-    };
-
-    // TODO: NOT USED remove
-    const renderObjectDetail = function (data) {
-
-        let html = '';
-
-        for (let i = 0; i < data.length; i++) {
-
-            collectionsModule.getCollectionName(data[i].pid);
-            let record = JSON.parse(data[i].display_record);
-            // TODO: place domain in config
-            let tn = 'http://librepo01-vlp.du.edu:8080/fedora/objects/' + data[i].pid + '/datastreams/TN/content';
-
-            html += '<div class="row">';
-            // TODO: check mime type here
-            html += '<div class="col-md-4"><img style="width: 70%; display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
-            html += '<div class="col-md-5" style="padding: 5px">';
-
-            if (record.title !== undefined) {
-
-                if (data[i].object_type === 'object') {
-                    // html += '<h3>' + record.title[0] + '</h3>';
-                    $('#object-title').html(record.title);
-                }
-
-            } else {
-                // html += '<h4>No Title</h4>';
-                $('#object-title').html('No Title');
-            }
-
-            // TODO: display more metadata
-            if (data[i].object_type === 'object') {
-                console.log(record);
-                // TODO: check if value is defined and if is_array before rendering
-                html += '<ul>';
-                html += '<li><small><strong>pid:</strong>&nbsp;' + data[i].pid + '</small></li>';
-
-                if (record.identifier !== undefined) {
-                    html += '<li><small><strong>Identifier:</strong>&nbsp;' + record.identifier + '</small></li>';
-                }
-
-                if (record.typeOfResource !== undefined) {
-                    html += '<li><small><strong>TypeOfResource:</strong>&nbsp;' + record.typeOfResource + '</small></li>';
-                }
-
-                if (record.language !== undefined) {
-                    html += '<li><small><strong>Language:</strong>&nbsp;' + record.language + '</small></li>';
-                }
-
-                if (record.accessCondition !== undefined) {
-                    html += '<li><small><strong>AccessCondition:</strong>&nbsp;' + record.accessCondition + '</small></li>';
-                }
-
-                if (record.abstract !== undefined) {
-                    html += '<li><small><strong>Abstract:</strong>&nbsp;' + record.abstract + '</small></li>';
-                }
-
-                html += '</ul>';
-            }
-
-            if (data[i].object_type === 'collection' && record.abstract !== undefined) {
-                html += '<p style="min-height: 75px"><small>' + record.abstract + '</small></p>';
-            } else {
-                // html += '<p style="min-height: 75px"><small>No description.</small></p>';
-            }
-
-
-            html += '</div>';
-            html += '<div class="col-md-3" style="padding: 5px">';
-
-            if (data[i].is_published === 1) {
-                html += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
-                html += '<p><a href="#"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
-            } else {
-                html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
-                html += '<p><a href="#"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
-            }
-
-            if (data[i].object_type === 'object') {
-                html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '"><i class="fa fa-download"></i>&nbsp;Download Object</a></p>';
-            }
-
-            html += '<p><a href="#"><i class="fa fa-edit"></i>&nbsp;Edit Object</a></p>';
-            html += '<p><a href="#"><i class="fa fa-code"></i>&nbsp;Technical Metadata</a></p>';
-            html += '<p><a href="#"><i class="fa fa-code"></i>&nbsp;MODS</a></p>';
-            html += '</div>';
-            html += '</div>';
-            html += '<hr>';
-        }
-
-        // TODO: implement pagination
-        $('#object-detail').html(html);
         $('a').tooltip();
     };
 
@@ -388,19 +294,10 @@ const objectsModule = (function () {
             });
     };
 
-    obj.getObjectDetail = function () {
-
-        let pid = helperModule.getParameterByName('pid');
-
-        userModule.setHeaderUserToken();
-
-        $.ajax(api + '/api/admin/v1/repo/object?pid=' + pid)
-            .done(function (data) {
-                renderObjectDetail(data);
-            })
-            .fail(function () {
-                renderError();
-            });
+    obj.downloadObject = function () {
+        let pid = helperModule.getParameterByName('pid'); // TODO: sanitize
+        window.location.replace(api + '/api/v1/object/download?pid=' + pid);
+        return false;
     };
 
     obj.init = function () {

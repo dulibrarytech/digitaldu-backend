@@ -9,9 +9,8 @@ var fs = require('fs'),
     pids = require('../libs/next-pid'),
     handles = require('../libs/handles'),
     modslibdisplay = require('../libs/display-record'),
+    archivematica = require('../libs/archivematica'),
     logger = require('../libs/log4'),
-    // es = require('elasticsearch'),
-    // shell = require('shelljs'),
     knex = require('knex')({
         client: 'mysql2',
         connection: {
@@ -21,12 +20,6 @@ var fs = require('fs'),
             database: config.dbName
         }
     });
-
-/*
-var client = new es.Client({
-    host: config.elasticSearch
-});
-*/
 
 exports.get_next_pid = function (req, callback) {
 
@@ -367,4 +360,52 @@ exports.save_admin_collection_object = function (req, callback) {
 
         }
     });
+};
+
+exports.get_object_download = function (req, callback) {
+
+    let pid = req.query.pid;
+
+    knex('tbl_objects')
+        .select('sip_uuid')
+        .where({
+            pid: pid,
+            object_type: 'object',
+            is_active: 1
+        })
+        .then(function (data) {
+
+            if (data.length === 0) {
+
+                callback({
+                    status: 500,
+                    message: 'Unable to download AIP.',
+                });
+            }
+
+            archivematica.download_aip(data[0].sip_uuid, function (aip) {
+
+                if (aip.error === true) {
+
+                    callback({
+                        status: 500,
+                        message: 'Unable to download AIP.',
+                    });
+
+                    throw aip.error;
+                }
+
+                callback({
+                    status: 200,
+                    content_type: 'application/x-7z-compressed',
+                    file: aip
+                });
+            });
+        })
+        .catch(function (error) {
+            logger.module().error('ERROR: unable to get object sip_uuid ' + error);
+            let obj = {};
+            obj.error = 'ERROR: unable to get object sip_uuid ' + error;
+            callback(null, obj);
+        });
 };

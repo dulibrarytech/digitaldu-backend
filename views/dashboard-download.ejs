@@ -1,1 +1,80 @@
-<h2>Downloads</h2>
+<% include partials/header.ejs %>
+
+<body class="nav-md">
+<div class="container body">
+    <div class="main_container">
+        <div class="col-md-3 left_col">
+            <div class="left_col scroll-view">
+                <div class="navbar nav_title" style="border: 0;">
+                    <a href="index.html" class="site_title"><i class="fa fa-archive"></i> <span>DU Repository</span></a>
+                </div>
+
+                <div class="clearfix"></div>
+
+                <!-- menu profile quick info -->
+                <% include partials/menu-profile.ejs %>
+                <!-- /menu profile quick info -->
+
+                <br>
+
+                <!-- sidebar menu -->
+                <% include partials/nav.ejs %>
+                <!-- /sidebar menu -->
+
+                <!-- /menu footer buttons -->
+                <% include partials/sidebar-footer.ejs %>
+                <!-- /menu footer buttons -->
+            </div>
+        </div>
+
+        <!-- top navigation -->
+        <% include partials/top-nav.ejs %>
+        <!-- /top navigation -->
+
+        <!-- page content -->
+        <div class="right_col" role="main">
+            <div class="">
+
+                <div class="page-title">
+                    <div class="title_left">
+                        <h3>AIP Download</h3>
+                    </div>
+
+                    <div class="title_right">
+                        <% include partials/search.ejs %>
+                    </div>
+                </div>
+
+                <div class="clearfix"></div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <!--<h2>AIP Download</h2>-->
+                                <p>One moment please.</p>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                                <div id="message"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div> <!-- end row -->
+            </div>
+        </div>
+        <!-- /page content -->
+        <!-- footer content -->
+        <% include partials/footer.ejs %>
+        <!-- /footer content -->
+    </div>
+
+    <script src="../../vendors/jquery/dist/jquery.min.js"></script>
+    <script src="../../vendors/bootstrap/dist/js/bootstrap.min.js"></script>
+    <!--<script src="../../vendors/nprogress/nprogress.js"></script>-->
+    <script src="../../assets/js/custom.js"></script>
+    <script src="../../app/libs/config.js"></script>
+    <script src="../../app/libs/helper.js"></script>
+    <script src="../../app/user.module.js"></script>
+    <script src="../../app/objects.module.js"></script>
+    <script>objectsModule.downloadObject();</script>

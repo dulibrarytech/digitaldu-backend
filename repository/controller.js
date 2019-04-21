@@ -56,6 +56,20 @@ exports.get_next_pid = function (req, res) {
     });
 };
 
+exports.get_object_download = function (req, res) {
+    Repo.get_object_download(req, function (data) {
+        console.log(data);
+        if (data.file === undefined) {
+            res.status(data.status).send(data);
+            return false;
+        }
+
+        res.set('Content-Type', data.content_type);
+        res.download(data.file);
+    });
+};
+
+/*
 exports.get_repo_object = function (req, res) {
     Repo.get_repo_object(req, function (result) {
         // res.setHeader('Content-Length', result.stat.size);
@@ -75,15 +89,8 @@ exports.get_repo_object = function (req, res) {
         result.pdf.on('open', function () {
             result.pdf.pipe(res);
         });
-        */
+        *
 
     });
 };
-
-/* search
-exports.do_search = function (req, res) {
-    Repo.do_search(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
- */
+*/

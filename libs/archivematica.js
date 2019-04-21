@@ -1,6 +1,7 @@
 const config = require('../config/config'),
     client = require('ssh2-sftp-client'),
     request = require('request'),
+    fs = require('fs'),
     logger = require('../libs/log4');
 
 /**
@@ -357,12 +358,80 @@ exports.clear_ingest = function (uuid) {
         }
 
         if (httpResponse.statusCode === 200) {
-            console.log(body);
             logger.module().info('INFO: ingest ' + uuid + ' has been cleared.');
             return false;
         } else {
             logger.module().error('ERROR: unable to clear ingest ' + error);
             return false;
         }
+    });
+};
+
+/**
+ * Downloads AIP from archivematica
+ * @param sip_uuid
+ * @param callback
+ */
+exports.download_aip = function (sip_uuid, callback) {
+
+    'use strict';
+
+    if (fs.existsSync('./tmp/' + sip_uuid + '.7z')) {
+        callback('./tmp/' + sip_uuid + '.7z');
+        return false;
+    }
+
+    let apiUrl = config.archivematicaStorageApi + 'v2/file/' + sip_uuid + '/download/?username=' + config.archivematicaStorageUsername + '&api_key=' + config.archivematicaStorageApiKey;
+
+    request.get({
+        url: apiUrl,
+        timeout: 60000
+    }, function (error, httpResponse, body) {
+
+        if (error) {
+
+            logger.module().error('ERROR: unable to get dip path ' + error);
+
+            callback({
+                error: true,
+                message: error
+            });
+
+            return false;
+        }
+
+        if (httpResponse.statusCode !== 200) {
+
+            logger.module().error('ERROR: unable to get AIP ' + body);
+
+            callback({
+                error: true,
+                message: 'Error: Unable to get AIP'
+            });
+
+            return false;
+        }
+
+        fs.writeFile('./tmp/' + sip_uuid + '.7z', body, function(error) {
+
+            if (error) {
+
+                logger.module().error('ERROR: Unable to write to tmp folder ' + error);
+
+                callback({
+                    error: true,
+                    error_message: error
+                });
+            }
+
+            // setTimeout(function () {
+
+                if (fs.existsSync('./tmp/' + sip_uuid + '.7z')) {
+                    callback('./tmp/' + sip_uuid + '.7z');
+                    return false;
+                }
+
+            // }, 20000);
+        });
     });
 };

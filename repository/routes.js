@@ -6,7 +6,6 @@ var Repo = require('../repository/controller'),
 // TODO: apply api security.  i.e. API key
 module.exports = function (app) {
 
-    //--- Used by discovery layer ---//
     /* Gets objects */
     app.route('/api/v1/objects')
         .get(Repo.get_objects);
@@ -15,7 +14,6 @@ module.exports = function (app) {
     app.route('/api/v1/object')
         .get(Repo.get_object);
 
-    //--- Used by repo admin dashboard ---//
     app.route('/api/admin/v1/repo/objects')
         .get(token.verify, Repo.get_admin_objects);
 
@@ -24,12 +22,9 @@ module.exports = function (app) {
         .post(token.verify, Repo.save_admin_collection_object)
         .put(token.verify, Repo.update_admin_collection_object);
 
+    app.route('/api/v1/object/download')
+        .get(Repo.get_object_download);
+
     app.route('/api/admin/v1/repo/pid')
         .post(Repo.get_next_pid);  // token.verify, // TODO: API key?
-
-    // temp
-    /*
-    app.route('/objects/:pid/datastreams/:ds/content')
-        .get(Repo.get_repo_object);
-        */
 };
