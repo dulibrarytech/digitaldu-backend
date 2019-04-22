@@ -4,6 +4,11 @@ const jwt = require('jsonwebtoken'),
     config = require('../config/config'),
     logger = require('../libs/log4');
 
+/**
+ * Creates session token
+ * @param username
+ * @returns {*}
+ */
 exports.create = function (username) {
 
     let tokenData = {
@@ -17,6 +22,12 @@ exports.create = function (username) {
     });
 };
 
+/**
+ * Verifies session token
+ * @param req
+ * @param res
+ * @param next
+ */
 exports.verify = function (req, res, next) {
 
     let token = req.headers['x-access-token'] || req.query.t;
