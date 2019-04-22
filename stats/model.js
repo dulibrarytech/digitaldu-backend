@@ -1,25 +1,18 @@
 'use strict';
 
-var fs = require('fs'),
-    Config = require('../config/config'),
-    // es = require('elasticsearch'),
+const fs = require('fs'),
+    config = require('../config/config'),
+    logger = require('../libs/log4'),
     async = require('async'),
     knex = require('knex')({
         client: 'mysql2',
         connection: {
-            host: Config.dbHost,
-            user: Config.dbUser,
-            password: Config.dbPassword,
-            database: Config.dbName
+            host: config.dbHost,
+            user: config.dbUser,
+            password: config.dbPassword,
+            database: config.dbName
         }
     });
-
-/*
-var client = new es.Client({
-    host: Config.elasticSearch
-    // log: 'trace'
-});
-*/
 
 exports.get_stats = function (req, callback) {
 
@@ -32,8 +25,13 @@ exports.get_stats = function (req, callback) {
         getTotalPdfCount,
         getTotalAudioCount,
         getTotalVideoCount
-    ], function (err, results) {
-        // TODO: add logging
+    ], function (error, results) {
+
+        if (error) {
+            logger.module().error('ERROR: unable to generate stats ' + error);
+            return false;
+        }
+
         callback({
             status: 200,
             content_type: {'Content-Type': 'application/json'},
@@ -59,8 +57,8 @@ exports.get_stats = function (req, callback) {
 
             })
             .catch(function (error) {
-                // TODO: add error callback
-                console.log(error);
+                logger.module().error('ERROR: unable to get published collection count ' + error);
+                throw 'ERROR: unable to get published collection count ' + error;
             });
     }
 
@@ -81,8 +79,8 @@ exports.get_stats = function (req, callback) {
                 return null;
             })
             .catch(function (error) {
-                // TODO: add error callback
-                console.log(error);
+                logger.module().error('ERROR: unable to get published object count ' + error);
+                throw 'ERROR: unable to get published object count ' + error;
             });
     }
 
@@ -102,8 +100,8 @@ exports.get_stats = function (req, callback) {
                 return null;
             })
             .catch(function (error) {
-                // TODO: add error callback
-                console.log(error);
+                logger.module().error('ERROR: unable to get total collection count ' + error);
+                throw 'ERROR: unable to get total collection count ' + error;
             });
     }
 
@@ -123,8 +121,8 @@ exports.get_stats = function (req, callback) {
                 return null;
             })
             .catch(function (error) {
-                // TODO: add error callback
-                console.log(error);
+                logger.module().error('ERROR: unable to get total object count ' + error);
+                throw 'ERROR: unable to get total object count ' + error;
             });
     }
 
@@ -151,8 +149,8 @@ exports.get_stats = function (req, callback) {
                 return null;
             })
             .catch(function (error) {
-                // TODO: add error callback
-                console.log(error);
+                logger.module().error('ERROR: unable to get total image count ' + error);
+                throw 'ERROR: unable to get total image count ' + error;
             });
     }
 
@@ -171,8 +169,8 @@ exports.get_stats = function (req, callback) {
                 return null;
             })
             .catch(function (error) {
-                // TODO: add error callback
-                console.log(error);
+                logger.module().error('ERROR: unable to get total pdf count ' + error);
+                throw 'ERROR: unable to get total pdf count ' + error;
             });
     }
 
@@ -191,8 +189,8 @@ exports.get_stats = function (req, callback) {
                 return null;
             })
             .catch(function (error) {
-                // TODO: add error callback
-                console.log(error);
+                logger.module().error('ERROR: unable to get total audio count ' + error);
+                throw 'ERROR: unable to get total audio count ' + error;
             });
     }
 
@@ -211,8 +209,8 @@ exports.get_stats = function (req, callback) {
                 return null;
             })
             .catch(function (error) {
-                // TODO: add error callback
-                console.log(error);
+                logger.module().error('ERROR: unable to get total video count ' + error);
+                throw 'ERROR: unable to get total video count ' + error;
             });
     }
 };
