@@ -8,66 +8,6 @@ const userModule = (function () {
         $('#message').html(message);
     };
 
-    obj.addUserToGroup = function (id) {
-
-        let user_id = id,
-            group_id = helperModule.getParameterByName('id'),
-            message = '<div class="alert alert-info">Adding user to group...</div>';
-
-        $('#user-form').hide();
-        $('#message').html(message);
-
-        $.ajax({
-            url: api + '/api/admin/v1/groups/users',
-            type: 'post',
-            data: {user_id: user_id, group_id: group_id}
-        }).done(function (data) {
-
-            var message = '<div class="alert alert-success">User added to group</div>';
-            $('#message').html(message);
-
-            setTimeout(function () {
-                $('#message').html('');
-
-            }, 3000);
-
-        }).fail(function (jqXHR, textStatus) {
-
-            if (jqXHR.status !== 201) {
-
-                var message = '<div class="alert alert-warning"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. User is already in this group.</div>';
-
-                setTimeout(function () {
-                    $('#message').html('');
-
-                }, 3000);
-
-                renderError(message);
-            }
-
-        });
-    };
-
-    const renderUsersForGroups = function (data) {
-
-        let html = '';
-
-        for (let i = 0; i < data.length; i++) {
-
-            if (data[i].status === 1) {
-                html += '<tr>';
-                html += '<td>' + data[i].first_name + '</td>';
-                html += '<td>' + data[i].last_name + '</td>';
-                html += '<td>' + data[i].email + '</td>';
-                html += '<td><a class="btn btn-xs btn-success" href="#" onclick="userModule.addUserToGroup(' + data[i].id + '); return false;" title="Add user to group"><i class="fa fa-plus"></i></a></td>';
-                html += '</tr>';
-            }
-        }
-
-        $('#users').html(html);
-        $('.loading').html('');
-    };
-
     const renderUsers = function (data) {
 
         let html = '';
@@ -114,12 +54,6 @@ const userModule = (function () {
             }
 
             html += '<hr>';
-
-            if (data[i].groups !== undefined) {
-                for (let j = 0; j < data[i].groups.length; j++) {
-                    html += '<p><strong>User group:</strong> ' + data[i].groups[j].group_name + '</p>';
-                }
-            }
         }
 
         $('#user-details').html(html);
@@ -139,33 +73,6 @@ const userModule = (function () {
             });
     };
 
-    obj.getUsersForGroups = function () {
-
-        userModule.setHeaderUserToken();
-
-        $.ajax(api + '/api/admin/v1/users')
-            .done(function (data) {
-                renderUsersForGroups(data);
-            })
-            .fail(function () {
-                renderError();
-            });
-    };
-
-    obj.getUserGroups = function (user_id, callback) {
-
-        userModule.setHeaderUserToken();
-
-        // user "id" passed in
-        $.ajax(api + '/api/admin/v1/users/groups?id=' + user_id)
-            .done(function (data) {
-                callback(data);
-            })
-            .fail(function () {
-                renderError();
-            });
-    };
-
     obj.getUserDetails = function () {
 
         // TODO: sanitize
@@ -175,11 +82,7 @@ const userModule = (function () {
 
         $.ajax(api + '/api/admin/v1/users?id=' + id)
             .done(function (data) {
-
-                userModule.getUserGroups(id, function (groups) {
-                    data[0].groups = groups;
-                    renderUserDetails(data);
-                });
+                renderUserDetails(data);
             })
             .fail(function () {
                 renderError();
@@ -187,7 +90,7 @@ const userModule = (function () {
     };
 
     obj.checkUserData = function () {
-        var data = window.sessionStorage.getItem('repo_user');
+        let data = window.sessionStorage.getItem('repo_user');
 
         if (data !== null) {
             return true;
@@ -195,7 +98,7 @@ const userModule = (function () {
     };
 
     obj.renderUserName = function () {
-        var data = JSON.parse(window.sessionStorage.getItem('repo_user'));
+        let data = JSON.parse(window.sessionStorage.getItem('repo_user'));
 
         if (data !== null) {
             $('.username').html('<strong>' + data.name + '</strong>');
@@ -205,18 +108,18 @@ const userModule = (function () {
 
     };
 
-    var getUserFormData = function () {
+    const getUserFormData = function () {
         return $('#user-form').serialize();
     };
 
     obj.getUserFullName = function () {
-        var data = JSON.parse(window.sessionStorage.getItem('repo_user'));
+        let data = JSON.parse(window.sessionStorage.getItem('repo_user'));
         return data.name;
     };
 
-    var addUser = function () {
+    const addUser = function () {
 
-        var message = '<div class="alert alert-info">Saving User...</div>';
+        let message = '<div class="alert alert-info">Saving User...</div>';
         $('#user-form').hide();
         $('#message').html(message);
 
@@ -228,7 +131,7 @@ const userModule = (function () {
             data: getUserFormData()
         }).done(function (data) {
 
-            var message = '<div class="alert alert-success">User created</div>';
+            let message = '<div class="alert alert-success">User created</div>';
             $('#message').html(message);
             $('#user-form').show();
             $('#user-form')[0].reset();
@@ -254,21 +157,13 @@ const userModule = (function () {
         });
     };
 
-    obj.getHeaderUserPermissions = function () {
-
-        var data = window.sessionStorage.getItem('repo_user'),
-            user = JSON.parse(data);
-            var userPermissions = user.groups;
-
-        return userPermissions;
-    };
-
     obj.setHeaderUserToken = function () {
 
-        var data = window.sessionStorage.getItem('repo_token');
+        let data = JSON.parse(window.sessionStorage.getItem('repo_token'));
 
         if (data.token === null) {
             // TODO: redirect to login
+            window.alert('oops');
         }
 
         $.ajaxSetup({
@@ -283,7 +178,7 @@ const userModule = (function () {
 
         userModule.saveToken();
         // TODO: sanitize
-        var uid = helperModule.getParameterByName('uid');
+        let uid = helperModule.getParameterByName('uid');
 
         if (uid !== null) {
 
@@ -291,13 +186,8 @@ const userModule = (function () {
 
             $.ajax(api + '/api/admin/v1/users?id=' + uid)
                 .done(function (data) {
-
-                    userModule.getUserGroups(uid, function (groups) {
-
-                        data[0].groups = groups;
-                        userModule.saveUserAuthData(data);
-                        userModule.renderUserName();
-                    });
+                    userModule.saveUserAuthData(data);
+                    userModule.renderUserName();
                 })
                 .fail(function () {
                     renderError();
@@ -309,10 +199,9 @@ const userModule = (function () {
 
     obj.saveUserAuthData = function (data) {
 
-        var userObj = {
+        let userObj = {
             uid: data[0].id,
-            name: data[0].first_name + ' ' + data[0].last_name,
-            groups: data[0].groups
+            name: data[0].first_name + ' ' + data[0].last_name
         };
 
         window.sessionStorage.setItem('repo_user', JSON.stringify(userObj));
@@ -320,10 +209,11 @@ const userModule = (function () {
 
     obj.saveToken = function () {
 
-        var token = helperModule.getParameterByName('t');
+        let token = helperModule.getParameterByName('t');
 
         if (token !== null) {
-            var data = {
+
+            let data = {
                 token: token
             };
 

@@ -1,3 +1,4 @@
+// TODO: move to transfer-ingest lib
 const config = require('../../config/config'),
     queue = require('../../libs/import/db-queue'),
     logger = require('../../libs/log4'),
@@ -10,7 +11,7 @@ const config = require('../../config/config'),
             database: config.dbQueueName
         }
     }),
-    IMPORT_QUEUE = 'tbl_duracloud_import_queue';
+    IMPORT_QUEUE = 'tbl_duracloud_queue';
 
 /**
  * Saves transfer object data to db

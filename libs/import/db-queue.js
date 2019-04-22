@@ -1,5 +1,6 @@
 'use strict';
 
+// TODO: move to transfer-ingest lib
 const config = require('../../config/config'),
     knexQ = require('knex')({
     client: 'mysql2',
@@ -16,10 +17,7 @@ exports.save = function (obj, callback) {
     let chunkSize = obj.data.length;
     knexQ.batchInsert(obj.table, obj.data, chunkSize)
         .then(function (data) {
-            // TODO:...
             callback('done');
-            // Start processing XML
-            // process_duracloud_queue_xml(sip_uuid);
         })
         .catch(function (error) {
             console.log(error);
