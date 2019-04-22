@@ -1,0 +1,76 @@
+# ************************************************************
+# Sequel Pro SQL dump
+# Version 4541
+#
+# http://www.sequelpro.com/
+# https://github.com/sequelpro/sequelpro
+#
+# Host: 127.0.0.1 (MySQL 5.5.42)
+# Database: repo_queue
+# Generation Time: 2019-04-22 21:17:25 +0000
+# ************************************************************
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+
+# Dump of table tbl_archivematica_queue
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `tbl_archivematica_queue`;
+
+CREATE TABLE `tbl_archivematica_queue` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `is_member_of_collection` varchar(25) NOT NULL DEFAULT '',
+  `object` varchar(255) NOT NULL DEFAULT '',
+  `transfer_uuid` varchar(255) DEFAULT NULL,
+  `sip_uuid` varchar(255) DEFAULT NULL,
+  `message` varchar(255) DEFAULT NULL,
+  `microservice` varchar(255) DEFAULT NULL,
+  `transfer_folder` varchar(255) DEFAULT NULL,
+  `user` varchar(255) DEFAULT NULL,
+  `transfer_status` int(11) NOT NULL DEFAULT '0',
+  `approval_status` int(11) DEFAULT '0',
+  `ingest_status` int(11) DEFAULT '0',
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+
+# Dump of table tbl_duracloud_queue
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `tbl_duracloud_queue`;
+
+CREATE TABLE `tbl_duracloud_queue` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `sip_uuid` varchar(255) NOT NULL DEFAULT '',
+  `uuid` varchar(255) NOT NULL DEFAULT '',
+  `file` varchar(255) NOT NULL DEFAULT '',
+  `file_id` varchar(255) DEFAULT NULL,
+  `type` varchar(20) DEFAULT NULL,
+  `dip_path` varchar(255) DEFAULT NULL,
+  `message` varchar(255) DEFAULT NULL,
+  `status` int(11) NOT NULL,
+  `created` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `sip_uuid_index` (`sip_uuid`),
+  KEY `status_index` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+
+
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
