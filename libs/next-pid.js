@@ -1,6 +1,11 @@
 var config = require('../config/config'),
+    logger = require('../libs/log4'),
     request = require('request');
 
+/**
+ * Makes HTTP request to get pid
+ * @param callback
+ */
 exports.get_next_pid = function (callback) {
 
     'use strict';
@@ -10,8 +15,14 @@ exports.get_next_pid = function (callback) {
     }, function(error, httpResponse, body){
 
         if (error) {
-            // TODO: log error and return callback
-            console.log(error);
+            logger.module().error('ERROR: Unable to get next pid ' + error);
+
+            callback({
+                error: true,
+                message: 'ERROR: Unable to get next pid ' + error
+            });
+
+            return false;
         }
 
         if (httpResponse.statusCode === 200) {
@@ -20,7 +31,12 @@ exports.get_next_pid = function (callback) {
             callback(json.pid);
 
         } else {
-            // TODO: log error and return callback
+            logger.module().error('ERROR: Unable to get next pid ' + error);
+
+            callback({
+                error: true,
+                message: 'ERROR: Unable to get next pid ' + error
+            });
         }
     });
 };

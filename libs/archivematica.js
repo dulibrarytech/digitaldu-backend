@@ -64,11 +64,6 @@ exports.start_tranfser = function (transferObj, callback) {
         encodedLocation = buffer.toString('base64'),
         apiUrl = config.archivematicaApi + 'transfer/start_transfer/?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
 
-    console.log(transferSource);
-    console.log(sftpPath);
-    console.log(location);
-    console.log(apiUrl);
-
     request.post({
         url: apiUrl,
         form: {
@@ -79,8 +74,6 @@ exports.start_tranfser = function (transferObj, callback) {
             'rows_ids[]': '[""]'
         }
     }, function (error, httpResponse, body) {
-
-        console.log(body);
 
         if (error) {
 
@@ -327,7 +320,6 @@ exports.clear_transfer = function (uuid) {
         }
 
         if (httpResponse.statusCode === 200) {
-            console.log(body);
             logger.module().info('INFO: transfer ' + uuid + ' has been cleared.');
             return false;
         } else {
@@ -424,14 +416,15 @@ exports.download_aip = function (sip_uuid, callback) {
                 });
             }
 
-            // setTimeout(function () {
+            // TODO: test
+            setTimeout(function () {
 
                 if (fs.existsSync('./tmp/' + sip_uuid + '.7z')) {
                     callback('./tmp/' + sip_uuid + '.7z');
                     return false;
                 }
 
-            // }, 20000);
+            }, 1000);
         });
     });
 };

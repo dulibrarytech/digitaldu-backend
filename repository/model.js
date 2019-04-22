@@ -21,6 +21,11 @@ var fs = require('fs'),
         }
     });
 
+/**
+ * Gets next pid and increments pid value
+ * @param req
+ * @param callback
+ */
 exports.get_next_pid = function (req, callback) {
 
     var namespace = config.namespace;
@@ -37,7 +42,7 @@ exports.get_next_pid = function (req, callback) {
             .then(function (data) {
 
                 // increment pid
-                var new_id = (parseInt(data[0].current_pid) + 1),
+                let new_id = (parseInt(data[0].current_pid) + 1),
                     new_pid = data[0].namespace + ':' + new_id;
 
                 // update current pid with new pid value
@@ -52,7 +57,8 @@ exports.get_next_pid = function (req, callback) {
                         return new_pid;
                     })
                     .catch(function (error) {
-                        console.log(error);
+                        logger.module().error('ERROR: Unable to get next pid ' + error);
+                        throw 'ERROR: Unable to get next pid ' + error;
                     });
 
             })
@@ -69,12 +75,19 @@ exports.get_next_pid = function (req, callback) {
             });
         })
         .catch(function (error) {
-            console.error(error);
+            logger.module().error('ERROR: Unable to get next pid ' + error);
+            throw 'ERROR: Unable to get next pid ' + error;
         });
 };
 
+/**
+ * Gets objects by collection
+ * @param req
+ * @param callback
+ */
 exports.get_objects = function (req, callback) {
 
+    // Collection pid
     var pid = req.query.pid; // TODO: sanitize
 
     knex('tbl_objects')
@@ -93,11 +106,16 @@ exports.get_objects = function (req, callback) {
             });
         })
         .catch(function (error) {
-            // TODO: add error callback
-            console.log(error);
+            logger.module().error('ERROR: Unable to get next pid ' + error);
+            throw 'ERROR: Unable to get next pid ' + error;
         });
 };
 
+/**
+ * Gets object by pid
+ * @param req
+ * @param callback
+ */
 exports.get_object = function (req, callback) {
 
     var pid = req.query.pid;  // TODO: sanitize
@@ -118,11 +136,16 @@ exports.get_object = function (req, callback) {
             });
         })
         .catch(function (error) {
-            // TODO: add error callback
-            console.log(error);
+            logger.module().error('ERROR: Unable to get object ' + error);
+            throw 'ERROR: Unable to get object ' + error;
         });
 };
 
+/**
+ * Get object by collection (admin dashboard)
+ * @param req
+ * @param callback
+ */
 exports.get_admin_objects = function (req, callback) {
 
     var pid = req.query.pid;
@@ -142,17 +165,21 @@ exports.get_admin_objects = function (req, callback) {
             });
         })
         .catch(function (error) {
-            // TODO: add error callback
-            console.log(error);
+            logger.module().error('ERROR: Unable to get object ' + error);
+            throw 'ERROR: Unable to get object ' + error;
         });
 };
 
+/**
+ * Gets object (admin dashboard)
+ * @param req
+ * @param callback
+ */
 exports.get_admin_object = function (req, callback) {
 
     var pid = req.query.pid;  // TODO: sanitize
 
     knex('tbl_objects')
-        // .select('is_member_of_collection', 'pid', 'object_type', 'mods', 'display_record', 'mime_type', 'is_published', 'is_compound', 'created')
         .select('is_member_of_collection', 'pid', 'handle', 'object_type', 'display_record', 'is_published', 'created')
         .where({
             pid: pid,
@@ -167,13 +194,13 @@ exports.get_admin_object = function (req, callback) {
             });
         })
         .catch(function (error) {
-            // TODO: add error callback
-            console.log(error);
+            logger.module().error('ERROR: Unable to get object ' + error);
+            throw 'ERROR: Unable to get object ' + error;
         });
 };
 
 /**
- *
+ * Updates collection object
  * @param req
  * @param callback
  */
@@ -226,12 +253,13 @@ exports.update_admin_collection_object = function (req, callback) {
             })
             .catch(function (error) {
                 logger.module().error('ERROR: unable to save collection record ' + error);
+                throw 'ERROR: unable to save collection record ' + error;
             });
     });
 };
 
 /**
- * Creates repository collection
+ * Creates repository collection (admin dashboard)
  * @param req
  * @param callback
  * @returns {boolean}
@@ -336,6 +364,7 @@ exports.save_admin_collection_object = function (req, callback) {
 
         if (error) {
             logger.module().error('ERROR: async (save_admin_collection_object)');
+            throw 'ERROR: async (save_admin_collection_object)';
         }
 
         logger.module().info('INFO: collection record saved');
@@ -357,11 +386,15 @@ exports.save_admin_collection_object = function (req, callback) {
                 data: [{'pid': 'no pid'}],
                 message: 'A database error occurred. ' + error
             });
-
         }
     });
 };
 
+/**
+ * Downloads AIP from archivematica
+ * @param req
+ * @param callback
+ */
 exports.get_object_download = function (req, callback) {
 
     let pid = req.query.pid;
