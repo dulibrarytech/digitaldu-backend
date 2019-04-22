@@ -23,7 +23,6 @@ const objectsModule = (function () {
             .fail(function () {
                 renderError();
             });
-
     };
 
     const renderObjectEditForm = function (data) {

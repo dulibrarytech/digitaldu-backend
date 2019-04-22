@@ -107,8 +107,6 @@ exports.import_mods_id = function (req, callback) {
  */
 exports.import_mods = function (req, callback) {
 
-    // 8886/7d01/8e6b/49c4/85eb/f168/f648/d4dd/codu_109608_clarion_v32_i34_19560224_transfer_1-b1487cea-3bb4-4c39-ba09-1c40426dc5f0/thumbnails/ae142ca2-c0a5-47c0-86e7-541d451e93d7.jpg
-
     let mods_id = req.body.mods_id,
         sip_uuid = req.body.sip_uuid;
 

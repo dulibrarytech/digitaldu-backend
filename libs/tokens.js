@@ -1,39 +1,49 @@
 'use strict';
 
-var jwt = require('jsonwebtoken'),
-    config = require('../config/config');
+const jwt = require('jsonwebtoken'),
+    config = require('../config/config'),
+    logger = require('../libs/log4');
 
 exports.create = function (username) {
 
-    var tokenData = {
+    let tokenData = {
         sub: username,
-        iss: 'https://libspec01-vlp.du.edu'
+        iss: config.tokenIssuer
     };
 
-    var token = jwt.sign(tokenData, config.tokenSecret, {
+    return jwt.sign(tokenData, config.tokenSecret, {
         algorithm: config.tokenAlgo,
         expiresIn: config.tokenExpires
     });
-
-    return token;
 };
 
 exports.verify = function (req, res, next) {
 
-    var token = req.headers['x-access-token'] || req.query.t;
+    let token = req.headers['x-access-token'] || req.query.t;
 
     if (token) {
 
-        jwt.verify(token, config.tokenSecret, function (err, decoded) {
+        jwt.verify(token, config.tokenSecret, function (error, decoded) {
 
-            if (err) {
-                // TODO: redirect to login
+            if (error) {
+
+                logger.module().error('ERROR: unable to verify token ' + error);
+
+                res.status(401).send({
+                    message: 'Unauthorized request ' + error
+                });
+
+                return false;
             }
 
             req.decoded = decoded;
             next();
         });
+
     } else {
-        console.log('Unable to verify token');
+
+        res.status(401).send({
+            message: 'Unauthorized request'
+        });
     }
 };

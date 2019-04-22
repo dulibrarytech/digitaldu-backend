@@ -6,6 +6,7 @@ module.exports = {
     tokenSecret: process.env.TOKEN_SECRET,
     tokenAlgo: process.env.TOKEN_ALGO,
     tokenExpires: process.env.TOKEN_EXPIRES,
+    tokenIssuer: process.env.TOKEN_ISSUER,
     dbHost: process.env.DB_HOST,
     dbUser: process.env.DB_USER,
     dbPassword: process.env.DB_PASSWORD,

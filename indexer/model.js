@@ -14,7 +14,6 @@ var request = require('request'),
     }),
     client = new es.Client({
         host: Config.elasticSearch
-        // log: 'trace'
     }),
     REPO_OBJECTS = 'tbl_objects';
 
