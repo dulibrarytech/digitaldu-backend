@@ -69,10 +69,11 @@ const collectionsModule = (function () {
     obj.getRootCollections = function () {
 
         userModule.setHeaderUserToken();
-        let userPermissions = userModule.getHeaderUserPermissions(),
-            permissions = [];
+        // let userPermissions = userModule.getHeaderUserPermissions(),
+        //     permissions = [];
 
         // TODO: REMOVE //move to lib
+        /*
         if (userPermissions.length > 1) {
 
             for (let i=0;i<userPermissions.length;i++) {
@@ -87,11 +88,12 @@ const collectionsModule = (function () {
         } else {
             // TODO
         }
+         */
 
         $.ajax({
             url: api + '/api/admin/v1/repo/objects?pid=codu:root',
-            type: 'GET',
-            headers: {'x-access-permissions': JSON.stringify(permissions)}
+            type: 'GET'
+            // headers: {'x-access-permissions': JSON.stringify(permissions)}
         })
             .done(function (data) {
                 renderRootCollections(data);
