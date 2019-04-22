@@ -1,6 +1,6 @@
 'use strict';
 
-var _ = require('lodash'),
+const _ = require('lodash'),
     validator = require('validator'),
     config = require('../config/config'),
     Token = require('../libs/tokens'),

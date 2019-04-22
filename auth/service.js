@@ -1,6 +1,6 @@
 'use strict';
 
-var request = require('request'),
+const request = require('request'),
     config = require('../config/config');
 
 exports.authenticate = function (username, password, callback) {
@@ -14,7 +14,7 @@ exports.authenticate = function (username, password, callback) {
         function (error, headers, response) {
 
             if (error) {
-                var errorObj = {
+                let errorObj = {
                     status: 500,
                     success: false,
                     message: 'An error has occurred.'
@@ -23,7 +23,7 @@ exports.authenticate = function (username, password, callback) {
                 callback(errorObj);
             }
 
-            var responseObj = JSON.parse(response);
+            let responseObj = JSON.parse(response);
             callback(responseObj);
         });
 };

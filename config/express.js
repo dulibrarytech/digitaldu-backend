@@ -1,6 +1,6 @@
 'use strict';
 
-var http = require('http'),
+const http = require('http'),
     express = require('express'),
     compress = require('compression'),
     bodyParser = require('body-parser'),
@@ -21,7 +21,6 @@ module.exports = function () {
 
     // accepts client connections
     io.on('connection', function(socket){
-        console.log('client connected to get transfer status');
         // sends transfer status to client
         socket.on('transfer_status', function(status) {
             io.emit('transfer_status', status);
@@ -29,15 +28,6 @@ module.exports = function () {
     });
 
     io.on('connection', function(socket){
-        console.log('client connected to get ingest status');
-        // sends ingest status to client
-        socket.on('ingest_status', function(status) {
-            io.emit('ingest_status', status);
-        });
-    });
-
-    io.on('connection', function(socket){
-        console.log('client connected to get import status');
         // sends import status to client
         socket.on('import_status', function(status) {
             io.emit('import_status', status);
@@ -63,7 +53,7 @@ module.exports = function () {
 
     require('../auth/routes.js')(app);
     require('../users/routes.js')(app);
-    require('../groups/routes.js')(app);
+    // require('../groups/routes.js')(app);
     require('../repository/routes.js')(app);
     require('../indexer/routes.js')(app);
     require('../dashboard/routes.js')(app);
