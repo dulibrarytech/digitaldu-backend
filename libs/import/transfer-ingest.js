@@ -21,7 +21,7 @@ const config = require('../../config/config'),
         }
     }),
     QUEUE = 'tbl_archivematica_queue',
-    IMPORT_QUEUE = 'tbl_duracloud_import_queue',
+    IMPORT_QUEUE = 'tbl_duracloud_queue',
     REPO_OBJECTS = 'tbl_objects';
 
 /**

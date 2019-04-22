@@ -53,7 +53,6 @@ module.exports = function () {
 
     require('../auth/routes.js')(app);
     require('../users/routes.js')(app);
-    // require('../groups/routes.js')(app);
     require('../repository/routes.js')(app);
     require('../indexer/routes.js')(app);
     require('../dashboard/routes.js')(app);

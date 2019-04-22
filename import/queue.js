@@ -3,7 +3,7 @@
 const fs = require('fs'),
     path = require('path'),
     config = require('../config/config'),
-    // modslib = require('../libs/mods/mods_init'),
+    // modslib = require('../libs/mods/mods_init'), // TODO: remove
     modslibdisplay = require('../libs/display-record'),
     metslib = require('../libs/mets'),
     importlib = require('../libs/import/transfer-ingest'),
@@ -20,7 +20,7 @@ const fs = require('fs'),
     socketclient = require('socket.io-client')(config.host),
     request = require('request'),
     shell = require('shelljs'),
-    queue = require('bull'),
+    queue = require('bull'),  // TODO: remove
     redislib = require('redis'),
     redisclient = redislib.createClient(),
     knexQ = require('knex')({
@@ -48,10 +48,10 @@ const fs = require('fs'),
         }
     },
     TRANSFER_QUEUE = 'tbl_archivematica_queue',
-    IMPORT_QUEUE = 'tbl_duracloud_import_queue',
+    IMPORT_QUEUE = 'tbl_duracloud_queue',
     TRANSFER_TIMER = 10000,                  // Transfer status is broadcast every 3 sec.
     IMPORT_TIMER = 10000,                    // Import status is broadcast every 5 sec.
-    // TRANSFER_INTERVAL_TIME = 60000,         // Object transfer starts every 60 sec. when the endpoint receives a request.
+    // TODO: remove  TRANSFER_INTERVAL_TIME = 60000,         // Object transfer starts every 60 sec. when the endpoint receives a request.
     TRANSFER_APPROVAL_TIME = 45000,         // Transfer approval occurs 60 sec. after transfer  (Gives transfer process time to complete)
     TRANSFER_STATUS_CHECK_INTERVAL = 30000,  // Transfer status checks occur every 3 sec.
     INGEST_STATUS_CHECK_INTERVAL = 30000;   // Ingest status checks begin 10 sec after the endpoint receives a request.
@@ -67,7 +67,6 @@ socketclient.on('connect', function () {
             .select('*')
             .whereRaw('DATE(created) = CURRENT_DATE')
             .orderBy('created', 'asc')
-            // .limit(10)
             .then(function (data) {
                 socketclient.emit('transfer_status', data);
             })
@@ -204,6 +203,7 @@ exports.queue_objects = function (req, callback) {
             });
     }
 
+    // TODO: remove
     function flush_queue(obj, callback) {
 
         if (obj.flush === false) {
@@ -218,7 +218,7 @@ exports.queue_objects = function (req, callback) {
 
     async.waterfall([
         check_db_queue,
-        flush_queue
+        flush_queue // TODO: remove
     ], function (error, results) {
 
         if (error) {
@@ -230,20 +230,25 @@ exports.queue_objects = function (req, callback) {
 
     let transfer_data = req.body;
 
+    // TODO: remove
     const queue_objects = new queue('queue-objects', REDIS);
 
+    // TODO: remove
     queue_objects.process(function (job, done) {
+        // TODO: move out of Redis queue code  // use transfer_data
         importlib.save_transfer_records(job.data, function (result) {
             done(null, result);
             return false;
         });
     });
 
+    // TODO: remove
     queue_objects.on('failed', function (job, error) {
         logger.module().fatal('FATAL: queue failed ' + job.failedReason);
         throw 'FATAL: queue failed ' + job.failedReason + ' (queue_objects)';
     });
 
+    // TODO: remove
     queue_objects.on('completed', function (job) {
 
         logger.module().info('INFO: queue process completed ' + job.returnvalue);
@@ -258,6 +263,7 @@ exports.queue_objects = function (req, callback) {
             throw 'FATAL: collection is undefined (queue_objects)';
         }
 
+        // TODO: initiate after data is saved to db queue
         request.post({
             url: config.apiUrl + '/api/admin/v1/import/start_transfer',
             form: {
@@ -283,12 +289,14 @@ exports.queue_objects = function (req, callback) {
         });
     });
 
+    // TODO: remove
     queue_objects.on('stalled', function (job) {
         // A job has been marked as stalled. This is useful for debugging job
         // workers that crash or pause the event loop.
         logger.module().info('INFO: stalled queue job ' + job + ' (queue_objects)');
     });
 
+    // TODO: remove
     queue_objects.add(transfer_data);
 
     callback({
@@ -322,45 +330,45 @@ exports.start_transfer = function (req, callback) {
         return false;
     }
 
+    // TODO: remove
     const start_transfer = new queue('start-transfer', REDIS);
 
+    // TODO: remove
     start_transfer.process(function (job, done) {
 
-        // let timer = setInterval(function () {
+        // TODO: move out of queue process
+        importlib.start_transfer(job.data, function (object) {
 
-            importlib.start_transfer(job.data, function (object) {
+            if (object === 'done') {
+                logger.module().info('INFO: transfer process complete (start_transfer)');
+                start_transfer.close();
+                done(null, object);
+                return false;
+            }
 
-                if (object === 'done') {
-                    // clearInterval(timer);
-                    logger.module().info('INFO: transfer process complete (start_transfer)');
-                    start_transfer.close();
-                    done(null, object);
-                    return false;
+            // Initiates file transfer on Archivematica service
+            archivematica.start_tranfser(object, function (response) {
+
+                if (response.error !== undefined && response.error === true) {
+                    logger.module().fatal('FATAL: transfer error ' + response + ' (start_transfer)');
+                    // TODO: test and update queue with FAILED message
+                    throw 'FATAL: transfer error ' + response + ' (start_transfer)';
+                    // return false;
                 }
 
-                // Initiates file transfer on Archivematica service
-                archivematica.start_tranfser(object, function (response) {
-
-                    if (response.error !== undefined && response.error === true) {
-                        logger.module().fatal('FATAL: transfer error ' + response + ' (start_transfer)');
-                        // TODO: test and update queue with FAILED message
-                        throw 'FATAL: transfer error ' + response + ' (start_transfer)';
-                        // return false;
-                    }
-
-                    logger.module().info('INFO: transfer started and confirming transfer (start_transfer)');
-                    importlib.confirm_transfer(response, object.id);
-                });
+                logger.module().info('INFO: transfer started and confirming transfer (start_transfer)');
+                importlib.confirm_transfer(response, object.id);
             });
-
-        // }, TRANSFER_INTERVAL_TIME);
+        });
     });
 
+    // TODO: remove
     start_transfer.on('failed', function (job, error) {
         logger.module().fatal('FATAL: transfer failed ' + error + ' reason: ' + job.failedReason + ' (start_transfer)');
         throw 'FATAL: transfer failed ' + error + ' reason: ' + job.failedReason + ' (start_transfer)';
     });
 
+    // TODO: remove
     start_transfer.on('completed', function (job) {
 
         if (job.data.collection === undefined) {
@@ -394,12 +402,14 @@ exports.start_transfer = function (req, callback) {
         });
     });
 
+    // TODO: remove
     start_transfer.on('stalled', function (job) {
         // A job has been marked as stalled. This is useful for debugging job
         // workers that crash or pause the event loop.
         logger.module().info('INFO: stalled queue job ' + job);
     });
 
+    // TODO: remove
     start_transfer.add({
         collection: collection
     });
@@ -942,7 +952,7 @@ exports.create_repo_record = function (req, callback) {
         /**
          * Makes request to archivespace to generate new session token
          */
-        function new_token () {
+        function new_token() {
 
             archivespace.get_session_token(function (response) {
 
