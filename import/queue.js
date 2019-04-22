@@ -3,7 +3,7 @@
 const fs = require('fs'),
     path = require('path'),
     config = require('../config/config'),
-    modslib = require('../libs/mods/mods_init'),
+    // modslib = require('../libs/mods/mods_init'),
     modslibdisplay = require('../libs/display-record'),
     metslib = require('../libs/mets'),
     importlib = require('../libs/import/transfer-ingest'),
