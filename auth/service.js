@@ -1,7 +1,8 @@
 'use strict';
 
-const request = require('request'),
-    config = require('../config/config');
+const config = require('../config/config'),
+    request = require('request'),
+    logger = require('../libs/log4');
 
 exports.authenticate = function (username, password, callback) {
 
@@ -14,6 +15,9 @@ exports.authenticate = function (username, password, callback) {
         function (error, headers, response) {
 
             if (error) {
+
+                logger.module().error('ERROR: request to LDAP failed ' + error);
+
                 let errorObj = {
                     status: 500,
                     success: false,
@@ -21,6 +25,7 @@ exports.authenticate = function (username, password, callback) {
                 };
 
                 callback(errorObj);
+                return false;
             }
 
             let responseObj = JSON.parse(response);

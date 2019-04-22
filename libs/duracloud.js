@@ -1,4 +1,4 @@
-var config = require('../config/config'),
+const config = require('../config/config'),
     logger = require('../libs/log4'),
     fs = require('fs'),
     request = require('request');
