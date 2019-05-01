@@ -21,6 +21,13 @@ module.exports = function () {
 
     // accepts client connections
     io.on('connection', function(socket){
+        // sends ingest status to client
+        socket.on('ingest_status', function(status) {
+            io.emit('ingest_status', status);
+        });
+    });
+
+    io.on('connection', function(socket){
         // sends transfer status to client
         socket.on('transfer_status', function(status) {
             io.emit('transfer_status', status);

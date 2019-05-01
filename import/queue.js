@@ -5,7 +5,7 @@ const fs = require('fs'),
     config = require('../config/config'),
     modslibdisplay = require('../libs/display-record'),
     metslib = require('../libs/mets'),
-    importlib = require('../libs/import/transfer-ingest'),
+    importlib = require('../libs/transfer-ingest'),
     pids = require('../libs/next-pid'),
     handles = require('../libs/handles'),
     archivematica = require('../libs/archivematica'),
@@ -40,12 +40,30 @@ const fs = require('fs'),
     IMPORT_QUEUE = 'tbl_duracloud_queue',
     TRANSFER_TIMER = 4000,                  // Transfer status is broadcast every 3 sec.
     IMPORT_TIMER = 4000,                    // Import status is broadcast every 5 sec.
-    TRANSFER_APPROVAL_TIME = 45000,          // Transfer approval occurs 45 sec. after transfer  (Gives transfer process time to complete)
+    INGEST_STATUS_TIMER = 60000,
+    TRANSFER_APPROVAL_TIME = 45000,         // Transfer approval occurs 45 sec. after transfer  (Gives transfer process time to complete)
     TRANSFER_STATUS_CHECK_INTERVAL = 4000,  // Transfer status checks occur every 3 sec.
     INGEST_STATUS_CHECK_INTERVAL = 4000;    // Ingest status checks begin 10 sec after the endpoint receives a request.
 
+/**
+ * Broadcasts current import record count
+ */
+socketclient.on('connect', function () {
 
-// TODO: broadcasts collection and remaining records in queue
+    let id = setInterval(function () {
+
+        knexQ(TRANSFER_QUEUE)
+            .count('id as count')
+            .then(function (data) {
+                socketclient.emit('ingest_status', data);
+            })
+            .catch(function (error) {
+                logger.module().error('ERROR: transfer queue database error');
+                throw error;
+            });
+
+    }, INGEST_STATUS_TIMER);
+});
 
 /**
  * Broadcasts archivematica transfer/ingest status

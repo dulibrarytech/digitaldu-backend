@@ -1,7 +1,6 @@
-const config = require('../../config/config'),
-    archivematica = require('../../libs/archivematica'),
-    // queue = require('../../libs/import/db-queue'),
-    logger = require('../../libs/log4'),
+const config = require('../config/config'),
+    archivematica = require('../libs/archivematica'),
+    logger = require('../libs/log4'),
     knexQ = require('knex')({
         client: 'mysql2',
         connection: {

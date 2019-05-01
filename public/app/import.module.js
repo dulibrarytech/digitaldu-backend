@@ -215,7 +215,7 @@ const importModule = (function () {
                 let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve collections.</div>';
 
                 if (jqXHR.status === 401) {
-                    // let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve collections.</div>';
+
                     renderError(message);
 
                     setTimeout(function () {
@@ -225,10 +225,8 @@ const importModule = (function () {
                     return false;
                 }
 
-                // let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to start transfer/import process.</div>';
                 renderError(message);
             }
-
         });
     };
 
@@ -239,7 +237,7 @@ const importModule = (function () {
 
         $('#message').html('<p><strong>Loading...</strong></p>');
 
-        var folder = helperModule.getParameterByName('collection'),
+        let folder = helperModule.getParameterByName('collection'),
             url = api + '/api/admin/v1/import/list?collection=' + null;
 
         // gets child folders when parent folder (collection) is present
@@ -255,10 +253,22 @@ const importModule = (function () {
             .fail(function (jqXHR, textStatus) {
 
                 if (jqXHR.status !== 200) {
-                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve object data from Archivematica SFTP server.</div>';
+
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve collections.</div>';
+
+                    if (jqXHR.status === 401) {
+
+                        renderError(message);
+
+                        setTimeout(function () {
+                            window.location.replace('/dashboard/error');
+                        }, 2000);
+
+                        return false;
+                    }
+
                     renderError(message);
                 }
-
             });
     };
 
@@ -273,11 +283,15 @@ const importModule = (function () {
             $('#message').html('');
         }
 
-        var socket = io();
+        let socket = io();
+
+        socket.on('ingest_status', function (data) {
+            $('#import-record-count').html('Records remaining in current import batch: ' + data[0].count);
+        });
 
         socket.on('transfer_status', function (data) {
 
-            var transferData = '';
+            let transferData = '';
 
             $('#message').html('');
 
