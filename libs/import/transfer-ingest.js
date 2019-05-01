@@ -79,7 +79,7 @@ exports.save_transfer_records = function (transfer_data, callback) {
  * @param obj
  * @param callback
  */
-exports.start_transfer = function (obj, callback) {
+exports.start_transfer = function (collection, callback) {
 
     'use strict';
 
@@ -87,7 +87,7 @@ exports.start_transfer = function (obj, callback) {
     knexQ(QUEUE)
         .select('id', 'is_member_of_collection', 'object')
         .where({
-            is_member_of_collection: obj.collection,
+            is_member_of_collection: collection,
             message: 'WAITING_FOR_TRANSFER',
             transfer_status: 0
         })
@@ -526,7 +526,6 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
             complete: false,
             sip_uuid: json.uuid
         });
-
     }
 };
 
@@ -752,7 +751,7 @@ exports.flag_incomplete_record = function (obj) {
             is_complete: 0
         })
         .then(function (data) {
-            console.log(data);
+            // console.log(data);
         })
         .catch(function (error) {
             logger.module().error('ERROR: unable to flag incomplete record ' + error);

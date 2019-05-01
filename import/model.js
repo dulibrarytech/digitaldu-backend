@@ -10,15 +10,7 @@ const config = require('../config/config'),
     uuid = require('uuid'),
     async = require('async'),
     request = require('request'),
-    knex = require('knex')({
-        client: 'mysql2',
-        connection: {
-            host: config.dbHost,
-            user: config.dbUser,
-            password: config.dbPassword,
-            database: config.dbName
-        }
-    }),
+    knex =require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects';
 
 /**

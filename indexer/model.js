@@ -1,19 +1,10 @@
 'use strict';
 
-var request = require('request'),
-    Config = require('../config/config'),
+const config = require('../config/config'),
     es = require('elasticsearch'),
-    knex = require('knex')({
-        client: 'mysql2',
-        connection: {
-            host: Config.dbHost,
-            user: Config.dbUser,
-            password: Config.dbPassword,
-            database: Config.dbName
-        }
-    }),
+    knex =require('../config/db')(),
     client = new es.Client({
-        host: Config.elasticSearch
+        host: config.elasticSearch
     }),
     REPO_OBJECTS = 'tbl_objects';
 
@@ -29,7 +20,7 @@ exports.index_record = function (req, callback) {
         return false;
     }
 
-    var sip_uuid = req.body.sip_uuid;
+    let sip_uuid = req.body.sip_uuid;
 
     knex(REPO_OBJECTS)
         .select('display_record')
@@ -45,7 +36,7 @@ exports.index_record = function (req, callback) {
             delete record.display_record.language;
 
             client.index({
-                index: Config.elasticSearchIndex,
+                index: config.elasticSearchIndex,
                 type: 'data',
                 id: record.pid.replace('codu:', ''),
                 body: record

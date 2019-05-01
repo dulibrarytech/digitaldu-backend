@@ -1,6 +1,6 @@
 'use strict';
 
-var fs = require('fs'),
+const fs = require('fs'),
     request = require('request'),
     config = require('../config/config'),
     pid = require('../libs/next-pid'),
@@ -11,15 +11,7 @@ var fs = require('fs'),
     modslibdisplay = require('../libs/display-record'),
     archivematica = require('../libs/archivematica'),
     logger = require('../libs/log4'),
-    knex = require('knex')({
-        client: 'mysql2',
-        connection: {
-            host: config.dbHost,
-            user: config.dbUser,
-            password: config.dbPassword,
-            database: config.dbName
-        }
-    });
+    knex =require('../config/db')();
 
 /**
  * Gets next pid and increments pid value
@@ -28,7 +20,7 @@ var fs = require('fs'),
  */
 exports.get_next_pid = function (req, callback) {
 
-    var namespace = config.namespace;
+    let namespace = config.namespace;
 
     knex.transaction(function (trx) {
 
@@ -88,7 +80,7 @@ exports.get_next_pid = function (req, callback) {
 exports.get_objects = function (req, callback) {
 
     // Collection pid
-    var pid = req.query.pid; // TODO: sanitize
+    let pid = req.query.pid; // TODO: sanitize
 
     knex('tbl_objects')
         .select('is_member_of_collection', 'pid', 'object_type', 'display_record', 'thumbnail', 'mime_type', 'is_compound', 'created')
@@ -118,7 +110,7 @@ exports.get_objects = function (req, callback) {
  */
 exports.get_object = function (req, callback) {
 
-    var pid = req.query.pid;  // TODO: sanitize
+    let pid = req.query.pid;  // TODO: sanitize
 
     knex('tbl_objects')
         .select('is_member_of_collection', 'pid', 'object_type', 'display_record', 'mime_type', 'is_compound', 'created')
@@ -148,7 +140,7 @@ exports.get_object = function (req, callback) {
  */
 exports.get_admin_objects = function (req, callback) {
 
-    var pid = req.query.pid;
+    let pid = req.query.pid;
 
     knex('tbl_objects')
         .select('id', 'is_member_of_collection', 'pid', 'object_type', 'display_record', 'thumbnail', 'mime_type', 'is_compound', 'is_published', 'created')

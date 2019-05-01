@@ -80,7 +80,21 @@ const collectionsModule = (function () {
             .fail(function (jqXHR, textStatus) {
 
                 if (jqXHR.status !== 201) {
+
                     let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve collections.</div>';
+
+                    if (jqXHR.status === 401) {
+                        // let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve collections.</div>';
+                        renderError(message);
+
+                        setTimeout(function () {
+                            window.location.replace('/dashboard/error');
+                        }, 2000);
+
+                        return false;
+                    }
+
+                    // let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve collections.</div>';
                     renderError(message);
                 }
             });

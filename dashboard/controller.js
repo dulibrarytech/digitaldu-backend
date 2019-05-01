@@ -89,30 +89,6 @@ exports.get_dashboard_user_add_form = function (req, res) {
     });
 };
 
-exports.get_dashboard_group_users = function (req, res) {
-    res.render('dashboard-group-users', {
-        host: config.host
-    });
-};
-
-exports.get_dashboard_groups = function (req, res) {
-    res.render('dashboard-groups', {
-        host: config.host
-    });
-};
-
-exports.get_dashboard_group_add_form = function (req, res) {
-    res.render('dashboard-add-group', {
-        host: config.host
-    });
-};
-
-exports.get_dashboard_group_user_add_form = function (req, res) {
-    res.render('dashboard-add-group-user.ejs', {
-        host: config.host
-    });
-};
-
 exports.get_dashboard_search = function (req, res) {
     res.render('dashboard-search-results', {
         host: config.host
@@ -121,6 +97,12 @@ exports.get_dashboard_search = function (req, res) {
 
 exports.get_dashboard_metadata = function (req, res) {
     res.render('dashboard-edit-metadata', {
+        host: config.host
+    });
+};
+
+exports.get_dashboard_error = function (req, res) {
+    res.render('error', {
         host: config.host
     });
 };

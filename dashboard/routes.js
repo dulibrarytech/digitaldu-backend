@@ -56,18 +56,8 @@ module.exports = function (app) {
     app.route('/dashboard/users/add')
         .get(Dashboard.get_dashboard_user_add_form);
 
-    /* groups */
-    app.route('/dashboard/groups')
-        .get(Dashboard.get_dashboard_groups);
-
-    app.route('/dashboard/groups/add')
-        .get(Dashboard.get_dashboard_group_add_form);
-
-    app.route('/dashboard/groups/users')
-        .get(Dashboard.get_dashboard_group_users);
-
-    app.route('/dashboard/groups/user/add')
-        .get(Dashboard.get_dashboard_group_user_add_form);
+    app.route('/dashboard/error')
+        .get(Dashboard.get_dashboard_error);
 
     app.route('/dashboard/search')
         .get(Dashboard.get_dashboard_search);

@@ -1,19 +1,49 @@
-<% include partials/header %>
+<% include partials/header.ejs %>
 
-<div class="fines-template">
+<body class="nav-md">
+<div class="container body">
+    <div class="main_container">
+        <div class="col-md-3 left_col">
+            <div class="left_col scroll-view">
+                <div class="navbar nav_title" style="border: 0;">
+                    <a href="#" class="site_title"><i class="fa fa-archive"></i> <span>DU Repository</span></a>
+                </div>
 
-    <% include partials/nav %>
-
-    <div class="container col-md-8 col-md-offset-2">
-
-        <fieldset>
-            <legend>DU Repository</legend>
-        </fieldset>
-
-        <div class="alert alert-danger">
-            <strong><%=message%></strong>
+                <div class="clearfix"></div>
+                <br>
+                <!-- /menu footer buttons -->
+                <% include partials/sidebar-footer.ejs %>
+                <!-- /menu footer buttons -->
+            </div>
         </div>
 
+        <!-- page content -->
+        <div class="right_col" role="main">
+            <div class="">
+                <div class="row top_tiles">
+                    <div id="message" class="alert alert-danger"><i class="fa fa-exclamation-circle"></i>&nbsp;<strong>Your session has expired.  One moment please.</strong></div>
+                </div>
+                <div class="row"></div>
+            </div>
+        </div>
+        <!-- /page content -->
+
+        <!-- footer content -->
+        <% include partials/footer.ejs %>
+        <!-- /footer content -->
     </div>
 </div>
-<% include partials/footer %>
+
+<!-- jQuery -->
+<script src="../vendors/jquery/dist/jquery.min.js"></script>
+<!-- Bootstrap -->
+<script src="../vendors/bootstrap/dist/js/bootstrap.min.js"></script>
+<!-- NProgress -->
+<script src="../vendors/nprogress/nprogress.js"></script>
+<!-- app -->
+<script src="../assets/js/custom.js"></script>
+<script src="../app/libs/config.js"></script>
+<script src="../app/user.module.js"></script>
+<script>userModule.sessionExpired();</script>
+</body>
+</html>

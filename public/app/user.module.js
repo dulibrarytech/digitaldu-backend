@@ -197,6 +197,13 @@ const userModule = (function () {
         }
     };
 
+    obj.sessionExpired = function () {
+        window.sessionStorage.removeItem('repo_user');
+        setTimeout(function () {
+            window.location.replace('/login');
+        }, 2000);
+    };
+
     obj.saveUserAuthData = function (data) {
 
         let userObj = {

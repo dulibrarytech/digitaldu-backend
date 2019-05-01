@@ -3,6 +3,8 @@
 const config = require('../config/config'),
     fs = require('fs'),
     logger = require('../libs/log4'),
+    knex =require('../config/db')();
+    /*
     knex = require('knex')({
         client: 'mysql2',
         connection: {
@@ -12,7 +14,7 @@ const config = require('../config/config'),
             database: config.dbName
         }
     });
-
+    */
 /**
  * Gets all users
  * @param req

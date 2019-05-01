@@ -53,8 +53,11 @@ exports.verify = function (req, res, next) {
 
     } else {
 
+        logger.module().error('ERROR: Unauthorized request');
+
         res.status(401).send({
             message: 'Unauthorized request'
         });
+
     }
 };

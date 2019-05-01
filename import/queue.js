@@ -3,7 +3,6 @@
 const fs = require('fs'),
     path = require('path'),
     config = require('../config/config'),
-    // modslib = require('../libs/mods/mods_init'), // TODO: remove
     modslibdisplay = require('../libs/display-record'),
     metslib = require('../libs/mets'),
     importlib = require('../libs/import/transfer-ingest'),
@@ -13,16 +12,12 @@ const fs = require('fs'),
     duracloud = require('../libs/duracloud'),
     archivespace = require('../libs/archivespace'),
     logger = require('../libs/log4'),
-    uuid = require('uuid'),
     crypto = require('crypto'),
     async = require('async'),
     moment = require('moment'),
     socketclient = require('socket.io-client')(config.host),
     request = require('request'),
     shell = require('shelljs'),
-    queue = require('bull'),  // TODO: remove
-    redislib = require('redis'),
-    redisclient = redislib.createClient(),
     knexQ = require('knex')({
         client: 'mysql2',
         connection: {
@@ -41,20 +36,16 @@ const fs = require('fs'),
             database: config.dbName
         }
     }),
-    REDIS = {
-        redis: {
-            port: config.redisPort,
-            host: config.redisHost
-        }
-    },
     TRANSFER_QUEUE = 'tbl_archivematica_queue',
     IMPORT_QUEUE = 'tbl_duracloud_queue',
-    TRANSFER_TIMER = 10000,                  // Transfer status is broadcast every 3 sec.
-    IMPORT_TIMER = 10000,                    // Import status is broadcast every 5 sec.
-    // TODO: remove  TRANSFER_INTERVAL_TIME = 60000,         // Object transfer starts every 60 sec. when the endpoint receives a request.
-    TRANSFER_APPROVAL_TIME = 45000,         // Transfer approval occurs 60 sec. after transfer  (Gives transfer process time to complete)
-    TRANSFER_STATUS_CHECK_INTERVAL = 30000,  // Transfer status checks occur every 3 sec.
-    INGEST_STATUS_CHECK_INTERVAL = 30000;   // Ingest status checks begin 10 sec after the endpoint receives a request.
+    TRANSFER_TIMER = 4000,                  // Transfer status is broadcast every 3 sec.
+    IMPORT_TIMER = 4000,                    // Import status is broadcast every 5 sec.
+    TRANSFER_APPROVAL_TIME = 45000,          // Transfer approval occurs 45 sec. after transfer  (Gives transfer process time to complete)
+    TRANSFER_STATUS_CHECK_INTERVAL = 4000,  // Transfer status checks occur every 3 sec.
+    INGEST_STATUS_CHECK_INTERVAL = 4000;    // Ingest status checks begin 10 sec after the endpoint receives a request.
+
+
+// TODO: broadcasts collection and remaining records in queue
 
 /**
  * Broadcasts archivematica transfer/ingest status
@@ -66,6 +57,9 @@ socketclient.on('connect', function () {
         knexQ(TRANSFER_QUEUE)
             .select('*')
             .whereRaw('DATE(created) = CURRENT_DATE')
+            .where({
+                transfer_status: 1
+            })
             .orderBy('created', 'asc')
             .then(function (data) {
                 socketclient.emit('transfer_status', data);
@@ -181,93 +175,23 @@ exports.queue_objects = function (req, callback) {
         return false;
     }
 
-    function check_db_queue(callback) {
-
-        let obj = {};
-        obj.flush = false;
-
-        knexQ(TRANSFER_QUEUE)
-            .count('id as count')
-            .then(function (data) {
-
-                if (data[0].count === 0) {
-                    obj.flush = true;
-                    callback(null, obj);
-                    return false;
-                }
-
-                callback(null, obj);
-            })
-            .catch(function (error) {
-                throw 'FATAL: queue check failed (queue_objects) ' + error;
-            });
-    }
-
-    // TODO: remove
-    function flush_queue(obj, callback) {
-
-        if (obj.flush === false) {
-            callback(null, obj);
-            return false;
-        }
-
-        redisclient.send_command('flushall', function (result) {
-            callback(null, obj);
-        });
-    }
-
-    async.waterfall([
-        check_db_queue,
-        flush_queue // TODO: remove
-    ], function (error, results) {
-
-        if (error) {
-            logger.module().error('ERROR: async (queue_objects)');
-        }
-    });
-
     logger.module().info('INFO: starting ingest process (queue_objects)');
 
     let transfer_data = req.body;
 
-    // TODO: remove
-    const queue_objects = new queue('queue-objects', REDIS);
+    // TODO: move to transfer-ingest lib
+    importlib.save_transfer_records(transfer_data, function (result) {
 
-    // TODO: remove
-    queue_objects.process(function (job, done) {
-        // TODO: move out of Redis queue code  // use transfer_data
-        importlib.save_transfer_records(job.data, function (result) {
-            done(null, result);
+        // TODO: apply result check... check object properties
+        if (result.recordCount === 0) {
+            // there are no records to process. Send back response to client
             return false;
-        });
-    });
-
-    // TODO: remove
-    queue_objects.on('failed', function (job, error) {
-        logger.module().fatal('FATAL: queue failed ' + job.failedReason);
-        throw 'FATAL: queue failed ' + job.failedReason + ' (queue_objects)';
-    });
-
-    // TODO: remove
-    queue_objects.on('completed', function (job) {
-
-        logger.module().info('INFO: queue process completed ' + job.returnvalue);
-
-        if (job.returnvalue.message !== 'Data saved.') {
-            logger.module().fatal('FATAL: unable to save queue data (queue_objects)');
-            throw 'FATAL: unable to save queue data (queue_objects)';
         }
 
-        if (job.data.collection === undefined) {
-            logger.module().fatal('FATAL: collection is undefined (queue_objects)');
-            throw 'FATAL: collection is undefined (queue_objects)';
-        }
-
-        // TODO: initiate after data is saved to db queue
         request.post({
             url: config.apiUrl + '/api/admin/v1/import/start_transfer',
             form: {
-                'collection': job.data.collection
+                'collection': transfer_data.collection
             }
         }, function (error, httpResponse, body) {
 
@@ -279,25 +203,15 @@ exports.queue_objects = function (req, callback) {
             if (httpResponse.statusCode === 200) {
                 callback(body);
                 logger.module().info('INFO: sending request to start transfer (queue_objects)');
-                queue_objects.close();
                 return false;
             } else {
                 logger.module().fatal('FATAL: unable to begin transfer ' + body + ' (queue_objects)');
-                queue_objects.close();
                 throw 'FATAL: unable to begin transfer ' + body + ' (queue_objects)';
             }
         });
-    });
 
-    // TODO: remove
-    queue_objects.on('stalled', function (job) {
-        // A job has been marked as stalled. This is useful for debugging job
-        // workers that crash or pause the event loop.
-        logger.module().info('INFO: stalled queue job ' + job + ' (queue_objects)');
+        return false;
     });
-
-    // TODO: remove
-    queue_objects.add(transfer_data);
 
     callback({
         status: 200,
@@ -330,88 +244,42 @@ exports.start_transfer = function (req, callback) {
         return false;
     }
 
-    // TODO: remove
-    const start_transfer = new queue('start-transfer', REDIS);
+    importlib.start_transfer(collection, function (object) {
 
-    // TODO: remove
-    start_transfer.process(function (job, done) {
+        // Initiates file transfer on Archivematica service
+        archivematica.start_tranfser(object, function (response) {
 
-        // TODO: move out of queue process
-        importlib.start_transfer(job.data, function (object) {
-
-            if (object === 'done') {
-                logger.module().info('INFO: transfer process complete (start_transfer)');
-                start_transfer.close();
-                done(null, object);
-                return false;
+            if (response.error !== undefined && response.error === true) {
+                logger.module().fatal('FATAL: transfer error ' + response + ' (start_transfer)');
+                // TODO: test and update queue with FAILED message
+                throw 'FATAL: transfer error ' + response + ' (start_transfer)';
+                // return false;
             }
 
-            // Initiates file transfer on Archivematica service
-            archivematica.start_tranfser(object, function (response) {
+            logger.module().info('INFO: transfer started and confirming transfer (start_transfer)');
+            importlib.confirm_transfer(response, object.id);
 
-                if (response.error !== undefined && response.error === true) {
-                    logger.module().fatal('FATAL: transfer error ' + response + ' (start_transfer)');
-                    // TODO: test and update queue with FAILED message
-                    throw 'FATAL: transfer error ' + response + ' (start_transfer)';
-                    // return false;
+            request.post({
+                url: config.apiUrl + '/api/admin/v1/import/approve_transfer',
+                form: {
+                    'collection': collection
+                }
+            }, function (error, httpResponse, body) {
+
+                if (error) {
+                    logger.module().fatal('FATAL: http error. unable to approve transfer ' + error);
+                    throw 'FATAL: http error. unable to approve transfer ' + error;
                 }
 
-                logger.module().info('INFO: transfer started and confirming transfer (start_transfer)');
-                importlib.confirm_transfer(response, object.id);
+                if (httpResponse.statusCode === 200) {
+                    // logger.module().info('INFO: sending approve transfer request');
+                    return false;
+                } else {
+                    logger.module().fatal('FATAL: http error. unable to approve transfer ' + body);
+                    throw 'FATAL: http error. unable to approve transfer ' + body;
+                }
             });
         });
-    });
-
-    // TODO: remove
-    start_transfer.on('failed', function (job, error) {
-        logger.module().fatal('FATAL: transfer failed ' + error + ' reason: ' + job.failedReason + ' (start_transfer)');
-        throw 'FATAL: transfer failed ' + error + ' reason: ' + job.failedReason + ' (start_transfer)';
-    });
-
-    // TODO: remove
-    start_transfer.on('completed', function (job) {
-
-        if (job.data.collection === undefined) {
-            logger.module().fatal('FATAL: Collection is undefined ' + job.data + ' (start_transfer)');
-            start_transfer.close();
-            throw 'FATAL: Collection is undefined ' + job.data + ' (start_transfer)';
-        }
-
-        request.post({
-            url: config.apiUrl + '/api/admin/v1/import/approve_transfer',
-            form: {
-                'collection': job.data.collection
-            }
-        }, function (error, httpResponse, body) {
-
-            if (error) {
-                logger.module().fatal('FATAL: http error. unable to approve transfer ' + error);
-                start_transfer.close();
-                throw 'FATAL: http error. unable to approve transfer ' + error;
-            }
-
-            if (httpResponse.statusCode === 200) {
-                logger.module().info('INFO: sending approve transfer request');
-                start_transfer.close();
-                return false;
-            } else {
-                logger.module().fatal('FATAL: http error. unable to approve transfer ' + body);
-                start_transfer.close();
-                throw 'FATAL: http error. unable to approve transfer ' + body;
-            }
-        });
-    });
-
-    // TODO: remove
-    start_transfer.on('stalled', function (job) {
-        // A job has been marked as stalled. This is useful for debugging job
-        // workers that crash or pause the event loop.
-        logger.module().info('INFO: stalled queue job ' + job);
-    });
-
-    // TODO: remove
-    start_transfer.add({
-        collection: collection
     });
 
     callback({
@@ -443,15 +311,9 @@ exports.approve_transfer = function (req, callback) {
         return false;
     }
 
-    let timer = setInterval(function () {
+    setTimeout(function () {
 
         importlib.get_transferred_record(collection, function (object) {
-
-            if (object === 'done') {
-                logger.module().info('INFO: approval complete (approve_transfer)');
-                clearInterval(timer);
-                return false;
-            }
 
             archivematica.approve_transfer(object.transfer_folder, function (response) {
 
@@ -459,6 +321,7 @@ exports.approve_transfer = function (req, callback) {
 
                     if (result.error !== undefined && result.error === true) {
                         logger.module().error('ERROR: unable to confirm transfer approval ' + result + ' (approve_transfer)');
+                        // TODO: update queue with NOT_APPROVED status message and status?
                         return false;
                     }
 
@@ -1221,19 +1084,20 @@ exports.create_repo_record = function (req, callback) {
             }
         }
 
-        // get queue record count for current collection
-        importlib.check_queue(results.is_member_of_collection, function (result) {
+        let collection = results.is_member_of_collection.replace(':', '_');
 
-            console.log(result);
+        // get queue record count for current collection
+        importlib.check_queue(collection, function (result) {
 
             if (result.status === 0) {
+                // ingest complete
                 return false;
             }
 
             request.post({
                 url: config.apiUrl + '/api/admin/v1/import/start_transfer',
                 form: {
-                    'collection': results.is_member_of_collection
+                    'collection': collection
                 }
             }, function (error, httpResponse, body) {
 

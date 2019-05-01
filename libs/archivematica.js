@@ -416,7 +416,6 @@ exports.download_aip = function (sip_uuid, callback) {
                 });
             }
 
-            // TODO: test
             setTimeout(function () {
 
                 if (fs.existsSync('./tmp/' + sip_uuid + '.7z')) {

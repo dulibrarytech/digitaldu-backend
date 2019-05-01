@@ -20,6 +20,18 @@ const importModule = (function () {
             collectionObjects = [],
             html = '';
 
+        if (collection !== undefined && data.list.length === 0) {
+            html += '<tr>';
+            html += '<td>';
+            html += '<div class="alert alert-info"><i class="fa fa-exclamation-triangle"></i> <strong>The collection folder "' + collection + '" is empty.</strong></div>';
+            html += '</td>';
+            html += '</tr>';
+            $('.import-instruction').hide();
+            $('#import-objects').html(html);
+            $('#message').html('');
+            return false;
+        }
+
         if (data.list.length === 0) {
             html += '<tr>';
             html += '<td>';
@@ -194,12 +206,26 @@ const importModule = (function () {
             setTimeout(function () {
                 $('#message').html('');
                 window.location.replace('/dashboard/import/status?import=true');
-            }, 6000);
+            }, 4000);
 
         }).fail(function (jqXHR, textStatus) {
 
             if (jqXHR.status !== 201) {
-                var message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to start transfer/import process.</div>';
+
+                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve collections.</div>';
+
+                if (jqXHR.status === 401) {
+                    // let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve collections.</div>';
+                    renderError(message);
+
+                    setTimeout(function () {
+                        window.location.replace('/dashboard/error');
+                    }, 2000);
+
+                    return false;
+                }
+
+                // let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to start transfer/import process.</div>';
                 renderError(message);
             }
 
