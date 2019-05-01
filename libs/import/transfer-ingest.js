@@ -1,6 +1,6 @@
 const config = require('../../config/config'),
     archivematica = require('../../libs/archivematica'),
-    queue = require('../../libs/import/db-queue'),
+    // queue = require('../../libs/import/db-queue'),
     logger = require('../../libs/log4'),
     knexQ = require('knex')({
         client: 'mysql2',
@@ -124,7 +124,8 @@ exports.start_transfer = function (collection, callback) {
             };
 
             // Update queue. Indicate to user that the transfer has started.
-            queue.update(transferStartedObj);
+            // queue.update(transferStartedObj);
+            update_queue(transferStartedObj);
 
             return null;
         })
@@ -171,7 +172,9 @@ exports.confirm_transfer = function (response, id) {
         };
 
         // Update queue. Indicate to user that the transfer has failed.
-        queue.update(transferFailedObj);
+        // queue.update(transferFailedObj);
+        update_queue(transferFailedObj);
+
         return false;
     }
 
@@ -209,7 +212,8 @@ exports.confirm_transfer = function (response, id) {
     };
 
     // Update queue. Indicate to user that the transfer has failed.
-    queue.update(transferCompleteObj);
+    // queue.update(transferCompleteObj);
+    update_queue(transferCompleteObj);
 };
 
 /**
@@ -297,7 +301,8 @@ exports.confirm_transfer_approval = function (response, object, callback) {
         };
 
         // Update queue and indicate that the transfer has been approved
-        queue.update(transferApprovedObj);
+        // queue.update(transferApprovedObj);
+        update_queue(transferApprovedObj);
 
         callback({
             is_member_of_collection: object.is_member_of_collection,
@@ -359,7 +364,8 @@ exports.update_transfer_status = function (response, callback) {
                     };
 
                     // Flag transfer as COMPLETE in queue
-                    queue.update(transferCompleteObj);
+                    // queue.update(transferCompleteObj);
+                    update_queue(transferCompleteObj);
 
                     callback({
                         complete: true,
@@ -397,7 +403,8 @@ exports.update_transfer_status = function (response, callback) {
         };
 
         // Update transfer status
-        queue.update(transferProcessingObj);
+        // queue.update(transferProcessingObj);
+        update_queue(transferProcessingObj);
 
         callback({
             complete: false,
@@ -455,7 +462,8 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
             }
         };
 
-        queue.update(importCompleteQueue);
+        // queue.update(importCompleteQueue);
+        update_queue(importCompleteQueue);
 
         callback({
             complete: true,
@@ -487,7 +495,8 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
             }
         };
 
-        queue.update(importFailed);
+        // queue.update(importFailed);
+        update_queue(importFailed);
 
         callback({
             error: true,
@@ -520,7 +529,8 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
             }
         };
 
-        queue.update(importProcessing);
+        // queue.update(importProcessing);
+        update_queue(importProcessing);
 
         callback({
             complete: false,
@@ -551,7 +561,6 @@ exports.save_mets_data = function (obj, callback) {
                 knexQ(IMPORT_QUEUE)
                     .insert(obj)
                     .then(function (data) {
-                        // console.log('METS saved: ', data);
                         callback('done');
                     })
                     .catch(function (error) {
@@ -647,7 +656,8 @@ exports.save_mods_id = function (mods_id, sip_uuid, callback) {
         }
     };
 
-    queue.update(importProcessing);
+    // queue.update(importProcessing);
+    update_queue(importProcessing);
 };
 
 /**
@@ -674,7 +684,6 @@ exports.get_object = function (sip_uuid, callback) {
             logger.module().error('ERROR: unable to get object (get_object) ' + error);
             throw 'ERROR: unable to get object (get_object) ' + error;
         });
-
 };
 
 /**
@@ -771,19 +780,12 @@ exports.check_queue = function (is_member_of_collection, callback) {
         })
         .then(function (result) {
 
-            let obj;
+            let obj = {};
 
             if (result[0].count !== 0) {
-
-                obj = {
-                    status: 1
-                };
-
+                obj.status = 1;
             } else {
-
-                obj = {
-                    status: 0
-                };
+                obj.status = 0;
             }
 
             callback(obj);
@@ -793,5 +795,19 @@ exports.check_queue = function (is_member_of_collection, callback) {
         .catch(function (error) {
             logger.module().error('ERROR: unable to save mets (save_mets_data) ' + error);
             throw 'ERROR: unable to save mets (save_mets_data) ' + error;
+        });
+};
+
+const update_queue = function (obj) {
+
+    'use strict';
+
+    knexQ(obj.table)
+        .where(obj.where)
+        .update(obj.update)
+        .then(obj.callback)
+        .catch(function (error) {
+            logger.module().error('ERROR: unable to update queue ' + error);
+            throw 'ERROR: unable to update queue ' + error;
         });
 };

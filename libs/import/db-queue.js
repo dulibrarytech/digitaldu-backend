@@ -12,6 +12,7 @@ const config = require('../../config/config'),
     }
 });
 
+/*
 exports.save = function (obj, callback) {
 
     let chunkSize = obj.data.length;
@@ -24,11 +25,13 @@ exports.save = function (obj, callback) {
             throw error;
         });
 };
+*/
 
 /**
  *
  * @param obj
  */
+/*
 exports.update = function (obj) {
 
     knexQ(obj.table)
@@ -41,3 +44,4 @@ exports.update = function (obj) {
             throw error;
         });
 };
+    */
