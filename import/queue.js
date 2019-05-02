@@ -38,12 +38,12 @@ const fs = require('fs'),
     }),
     TRANSFER_QUEUE = 'tbl_archivematica_queue',
     IMPORT_QUEUE = 'tbl_duracloud_queue',
-    TRANSFER_TIMER = 3000,                  // Transfer status is broadcast every 3 sec.
-    IMPORT_TIMER = 3000,                    // Import status is broadcast every 3 sec.
-    INGEST_STATUS_TIMER = 20000,
-    TRANSFER_APPROVAL_TIME = 35000,         // Transfer approval occurs 35 sec. after transfer  (Gives transfer process time to complete)
-    TRANSFER_STATUS_CHECK_INTERVAL = 3000,  // Transfer status checks occur every 3 sec.
-    INGEST_STATUS_CHECK_INTERVAL = 3000;    // Ingest status checks begin 3 sec after the endpoint receives a request.
+    TRANSFER_TIMER = config.transferTimer,                                  // Transfer status is broadcast every 3 sec.
+    IMPORT_TIMER = config.importTimer,                                      // Import status is broadcast every 3 sec.
+    INGEST_STATUS_TIMER = config.ingestStatusTimer,                         // Ingest status (object count) is broadcast every 20 sec.
+    TRANSFER_APPROVAL_TIMER = config.transferApprovalTimer,                 // Transfer approval occurs 35 sec. after transfer  (Gives transfer process time to complete)
+    TRANSFER_STATUS_CHECK_INTERVAL = config.transferStatusCheckInterval,    // Transfer status checks occur every 3 sec.
+    INGEST_STATUS_CHECK_INTERVAL = config.ingestStatusCheckInterval;        // Ingest status checks begin 3 sec after the endpoint receives a request.
 
 /**
  * Broadcasts current import record count
@@ -362,7 +362,7 @@ exports.approve_transfer = function (req, callback) {
             });
         });
 
-    }, TRANSFER_APPROVAL_TIME);
+    }, TRANSFER_APPROVAL_TIMER);
 
     callback({
         status: 200,
