@@ -74,7 +74,7 @@ exports.save_transfer_records = function (transfer_data, callback) {
 };
 
 /**
- *
+ * Starts Archivematica transfer process
  * @param obj
  * @param callback
  */
@@ -93,12 +93,6 @@ exports.start_transfer = function (collection, callback) {
         .orderBy('created', 'asc')
         .limit(1)
         .then(function (data) {
-
-            if (data.length === 0) {
-                logger.module().info('INFO: transfers complete (start transfer)');
-                callback('done');
-                return false;
-            }
 
             let object = data.pop();
 
@@ -119,11 +113,12 @@ exports.start_transfer = function (collection, callback) {
                     }
 
                     callback(object);
+
+                    return null;
                 }
             };
 
             // Update queue. Indicate to user that the transfer has started.
-            // queue.update(transferStartedObj);
             update_queue(transferStartedObj);
 
             return null;
@@ -135,8 +130,9 @@ exports.start_transfer = function (collection, callback) {
 };
 
 /**
- *
+ * Updates local queue with transfer status
  * @param response
+ * @param id
  */
 exports.confirm_transfer = function (response, id) {
 
@@ -171,7 +167,6 @@ exports.confirm_transfer = function (response, id) {
         };
 
         // Update queue. Indicate to user that the transfer has failed.
-        // queue.update(transferFailedObj);
         update_queue(transferFailedObj);
 
         return false;
@@ -207,16 +202,17 @@ exports.confirm_transfer = function (response, id) {
                 logger.module().fatal('FATAL: database transfer queue error (confirm_transfer)');
                 throw 'FATAL: database transfer queue error (confirm_transfer)';
             }
+
+            return null;
         }
     };
 
     // Update queue. Indicate to user that the transfer has failed.
-    // queue.update(transferCompleteObj);
     update_queue(transferCompleteObj);
 };
 
 /**
- *
+ * Gets transferred record from local queue
  * @param obj
  * @param callback
  */
@@ -253,7 +249,7 @@ exports.get_transferred_record = function (collection, callback) {
 };
 
 /**
- *
+ * Updates local queue with approval status
  * @param response
  * @param object
  * @param callback
@@ -296,11 +292,12 @@ exports.confirm_transfer_approval = function (response, object, callback) {
                     logger.module().error('ERROR: unable to update database queue (confirm_transfer_approval)');
                     return false;
                 }
+
+                return null;
             }
         };
 
         // Update queue and indicate that the transfer has been approved
-        // queue.update(transferApprovedObj);
         update_queue(transferApprovedObj);
 
         callback({
@@ -313,7 +310,7 @@ exports.confirm_transfer_approval = function (response, object, callback) {
 };
 
 /**
- *
+ * Updates transfer queue status
  * @param response
  * @param transfer_uuid
  * @param callback
@@ -359,11 +356,11 @@ exports.update_transfer_status = function (response, callback) {
                                 throw 'ERROR: updated more than one record in database queue (update_transfer_status)';
                             }
 
+                            return null;
                         }
                     };
 
                     // Flag transfer as COMPLETE in queue
-                    // queue.update(transferCompleteObj);
                     update_queue(transferCompleteObj);
 
                     callback({
@@ -371,6 +368,8 @@ exports.update_transfer_status = function (response, callback) {
                         sip_uuid: json.sip_uuid
                     });
                 }
+
+                return null;
             })
             .catch(function (error) {
                 logger.module().error('ERROR: database queue error (update_transfer_status) ' + error);
@@ -401,8 +400,6 @@ exports.update_transfer_status = function (response, callback) {
             }
         };
 
-        // Update transfer status
-        // queue.update(transferProcessingObj);
         update_queue(transferProcessingObj);
 
         callback({
@@ -415,7 +412,7 @@ exports.update_transfer_status = function (response, callback) {
 };
 
 /**
- *
+ * Updates ingest queue status
  * @param response
  * @param sip_uuid
  * @param callback
@@ -433,8 +430,6 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
 
     if (json.status === 'COMPLETE') {
 
-        // TODO: might be trying to update multiple times?
-
         let importCompleteQueue = {
             table: QUEUE,
             where: {
@@ -450,18 +445,13 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
             },
             callback: function (data) {
 
-                console.log('ingest with status of COMPLETE: ', data);
-
-                /*
                 if (data !== 1) {
                     logger.module().error('ERROR: database queue error (update_ingest_status) ' + json.status);
                     throw 'ERROR: database queue error (update_ingest_status)';
                 }
-                */
             }
         };
 
-        // queue.update(importCompleteQueue);
         update_queue(importCompleteQueue);
 
         callback({
@@ -494,7 +484,6 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
             }
         };
 
-        // queue.update(importFailed);
         update_queue(importFailed);
 
         callback({
@@ -528,7 +517,6 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
             }
         };
 
-        // queue.update(importProcessing);
         update_queue(importProcessing);
 
         callback({
@@ -539,7 +527,7 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
 };
 
 /**
- *
+ * Saves object data retrieved from Archivematica METS file
  * @param obj
  * @param callback
  * @returns {boolean}
@@ -561,12 +549,15 @@ exports.save_mets_data = function (obj, callback) {
                     .insert(obj)
                     .then(function (data) {
                         callback('done');
+                        return null;
                     })
                     .catch(function (error) {
                         logger.module().error('ERROR: unable to save mets (save_mets_data) ' + error);
                         throw 'ERROR: unable to save mets (save_mets_data) ' + error;
                     });
             }
+
+            return null;
         })
         .catch(function (error) {
             logger.module().error('ERROR: unable to save mets (save_mets_data) ' + error);
@@ -577,7 +568,7 @@ exports.save_mets_data = function (obj, callback) {
 };
 
 /**
- *
+ * Gets uri.txt containing mods id (used to get metadata from archivespace)
  * @param sip_uuid
  * @param callback
  */
@@ -603,7 +594,7 @@ exports.get_uri_txt = function (sip_uuid, callback) {
 };
 
 /**
- *
+ * Gets collection from local queue
  * @param sip_uuid
  * @param callback
  */
@@ -626,7 +617,7 @@ exports.get_collection = function (sip_uuid, callback) {
 };
 
 /**
- *
+ * Saves mods_id used to get metadata from Archivespace
  * @param mods_id
  * @param sip_uuid
  * @param callback
@@ -655,12 +646,11 @@ exports.save_mods_id = function (mods_id, sip_uuid, callback) {
         }
     };
 
-    // queue.update(importProcessing);
     update_queue(importProcessing);
 };
 
 /**
- *
+ * Gets local queue record
  * @param sip_uuid
  * @param callback
  */
@@ -686,7 +676,7 @@ exports.get_object = function (sip_uuid, callback) {
 };
 
 /**
- *
+ * Creates repository record
  * @param obj
  * @param callback
  */
@@ -710,6 +700,11 @@ exports.create_repo_record = function (obj, callback) {
         });
 };
 
+/**
+ * Cleans up local queue when object ingest is complete
+ * @param obj
+ * @param callback
+ */
 exports.cleanup = function (obj, callback) {
 
     'use strict';
@@ -744,7 +739,7 @@ exports.cleanup = function (obj, callback) {
 };
 
 /**
- *
+ * Flags incomplete records
  * @param obj
  */
 exports.flag_incomplete_record = function (obj) {
@@ -759,7 +754,7 @@ exports.flag_incomplete_record = function (obj) {
             is_complete: 0
         })
         .then(function (data) {
-            // console.log(data);
+
         })
         .catch(function (error) {
             logger.module().error('ERROR: unable to flag incomplete record ' + error);
@@ -768,6 +763,11 @@ exports.flag_incomplete_record = function (obj) {
 
 };
 
+/**
+ * Checks queue to determine if another transfer should be started
+ * @param is_member_of_collection
+ * @param callback
+ */
 exports.check_queue = function (is_member_of_collection, callback) {
 
     'use strict';
@@ -797,6 +797,10 @@ exports.check_queue = function (is_member_of_collection, callback) {
         });
 };
 
+/**
+ * Updates queue statuses
+ * @param obj
+ */
 const update_queue = function (obj) {
 
     'use strict';

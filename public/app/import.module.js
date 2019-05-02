@@ -286,7 +286,12 @@ const importModule = (function () {
         let socket = io();
 
         socket.on('ingest_status', function (data) {
-            $('#import-record-count').html('Records remaining in current import batch: ' + data[0].count);
+
+            if (data.length > 0) {
+                $('#import-record-count').html('Objects remaining in current batch: ' + data[0].count);
+            } else {
+                $('#import-record-count').html('');
+            }
         });
 
         socket.on('transfer_status', function (data) {
