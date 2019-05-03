@@ -3,6 +3,11 @@ const config = require('../config/config'),
     fs = require('fs'),
     request = require('request');
 
+/**
+ *
+ * @param data
+ * @param callback
+ */
 exports.get_mets = function (data, callback) {
 
     'use strict';
@@ -12,7 +17,7 @@ exports.get_mets = function (data, callback) {
 
     request.get({
         url: apiUrl
-    }, function(error, httpResponse, body) {
+    }, function (error, httpResponse, body) {
 
         if (error) {
 
@@ -46,9 +51,24 @@ exports.get_mets = function (data, callback) {
     });
 };
 
+/**
+ *
+ * @param data
+ * @param callback
+ * @returns {boolean}
+ */
 exports.get_object = function (data, callback) {
 
     'use strict';
+
+    if (data.file === 'uri.txt') {
+
+        get_uri(data, function (result) {
+            callback(result);
+        });
+
+        return false;
+    }
 
     let dip_path = data.dip_path;
 
@@ -63,14 +83,63 @@ exports.get_object = function (data, callback) {
 
     let apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + dip_path + '/objects/' + data.uuid + '-' + data.file;
 
-    request.get({
+    request.head({
         url: apiUrl,
-        timeout: 60000
-    }, function(error, httpResponse, body) {
+        timeout: 25000
+    }, function (error, httpResponse, body) {
 
         if (error) {
 
             logger.module().error('ERROR: Unable to get duracloud object ' + error);
+
+            callback({
+                error: true,
+                error_message: error
+            });
+        }
+
+        if (httpResponse.statusCode === 200) {
+
+            let resp = {};
+            resp.headers = httpResponse.headers;
+            resp.file = data.file;
+            callback(resp);
+            return false;
+
+        } else {
+
+            logger.module().error('ERROR: Unable to get duracloud object ' + body);
+
+            callback({
+                error: true,
+                error_message: body
+            });
+
+            return false;
+        }
+    });
+};
+
+/**
+ *
+ * @param data
+ * @param callback
+ */
+const get_uri = function (data, callback) {
+
+    'use strict';
+
+    let dip_path = data.dip_path,
+        apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + dip_path + '/objects/' + data.uuid + '-' + data.file;
+
+    request.get({
+        url: apiUrl,
+        timeout: 25000
+    }, function (error, httpResponse, body) {
+
+        if (error) {
+
+            logger.module().error('ERROR: Unable to get duracloud uri object ' + error);
 
             callback({
                 error: true,
@@ -85,13 +154,13 @@ exports.get_object = function (data, callback) {
                 return false;
             }
 
-            var resp = {};
+            let resp = {};
             resp.headers = httpResponse.headers;
             resp.file = data.file;
 
             // TODO: create tmp folder if it doesn't exist
             // save file to disk (temporarily)
-            fs.writeFile('./tmp/' + data.file, body, function(error) {
+            fs.writeFile('./tmp/' + data.file, body, function (error) {
 
                 if (error) {
 
@@ -112,7 +181,7 @@ exports.get_object = function (data, callback) {
 
         } else {
 
-            logger.module().error('ERROR: Unable to get duracloud object ' + body);
+            logger.module().error('ERROR: Unable to get duracloud uri object ' + body);
 
             callback({
                 error: true,

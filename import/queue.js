@@ -1,3 +1,21 @@
+/**
+
+ Copyright 2019 University of Denver
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+
+ */
+
 'use strict';
 
 const fs = require('fs'),
@@ -219,7 +237,6 @@ exports.queue_objects = function (req, callback) {
 
             if (httpResponse.statusCode === 200) {
                 callback(body);
-                // logger.module().info('INFO: sending request to start transfer (queue_objects)');
                 return false;
             } else {
                 logger.module().fatal('FATAL: unable to begin transfer ' + body + ' (queue_objects)');
@@ -275,25 +292,29 @@ exports.start_transfer = function (req, callback) {
 
             importlib.confirm_transfer(response, object.id);
 
-            request.post({
-                url: config.apiUrl + '/api/admin/v1/import/approve_transfer',
-                form: {
-                    'collection': collection
-                }
-            }, function (error, httpResponse, body) {
+            setTimeout(function () {
 
-                if (error) {
-                    logger.module().fatal('FATAL: http error. unable to approve transfer ' + error);
-                    throw 'FATAL: http error. unable to approve transfer ' + error;
-                }
+                request.post({
+                    url: config.apiUrl + '/api/admin/v1/import/approve_transfer',
+                    form: {
+                        'collection': collection
+                    }
+                }, function (error, httpResponse, body) {
 
-                if (httpResponse.statusCode === 200) {
-                    return false;
-                } else {
-                    logger.module().fatal('FATAL: http error. unable to approve transfer ' + body);
-                    throw 'FATAL: http error. unable to approve transfer ' + body;
-                }
-            });
+                    if (error) {
+                        logger.module().fatal('FATAL: http error. unable to approve transfer ' + error);
+                        throw 'FATAL: http error. unable to approve transfer ' + error;
+                    }
+
+                    if (httpResponse.statusCode === 200) {
+                        return false;
+                    } else {
+                        logger.module().fatal('FATAL: http error. unable to approve transfer ' + body);
+                        throw 'FATAL: http error. unable to approve transfer ' + body;
+                    }
+                });
+
+            }, TRANSFER_APPROVAL_TIMER);
         });
     });
 
@@ -311,8 +332,6 @@ exports.start_transfer = function (req, callback) {
  */
 exports.approve_transfer = function (req, callback) {
 
-    logger.module().info('INFO: approving transfer');
-
     let collection = req.body.collection;
 
     if (collection === undefined) {
@@ -326,43 +345,39 @@ exports.approve_transfer = function (req, callback) {
         return false;
     }
 
-    setTimeout(function () {
+    importlib.get_transferred_record(collection, function (object) {
 
-        importlib.get_transferred_record(collection, function (object) {
+        archivematica.approve_transfer(object.transfer_folder, function (response) {
 
-            archivematica.approve_transfer(object.transfer_folder, function (response) {
+            importlib.confirm_transfer_approval(response, object, function (result) {
 
-                importlib.confirm_transfer_approval(response, object, function (result) {
+                if (result.error !== undefined && result.error === true) {
+                    logger.module().error('ERROR: unable to confirm transfer approval ' + result + ' (approve_transfer)');
+                    // TODO: update queue with NOT_APPROVED status message and status?
+                    return false;
+                }
 
-                    if (result.error !== undefined && result.error === true) {
-                        logger.module().error('ERROR: unable to confirm transfer approval ' + result + ' (approve_transfer)');
-                        // TODO: update queue with NOT_APPROVED status message and status?
-                        return false;
+                logger.module().info('INFO: transfer approved (approve_transfer)');
+
+                request.get({
+                    url: config.apiUrl + '/api/admin/v1/import/transfer_status?collection=' + result.is_member_of_collection + '&transfer_uuid=' + result.transfer_uuid
+                }, function (error, httpResponse, body) {
+
+                    if (error) {
+                        logger.module().fatal('FATAL: http error ' + error + ' (approve_transfer)');
+                        throw 'FATAL: http error ' + error;
                     }
 
-                    // logger.module().info('INFO: transfer approved (approve_transfer)');
-
-                    request.get({
-                        url: config.apiUrl + '/api/admin/v1/import/transfer_status?collection=' + result.is_member_of_collection + '&transfer_uuid=' + result.transfer_uuid
-                    }, function (error, httpResponse, body) {
-
-                        if (error) {
-                            logger.module().fatal('FATAL: http error ' + error + ' (approve_transfer)');
-                            throw 'FATAL: http error ' + error;
-                        }
-
-                        if (httpResponse.statusCode === 200) {
-                            return false;
-                        } else {
-                            logger.module().fatal('ERROR: http error ' + body + ' (approve_transfer)');
-                            throw 'FATAL: http error ' + body + ' (approve_transfer)';
-                        }
-                    });
+                    if (httpResponse.statusCode === 200) {
+                        return false;
+                    } else {
+                        logger.module().fatal('ERROR: http error ' + body + ' (approve_transfer)');
+                        throw 'FATAL: http error ' + body + ' (approve_transfer)';
+                    }
                 });
             });
         });
-
-    }, TRANSFER_APPROVAL_TIMER);
+    });
 
     callback({
         status: 200,
@@ -666,6 +681,7 @@ exports.create_repo_record = function (req, callback) {
             return false;
         }
 
+        // downloads uri.txt file
         duracloud.get_object(obj, function (response) {
             let uriArr = response.split('/');
             obj.mods_id = uriArr[uriArr.length - 1].trim();
@@ -722,43 +738,50 @@ exports.create_repo_record = function (req, callback) {
             return false;
         }
 
-        setTimeout(function () {
+        // gets headers only
+        duracloud.get_object(obj, function (response) {
 
-            duracloud.get_object(obj, function (response) {
+            if (response.error === true) {
+                logger.module().error('ERROR: Unable to get object ' + response.error_message);
+                return false;
+            }
 
-                if (response.error === true) {
-                    logger.module().error('ERROR: Unable to get object ' + response.error_message);
-                    return false;
+            obj.checksum = response.headers['content-md5'];
+            obj.file_size = response.headers['content-length'];
+            obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
+            obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
+
+
+            // TODO: get mime type here
+            // get_mime_type(obj.file);
+
+            /*
+            if (!fs.existsSync('./tmp/' + obj.file)) {
+                logger.module().error('ERROR: file ' + obj.file + ' does not exist');
+                throw 'File ' + obj.file + ' does not exist.';
+            }
+
+            let tmp = shell.exec('file --mime-type ./tmp/' + obj.file).stdout;
+            let mimetypetmp = tmp.split(':');
+
+            // if unable to detect mime type correctly, check file extension
+            if (mimetypetmp[1].trim() === 'application/octet-stream') {
+
+                if (obj.file.indexOf('mp3') !== -1) {
+                    obj.mime_type = 'audio/x-wav';
                 }
 
-                obj.checksum = response.headers['content-md5'];
-                obj.file_size = response.headers['content-length'];
-                obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
-                obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
-
-                if (!fs.existsSync('./tmp/' + obj.file)) {
-                    logger.module().error('ERROR: file ' + obj.file + ' does not exist');
-                    throw 'File ' + obj.file + ' does not exist.';
+                if (obj.file.indexOf('mp4') !== -1) {
+                    obj.mime_type = 'video/mp4';
                 }
 
-                let tmp = shell.exec('file --mime-type ./tmp/' + obj.file).stdout;
-                let mimetypetmp = tmp.split(':');
+            } else {
+                obj.mime_type = mimetypetmp[1].trim();
+            }
+            */
 
-                // if unable to detect mime type correctly, check file extension
-                if (mimetypetmp[1].trim() === 'application/octet-stream') {
-
-                    if (obj.file.indexOf('mp3') !== -1) {
-                        obj.mime_type = 'audio/x-wav';
-                    }
-
-                } else {
-                    obj.mime_type = mimetypetmp[1].trim();
-                }
-
-                callback(null, obj);
-            });
-
-        }, 5000);
+            callback(null, obj);
+        });
     }
 
     // 7.)

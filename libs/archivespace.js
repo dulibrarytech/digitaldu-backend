@@ -35,8 +35,6 @@ exports.get_mods = function (id, session, callback) {
 
         if (httpResponse.statusCode === 200) {
 
-            logger.module().info('INFO: archivespace mods retrieved');
-
             callback({
                 error: false,
                 mods: body
@@ -89,8 +87,6 @@ exports.get_session_token = function (callback) {
         }
 
         if (httpResponse.statusCode === 200) {
-
-            logger.module().info('INFO: archivespace session token retrieved');
 
             callback({
                 error: false,
