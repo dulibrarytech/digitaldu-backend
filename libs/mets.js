@@ -1,11 +1,11 @@
 'use strict';
 
-var xmldoc = require('xmldoc'),
+const xmldoc = require('xmldoc'),
     _ = require('lodash');
 
 exports.process_mets = function (sip_uuid, dip_path, xml) {
 
-    var document = new xmldoc.XmlDocument(xml),
+    let document = new xmldoc.XmlDocument(xml),
         Obj = {},
         Arr = [];
 
@@ -15,18 +15,17 @@ exports.process_mets = function (sip_uuid, dip_path, xml) {
 
             if (array[index].children[1].name === 'mets:fileGrp') {
 
-                for (var i = 0; i < array[index].children[1].children.length; i++) {
+                for (let i = 0; i < array[index].children[1].children.length; i++) {
 
                     if (array[index].children[1].children[i].name === 'mets:file') {
 
-                        for (var k = 0; k < array[index].children[1].children[i].children.length; k++) {
+                        for (let k = 0; k < array[index].children[1].children[i].children.length; k++) {
                             // get file id and names
                             if (array[index].children[1].children[i].children[k].name === 'mets:FLocat') {
 
-                                var tmpArr = array[index].children[1].children[i].children[k].attr['xlink:href'].replace(/objects\//g, '').split('.'),
-                                    file_id;
-
-                                var ext = tmpArr.pop();
+                                let tmpArr = array[index].children[1].children[i].children[k].attr['xlink:href'].replace(/objects\//g, '').split('.'),
+                                    file_id,
+                                    ext = tmpArr.pop();
 
                                 file_id = tmpArr.join('.');
 

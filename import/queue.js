@@ -24,6 +24,7 @@ const fs = require('fs'),
     modslibdisplay = require('../libs/display-record'),
     metslib = require('../libs/mets'),
     importlib = require('../libs/transfer-ingest'),
+    mimetypelib = require('../libs/mime_types'),
     pids = require('../libs/next-pid'),
     handles = require('../libs/handles'),
     archivematica = require('../libs/archivematica'),
@@ -35,7 +36,7 @@ const fs = require('fs'),
     moment = require('moment'),
     socketclient = require('socket.io-client')(config.host),
     request = require('request'),
-    shell = require('shelljs'),
+    // shell = require('shelljs'),
     knexQ = require('knex')({
         client: 'mysql2',
         connection: {
@@ -750,10 +751,7 @@ exports.create_repo_record = function (req, callback) {
             obj.file_size = response.headers['content-length'];
             obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
             obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
-
-
-            // TODO: get mime type here
-            // get_mime_type(obj.file);
+            obj.mime_type = mimetypelib.get_mime_type(obj.file);
 
             /*
             if (!fs.existsSync('./tmp/' + obj.file)) {
@@ -786,8 +784,6 @@ exports.create_repo_record = function (req, callback) {
 
     // 7.)
     function get_token(obj, callback) {
-
-        logger.module().info('INFO: getting session token');
 
         if (fs.existsSync('./tmp/st.txt')) {
 

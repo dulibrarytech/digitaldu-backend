@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- *
+ * Returns mime type based on file extension
  * @param file
  * @returns {null}
  */
