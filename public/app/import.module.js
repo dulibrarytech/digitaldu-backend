@@ -59,15 +59,19 @@ const importModule = (function () {
                         collectionObjects.push(data.list[i].name);
                     }
 
-                    html += '<td>';
+                    // list only collection folders
+                    if (data.list[i].name.search('codu') !== -1) {
 
-                    if (collection !== null) {
-                        html += '&nbsp;&nbsp;&nbsp;<i class="fa fa-folder"></i>&nbsp;&nbsp;' + data.list[i].name;
-                    } else {
-                        html += '&nbsp;&nbsp;&nbsp;<a href="/dashboard/import?collection=' + data.list[i].name + '"><i class="fa fa-folder"></i>&nbsp;&nbsp;' + data.list[i].name + '</a>';
+                        html += '<td>';
+
+                        if (collection !== null) {
+                            html += '&nbsp;&nbsp;&nbsp;<i class="fa fa-folder"></i>&nbsp;&nbsp;' + data.list[i].name;
+                        } else {
+                            html += '&nbsp;&nbsp;&nbsp;<a href="/dashboard/import?collection=' + data.list[i].name + '"><i class="fa fa-folder"></i>&nbsp;&nbsp;' + data.list[i].name + '</a>';
+                        }
+
+                        html += '</td>';
                     }
-
-                    html += '</td>';
                 }
 
                 html += '</tr>';
