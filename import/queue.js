@@ -739,47 +739,27 @@ exports.create_repo_record = function (req, callback) {
             return false;
         }
 
-        // gets headers only
-        duracloud.get_object(obj, function (response) {
+        // give archivematica time to upload large files to duracloud
+        setTimeout(function () {
 
-            if (response.error === true) {
-                logger.module().error('ERROR: Unable to get object ' + response.error_message);
-                return false;
-            }
+            // gets headers only
+            duracloud.get_object(obj, function (response) {
 
-            obj.checksum = response.headers['content-md5'];
-            obj.file_size = response.headers['content-length'];
-            obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
-            obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
-            obj.mime_type = mimetypelib.get_mime_type(obj.file);
-
-            /*
-            if (!fs.existsSync('./tmp/' + obj.file)) {
-                logger.module().error('ERROR: file ' + obj.file + ' does not exist');
-                throw 'File ' + obj.file + ' does not exist.';
-            }
-
-            let tmp = shell.exec('file --mime-type ./tmp/' + obj.file).stdout;
-            let mimetypetmp = tmp.split(':');
-
-            // if unable to detect mime type correctly, check file extension
-            if (mimetypetmp[1].trim() === 'application/octet-stream') {
-
-                if (obj.file.indexOf('mp3') !== -1) {
-                    obj.mime_type = 'audio/x-wav';
+                if (response.error === true) {
+                    logger.module().error('ERROR: Unable to get object ' + response.error_message);
+                    return false;
                 }
 
-                if (obj.file.indexOf('mp4') !== -1) {
-                    obj.mime_type = 'video/mp4';
-                }
+                obj.checksum = response.headers['content-md5'];
+                obj.file_size = response.headers['content-length'];
+                obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
+                obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
+                obj.mime_type = mimetypelib.get_mime_type(obj.file);
 
-            } else {
-                obj.mime_type = mimetypetmp[1].trim();
-            }
-            */
+                callback(null, obj);
+            });
 
-            callback(null, obj);
-        });
+        }, 5000); // TODO: test large video files
     }
 
     // 7.)
@@ -961,7 +941,7 @@ exports.create_repo_record = function (req, callback) {
         });
     }
 
-    // 12.)
+    // 12.) NOT USED
     function delete_file(obj, callback) {
 
         if (obj.dip_path === null) {
@@ -1061,7 +1041,7 @@ exports.create_repo_record = function (req, callback) {
         get_pid,
         get_handle,
         create_display_record,
-        delete_file,
+        // delete_file,
         create_repo_record,
         index,
         cleanup_queue

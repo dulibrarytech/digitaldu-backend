@@ -83,6 +83,7 @@ exports.save_transfer_records = function (transfer_data, callback) {
             }
 
             callback(obj);
+            return null
         })
         .catch(function (error) {
             logger.module().fatal('FATAL: unable to save queue data (save_transfer_records)');
@@ -176,10 +177,13 @@ exports.confirm_transfer = function (response, id) {
                 transfer_status: 1
             },
             callback: function (data) {
+
                 if (data !== 1) {
                     logger.module().fatal('FATAL: database transfer queue error (confirm_transfer)');
                     throw 'FATAL: database transfer queue error (confirm_transfer)';
                 }
+
+                return null;
             }
         };
 
@@ -414,6 +418,8 @@ exports.update_transfer_status = function (response, callback) {
                     logger.module().error('ERROR: database queue error (update_transfer_status)');
                     throw 'ERROR: database queue error (update_transfer_status)';
                 }
+
+                return null;
             }
         };
 
@@ -466,6 +472,8 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
                     logger.module().error('ERROR: database queue error (update_ingest_status) ' + json.status);
                     throw 'ERROR: database queue error (update_ingest_status)';
                 }
+
+                return null;
             }
         };
 
@@ -498,6 +506,8 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
                     logger.module().error('ERROR: database queue error (update_ingest_status) ' + json.status);
                     throw 'ERROR: database queue error (update_ingest_status)';
                 }
+
+                return null;
             }
         };
 
@@ -531,6 +541,8 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
                     logger.module().error('ERROR: database queue error (update_ingest_status) ' + json.status);
                     throw 'ERROR: database queue error (update_ingest_status)';
                 }
+
+                return null;
             }
         };
 
@@ -603,6 +615,7 @@ exports.get_uri_txt = function (sip_uuid, callback) {
         .limit(1)
         .then(function (data) {
             callback(data);
+            return null;
         })
         .catch(function (error) {
             logger.module().error('ERROR: unable to get uri txt file (get_uri_txt) ' + error);
@@ -626,6 +639,7 @@ exports.get_collection = function (sip_uuid, callback) {
         })
         .then(function (data) {
             callback(data[0].is_member_of_collection.replace('_', ':'));
+            return null;
         })
         .catch(function (error) {
             logger.module().error('ERROR: unable to get collection (get_collection) ' + error);
@@ -660,6 +674,8 @@ exports.save_mods_id = function (mods_id, sip_uuid, callback) {
             }
 
             callback(true);
+
+            return null;
         }
     };
 
@@ -685,6 +701,7 @@ exports.get_object = function (sip_uuid, callback) {
         .limit(1)
         .then(function (data) {
             callback(data);
+            return null;
         })
         .catch(function (error) {
             logger.module().error('ERROR: unable to get object (get_object) ' + error);
@@ -710,6 +727,7 @@ exports.create_repo_record = function (obj, callback) {
         .insert(obj)
         .then(function (data) {
             callback(true);
+            return null;
         })
         .catch(function (error) {
             logger.module().error('ERROR: unable to create repo record (create_repo_record) ' + error);
@@ -771,7 +789,7 @@ exports.flag_incomplete_record = function (obj) {
             is_complete: 0
         })
         .then(function (data) {
-
+            return null;
         })
         .catch(function (error) {
             logger.module().error('ERROR: unable to flag incomplete record ' + error);

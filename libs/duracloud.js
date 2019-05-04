@@ -4,7 +4,7 @@ const config = require('../config/config'),
     request = require('request');
 
 /**
- *
+ * Gets METS file
  * @param data
  * @param callback
  */
@@ -52,7 +52,7 @@ exports.get_mets = function (data, callback) {
 };
 
 /**
- *
+ * Gets objects/header info
  * @param data
  * @param callback
  * @returns {boolean}

@@ -9,6 +9,8 @@ exports.get_mime_type = function (file) {
 
     let mime_type;
 
+    // TODO: figure out image mime type
+
     if (file.indexOf('tif') !== -1) {
         mime_type = 'image/tiff';
     }

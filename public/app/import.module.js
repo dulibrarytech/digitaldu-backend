@@ -20,7 +20,7 @@ const importModule = (function () {
             collectionObjects = [],
             html = '';
 
-        if (collection !== undefined && data.list.length === 0) {
+        if (collection !== null && data.list.length === 0) {
             html += '<tr>';
             html += '<td>';
             html += '<div class="alert alert-info"><i class="fa fa-exclamation-triangle"></i> <strong>The collection folder "' + collection + '" is empty.</strong></div>';
@@ -32,7 +32,7 @@ const importModule = (function () {
             return false;
         }
 
-        if (data.list.length === 0) {
+        if (collection === null && data.list.length === 0) {
             html += '<tr>';
             html += '<td>';
             html += '<div class="alert alert-info"><i class="fa fa-exclamation-triangle"></i> <strong>Import in progress.  Please try again after current import has completed.</strong></div>';
@@ -307,7 +307,7 @@ const importModule = (function () {
                     transferData += '<tr>';
                     transferData += '<td>' + data[i].is_member_of_collection + '</td>';
                     transferData += '<td>' + data[i].object + '</td>';
-                    transferData += '<td>' + data[i].transfer_uuid + '</td>';
+                    // transferData += '<td>' + data[i].transfer_uuid + '</td>';
                     transferData += '<td>' + data[i].microservice + '</td>';
                     transferData += '<td>' + data[i].user + '</td>';
                     transferData += '<td>' + data[i].message + '</td>';
@@ -319,7 +319,7 @@ const importModule = (function () {
 
             } else {
 
-                $('#transfer-status').html('<tr><td>No ingests in progress</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>');
+                $('#transfer-status').html('<tr><td>No ingests in progress</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>');
 
             }
         });
