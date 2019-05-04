@@ -89,6 +89,12 @@ exports.get_dashboard_user_add_form = function (req, res) {
     });
 };
 
+exports.get_dashboard_user_edit_form = function (req, res) {
+    res.render('dashboard-edit-user', {
+        host: config.host
+    });
+};
+
 exports.get_dashboard_search = function (req, res) {
     res.render('dashboard-search-results', {
         host: config.host

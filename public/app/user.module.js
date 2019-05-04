@@ -26,7 +26,8 @@ const userModule = (function () {
             }
 
             html += '<td>';
-            html += '<a class="btn btn-xs btn-primary" href="/dashboard/users/detail?id=' + data[i].id + '" title="User Details"><i class="fa fa-user"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;';
+            // html += '<a class="btn btn-xs btn-primary" href="/dashboard/users/detail?id=' + data[i].id + '" title="User Details"><i class="fa fa-user"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;';
+            html += '&nbsp;';
             html += '<a class="btn btn-xs btn-default" href="/dashboard/users/edit?id=' + data[i].id + '" title="Edit User"><i class="fa fa-edit"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;';
             html += '<a class="btn btn-xs btn-danger" href="/dashboard/users/delete?id=' + data[i].id + '" title="Delete User"><i class="fa fa-times"></i></a>';
             html += '</td>';

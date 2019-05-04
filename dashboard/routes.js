@@ -50,8 +50,8 @@ module.exports = function (app) {
     app.route('/dashboard/users')
         .get(Dashboard.get_dashboard_users);
 
-    app.route('/dashboard/users/detail')
-        .get(Dashboard.get_dashboard_user_detail);
+    app.route('/dashboard/users/edit')
+        .get(Dashboard.get_dashboard_user_edit_form);
 
     app.route('/dashboard/users/add')
         .get(Dashboard.get_dashboard_user_add_form);
