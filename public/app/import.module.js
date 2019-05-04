@@ -44,8 +44,6 @@ const importModule = (function () {
             return false;
         }
 
-        // TODO: check for codu namespace in collection name
-        // TODO: return error message if codu namespace not found in collection name
         for (let i = 0; i < data.list.length; i++) {
 
             if (data.list[i].name.charAt(0) !== '.') {
