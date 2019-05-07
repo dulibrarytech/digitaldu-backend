@@ -740,6 +740,14 @@ exports.create_repo_record = function (req, callback) {
         }
 
         // give archivematica time to upload large files to duracloud
+        let TIMER = 1000;
+
+        obj.mime_type = mimetypelib.get_mime_type(obj.file);
+
+        if (obj.mime_type.indexOf('mp4') !== -1) {
+            TIMER = 60000;
+        }
+
         setTimeout(function () {
 
             // gets headers only
@@ -754,12 +762,11 @@ exports.create_repo_record = function (req, callback) {
                 obj.file_size = response.headers['content-length'];
                 obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
                 obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
-                obj.mime_type = mimetypelib.get_mime_type(obj.file);
 
                 callback(null, obj);
             });
 
-        }, 5000); // TODO: test large video files
+        }, TIMER);
     }
 
     // 7.)
