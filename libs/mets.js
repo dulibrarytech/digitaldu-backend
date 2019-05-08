@@ -7,12 +7,12 @@ exports.process_mets = function (sip_uuid, dip_path, xml) {
 
     let document = new xmldoc.XmlDocument(xml),
         Obj = {},
-        Arr = [];
+        Arr = [],
+        mime_type;
 
     document.eachChild(function (child, index, array) {
 
-        // get mime type
-        /*
+        // get mime type for wav, mp4 and tiff files
         if (array[index].name === 'mets:amdSec') {
 
             let techMD = array[index].childNamed("mets:techMD");
@@ -22,14 +22,27 @@ exports.process_mets = function (sip_uuid, dip_path, xml) {
             let premisObjectCharacteristics = premisObject.childNamed("premis:objectCharacteristics");
             let premisObjectCharacteristicsExtension = premisObjectCharacteristics.childNamed("premis:objectCharacteristicsExtension");
 
-            // console.log(premisObjectCharacteristicsExtension.children);
-
             if (premisObjectCharacteristicsExtension.childNamed("rdf:RDF") !== undefined) {
                 let rdfDescription = premisObjectCharacteristicsExtension.childNamed("rdf:RDF").childNamed("rdf:Description");
-                Obj.mime_type = rdfDescription.childNamed("File:MIMEType").val;
+                mime_type = rdfDescription.childNamed("File:MIMEType").val;
+            }
+
+            let fits = premisObjectCharacteristicsExtension.childNamed('fits');
+
+            // get mime type for pdf files
+            if (fits !== undefined) {
+                let toolOutput = fits.childNamed('toolOutput');
+                let tool = toolOutput.childNamed('tool');
+                let fileUtilityOutput = tool.childNamed('fileUtilityOutput');
+                let mimeType = fileUtilityOutput.childNamed('mimetype').val;
+
+                if (mimeType === 'application/pdf') {
+                    mime_type = mimeType;
+                }
             }
         }
-        */
+
+        // TODO: get pdf mime type
 
         // gets file information TODO: refactor to make use of xmldoc methods
         if (array[index].name === 'mets:fileSec') {
@@ -56,6 +69,7 @@ exports.process_mets = function (sip_uuid, dip_path, xml) {
                                 Obj.file = array[index].children[1].children[i].children[k].attr['xlink:href'].replace(/objects\//g, '');
                                 Obj.message = 'PROCESSING_IMPORT';
                                 Obj.file_id = file_id;
+                                Obj.mime_type = mime_type;
 
                                 if (ext === 'txt') {
                                     Obj.type = 'txt';

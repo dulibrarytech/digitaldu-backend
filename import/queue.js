@@ -722,7 +722,7 @@ exports.create_repo_record = function (req, callback) {
             obj.dip_path = dc_data.dip_path;
             obj.file = dc_data.file;
             obj.uuid = dc_data.uuid;
-            // obj.mime_type = data.mime_type;
+            obj.mime_type = data.mime_type;
             callback(null, obj);
         });
     }
@@ -740,10 +740,17 @@ exports.create_repo_record = function (req, callback) {
             return false;
         }
 
-        let TIMER = 25000;
+        // if unable to get mime type from mets, check file extension
+        if (obj.mime_type === undefined) {
+            obj.mime_type = mimetypelib.get_mime_type(obj.file);
+        }
 
-        // temporary way of retrieving mime types
-        obj.mime_type = mimetypelib.get_mime_type(obj.file);
+        let TIMER = 5000;
+
+        // give larger files
+        if (obj.mime_type === 'audio/x-wav' || obj.mime_type === 'video/mp4') {
+            TIMER = 30000;
+        }
 
         setTimeout(function () {
 
@@ -759,6 +766,7 @@ exports.create_repo_record = function (req, callback) {
                 obj.file_size = response.headers['content-length'];
                 obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
                 obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
+                console.log(obj);
 
                 callback(null, obj);
             });

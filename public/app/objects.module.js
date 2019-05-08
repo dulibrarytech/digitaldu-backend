@@ -109,7 +109,7 @@ const objectsModule = (function () {
 
             if (data[i].display_record === null) {
                 $('#message').html('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i>&nbsp; Display record(s) is not available.</div>');
-                return false;
+                continue;
             }
 
             let record = JSON.parse(data[i].display_record),
@@ -134,16 +134,16 @@ const objectsModule = (function () {
             if (data[i].object_type === 'object') {
 
                 html += '<ul>';
-                html += '<li><small><strong>Pid:</strong>&nbsp;<a target="_blank" href="' + record.handle + '">' + record.pid + '</a>&nbsp;&nbsp;<i class="fa fa-external-link"></i></small></li>';
-                html += '<li><small><strong>Uri:</strong>&nbsp;' + record.display_record.uri + '</small></li>';
+                html += '<li><strong>Pid:</strong>&nbsp;<a target="_blank" href="' + record.handle + '">' + record.pid + '</a>&nbsp;&nbsp;<i class="fa fa-external-link"></i></li>';
+                html += '<li><strong>Uri:</strong>&nbsp;' + record.display_record.uri + '</li>';
 
                 if (record.display_record.dates !== undefined && record.display_record.dates.length !== 0) {
 
-                    html += '<li><small><strong>Dates:</strong></small></li>';
+                    html += '<li><strong>Dates:</strong></li>';
                     html += '<ul>';
 
                     for (let i = 0; i < record.display_record.dates.length; i++) {
-                        html += '<li><small>' + record.display_record.dates[i].expression + ' ( ' + record.display_record.dates[i].type + '</a> )</small></li>';
+                        html += '<li>' + record.display_record.dates[i].expression + ' ( ' + record.display_record.dates[i].type + '</a> )</li>';
                     }
 
                     html += '</ul>';
@@ -151,11 +151,11 @@ const objectsModule = (function () {
 
                 if (record.display_record.extents !== undefined && record.display_record.extents.length !== 0) {
 
-                    html += '<li><small><strong>Extents:</strong></small></li>';
+                    html += '<li><strong>Extents:</strong></li>';
                     html += '<ul>';
 
                     for (let i = 0; i < record.display_record.extents.length; i++) {
-                        html += '<li><small>' + record.display_record.extents[i] + '</small></li>';
+                        html += '<li>' + record.display_record.extents[i] + '</li>';
                     }
 
                     html += '</ul>';
@@ -163,11 +163,11 @@ const objectsModule = (function () {
 
                 if (record.display_record.identifiers !== undefined && record.display_record.identifiers.length !== 0) {
 
-                    html += '<li><small><strong>Identifiers:</strong></small></li>';
+                    html += '<li><strong>Identifiers:</strong></li>';
                     html += '<ul>';
 
                     for (let i = 0; i < record.display_record.identifiers.length; i++) {
-                        html += '<li><small>' + record.display_record.identifiers[i].identifier + ' ( ' + record.display_record.identifiers[i].type + ' )</small></li>';
+                        html += '<li>' + record.display_record.identifiers[i].identifier + ' ( ' + record.display_record.identifiers[i].type + ' )</li>';
                     }
 
                     html += '</ul>';
@@ -176,17 +176,17 @@ const objectsModule = (function () {
                 if (record.display_record.language !== undefined && record.display_record.language.length !== 0) {
 
                     for (let i = 0; i < record.display_record.language.length; i++) {
-                        html += '<li><small><strong>Language:</strong> ' + record.display_record.language[i].text + ' ( ' + record.display_record.language[i].authority + ' )</small></li>';
+                        html += '<li><strong>Language:</strong> ' + record.display_record.language[i].text + ' ( ' + record.display_record.language[i].authority + ' )</li>';
                     }
                 }
 
                 if (record.display_record.names !== undefined && record.display_record.names.length !== 0) {
 
-                    html += '<li><small><strong>Names:</strong></small></li>';
+                    html += '<li><strong>Names:</strong></li>';
                     html += '<ul>';
 
                     for (let i = 0; i < record.display_record.names.length; i++) {
-                        html += '<li><small>' + record.display_record.names[i].title + ' ( ' + record.display_record.names[i].source + ' )</small></li>';
+                        html += '<li>' + record.display_record.names[i].title + ' ( ' + record.display_record.names[i].source + ' )</li>';
                     }
 
                     html += '</ul>';
@@ -194,11 +194,11 @@ const objectsModule = (function () {
 
                 if (record.display_record.notes !== undefined && record.display_record.notes.length !== 0) {
 
-                    html += '<li><small><strong>Notes:</strong></small></li>';
+                    html += '<li><strong>Notes:</strong></li>';
                     html += '<ul>';
 
                     for (let i = 0; i < record.display_record.notes.length; i++) {
-                        html += '<li><small>' + record.display_record.notes[i].content + ' ( ' + record.display_record.notes[i].type + ' )</small></li>';
+                        html += '<li>' + record.display_record.notes[i].content + ' ( ' + record.display_record.notes[i].type + ' )</li>';
                     }
 
                     html += '</ul>';
@@ -206,24 +206,24 @@ const objectsModule = (function () {
 
                 if (record.display_record.parts !== undefined && record.display_record.parts.length !== 0) {
 
-                    html += '<li><small><strong>Parts:</strong></small></li>';
+                    html += '<li><strong>Parts:</strong></li>';
                     html += '<ul>';
 
                     for (let i = 0; i < record.display_record.parts.length; i++) {
-                        html += '<li><small>' + record.display_record.parts[i].title + ' ( ' + record.display_record.parts[i].type + ' ) order: ' + record.display_record.parts[i].order + '</small></li>';
+                        html += '<li>' + record.display_record.parts[i].title + ' ( ' + record.display_record.parts[i].type + ' ) order: ' + record.display_record.parts[i].order + '</li>';
                     }
                 }
 
                 if (record.display_record.subjects !== undefined && record.display_record.subjects.length !== 0) {
 
-                    html += '<li><small><strong>Subjects:</strong></small></li>';
+                    html += '<li><strong>Subjects:</strong></li>';
                     html += '<ul>';
 
                     for (let i = 0; i < record.display_record.subjects.length; i++) {
                         if (record.display_record.subjects[i].authority_id !== undefined) {
-                            html += '<li><small>' + record.display_record.subjects[i].title + ' ( <a target="_blank" href="' + record.display_record.subjects[i].authority_id + '">' + record.display_record.subjects[i].authority + '</a> )</small></li>';
+                            html += '<li>' + record.display_record.subjects[i].title + ' ( <a target="_blank" href="' + record.display_record.subjects[i].authority_id + '">' + record.display_record.subjects[i].authority + '</a> )</li>';
                         } else {
-                            html += '<li><small>' + record.display_record.subjects[i].title + ' ( ' + record.display_record.subjects[i].authority + ' )</small></li>';
+                            html += '<li>' + record.display_record.subjects[i].title + ' ( ' + record.display_record.subjects[i].authority + ' )</li>';
                         }
                     }
 
@@ -234,7 +234,7 @@ const objectsModule = (function () {
             }
 
             if (data[i].object_type === 'collection' && record.abstract !== undefined) {
-                html += '<p style="min-height: 75px"><small>' + record.abstract + '</small></p>';
+                html += '<p style="min-height: 75px">' + record.abstract + '</p>';
             }
 
             html += '</div>';
