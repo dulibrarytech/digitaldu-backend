@@ -722,6 +722,7 @@ exports.create_repo_record = function (req, callback) {
             obj.dip_path = dc_data.dip_path;
             obj.file = dc_data.file;
             obj.uuid = dc_data.uuid;
+            // obj.mime_type = data.mime_type;
             callback(null, obj);
         });
     }
@@ -739,14 +740,10 @@ exports.create_repo_record = function (req, callback) {
             return false;
         }
 
-        // give archivematica time to upload large files to duracloud
-        let TIMER = 1000;
+        let TIMER = 25000;
 
+        // temporary way of retrieving mime types
         obj.mime_type = mimetypelib.get_mime_type(obj.file);
-
-        if (obj.mime_type.indexOf('mp4') !== -1) {
-            TIMER = 60000;
-        }
 
         setTimeout(function () {
 
@@ -767,6 +764,7 @@ exports.create_repo_record = function (req, callback) {
             });
 
         }, TIMER);
+
     }
 
     // 7.)
@@ -815,9 +813,14 @@ exports.create_repo_record = function (req, callback) {
 
             archivespace.get_session_token(function (response) {
 
-                // TODO: catch error here...
                 let data = response.data,
                     token;
+
+                if (data === undefined) {
+                    obj.session = null;
+                    callback(null, obj);
+                    return false;
+                }
 
                 try {
 
@@ -859,7 +862,7 @@ exports.create_repo_record = function (req, callback) {
 
                 } catch (e) {
                     logger.module().error('ERROR: session token error ' + e);
-                    throw e;
+                    // throw e;
                 }
             });
         }

@@ -736,6 +736,39 @@ exports.create_repo_record = function (obj, callback) {
 };
 
 /**
+ * Gets mime type from queue
+ * @param sip_uuid
+ * @param callback
+ */
+exports.get_mime_type = function (sip_uuid, callback) {
+
+    'use strict';
+
+    knexQ(IMPORT_QUEUE)
+        .select('mime_type')
+        .where({
+            sip_uuid: sip_uuid,
+            type: 'object',
+            status: 0
+        })
+        .limit(1)
+        .then(function (data) {
+
+            if (data.length === 1) {
+                callback(data);
+            } else {
+                callback(null);
+            }
+
+            return null;
+        })
+        .catch(function (error) {
+            logger.module().error('ERROR: unable to get mime type ' + error);
+            throw 'ERROR: unable to get mime type' + error;
+        });
+};
+
+/**
  * Cleans up local queue when object ingest is complete
  * @param obj
  * @param callback

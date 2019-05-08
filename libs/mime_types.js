@@ -17,7 +17,7 @@ exports.get_mime_type = function (file) {
         mime_type = 'application/pdf';
     }
 
-    if (file.indexOf('mp3') !== -1) {
+    if (file.indexOf('wav') !== -1) {
         mime_type = 'audio/x-wav';
     }
 

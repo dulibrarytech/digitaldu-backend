@@ -12,7 +12,9 @@ exports.process_mets = function (sip_uuid, dip_path, xml) {
     document.eachChild(function (child, index, array) {
 
         // get mime type
+        /*
         if (array[index].name === 'mets:amdSec') {
+
             let techMD = array[index].childNamed("mets:techMD");
             let mdWrap = techMD.childNamed("mets:mdWrap");
             let xmlData = mdWrap.childNamed("mets:xmlData");
@@ -20,11 +22,14 @@ exports.process_mets = function (sip_uuid, dip_path, xml) {
             let premisObjectCharacteristics = premisObject.childNamed("premis:objectCharacteristics");
             let premisObjectCharacteristicsExtension = premisObjectCharacteristics.childNamed("premis:objectCharacteristicsExtension");
 
+            // console.log(premisObjectCharacteristicsExtension.children);
+
             if (premisObjectCharacteristicsExtension.childNamed("rdf:RDF") !== undefined) {
                 let rdfDescription = premisObjectCharacteristicsExtension.childNamed("rdf:RDF").childNamed("rdf:Description");
                 Obj.mime_type = rdfDescription.childNamed("File:MIMEType").val;
             }
         }
+        */
 
         // gets file information TODO: refactor to make use of xmldoc methods
         if (array[index].name === 'mets:fileSec') {
