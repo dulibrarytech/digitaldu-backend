@@ -369,7 +369,18 @@ const importModule = (function () {
             if (response.status === 200) {
 
                 response.json().then(function (data) {
-                    renderIncompleteRecords(data);
+
+                    $('#message').html('');
+
+                    if (data.length === 0) {
+                        let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> No incomplete records found.</div>';
+                        $('#incomplete-records').hide();
+                        $('#message').html(message);
+                    } else {
+                        // TODO: test to determine if this is needed
+                        $('#incomplete-records').show();
+                        renderIncompleteRecords(data);
+                    }
                 });
 
             } else {
@@ -391,8 +402,6 @@ const importModule = (function () {
 
             if (incompleteRecords.length === 0) {
                 clearInterval(timer);
-                // $('#message').html('');
-                console.log('complete');
                 return false;
             } else {
 
@@ -475,8 +484,6 @@ const importModule = (function () {
      */
     obj.importModsId = function (sip_uuid, mods_id) {
 
-        // $('#message').html('');
-
         let url = api + '/api/admin/v1/import/mods_id',
             request = new Request(url, {
                 method: 'POST',
@@ -490,8 +497,7 @@ const importModule = (function () {
         const callback = function (response) {
 
             if (response.status === 201) {
-                // message = '<div class="alert alert-success">Archivespace ID added to repository record</div>';
-                // $('#message').html(message);
+
                 let responses = document.getElementById('responses');
                 responses.innerHTML = '<p><strong>Archivesapce ID added to repository record</strong></p>';
 
@@ -545,9 +551,6 @@ const importModule = (function () {
             return false;
         }
 
-        // let message = '<p><strong>(' + sip_uuid + ') Importing MODS...</strong></p>';
-        // $('#message').html(message);
-
         let url = api + '/api/admin/v1/import/mods',
             request = new Request(url, {
                 method: 'POST',
@@ -586,9 +589,6 @@ const importModule = (function () {
      * @param sip_uuid
      */
     obj.importThumbnail = function (sip_uuid) {
-
-        console.log('importing thumbnail');
-        console.log(sip_uuid);
 
         if (sip_uuid === undefined) {
             // TODO: render message

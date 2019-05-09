@@ -58,7 +58,7 @@ const collectionsModule = (function () {
             html += '<hr>';
         }
 
-        // TODO: implement pagination or infinite scrolling
+        // TODO: implement pagination
         $('#collections').html(html);
         $('a').tooltip();
     };
@@ -75,7 +75,13 @@ const collectionsModule = (function () {
             type: 'GET'
         })
             .done(function (data) {
-                renderRootCollections(data);
+
+                if (data.length === 0) {
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> No collections found.</div>';
+                    $('#collections').html(message);
+                } else {
+                    renderRootCollections(data);
+                }
             })
             .fail(function (jqXHR, textStatus) {
 
@@ -84,7 +90,6 @@ const collectionsModule = (function () {
                     let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve collections.</div>';
 
                     if (jqXHR.status === 401) {
-                        // let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve collections.</div>';
                         renderError(message);
 
                         setTimeout(function () {
@@ -94,7 +99,6 @@ const collectionsModule = (function () {
                         return false;
                     }
 
-                    // let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve collections.</div>';
                     renderError(message);
                 }
             });
