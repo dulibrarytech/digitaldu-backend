@@ -742,14 +742,15 @@ exports.create_repo_record = function (req, callback) {
 
         // if unable to get mime type from mets, check file extension
         if (obj.mime_type === undefined) {
+            logger.module().info('INFO: failed to get mime type from METS');
             obj.mime_type = mimetypelib.get_mime_type(obj.file);
         }
 
         let TIMER = 5000;
 
-        // give larger files
+        // give larger files more time
         if (obj.mime_type === 'audio/x-wav' || obj.mime_type === 'video/mp4') {
-            TIMER = 30000;
+            TIMER = 35000;
         }
 
         setTimeout(function () {
@@ -759,6 +760,7 @@ exports.create_repo_record = function (req, callback) {
 
                 if (response.error === true) {
                     logger.module().error('ERROR: Unable to get object ' + response.error_message);
+                    importlib.flag_failed_record(obj);
                     return false;
                 }
 
@@ -766,7 +768,6 @@ exports.create_repo_record = function (req, callback) {
                 obj.file_size = response.headers['content-length'];
                 obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
                 obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
-                console.log(obj);
 
                 callback(null, obj);
             });

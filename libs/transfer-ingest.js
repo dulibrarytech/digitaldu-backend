@@ -735,11 +735,11 @@ exports.create_repo_record = function (obj, callback) {
         });
 };
 
-/**
+/** NOT USED
  * Gets mime type from queue
  * @param sip_uuid
  * @param callback
- */
+
 exports.get_mime_type = function (sip_uuid, callback) {
 
     'use strict';
@@ -767,6 +767,7 @@ exports.get_mime_type = function (sip_uuid, callback) {
             throw 'ERROR: unable to get mime type' + error;
         });
 };
+ */
 
 /**
  * Cleans up local queue when object ingest is complete
@@ -830,6 +831,33 @@ exports.flag_incomplete_record = function (obj) {
         });
 
 };
+
+/**
+ * Flags failed ingest records
+ * @param obj
+ */
+exports.flag_failed_record = function (obj) {
+
+    'use strict';
+
+    knexQ(QUEUE)
+        .where({
+            sip_uuid: obj.sip_uuid,
+            status: 0
+        })
+        .update({
+            message: 'FAILED'
+        })
+        .then(function (data) {
+            return null;
+        })
+        .catch(function (error) {
+            logger.module().error('ERROR: unable to flag failed queue record ' + error);
+            throw 'ERROR: unable to flag failed queue record ' + error;
+        });
+
+};
+
 
 /**
  * Checks queue to determine if another transfer should be started
