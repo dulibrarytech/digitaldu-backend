@@ -26,6 +26,8 @@ const configModule = (function () {
      */
     obj.getTn = function (tn, pid) {
 
+        console.log(tn);
+
         if (tn === null) {
             return 'http://librepo01-vlp.du.edu:8080/fedora/objects/' + pid + '/datastreams/TN/content';
         }

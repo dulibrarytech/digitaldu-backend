@@ -64,7 +64,7 @@ exports.get_session_token = function (callback) {
 
     'use strict';
 
-    let apiUrl = config.archivespaceHost + '/users/' + config.archivespaceUser + '/login?password=' + config.archivespacePassword + '&expiring=false';
+    let apiUrl = config.archivespaceHost + '/users/' + config.archivespaceUser + '/login?password=' + config.archivespacePassword + '&expiring=true';
 
     request.post({
         url: apiUrl,

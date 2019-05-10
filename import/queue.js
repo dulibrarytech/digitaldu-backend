@@ -749,8 +749,10 @@ exports.create_repo_record = function (req, callback) {
         let TIMER = 5000;
 
         // give larger files more time
-        if (obj.mime_type === 'audio/x-wav' || obj.mime_type === 'video/mp4') {
+        if (obj.mime_type === 'audio/x-wav') {
             TIMER = 35000;
+        } else if (obj.mime_type === 'video/mp4') {
+            // TODO: get dura-manifest for videos
         }
 
         setTimeout(function () {

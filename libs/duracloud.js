@@ -61,6 +61,7 @@ exports.get_object = function (data, callback) {
 
     'use strict';
 
+    // TODO: refactor
     if (data.file === 'uri.txt') {
 
         get_uri(data, function (result) {
@@ -68,6 +69,10 @@ exports.get_object = function (data, callback) {
         });
 
         return false;
+    }
+
+    if (data.mime_type === 'video/mp4') {
+        // TODO: call get_video_manifest()
     }
 
     let dip_path = data.dip_path;
@@ -80,6 +85,12 @@ exports.get_object = function (data, callback) {
     if (data.file.indexOf('wav') !== -1) {
         data.file = data.file.replace('wav', 'mp3');
     }
+
+    /*
+    if (data.file.indexOf('mp4') !== -1) {
+        data.file = data.file + '.dura-manifest';
+    }
+    */
 
     let apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + dip_path + '/objects/' + data.uuid + '-' + data.file;
 
@@ -149,6 +160,10 @@ const get_uri = function (data, callback) {
 
         if (httpResponse.statusCode === 200) {
 
+            callback(body);
+            return false;
+
+            /*
             if (data.file === 'uri.txt') {
                 callback(body);
                 return false;
@@ -178,10 +193,57 @@ const get_uri = function (data, callback) {
                 }
 
             });
+            */
 
         } else {
 
             logger.module().error('ERROR: Unable to get duracloud uri object ' + body);
+
+            callback({
+                error: true,
+                error_message: body
+            });
+
+            return false;
+        }
+    });
+};
+
+/**
+ *
+ * @param data
+ * @param callback
+ */
+const get_video_manifest = function (data, callback) {
+
+    'use strict';
+
+    let dip_path = data.dip_path,
+        apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + dip_path + '/objects/' + data.uuid + '-' + data.file;
+
+    request.get({
+        url: apiUrl,
+        timeout: 25000
+    }, function (error, httpResponse, body) {
+
+        if (error) {
+
+            logger.module().error('ERROR: Unable to get duracloud video manifest ' + error);
+
+            callback({
+                error: true,
+                error_message: error
+            });
+        }
+
+        if (httpResponse.statusCode === 200) {
+
+            callback(body);
+            return false;
+
+        } else {
+
+            logger.module().error('ERROR: Unable to get duracloud video manifest ' + body);
 
             callback({
                 error: true,
