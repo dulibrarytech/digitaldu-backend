@@ -34,9 +34,9 @@ const collectionsModule = (function () {
             }
 
             if (record.abstract !== undefined) {
-                html += '<p style="min-height: 75px"><small>' + record.abstract + '</small></p>';
+                html += '<p style="min-height: 75px">' + record.abstract + '</p>';
             } else {
-                html += '<p style="min-height: 75px"><small>No description.</small></p>';
+                html += '<p style="min-height: 75px">No description.</p>';
             }
 
             html += '</div>';

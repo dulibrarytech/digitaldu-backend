@@ -25,6 +25,7 @@ const fs = require('fs'),
     metslib = require('../libs/mets'),
     importlib = require('../libs/transfer-ingest'),
     mimetypelib = require('../libs/mime_types'),
+    videomanifestlib = require('../libs/video_manifest'),
     pids = require('../libs/next-pid'),
     handles = require('../libs/handles'),
     archivematica = require('../libs/archivematica'),
@@ -752,13 +753,18 @@ exports.create_repo_record = function (req, callback) {
         if (obj.mime_type === 'audio/x-wav') {
             TIMER = 35000;
         } else if (obj.mime_type === 'video/mp4') {
-            // TODO: get dura-manifest for videos
+
+            duracloud.get_object(obj, function (xml) {
+                obj.video_chunk_ids = videomanifestlib.save_video_manifest(xml);
+                callback(null, obj);
+                return false;
+            });
         }
 
         setTimeout(function () {
 
             // gets headers only
-            duracloud.get_object(obj, function (response) {
+            duracloud.get_object_info(obj, function (response) {
 
                 if (response.error === true) {
                     logger.module().error('ERROR: Unable to get object ' + response.error_message);

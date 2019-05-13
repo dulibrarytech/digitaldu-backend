@@ -57,7 +57,7 @@ exports.get_mets = function (data, callback) {
  * @param callback
  * @returns {boolean}
  */
-exports.get_object = function (data, callback) {
+exports.get_object_info = function (data, callback) {
 
     'use strict';
 
@@ -85,12 +85,6 @@ exports.get_object = function (data, callback) {
     if (data.file.indexOf('wav') !== -1) {
         data.file = data.file.replace('wav', 'mp3');
     }
-
-    /*
-    if (data.file.indexOf('mp4') !== -1) {
-        data.file = data.file + '.dura-manifest';
-    }
-    */
 
     let apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + dip_path + '/objects/' + data.uuid + '-' + data.file;
 
@@ -136,7 +130,7 @@ exports.get_object = function (data, callback) {
  * @param data
  * @param callback
  */
-const get_uri = function (data, callback) {
+exports.get_uri = function (data, callback) {
 
     'use strict';
 
@@ -214,7 +208,7 @@ const get_uri = function (data, callback) {
  * @param data
  * @param callback
  */
-const get_video_manifest = function (data, callback) {
+exports.get_object = function (data, callback) {
 
     'use strict';
 

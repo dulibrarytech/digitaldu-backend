@@ -15,34 +15,32 @@ exports.process_mets = function (sip_uuid, dip_path, xml) {
         // get mime type for wav, mp4 and tiff files
         if (array[index].name === 'mets:amdSec') {
 
-            let techMD = array[index].childNamed("mets:techMD");
-            let mdWrap = techMD.childNamed("mets:mdWrap");
-            let xmlData = mdWrap.childNamed("mets:xmlData");
-            let premisObject = xmlData.childNamed("premis:object");
-            let premisObjectCharacteristics = premisObject.childNamed("premis:objectCharacteristics");
-            let premisObjectCharacteristicsExtension = premisObjectCharacteristics.childNamed("premis:objectCharacteristicsExtension");
+            let techMD = array[index].childNamed('mets:techMD'),
+                mdWrap = techMD.childNamed('mets:mdWrap'),
+                xmlData = mdWrap.childNamed('mets:xmlData'),
+                premisObject = xmlData.childNamed('premis:object'),
+                premisObjectCharacteristics = premisObject.childNamed('premis:objectCharacteristics'),
+                premisObjectCharacteristicsExtension = premisObjectCharacteristics.childNamed('premis:objectCharacteristicsExtension');
 
-            if (premisObjectCharacteristicsExtension.childNamed("rdf:RDF") !== undefined) {
-                let rdfDescription = premisObjectCharacteristicsExtension.childNamed("rdf:RDF").childNamed("rdf:Description");
-                mime_type = rdfDescription.childNamed("File:MIMEType").val;
+            if (premisObjectCharacteristicsExtension.childNamed('rdf:RDF') !== undefined) {
+                let rdfDescription = premisObjectCharacteristicsExtension.childNamed('rdf:RDF').childNamed('rdf:Description');
+                mime_type = rdfDescription.childNamed('File:MIMEType').val;
             }
 
             let fits = premisObjectCharacteristicsExtension.childNamed('fits');
 
             // get mime type for pdf files
             if (fits !== undefined) {
-                let toolOutput = fits.childNamed('toolOutput');
-                let tool = toolOutput.childNamed('tool');
-                let fileUtilityOutput = tool.childNamed('fileUtilityOutput');
-                let mimeType = fileUtilityOutput.childNamed('mimetype').val;
+                let toolOutput = fits.childNamed('toolOutput'),
+                    tool = toolOutput.childNamed('tool'),
+                    fileUtilityOutput = tool.childNamed('fileUtilityOutput'),
+                    mimeType = fileUtilityOutput.childNamed('mimetype').val;
 
                 if (mimeType === 'application/pdf') {
                     mime_type = mimeType;
                 }
             }
         }
-
-        // TODO: get pdf mime type
 
         // gets file information TODO: refactor to make use of xmldoc methods
         if (array[index].name === 'mets:fileSec') {
@@ -81,6 +79,7 @@ exports.process_mets = function (sip_uuid, dip_path, xml) {
                     }
 
                     if (!_.isEmpty(Obj)) {
+                        console.log(Obj);
                         Arr.push(Obj);
                         Obj = {};
                     }
