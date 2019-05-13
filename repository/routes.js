@@ -22,6 +22,7 @@ module.exports = function (app) {
         .post(token.verify, Repo.save_admin_collection_object)
         .put(token.verify, Repo.update_admin_collection_object);
 
+    // TODO: add "admin" to route
     app.route('/api/v1/object/download')
         .get(Repo.get_object_download);
 

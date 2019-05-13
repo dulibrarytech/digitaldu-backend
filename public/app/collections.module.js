@@ -21,7 +21,7 @@ const collectionsModule = (function () {
         for (let i = 0; i < data.length; i++) {
 
             let record = JSON.parse(data[i].display_record);
-            let tn = configModule.getTn(data[i].thumbnail, data[i].pid);
+            let tn = helperModule.getTn(data[i].thumbnail, 'collection', data[i].pid);
 
             html += '<div class="row">';
             html += '<div class="col-md-3"><img display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';

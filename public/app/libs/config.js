@@ -20,27 +20,18 @@ const configModule = (function () {
     };
 
     /**
-     * Resolves repo thumbnails
-     * @param pid
-     * @returns {string}
+     * Contains urls for default thumbnails
+     * @returns {{duracloud: string, default: string, default_pdf: string, default_audio: string, default_video: string}}
      */
-    obj.getTn = function (tn, pid) {
-
-        console.log(tn);
-
-        if (tn === null) {
-            return 'http://librepo01-vlp.du.edu:8080/fedora/objects/' + pid + '/datastreams/TN/content';
-        }
-        return 'https://archivesdu.duracloud.org/durastore/dip-store/dip-store/' + tn;
-    };
-
-    /** Temporary
-     * Resolves Fedora repo thumbnails
-     * @param pid
-     * @returns {string}
-     */
-    obj.getFedoraTn = function (pid) {
-        return 'http://librepo01-vlp.du.edu:8080/fedora/objects/' + pid + '/datastreams/TN/content';
+    obj.getTnUrls = function () {
+        return {
+            duracloud: 'https://archivesdu.duracloud.org/durastore/dip-store/dip-store/',
+            default_collection: configModule.getApi() + '/images/media.jpg',
+            default: configModule.getApi() + '/images/media.jpg',
+            default_pdf: configModule.getApi() + '/images/media.jpg',
+            default_audio: configModule.getApi() + '/images/media.jpg',
+            default_video: configModule.getApi() + '/images/media.jpg'
+        };
     };
 
     return obj;
