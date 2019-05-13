@@ -184,11 +184,12 @@ const collectionsModule = (function () {
 
             let message = '<div class="alert alert-success">Collection created (' + data[0].pid + ')</div>';
             $('#message').html(message);
-            $('#collection-form').show();
-            $('#collection-form')[0].reset();
+            $('#collection-form').hide();
+            // $('#collection-form')[0].reset();
 
             setTimeout(function () {
                 $('#message').html('');
+                window.location.replace(api + '/dashboard/root-collections');
             }, 3000);
 
         }).fail(function (jqXHR, textStatus) {
