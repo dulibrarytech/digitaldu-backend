@@ -116,7 +116,7 @@ const objectsModule = (function () {
                 tn = helperModule.getTn(data[i].thumbnail, data[i].mime_type, data[i].pid);
 
             html += '<div class="row">';
-            html += '<div class="col-md-3"><img display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
+            html += '<div class="col-md-3"><img style="max-height: 250px; max-width: 250px;" display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
             html += '<div class="col-md-6" style="padding: 5px">';
 
             if (record.display_record.title !== undefined) {
