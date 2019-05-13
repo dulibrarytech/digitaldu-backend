@@ -55,7 +55,7 @@ const objectsModule = (function () {
 
             // TODO: refactor after all display records have been standardized
             if (display_record.title !== undefined && display_record.title.length > 0) {
-                title = display_record.title[0];
+                title = display_record.title;
             } else {
                 title = display_record.display_record.title;
             }

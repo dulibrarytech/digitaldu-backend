@@ -3,7 +3,7 @@ const config = require('../config/config'),
     logger = require('../libs/log4');
 
 /**
- *
+ * Gets JSON representation of mods record from archivespace
  * @param id
  * @param callback
  */
@@ -57,7 +57,7 @@ exports.get_mods = function (id, session, callback) {
 };
 
 /**
- *
+ * Gets session token from archivespace
  * @param callback
  */
 exports.get_session_token = function (callback) {
