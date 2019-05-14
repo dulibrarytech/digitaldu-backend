@@ -86,7 +86,7 @@ const helperModule = (function () {
     obj.ping = function () {
 
         $.ajax({
-            url: configModule.getApi() + '/dashboard/ping',
+            url: configModule.getApi() + '/api/ping',
             type: 'GET'
         })
             .done(function (data) {
