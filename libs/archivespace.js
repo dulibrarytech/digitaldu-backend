@@ -2,6 +2,63 @@ const config = require('../config/config'),
     request = require('request'),
     logger = require('../libs/log4');
 
+
+/**
+ *
+ * @param callback
+ */
+exports.ping = function (callback) {
+
+    'use strict';
+
+    // TODO:...
+    let apiUrl = config.archivespaceHost;
+
+    request.get({
+        url: apiUrl,
+        timeout: 25000
+    }, function(error, httpResponse, body) {
+
+        if (error) {
+
+            logger.module().error('ERROR: request to archivespace failed ' + error);
+
+            callback({
+                error: true,
+                status: 'down',
+                message: error
+            });
+
+            return false;
+        }
+
+        if (httpResponse.statusCode === 200) {
+
+            callback({
+                error: false,
+                status: 'up',
+                message: 'Archivespace service is available'
+            });
+
+            return false;
+
+        } else {
+
+            logger.module().error('ERROR: request to archivespace failed ' + error);
+
+            callback({
+                error: true,
+                status: 'down',
+                message: error
+            });
+
+            return false;
+        }
+    });
+
+};
+
+
 /**
  * Gets JSON representation of mods record from archivespace
  * @param id

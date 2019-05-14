@@ -3,6 +3,55 @@ const config = require('../config/config'),
     fs = require('fs'),
     request = require('request');
 
+
+exports.ping = function (callback) {
+
+    'use strict';
+
+    // TODO: remove extra dip-store path
+    let apiUrl = 'https://' + config.duraCloudApi;
+
+    request.get({
+        url: apiUrl,
+        timeout: 25000
+    }, function (error, httpResponse, body) {
+
+        if (error) {
+
+            logger.module().error('ERROR: Unable to ping duracloud ' + error);
+
+            callback({
+                error: true,
+                status: 'down',
+                message: error
+            });
+        }
+
+        if (httpResponse.statusCode === 200) {
+
+            callback({
+                error: false,
+                status: 'up',
+                message: 'Duracloud service is available'
+            });
+
+            return false;
+
+        } else {
+
+            logger.module().error('ERROR: Unable to ping duracloud ' + body);
+
+            callback({
+                error: true,
+                status: 'down',
+                message: error
+            });
+
+            return false;
+        }
+    });
+};
+
 /**
  * Gets METS file
  * @param data
@@ -13,7 +62,7 @@ exports.get_mets = function (data, callback) {
     'use strict';
 
     let mets = 'METS.' + data.sip_uuid + '.xml',
-        apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + data.dip_path + '/' + mets;
+        apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + '/dip-store/' + data.dip_path + '/' + mets;
 
     request.get({
         url: apiUrl
@@ -62,6 +111,7 @@ exports.get_object_info = function (data, callback) {
     'use strict';
 
     // TODO: refactor
+    /*
     if (data.file === 'uri.txt') {
 
         get_uri(data, function (result) {
@@ -70,10 +120,13 @@ exports.get_object_info = function (data, callback) {
 
         return false;
     }
+    */
 
+    /*
     if (data.mime_type === 'video/mp4') {
         // TODO: call get_video_manifest()
     }
+    */
 
     let dip_path = data.dip_path;
 
@@ -86,7 +139,7 @@ exports.get_object_info = function (data, callback) {
         data.file = data.file.replace('wav', 'mp3');
     }
 
-    let apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + dip_path + '/objects/' + data.uuid + '-' + data.file;
+    let apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + '/dip-store/' + dip_path + '/objects/' + data.uuid + '-' + data.file;
 
     request.head({
         url: apiUrl,
@@ -135,7 +188,7 @@ exports.get_uri = function (data, callback) {
     'use strict';
 
     let dip_path = data.dip_path,
-        apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + dip_path + '/objects/' + data.uuid + '-' + data.file;
+        apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + '/dip-store/' + dip_path + '/objects/' + data.uuid + '-' + data.file;
 
     request.get({
         url: apiUrl,
@@ -156,38 +209,6 @@ exports.get_uri = function (data, callback) {
 
             callback(body);
             return false;
-
-            /*
-            if (data.file === 'uri.txt') {
-                callback(body);
-                return false;
-            }
-
-            let resp = {};
-            resp.headers = httpResponse.headers;
-            resp.file = data.file;
-
-            // TODO: create tmp folder if it doesn't exist
-            // save file to disk (temporarily)
-            fs.writeFile('./tmp/' + data.file, body, function (error) {
-
-                if (error) {
-
-                    logger.module().error('ERROR: Unable to write to tmp folder ' + error);
-
-                    callback({
-                        error: true,
-                        error_message: error
-                    });
-                }
-
-                if (fs.existsSync('./tmp/' + data.file)) {
-                    callback(resp);
-                    return false;
-                }
-
-            });
-            */
 
         } else {
 
@@ -213,7 +234,7 @@ exports.get_object = function (data, callback) {
     'use strict';
 
     let dip_path = data.dip_path,
-        apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + dip_path + '/objects/' + data.uuid + '-' + data.file;
+        apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + '/dip-store/' + dip_path + '/objects/' + data.uuid + '-' + data.file;
 
     request.get({
         url: apiUrl,

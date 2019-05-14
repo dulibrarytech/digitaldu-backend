@@ -373,7 +373,7 @@ const importModule = (function () {
                     $('#message').html('');
 
                     if (data.length === 0) {
-                        let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> No incomplete records found.</div>';
+                        let message = '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No incomplete records found.</div>';
                         $('table').empty();
                         $('#message').html(message);
                     } else {
@@ -641,6 +641,7 @@ const importModule = (function () {
 
     obj.init = function () {
         userModule.renderUserName();
+        helperModule.ping();
     };
 
     return obj;

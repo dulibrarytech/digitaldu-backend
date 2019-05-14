@@ -272,6 +272,7 @@ const collectionsModule = (function () {
     obj.init = function () {
         userModule.renderUserName();
         collectionsModule.getRootCollections();
+        helperModule.ping();
     };
 
     return obj;

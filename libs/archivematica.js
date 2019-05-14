@@ -5,6 +5,106 @@ const config = require('../config/config'),
     logger = require('../libs/log4');
 
 /**
+ * Pings archivematica api
+ * @param callback
+ */
+exports.ping_api = function (callback) {
+
+    'use strict';
+
+    let apiUrl = config.archivematicaApi + 'administration/dips/atom/levels/?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
+
+    request.get({
+        url: apiUrl,
+        timeout: 25000
+    }, function (error, httpResponse, body) {
+
+        if (error) {
+
+            logger.module().error('ERROR: unable to ping archivematica ' + error);
+
+            callback({
+                error: true,
+                status: 'down',
+                message: error
+            });
+
+            return false;
+        }
+
+        if (httpResponse.statusCode === 200) {
+
+            callback({
+                error: false,
+                status: 'up',
+                message: 'Archivematica service is available'
+            });
+
+            return false;
+
+        } else {
+
+            logger.module().error('ERROR: unable to ping archivematica ' + body);
+
+            callback({
+                error: true,
+                status: 'down',
+                message: 'Error: Unable to ping archivematica'
+            });
+        }
+    });
+};
+
+/**
+ * Pings archivematica storage api
+ * @param callback
+ */
+exports.ping_storage_api = function (callback) {
+
+    'use strict';
+
+    let apiUrl = config.archivematicaStorageApi + '/v2/file/?username=' + config.archivematicaStorageUsername + '&api_key=' + config.archivematicaStorageApiKey;
+
+    request.get({
+        url: apiUrl,
+        timeout: 25000
+    }, function (error, httpResponse, body) {
+
+        if (error) {
+
+            logger.module().error('ERROR: unable to ping archivematica storage api ' + error);
+
+            callback({
+                error: true,
+                status: 'down',
+                message: error
+            });
+
+            return false;
+        }
+
+        if (httpResponse.statusCode === 200) {
+            callback({
+                error: false,
+                status: 'up',
+                message: 'Archivematica storage api service is available'
+            });
+            return false;
+
+        } else {
+
+            logger.module().error('ERROR: unable to ping archivematica storage api ' + body);
+
+            callback({
+                error: true,
+                status: 'down',
+                message: 'Error: Unable to ping archivematica storage api'
+            });
+        }
+    });
+};
+
+/**
  * List the files and folders on the FTP server
  * @param folder
  * @param callback

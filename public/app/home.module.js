@@ -2,8 +2,6 @@ const homeModule = (function () {
 
     'use strict';
 
-    // dependencies: userModule
-
     let obj = {};
 
     /**
@@ -16,6 +14,8 @@ const homeModule = (function () {
         } else {
             userModule.renderUserName();
         }
+
+        helperModule.ping();
 
         // TODO: rewrite URL. remove token and uid from url
     };

@@ -753,8 +753,11 @@ exports.create_repo_record = function (req, callback) {
         if (obj.mime_type === 'audio/x-wav') {
             TIMER = 35000;
         } else if (obj.mime_type === 'video/mp4') {
-
+            console.log(obj.file_name);
+            obj.file_name = obj.file_name + '.dura-manifest';
             duracloud.get_object(obj, function (xml) {
+                // TODO: error and logging
+                // TODO: checksum, filesize, filename, and thumbnail will be retrieved from kaltura
                 obj.video_chunk_ids = videomanifestlib.save_video_manifest(xml);
                 callback(null, obj);
                 return false;

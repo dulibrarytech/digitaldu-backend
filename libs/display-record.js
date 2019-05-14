@@ -30,7 +30,7 @@ exports.create_display_record = function (obj, callback) {
     }
 
     if (metadata.subjects !== undefined) {
-        var subjectsArr = [];
+        let subjectsArr = [];
         for (let i=0;i<metadata.subjects.length;i++) {
             subjectsArr.push(metadata.subjects[i].title);
         }

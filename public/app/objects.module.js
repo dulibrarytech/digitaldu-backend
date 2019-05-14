@@ -301,6 +301,7 @@ const objectsModule = (function () {
 
     obj.init = function () {
         userModule.renderUserName();
+        helperModule.ping();
     };
 
     return obj;

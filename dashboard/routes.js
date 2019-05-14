@@ -1,9 +1,13 @@
 'use strict';
 
-var Dashboard = require('../dashboard/controller');
+const Dashboard = require('../dashboard/controller'),
+    Service = require('../dashboard/service');
 
 // TODO: apply api security.  i.e. API key / tokens (Admin)
 module.exports = function (app) {
+
+    app.route('/dashboard/ping')
+        .get(Dashboard.ping);
 
     /* These routes are used to load HTML pages */
     app.route('/dashboard/home')
