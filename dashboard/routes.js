@@ -1,7 +1,6 @@
 'use strict';
 
-const Dashboard = require('../dashboard/controller'),
-    Service = require('../dashboard/service');
+const Dashboard = require('../dashboard/controller');
 
 // TODO: apply api security.  i.e. API key / tokens (Admin)
 module.exports = function (app) {

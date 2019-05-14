@@ -63,7 +63,7 @@ exports.ping_storage_api = function (callback) {
 
     'use strict';
 
-    let apiUrl = config.archivematicaStorageApi + '/v2/file/?username=' + config.archivematicaStorageUsername + '&api_key=' + config.archivematicaStorageApiKey;
+    let apiUrl = config.archivematicaStorageApi + 'v2/file/?username=' + config.archivematicaStorageUsername + '&api_key=' + config.archivematicaStorageApiKey;
 
     request.get({
         url: apiUrl,
