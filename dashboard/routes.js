@@ -5,8 +5,10 @@ const Dashboard = require('../dashboard/controller');
 // TODO: apply api security.  i.e. API key / tokens (Admin)
 module.exports = function (app) {
 
+    /*
     app.route('/api/ping')
         .get(Dashboard.ping);
+    */
 
     /* These routes are used to load HTML pages */
     app.route('/dashboard/home')

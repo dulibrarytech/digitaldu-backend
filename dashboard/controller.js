@@ -1,13 +1,15 @@
 'use strict';
 
-const config = require('../config/config'),
-    Service = require('../dashboard/service');
+const config = require('../config/config');
+    // Service = require('../dashboard/service');
 
+/*
 exports.ping = function (req, res) {
     Service.ping_services(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
+*/
 
 /* home page */
 exports.get_dashboard_home = function (req, res) {

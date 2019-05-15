@@ -7,12 +7,16 @@ var Repo = require('../repository/controller'),
 module.exports = function (app) {
 
     /* Gets objects */
+    /*
     app.route('/api/v1/objects')
         .get(Repo.get_objects);
+    */
 
     /* Gets single object (Collection or Object) */
+    /*
     app.route('/api/v1/object')
         .get(Repo.get_object);
+    */
 
     app.route('/api/admin/v1/repo/objects')
         .get(token.verify, Repo.get_admin_objects);
@@ -28,4 +32,7 @@ module.exports = function (app) {
 
     app.route('/api/admin/v1/repo/pid')
         .post(Repo.get_next_pid);  // token.verify, // TODO: API key?
+
+    app.route('/api/admin/v1/repo/ping/services')
+        .get(Repo.ping);
 };
