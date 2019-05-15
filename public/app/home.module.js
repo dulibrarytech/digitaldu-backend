@@ -15,9 +15,8 @@ const homeModule = (function () {
             userModule.renderUserName();
         }
 
+        history.replaceState({}, '', '/dashboard/home');
         helperModule.ping();
-
-        // TODO: rewrite URL. remove token and uid from url
     };
 
     return obj;
