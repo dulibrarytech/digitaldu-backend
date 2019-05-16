@@ -25,7 +25,7 @@ const fs = require('fs'),
     metslib = require('../libs/mets'),
     importlib = require('../libs/transfer-ingest'),
     mimetypelib = require('../libs/mime_types'),
-    videomanifestlib = require('../libs/video_manifest'),
+    manifestlib = require('../libs/manifest'),
     pids = require('../libs/next-pid'),
     handles = require('../libs/handles'),
     archivematica = require('../libs/archivematica'),
@@ -741,6 +741,8 @@ exports.create_repo_record = function (req, callback) {
             return false;
         }
 
+        console.log(obj);
+
         // if unable to get mime type from mets, check file extension
         if (obj.mime_type === undefined) {
             logger.module().info('INFO: failed to get mime type from METS');
@@ -753,12 +755,24 @@ exports.create_repo_record = function (req, callback) {
         if (obj.mime_type === 'audio/x-wav') {
             TIMER = 35000;
         } else if (obj.mime_type === 'video/mp4') {
-            console.log(obj.file_name);
-            obj.file_name = obj.file_name + '.dura-manifest';
+
+            obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file + '.dura-manifest';
+
             duracloud.get_object(obj, function (xml) {
+
+             /* TODO: get checksum and filesize from manifest
+             obj.checksum = response.headers['content-md5'];
+             obj.file_size = response.headers['content-length'];
+             obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
+             //// obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
+             */
                 // TODO: error and logging
                 // TODO: checksum, filesize, filename, and thumbnail will be retrieved from kaltura
-                obj.video_chunk_ids = videomanifestlib.save_video_manifest(xml);
+                // TODO: rename function
+                // TODO: refactor function to get checksum and filesize
+                let manifest = manifestlib.process_manifest(xml);
+                obj.checksum = manifest.checksum;
+                obj.file_size = manifest.file_size;
                 callback(null, obj);
                 return false;
             });
@@ -784,7 +798,6 @@ exports.create_repo_record = function (req, callback) {
             });
 
         }, TIMER);
-
     }
 
     // 7.)

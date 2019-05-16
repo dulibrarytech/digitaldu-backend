@@ -7,12 +7,18 @@ const xmldoc = require('xmldoc');
  * @param xml
  * @returns {Array}
  */
-exports.save_video_manifest = function (xml) {
+exports.process_manifest = function (xml) {
 
     let document = new xmldoc.XmlDocument(xml),
         chunks = document.childNamed('chunks'),
         arr = [],
         obj = {};
+
+    let header = document.childNamed('header'),
+        sourceContent = header.childNamed('sourceContent');
+
+    obj.checksum = sourceContent.childNamed('md5').val;
+    obj.file_size = sourceContent.childNamed('byteSize').val;
 
     for (let i=0;i<chunks.children.length;i++) {
 
@@ -28,5 +34,5 @@ exports.save_video_manifest = function (xml) {
         }
     }
 
-    return JSON.stringify(arr);
+    return arr;
 };

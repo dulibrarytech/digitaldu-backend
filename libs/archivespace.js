@@ -11,12 +11,11 @@ exports.ping = function (callback) {
 
     'use strict';
 
-    // TODO:...
     let apiUrl = config.archivespaceHost;
 
     request.get({
         url: apiUrl,
-        timeout: 25000
+        timeout: 5000
     }, function(error, httpResponse, body) {
 
         if (error) {
@@ -55,7 +54,6 @@ exports.ping = function (callback) {
             return false;
         }
     });
-
 };
 
 
@@ -75,7 +73,7 @@ exports.get_mods = function (id, session, callback) {
         headers: {
             'X-ArchivesSpace-Session': session
         },
-        timeout: 45000
+        timeout: 5000
     }, function(error, httpResponse, body) {
 
         if (error) {

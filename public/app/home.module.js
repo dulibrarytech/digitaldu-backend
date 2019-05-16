@@ -5,7 +5,7 @@ const homeModule = (function () {
     let obj = {};
 
     /**
-     * Invokes desired functions on every page load
+     *
      */
     obj.init = function () {
 

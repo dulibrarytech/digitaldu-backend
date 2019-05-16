@@ -8,7 +8,6 @@ exports.ping = function (callback) {
 
     'use strict';
 
-    // TODO: remove extra dip-store path
     let apiUrl = 'https://' + config.duraCloudApi;
 
     request.get({
@@ -109,24 +108,6 @@ exports.get_mets = function (data, callback) {
 exports.get_object_info = function (data, callback) {
 
     'use strict';
-
-    // TODO: refactor
-    /*
-    if (data.file === 'uri.txt') {
-
-        get_uri(data, function (result) {
-            callback(result);
-        });
-
-        return false;
-    }
-    */
-
-    /*
-    if (data.mime_type === 'video/mp4') {
-        // TODO: call get_video_manifest()
-    }
-    */
 
     let dip_path = data.dip_path;
 

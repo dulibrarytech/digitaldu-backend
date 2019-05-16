@@ -79,7 +79,6 @@ exports.process_mets = function (sip_uuid, dip_path, xml) {
                     }
 
                     if (!_.isEmpty(Obj)) {
-                        console.log(Obj);
                         Arr.push(Obj);
                         Obj = {};
                     }

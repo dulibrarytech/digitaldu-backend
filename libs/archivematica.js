@@ -16,7 +16,7 @@ exports.ping_api = function (callback) {
 
     request.get({
         url: apiUrl,
-        timeout: 25000
+        timeout: 5000
     }, function (error, httpResponse, body) {
 
         if (error) {
@@ -67,7 +67,7 @@ exports.ping_storage_api = function (callback) {
 
     request.get({
         url: apiUrl,
-        timeout: 25000
+        timeout: 5000
     }, function (error, httpResponse, body) {
 
         if (error) {
