@@ -191,6 +191,7 @@ const userModule = (function () {
                     userModule.renderUserName();
                 })
                 .fail(function () {
+                    // TODO: redirect
                     renderError();
                 });
         } else {
