@@ -754,22 +754,18 @@ exports.create_repo_record = function (req, callback) {
         // give larger files more time
         if (obj.mime_type === 'audio/x-wav') {
             TIMER = 35000;
+            // TODO: test larger wav files
         } else if (obj.mime_type === 'video/mp4') {
+
+            TIMER = 35000;
 
             obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file + '.dura-manifest';
 
+            // get dura-manifest xml document
             duracloud.get_object(obj, function (xml) {
 
-             /* TODO: get checksum and filesize from manifest
-             obj.checksum = response.headers['content-md5'];
-             obj.file_size = response.headers['content-length'];
-             obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
-             //// obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
-             */
                 // TODO: error and logging
                 // TODO: checksum, filesize, filename, and thumbnail will be retrieved from kaltura
-                // TODO: rename function
-                // TODO: refactor function to get checksum and filesize
                 let manifest = manifestlib.process_manifest(xml);
                 obj.checksum = manifest.checksum;
                 obj.file_size = manifest.file_size;
