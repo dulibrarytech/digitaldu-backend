@@ -210,12 +210,12 @@ exports.get_uri = function (data, callback) {
  * @param data
  * @param callback
  */
-exports.get_object = function (data, callback) {
+exports.get_object_manifest = function (data, callback) {
 
     'use strict';
 
     let dip_path = data.dip_path,
-        apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + '/dip-store/' + dip_path + '/objects/' + data.uuid + '-' + data.file;
+        apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + '/dip-store/' + dip_path + '/objects/' + data.uuid + '-' + data.file  + '.dura-manifest';
 
     request.get({
         url: apiUrl,
@@ -239,7 +239,7 @@ exports.get_object = function (data, callback) {
 
         } else {
 
-            logger.module().error('ERROR: Unable to get duracloud video manifest ' + body);
+            logger.module().error('ERROR: Unable to get manifest ' + body);
 
             callback({
                 error: true,

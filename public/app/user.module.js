@@ -237,7 +237,7 @@ const userModule = (function () {
 
     obj.init = function () {
         obj.renderUserName();
-        helperModule.ping();
+        // helperModule.ping();
     };
 
     return obj;

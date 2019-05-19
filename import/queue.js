@@ -684,7 +684,7 @@ exports.create_repo_record = function (req, callback) {
         }
 
         // downloads uri.txt file
-        duracloud.get_object(obj, function (response) {
+        duracloud.get_uri(obj, function (response) {
             let uriArr = response.split('/');
             obj.mods_id = uriArr[uriArr.length - 1].trim();
             callback(null, obj);
@@ -723,7 +723,7 @@ exports.create_repo_record = function (req, callback) {
             obj.dip_path = dc_data.dip_path;
             obj.file = dc_data.file;
             obj.uuid = dc_data.uuid;
-            obj.mime_type = data.mime_type;
+            obj.mime_type = dc_data.mime_type;
             callback(null, obj);
         });
     }
@@ -741,65 +741,94 @@ exports.create_repo_record = function (req, callback) {
             return false;
         }
 
-        console.log(obj);
-
         // if unable to get mime type from mets, check file extension
         if (obj.mime_type === undefined) {
             logger.module().info('INFO: failed to get mime type from METS');
             obj.mime_type = mimetypelib.get_mime_type(obj.file);
         }
 
-        let TIMER = 5000;
-
         // give larger files more time
         if (obj.mime_type === 'audio/x-wav') {
-            TIMER = 35000;
-            // TODO: test larger wav files
+
+            get_duracloud_object(obj, 35000);
+
         } else if (obj.mime_type === 'video/mp4') {
 
-            TIMER = 35000;
-
-            obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file + '.dura-manifest';
-
             // get dura-manifest xml document
-            duracloud.get_object(obj, function (xml) {
+            duracloud.get_object_manifest(obj, function (response) {
 
-                // TODO: error and logging
-                // TODO: checksum, filesize, filename, and thumbnail will be retrieved from kaltura
-                let manifest = manifestlib.process_manifest(xml);
-                obj.checksum = manifest.checksum;
-                obj.file_size = manifest.file_size;
-                callback(null, obj);
-                return false;
-            });
-        }
+                if (response.error !== undefined && response.error === true) {
 
-        setTimeout(function () {
+                    logger.module().error('ERROR: unable to get manifest ' + response.error_message);
+                    console.log('manifest error: ', obj);
+                    obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
+                    get_duracloud_object(obj, 5000);
+                    return false;
 
-            // gets headers only
-            duracloud.get_object_info(obj, function (response) {
+                } else {
 
-                if (response.error === true) {
-                    logger.module().error('ERROR: Unable to get object ' + response.error_message);
-                    importlib.flag_failed_record(obj);
+                    let manifest = manifestlib.process_manifest(response);
+
+                    if (manifest.length === 0) {
+                        obj.checksum = null;
+                        obj.file_size = null;
+                    } else {
+                        obj.checksum = manifest[0].checksum;
+                        obj.file_size = manifest[0].file_size;
+                    }
+
+                    console.log('checksum: ', manifest.checksum);
+                    console.log('file size: ', manifest.file_size);
+                    console.log(obj);
+
+                    callback(null, obj);
                     return false;
                 }
-
-                obj.checksum = response.headers['content-md5'];
-                obj.file_size = response.headers['content-length'];
-                obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
-                obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
-
-                callback(null, obj);
             });
 
-        }, TIMER);
+        } else {
+            get_duracloud_object(obj, 5000);
+        }
+
+        function get_duracloud_object (obj, TIMER) {
+
+            setTimeout(function () {
+
+                console.log('set timeout: ', obj);
+
+                // gets headers only
+                duracloud.get_object_info(obj, function (response) {
+
+                    console.log(response);
+
+                    if (response.error === true) {
+                        logger.module().error('ERROR: Unable to get object ' + response.error_message);
+                        importlib.flag_failed_record(obj);
+                        return false;
+                    }
+
+                    obj.checksum = response.headers['content-md5'];
+                    obj.file_size = response.headers['content-length'];
+                    obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
+                    obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
+
+                    callback(null, obj);
+                });
+
+            }, TIMER);
+
+            return false;
+        }
     }
 
     // 7.)
     function get_token(obj, callback) {
 
+        console.log('get_token: ', obj);
+
         if (fs.existsSync('./tmp/st.txt')) {
+
+            console.log('st.txt exists');
 
             let st_file = fs.statSync('./tmp/st.txt'),
                 now = moment().startOf('day'),
@@ -808,16 +837,23 @@ exports.create_repo_record = function (req, callback) {
 
             if (st_expire_date_time.isBefore(now)) {
 
+                // if token is expired, delete existing one and get new one.
+                console.log('current token expired');
+
                 let fileObj = {
                     file: 'st.txt'
                 };
 
                 delete_file(fileObj, function (result) {
+                    console.log('getting new token.');
                     new_token();
                 });
 
             } else if (st_expire_date_time.isAfter(now)) {
 
+                console.log('existing token is still valid');
+
+                // if token is still valid, get the token from the txt file
                 fs.readFile('./tmp/st.txt', {encoding: 'utf-8'}, function (error, data) {
 
                     if (error) {
@@ -889,9 +925,8 @@ exports.create_repo_record = function (req, callback) {
 
                     });
 
-                } catch (e) {
-                    logger.module().error('ERROR: session token error ' + e);
-                    // throw e;
+                } catch (error) {
+                    logger.module().error('ERROR: session token error ' + error);
                 }
             });
         }
@@ -912,7 +947,9 @@ exports.create_repo_record = function (req, callback) {
             archivespace.get_mods(obj.mods_id, obj.session, function (response) {
 
                 if (response.error !== undefined && response.error === true) {
+
                     logger.module().error('ERROR: unable to get mods ' + response.error_message);
+
                     obj.mods = null;
                     callback(null, obj);
                     return false;
