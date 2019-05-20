@@ -747,12 +747,13 @@ exports.create_repo_record = function (req, callback) {
             obj.mime_type = mimetypelib.get_mime_type(obj.file);
         }
 
-        // give larger files more time
-        if (obj.mime_type === 'audio/x-wav') {
+        // give larger files more time be moved to duracloud
+        // if (obj.mime_type === 'audio/x-wav') {
+        if (obj.mime_type.indexOf('audio') !== -1) {
 
             get_duracloud_object(obj, 35000);
 
-        } else if (obj.mime_type === 'video/mp4') {
+        } else if (obj.mime_type.indexOf('video') !== -1) {
 
             // get dura-manifest xml document
             duracloud.get_object_manifest(obj, function (response) {
@@ -760,7 +761,6 @@ exports.create_repo_record = function (req, callback) {
                 if (response.error !== undefined && response.error === true) {
 
                     logger.module().error('ERROR: unable to get manifest ' + response.error_message);
-                    console.log('manifest error: ', obj);
                     obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
                     get_duracloud_object(obj, 5000);
                     return false;
@@ -769,17 +769,13 @@ exports.create_repo_record = function (req, callback) {
 
                     let manifest = manifestlib.process_manifest(response);
 
-                    if (manifest.length === 0) {
-                        obj.checksum = null;
-                        obj.file_size = null;
-                    } else {
+                    if (manifest.length > 0) {
                         obj.checksum = manifest[0].checksum;
                         obj.file_size = manifest[0].file_size;
+                    } else {
+                        obj.checksum = null;
+                        obj.file_size = null;
                     }
-
-                    console.log('checksum: ', manifest.checksum);
-                    console.log('file size: ', manifest.file_size);
-                    console.log(obj);
 
                     callback(null, obj);
                     return false;
@@ -794,12 +790,8 @@ exports.create_repo_record = function (req, callback) {
 
             setTimeout(function () {
 
-                console.log('set timeout: ', obj);
-
                 // gets headers only
                 duracloud.get_object_info(obj, function (response) {
-
-                    console.log(response);
 
                     if (response.error === true) {
                         logger.module().error('ERROR: Unable to get object ' + response.error_message);
@@ -824,11 +816,7 @@ exports.create_repo_record = function (req, callback) {
     // 7.)
     function get_token(obj, callback) {
 
-        console.log('get_token: ', obj);
-
         if (fs.existsSync('./tmp/st.txt')) {
-
-            console.log('st.txt exists');
 
             let st_file = fs.statSync('./tmp/st.txt'),
                 now = moment().startOf('day'),
@@ -838,20 +826,16 @@ exports.create_repo_record = function (req, callback) {
             if (st_expire_date_time.isBefore(now)) {
 
                 // if token is expired, delete existing one and get new one.
-                console.log('current token expired');
 
                 let fileObj = {
                     file: 'st.txt'
                 };
 
                 delete_file(fileObj, function (result) {
-                    console.log('getting new token.');
                     new_token();
                 });
 
             } else if (st_expire_date_time.isAfter(now)) {
-
-                console.log('existing token is still valid');
 
                 // if token is still valid, get the token from the txt file
                 fs.readFile('./tmp/st.txt', {encoding: 'utf-8'}, function (error, data) {
