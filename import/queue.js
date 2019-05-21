@@ -747,13 +747,8 @@ exports.create_repo_record = function (req, callback) {
             obj.mime_type = mimetypelib.get_mime_type(obj.file);
         }
 
-        // give larger files more time be moved to duracloud
-        // if (obj.mime_type === 'audio/x-wav') {
-        if (obj.mime_type.indexOf('audio') !== -1) {
-
-            get_duracloud_object(obj, 35000);
-
-        } else if (obj.mime_type.indexOf('video') !== -1) {
+        // process larger files. checks if there is a manifest available for chunked files
+        if (obj.mime_type.indexOf('audio') !== -1 || obj.mime_type.indexOf('video') !== -1) {
 
             // get dura-manifest xml document
             duracloud.get_object_manifest(obj, function (response) {
