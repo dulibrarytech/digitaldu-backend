@@ -14,6 +14,22 @@ Check out our [contributing guidelines](/CONTRIBUTING.md) for ways to offer feed
 
 All other content is released under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).
 
+## Local Environment Setup
+
+```
+go into digitaldu-backend
+npm install
+if it doesn't work the first time delete the node_modules folder and npm install
+install redis https://redis.io/download
+src/redis-server
+have mysql 5.7
+add .env file in root folder
+add mysql schema and db repo/repo_queue to db
+"node repo.js"
+http://localhost:8000/login
+http://localhost:8000/dashboard/root-collections
+```
+
 ## Maintainers
 
 @freyesdulib
