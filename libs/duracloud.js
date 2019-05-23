@@ -164,7 +164,8 @@ exports.get_object_info = function (data, callback) {
  * @param data
  * @param callback
  */
-exports.get_uri = function (data, callback) {
+// TODO: change name to get object in order to use for uri and kaltura id
+exports.get_object = function (data, callback) {
 
     'use strict';
 

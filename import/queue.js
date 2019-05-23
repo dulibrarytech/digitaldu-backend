@@ -684,7 +684,7 @@ exports.create_repo_record = function (req, callback) {
         }
 
         // downloads uri.txt file
-        duracloud.get_uri(obj, function (response) {
+        duracloud.get_object(obj, function (response) {
             let uriArr = response.split('/');
             obj.mods_id = uriArr[uriArr.length - 1].trim();
             callback(null, obj);
@@ -750,38 +750,72 @@ exports.create_repo_record = function (req, callback) {
         // process larger files. checks if there is a manifest available for chunked files
         if (obj.mime_type.indexOf('audio') !== -1 || obj.mime_type.indexOf('video') !== -1) {
 
-            // get dura-manifest xml document
-            duracloud.get_object_manifest(obj, function (response) {
+            const get_kaltura_id = function () {
 
-                if (response.error !== undefined && response.error === true) {
+                // get kaltura id
+                duracloud.get_object(obj, function (response) {
 
-                    logger.module().error('ERROR: unable to get manifest ' + response.error_message);
-                    obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
-                    get_duracloud_object(obj, 5000);
-                    return false;
-
-                } else {
-
-                    let manifest = manifestlib.process_manifest(response);
-
-                    if (manifest.length > 0) {
-                        obj.checksum = manifest[0].checksum;
-                        obj.file_size = manifest[0].file_size;
+                    if (response.error !== undefined && response.error === true) {
+                        logger.module().error('ERROR: unable to get kaltura id  ' + response.error_message);
+                        obj.entry_id = null;
+                        callback(null, obj);
+                        return false;
                     } else {
-                        obj.checksum = null;
-                        obj.file_size = null;
+                        obj.entry_id = response;
+                        callback(null, obj);
+                        return false;
                     }
+                });
+            };
 
-                    callback(null, obj);
-                    return false;
+            const get_manifest = function () {
+
+                // get dura-manifest xml document
+                duracloud.get_object_manifest(obj, function (response) {
+
+                    if (response.error !== undefined && response.error === true) {
+
+                        logger.module().error('ERROR: unable to get manifest ' + response.error_message);
+                        obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
+                        get_duracloud_object(obj, 5000);
+                        return false;
+
+                    } else {
+
+                        let manifest = manifestlib.process_manifest(response);
+
+                        if (manifest.length > 0) {
+                            obj.checksum = manifest[0].checksum;
+                            obj.file_size = manifest[0].file_size;
+                        } else {
+                            obj.checksum = null;
+                            obj.file_size = null;
+                        }
+
+                        callback(null, obj);
+                        return false;
+                    }
+                });
+            };
+
+            async.waterfall([
+                get_kaltura_id,
+                get_manifest
+            ], function (error, obj) {
+
+                if (error) {
+                    logger.module().error('ERROR: async (kaltura id / manifest)');
                 }
+
+                console.log(obj);
+                callback(null, obj);
             });
 
         } else {
             get_duracloud_object(obj, 5000);
         }
 
-        function get_duracloud_object (obj, TIMER) {
+        function get_duracloud_object(obj, TIMER) {
 
             setTimeout(function () {
 
