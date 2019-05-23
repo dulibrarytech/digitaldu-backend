@@ -8,6 +8,7 @@ const config = require('../config/config'),
     }),
     REPO_OBJECTS = 'tbl_objects';
 
+// TODO: rename to get_index_record
 exports.index_record = function (req, callback) {
 
     if (req.body.sip_uuid === undefined) {
@@ -35,6 +36,7 @@ exports.index_record = function (req, callback) {
             record.display_record.t_language = record.display_record.language;
             delete record.display_record.language;
 
+            // TODO: move to service
             client.index({
                 index: config.elasticSearchIndex,
                 type: 'data',

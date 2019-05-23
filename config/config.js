@@ -50,15 +50,4 @@ module.exports = {
     transferApprovalTimer: process.env.TRANSFER_APPROVAL_TIMER,
     transferStatusCheckInterval: process.env.TRANSFER_STATUS_CHECK_INTERVAL,
     ingestStatusCheckInterval: process.env.INGEST_STATUS_CHECK_INTERVAL
-    // redisHost: process.env.REDIS_HOST,
-    // redisPort: process.env.REDIS_PORT,
-    // smtp: process.env.SMTP,
-    // fromEmail: process.env.FROM_EMAIL,
-    // emailSubject: process.env.SUBJECT,
-    // communityTnPath: process.env.COMMUNITY_TN_PATH,
-    // collectionTnPath: process.env.COLLECTION_TN_PATH,
-    // objectPath: process.env.OBJECT_PATH,
-    // importPath: process.env.IMPORT_PATH,
-    // tempPath: process.env.TEMP_PATH,
-    // errorTn: process.env.ERROR_TN
 };

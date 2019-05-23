@@ -750,9 +750,10 @@ exports.create_repo_record = function (req, callback) {
         // process larger files. checks if there is a manifest available for chunked files
         if (obj.mime_type.indexOf('audio') !== -1 || obj.mime_type.indexOf('video') !== -1) {
 
-            const get_kaltura_id = function () {
+            // TODO: TEST
+            const get_kaltura_id = function (callback) {
 
-                // get kaltura id
+                // get kaltura entry_id
                 duracloud.get_object(obj, function (response) {
 
                     if (response.error !== undefined && response.error === true) {
@@ -768,7 +769,7 @@ exports.create_repo_record = function (req, callback) {
                 });
             };
 
-            const get_manifest = function () {
+            const get_manifest = function (obj, callback) {
 
                 // get dura-manifest xml document
                 duracloud.get_object_manifest(obj, function (response) {
