@@ -1,20 +1,22 @@
 'use strict';
 
 const config = require('../config/config'),
-    es = require('elasticsearch'),
+    service = require('../indexer/service'),
     knex =require('../config/db')(),
-    client = new es.Client({
-        host: config.elasticSearch
-    }),
+    logger = require('../libs/log4'),
     REPO_OBJECTS = 'tbl_objects';
 
-// TODO: rename to get_index_record
-exports.index_record = function (req, callback) {
+/**
+ *
+ * @param req
+ * @param callback
+ * @returns {boolean}
+ */
+exports.get_index_record = function (req, callback) {
 
     if (req.body.sip_uuid === undefined) {
         callback({
             status: 400,
-            content_type: {'Content-Type': 'application/json'},
             message: 'missing sip uuid.'
         });
 
@@ -30,35 +32,141 @@ exports.index_record = function (req, callback) {
         })
         .then(function (data) {
 
-            var record = JSON.parse(data[0].display_record);
+            let record = JSON.parse(data[0].display_record);
             // TODO: test with authority value...
             // delete record.display_record.language.authority;
             record.display_record.t_language = record.display_record.language;
             delete record.display_record.language;
 
-            // TODO: move to service
-            client.index({
+            service.index_record({
                 index: config.elasticSearchIndex,
                 type: 'data',
                 id: record.pid.replace('codu:', ''),
                 body: record
-            }, function (error, response) {
-
-                if (error) {
-                    console.log(error);
-                }
-
-                callback({
-                    status: 200,
-                    content_type: {'Content-Type': 'application/json'},
-                    data: response,
-                    message: sip_uuid + ' record indexed'
-                });
+            }, function (response) {
+                console.log(response);
+                callback(response);
             });
 
         })
         .catch(function (error) {
-            console.log(error);
+            logger.module().error('ERROR: unable to index record ' + error);
             throw error;
         });
+};
+
+/**
+ * Indexes all repository records
+ * @param req
+ * @param callback
+ * @returns {boolean}
+ */
+exports.index_records = function (req, callback) {
+
+    let index_name;
+
+    if (req.body.index_name !== undefined) {
+        index_name = req.body.index_name;
+    } else {
+        index_name = config.elasticSearchIndex;
+    }
+
+    function index (index_name) {
+
+        knex(REPO_OBJECTS)
+            .select('display_record')
+            .where({
+                is_indexed: 0
+            })
+            .whereNot({
+                display_record: null
+            })
+            .limit(1)
+            .then(function (data) {
+
+                if (data.length > 0) {
+
+                    let record = JSON.parse(data[0].display_record);
+                    record.display_record.t_language = record.display_record.language;
+                    delete record.display_record.language;
+
+                    service.index_record({
+                        index: index_name,
+                        type: 'data',
+                        id: record.pid.replace('codu:', ''),
+                        body: record
+                    }, function (response) {
+
+                        if (response.result === 'created' || response.result === 'updated') {
+
+                            knex(REPO_OBJECTS)
+                                .where({
+                                    pid: record.pid
+                                })
+                                .update({
+                                    is_indexed: 1
+                                })
+                                .then(function (data) {
+
+                                    if (data === 1) {
+
+                                        setTimeout(function () {
+                                            index(index_name);
+                                        }, config.indexTimer);
+
+                                    } else {
+                                        logger.module().error('ERROR: more than one record was updated (index)');
+                                    }
+
+                                })
+                                .catch(function (error) {
+                                    logger.module().error('ERROR: unable to update is_indexed field (index) ' + error);
+                                    throw error;
+                                });
+
+                        } else {
+
+                            callback({
+                                status: 500,
+                                data: 'unable to index record'
+                            });
+                        }
+                    });
+
+                } else {
+                    logger.module().info('INFO: indexing complete');
+                }
+            })
+            .catch(function (error) {
+                logger.module().error('ERROR: unable to get record (index) ' + error);
+                throw error;
+            });
+    }
+
+    // reset is_indexed fields
+    knex(REPO_OBJECTS)
+        .where({
+            is_indexed: 1
+        })
+        .update({
+            is_indexed: 0
+        })
+        .then(function (data) {
+
+            if (data > 0) {
+                index(index_name);
+            } else {
+                logger.module().error('ERROR: unable to reset is_indexed fields (index)');
+            }
+
+        })
+        .catch(function (error) {
+            logger.module().error('ERROR: unable to reset is_indexed fields (index) ' + error);
+            throw error;
+        });
+
+    callback({
+        status: 200,
+        message: 'Indexing repository records...'
+    });
 };
