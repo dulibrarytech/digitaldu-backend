@@ -673,6 +673,8 @@ exports.create_repo_record = function (req, callback) {
         });
     }
 
+    // TOOD: get kaltura id from db here?
+
     // 3.)
     function get_object_uri_data(obj, callback) {
 
@@ -684,7 +686,8 @@ exports.create_repo_record = function (req, callback) {
         }
 
         // downloads uri.txt file
-        duracloud.get_object(obj, function (response) {
+        duracloud.get_uri(obj, function (response) {
+            console.log('get uri response: ', response);
             let uriArr = response.split('/');
             obj.mods_id = uriArr[uriArr.length - 1].trim();
             callback(null, obj);
@@ -750,22 +753,42 @@ exports.create_repo_record = function (req, callback) {
         // process larger files. checks if there is a manifest available for chunked files
         if (obj.mime_type.indexOf('audio') !== -1 || obj.mime_type.indexOf('video') !== -1) {
 
-            // TODO: TEST
-            const get_kaltura_id = function (callback) {
+            // get kaltura entry_id
+            const get_entry_id = function (callback) {
 
-                // get kaltura entry_id
-                duracloud.get_object(obj, function (response) {
+                importlib.get_entry_id_txt(obj.sip_uuid, function (data) {
 
-                    if (response.error !== undefined && response.error === true) {
-                        logger.module().error('ERROR: unable to get kaltura id  ' + response.error_message);
-                        obj.entry_id = null;
-                        callback(null, obj);
-                        return false;
-                    } else {
-                        obj.entry_id = response;
+                    // kalturaid.txt is not present
+                    if (data.length === 0) {
+
+                        obj.sip_uuid = sip_uuid;
+                        obj.dip_path = null;
+                        obj.file = null;
+                        obj.uuid = null;
                         callback(null, obj);
                         return false;
                     }
+
+                    // gets entry_id (kalturaid) data from db
+                    let dc_data = data.pop();
+                    obj.sip_uuid = sip_uuid;
+                    obj.dip_path = dc_data.dip_path;
+                    obj.file = dc_data.file;
+                    obj.uuid = dc_data.uuid;
+
+                    duracloud.get_entry_id(obj, function (response) {
+
+                        if (response.error !== undefined && response.error === true) {
+                            logger.module().error('ERROR: unable to get kaltura id  ' + response.error_message);
+                            obj.entry_id = null;
+                            callback(null, obj);
+                            return false;
+                        } else {
+                            obj.entry_id = response;
+                            callback(null, obj);
+                            return false;
+                        }
+                    });
                 });
             };
 
@@ -800,7 +823,7 @@ exports.create_repo_record = function (req, callback) {
             };
 
             async.waterfall([
-                get_kaltura_id,
+                get_entry_id,
                 get_manifest
             ], function (error, obj) {
 

@@ -610,6 +610,7 @@ exports.get_uri_txt = function (sip_uuid, callback) {
         .where({
             sip_uuid: sip_uuid,
             type: 'txt',
+            file: 'uri.txt',
             status: 0
         })
         .limit(1)
@@ -620,6 +621,34 @@ exports.get_uri_txt = function (sip_uuid, callback) {
         .catch(function (error) {
             logger.module().error('ERROR: unable to get uri txt file (get_uri_txt) ' + error);
             throw 'ERROR: unable to get uri txt file (get_uri_txt) ' + error;
+        });
+};
+
+/**
+ * Gets kalturaid.txt containing mods id (used to get metadata from archivespace)
+ * @param sip_uuid
+ * @param callback
+ */
+exports.get_entry_id_txt = function (sip_uuid, callback) {
+
+    'use strict';
+
+    knexQ(IMPORT_QUEUE)
+        .select('*')
+        .where({
+            sip_uuid: sip_uuid,
+            type: 'txt',
+            file: 'kalturaid.txt',
+            status: 0
+        })
+        .limit(1)
+        .then(function (data) {
+            callback(data);
+            return null;
+        })
+        .catch(function (error) {
+            logger.module().error('ERROR: unable to get kalturaid txt file (get_entry_id_txt) ' + error);
+            throw 'ERROR: unable to get kalturaid txt file (get_entry_id_txt) ' + error;
         });
 };
 

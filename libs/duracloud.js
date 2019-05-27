@@ -1,3 +1,21 @@
+/**
+
+ Copyright 2019 University of Denver
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+
+ */
+
 const config = require('../config/config'),
     logger = require('../libs/log4'),
     fs = require('fs'),
@@ -61,7 +79,7 @@ exports.get_mets = function (data, callback) {
     'use strict';
 
     let mets = 'METS.' + data.sip_uuid + '.xml',
-        apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + '/dip-store/' + data.dip_path + '/' + mets;
+        apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + 'dip-store/' + data.dip_path + '/' + mets;
 
     request.get({
         url: apiUrl
@@ -120,7 +138,7 @@ exports.get_object_info = function (data, callback) {
         data.file = data.file.replace('wav', 'mp3');
     }
 
-    let apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + '/dip-store/' + dip_path + '/objects/' + data.uuid + '-' + data.file;
+    let apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + 'dip-store/' + dip_path + '/objects/' + data.uuid + '-' + data.file;
 
     request.head({
         url: apiUrl,
@@ -160,17 +178,62 @@ exports.get_object_info = function (data, callback) {
 };
 
 /**
- *
+ * Get entry id (kaltura)
  * @param data
  * @param callback
  */
-// TODO: change name to get object in order to use for uri and kaltura id
-exports.get_object = function (data, callback) {
+exports.get_entry_id = function (data, callback) {
 
     'use strict';
 
     let dip_path = data.dip_path,
-        apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + '/dip-store/' + dip_path + '/objects/' + data.uuid + '-' + data.file;
+        apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + 'dip-store/' + dip_path + '/objects/' + data.uuid + '-kalturaid.txt';
+
+    request.get({
+        url: apiUrl,
+        timeout: 25000
+    }, function (error, httpResponse, body) {
+
+        if (error) {
+
+            logger.module().error('ERROR: Unable to get duracloud kalturaid object ' + error);
+
+            callback({
+                error: true,
+                error_message: error
+            });
+        }
+
+        if (httpResponse.statusCode === 200) {
+
+            callback(body);
+            return false;
+
+        } else {
+
+            logger.module().error('ERROR: Unable to get duracloud kalturaid object ' + body);
+
+            callback({
+                error: true,
+                error_message: body
+            });
+
+            return false;
+        }
+    });
+};
+
+/**
+ * Used for archivespace uri.txt retrieval
+ * @param data
+ * @param callback
+ */
+exports.get_uri = function (data, callback) {
+
+    'use strict';
+
+    let dip_path = data.dip_path,
+        apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + 'dip-store/' + dip_path + '/objects/' + data.uuid + '-' + data.file;
 
     request.get({
         url: apiUrl,
@@ -207,7 +270,7 @@ exports.get_object = function (data, callback) {
 };
 
 /**
- *
+ * Gets manifest for chunked files
  * @param data
  * @param callback
  */
@@ -216,7 +279,7 @@ exports.get_object_manifest = function (data, callback) {
     'use strict';
 
     let dip_path = data.dip_path,
-        apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + '/dip-store/' + dip_path + '/objects/' + data.uuid + '-' + data.file  + '.dura-manifest';
+        apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + 'dip-store/' + dip_path + '/objects/' + data.uuid + '-' + data.file  + '.dura-manifest';
 
     request.get({
         url: apiUrl,

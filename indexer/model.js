@@ -1,3 +1,21 @@
+/**
+
+ Copyright 2019 University of Denver
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+
+ */
+
 'use strict';
 
 const config = require('../config/config'),
@@ -7,7 +25,7 @@ const config = require('../config/config'),
     REPO_OBJECTS = 'tbl_objects';
 
 /**
- *
+ * Gets index record
  * @param req
  * @param callback
  * @returns {boolean}
@@ -44,13 +62,28 @@ exports.get_index_record = function (req, callback) {
                 id: record.pid.replace('codu:', ''),
                 body: record
             }, function (response) {
-                console.log(response);
-                callback(response);
-            });
 
+                if (response.result === 'created' || response.result === 'updated') {
+
+                    callback({
+                        status: 200,
+                        message: 'record indexed'
+                    });
+
+                } else {
+
+                    logger.module().error('ERROR: unable to index record');
+
+                    callback({
+                        status: 200,
+                        message: 'record not indexed'
+                    });
+                }
+
+            });
         })
         .catch(function (error) {
-            logger.module().error('ERROR: unable to index record ' + error);
+            logger.module().error('ERROR: unable get index record ' + error);
             throw error;
         });
 };
