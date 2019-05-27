@@ -673,8 +673,6 @@ exports.create_repo_record = function (req, callback) {
         });
     }
 
-    // TOOD: get kaltura id from db here?
-
     // 3.)
     function get_object_uri_data(obj, callback) {
 
@@ -687,7 +685,6 @@ exports.create_repo_record = function (req, callback) {
 
         // downloads uri.txt file
         duracloud.get_uri(obj, function (response) {
-            console.log('get uri response: ', response);
             let uriArr = response.split('/');
             obj.mods_id = uriArr[uriArr.length - 1].trim();
             callback(null, obj);
