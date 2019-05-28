@@ -24,8 +24,8 @@ install redis https://redis.io/download
 src/redis-server
 have mysql 5.7
 add .env file in root folder
-add mysql schema and db repo/repo_queue to db
-"node repo.js"
+add mysql schema and db "repo" and "repo_queue" to db, import .sql export
+in git repo run "node repo.js"
 http://localhost:8000/login
 http://localhost:8000/dashboard/root-collections
 ```
