@@ -38,7 +38,35 @@ const config = require('../config/config'),
     }),
     QUEUE = 'tbl_archivematica_queue',
     IMPORT_QUEUE = 'tbl_duracloud_queue',
+    FAIL_QUEUE = 'tbl_fail_queue',
     REPO_OBJECTS = 'tbl_objects';
+
+
+exports.check_collection = function (pid, callback) {
+
+    'use strict';
+
+    knex(REPO_OBJECTS)
+        .count('pid as count')
+        .where({
+            object_type: 'collection',
+            pid: pid.replace('_', ':')
+        })
+        .then(function (result) {
+
+            if (result[0].count === 0) {
+                callback(false);
+            } else {
+                callback(true);
+            }
+
+            return null;
+        })
+        .catch(function (error) {
+            logger.module().error('ERROR: database queue error (check_collection) ' + error);
+            throw 'ERROR: database queue error (check_collection) ' + error;
+        });
+};
 
 /**
  * Saves transfer object data to db
@@ -83,7 +111,7 @@ exports.save_transfer_records = function (transfer_data, callback) {
             }
 
             callback(obj);
-            return null
+            return null;
         })
         .catch(function (error) {
             logger.module().fatal('FATAL: unable to save queue data (save_transfer_records)');
@@ -432,6 +460,9 @@ exports.update_transfer_status = function (response, callback) {
 
         return false;
     }
+
+    // TODO: handle errors
+
 };
 
 /**
@@ -880,6 +911,26 @@ exports.check_queue = function (is_member_of_collection, callback) {
 
             callback(obj);
 
+            return null;
+        })
+        .catch(function (error) {
+            logger.module().error('ERROR: unable to save mets (save_mets_data) ' + error);
+            throw 'ERROR: unable to save mets (save_mets_data) ' + error;
+        });
+};
+
+/**
+ *
+ * @param obj
+ */
+exports.save_to_fail_queue = function (obj) {
+
+    'use strict';
+
+    knexQ(FAIL_QUEUE)
+        .insert(obj)
+        .then(function (data) {
+            // callback('done');
             return null;
         })
         .catch(function (error) {

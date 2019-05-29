@@ -142,8 +142,6 @@ exports.index_record = function (obj, callback) {
             return false;
         }
 
-        console.log(response);
-
         callback(response);
     });
 };

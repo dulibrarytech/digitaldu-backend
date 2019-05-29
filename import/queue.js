@@ -213,38 +213,83 @@ exports.queue_objects = function (req, callback) {
         return false;
     }
 
-    logger.module().info('INFO: starting ingest process (queue_objects)');
-
     let transfer_data = req.body;
 
-    importlib.save_transfer_records(transfer_data, function (result) {
+    const check_collection = function (callback) {
 
-        // TODO: apply result check... check object properties
-        if (result.recordCount === 0) {
-            // TODO: there are no records to process. Send back response to client
+        importlib.check_collection(transfer_data.collection, function (result) {
+
+            if (result === false) {
+                transfer_data.collection_status = false;
+                callback(null, transfer_data);
+            } else {
+                callback(null, transfer_data);
+            }
+
+        });
+    };
+
+    const start_transfer = function (obj, callback) {
+
+        if (obj.collection_status !== undefined && obj.collection_status === false) {
+            callback(null, obj);
             return false;
         }
 
-        request.post({
-            url: config.apiUrl + '/api/admin/v1/import/start_transfer',
-            form: {
-                'collection': transfer_data.collection
-            }
-        }, function (error, httpResponse, body) {
+        logger.module().info('INFO: starting ingest process (queue_objects)');
 
-            if (error) {
-                logger.module().fatal('FATAL: unable to begin transfer ' + error + ' (queue_objects)');
-                throw 'ERROR: unable to begin transfer ' + error + ' (queue_objects)';
-            }
+        importlib.save_transfer_records(transfer_data, function (result) {
 
-            if (httpResponse.statusCode === 200) {
-                callback(body);
+            if (result.recordCount === 0) {
+                // TODO: fail queue?
                 return false;
-            } else {
-                logger.module().fatal('FATAL: unable to begin transfer ' + body + ' (queue_objects)');
-                throw 'FATAL: unable to begin transfer ' + body + ' (queue_objects)';
             }
+
+            request.post({
+                url: config.apiUrl + '/api/admin/v1/import/start_transfer',
+                form: {
+                    'collection': transfer_data.collection
+                }
+            }, function (error, httpResponse, body) {
+
+                if (error) {
+                    logger.module().fatal('FATAL: unable to begin transfer ' + error + ' (queue_objects)');
+                    throw 'ERROR: unable to begin transfer ' + error + ' (queue_objects)';
+                }
+
+                if (httpResponse.statusCode === 200) {
+                    // callback(body);
+                    return false;
+                } else {
+                    logger.module().fatal('FATAL: unable to begin transfer ' + body + ' (queue_objects)');
+                    throw 'FATAL: unable to begin transfer ' + body + ' (queue_objects)';
+                }
+            });
+
+            return false;
         });
+    };
+
+    async.waterfall([
+        check_collection,
+        start_transfer
+    ], function (error, obj) {
+
+        if (error) {
+            logger.module().error('ERROR: async (check_collection/start_transfer)');
+        }
+
+        if (obj.collection_status !== undefined && obj.collection_status === false) {
+
+            let failObj = {
+                is_member_of_collection: obj.collection.replace('_', ':'),
+                message: 'Unable to move forward with import due to no collection or incorrect collection pid.'
+            };
+
+            importlib.save_to_fail_queue(failObj);
+        }
+
+        logger.module().info('INFO: transfer records queued');
 
         return false;
     });
@@ -252,7 +297,7 @@ exports.queue_objects = function (req, callback) {
     callback({
         status: 200,
         content_type: {'Content-Type': 'application/json'},
-        message: 'Objects queued.'
+        message: 'Queuing objects.'
     });
 };
 
@@ -355,7 +400,7 @@ exports.approve_transfer = function (req, callback) {
 
                 if (result.error !== undefined && result.error === true) {
                     logger.module().error('ERROR: unable to confirm transfer approval ' + result + ' (approve_transfer)');
-                    // TODO: update queue with NOT_APPROVED status message and status?
+                    //*** TODO: update queue with NOT_APPROVED status message and status?
                     return false;
                 }
 
@@ -419,6 +464,7 @@ exports.get_transfer_status = function (req, callback) {
                 if (result.error !== undefined && result.error === true) {
                     logger.module().error('ERROR: unable to get transfer status (get_transfer_status)');
                     clearInterval(timer);
+                    // TODO: fail queue
                     return false;
                 }
 
@@ -540,7 +586,9 @@ exports.import_dip = function (req, callback) {
     var sip_uuid = req.query.sip_uuid;
 
     if (sip_uuid === undefined) {
+
         logger.module().error('ERROR: import dip request (import_dip)');
+
         callback({
             status: 400,
             content_type: {'Content-Type': 'application/json'},
@@ -566,6 +614,7 @@ exports.import_dip = function (req, callback) {
 
             if (response.error !== undefined && response.error === true) {
                 logger.module().error('ERROR: unable to get mets (import_dip)');
+                // TODO: log to fail queue
                 throw 'ERROR: unable to get mets (import_dip)';
             }
 
@@ -612,9 +661,9 @@ exports.create_repo_record = function (req, callback) {
 
     var sip_uuid = req.query.sip_uuid;
 
-    if (sip_uuid === undefined) {
+    if (sip_uuid === undefined || sip_uuid === null) {
         // no need to move forward if sip_uuid is missing
-        // TODO: update queue as failed
+        // TODO: log to fail queue
         logger.module().error('ERROR: sip uuid undefined (create_repo_record)');
         callback({
             status: 400,
@@ -1043,8 +1092,6 @@ exports.create_repo_record = function (req, callback) {
     // 11.)
     function create_display_record(obj, callback) {
 
-        console.log('display record: ', obj);
-
         if (obj.mods === null) {
             logger.module().info('INFO: display record not created because we were not able to get MODS from archivespace');
             callback(null, obj);
@@ -1079,10 +1126,6 @@ exports.create_repo_record = function (req, callback) {
     function create_repo_record(obj, callback) {
 
         if (obj.mods === null && obj.dip_path === null) {
-            // TODO: I need some way to indicate that this record could not be created during the import process.
-            // TODO: update DB?
-            // TODO: another queue table?
-            // TODO: send email?
             callback(null, obj);
             return false;
         }
@@ -1167,6 +1210,18 @@ exports.create_repo_record = function (req, callback) {
 
         if (error) {
             logger.module().error('ERROR: async (create_repo_record)');
+        }
+
+        // TODO: ...
+        if (results.mods === null && results.dip_path === null) {
+
+            let failObj = {
+                is_member_of_collection: results.is_member_of_collection,
+                sip_uuid: results.sip_uuid,
+                message: 'Unable to create repository record'
+            };
+
+            importlib.save_to_fail_queue(failObj);
         }
 
         logger.module().info('INFO: record imported');
