@@ -293,6 +293,15 @@ const importModule = (function () {
             }
         });
 
+        socket.on('fail_status', function (data) {
+
+            if (data.length > 0) {
+                $('#import-failure-count').html('Import failures reported: ' + data[0].count + ' <a href="/dashboard/import/failures">View failure details</a>');
+            } else {
+                $('#import-failure-count').html('');
+            }
+        });
+
         socket.on('transfer_status', function (data) {
 
             let transferData = '';
@@ -306,7 +315,6 @@ const importModule = (function () {
                     transferData += '<tr>';
                     transferData += '<td>' + data[i].is_member_of_collection + '</td>';
                     transferData += '<td>' + data[i].object + '</td>';
-                    // transferData += '<td>' + data[i].transfer_uuid + '</td>';
                     transferData += '<td>' + data[i].microservice + '</td>';
                     transferData += '<td>' + data[i].user + '</td>';
                     transferData += '<td>' + data[i].message + '</td>';

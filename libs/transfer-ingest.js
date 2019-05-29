@@ -15,6 +15,7 @@
  limitations under the License.
 
 */
+
 const config = require('../config/config'),
     archivematica = require('../libs/archivematica'),
     logger = require('../libs/log4'),
@@ -461,7 +462,7 @@ exports.update_transfer_status = function (response, callback) {
         return false;
     }
 
-    // TODO: handle errors
+    // TODO: handle failures
 
 };
 

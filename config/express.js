@@ -41,6 +41,13 @@ module.exports = function () {
         });
     });
 
+    io.on('connection', function(socket){
+        // sends import fail status to client
+        socket.on('fail_status', function(status) {
+            io.emit('fail_status', status);
+        });
+    });
+
     if (process.env.NODE_ENV === 'development') {
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
     } else if (process.env.NODE_ENV === 'production') {

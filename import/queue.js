@@ -58,6 +58,7 @@ const fs = require('fs'),
     }),
     TRANSFER_QUEUE = 'tbl_archivematica_queue',
     IMPORT_QUEUE = 'tbl_duracloud_queue',
+    FAIL_QUEUE = 'tbl_fail_queue',
     TRANSFER_TIMER = config.transferTimer,                                  // Transfer status is broadcast every 3 sec.
     IMPORT_TIMER = config.importTimer,                                      // Import status is broadcast every 3 sec.
     INGEST_STATUS_TIMER = config.ingestStatusTimer,                         // Ingest status (object count) is broadcast every 20 sec.
@@ -131,6 +132,26 @@ socketclient.on('connect', function () {
             });
 
     }, IMPORT_TIMER);
+});
+
+/**
+ * Broadcasts import failures
+ */
+socketclient.on('connect', function () {
+
+    let id = setInterval(function () {
+
+        knexQ(FAIL_QUEUE)
+            .count('id as count')
+            .then(function (data) {
+                socketclient.emit('fail_status', data);
+            })
+            .catch(function (error) {
+                logger.module().error('ERROR: fail queue database error');
+                throw error;
+            });
+
+    }, INGEST_STATUS_TIMER);
 });
 
 /**
