@@ -1057,8 +1057,7 @@ exports.create_repo_record = function (req, callback) {
         });
     }
 
-    // 12.) NOT USED
-    /*
+    /// 12.)
     function delete_file(obj, callback) {
 
         if (obj.dip_path === null) {
@@ -1075,7 +1074,6 @@ exports.create_repo_record = function (req, callback) {
             callback(null, obj);
         });
     }
-    */
 
     // 13.)
     function create_repo_record(obj, callback) {
