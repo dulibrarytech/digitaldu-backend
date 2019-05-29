@@ -757,11 +757,11 @@ exports.create_repo_record = function (req, callback) {
 
                     // kalturaid.txt is not present
                     if (data.length === 0) {
-
                         obj.sip_uuid = sip_uuid;
                         obj.dip_path = null;
                         obj.file = null;
                         obj.uuid = null;
+                        obj.entry_id = null;
                         callback(null, obj);
                         return false;
                     }
@@ -790,6 +790,11 @@ exports.create_repo_record = function (req, callback) {
             };
 
             const get_manifest = function (obj, callback) {
+
+                if (obj.dip_path === null) {
+                    callback(null, obj);
+                    return false;
+                }
 
                 // get dura-manifest xml document
                 duracloud.get_object_manifest(obj, function (response) {
@@ -828,7 +833,6 @@ exports.create_repo_record = function (req, callback) {
                     logger.module().error('ERROR: async (kaltura id / manifest)');
                 }
 
-                console.log(obj);
                 callback(null, obj);
             });
 
@@ -1039,6 +1043,8 @@ exports.create_repo_record = function (req, callback) {
     // 11.)
     function create_display_record(obj, callback) {
 
+        console.log('display record: ', obj);
+
         if (obj.mods === null) {
             logger.module().info('INFO: display record not created because we were not able to get MODS from archivespace');
             callback(null, obj);
@@ -1052,6 +1058,7 @@ exports.create_repo_record = function (req, callback) {
     }
 
     // 12.) NOT USED
+    /*
     function delete_file(obj, callback) {
 
         if (obj.dip_path === null) {
@@ -1068,6 +1075,7 @@ exports.create_repo_record = function (req, callback) {
             callback(null, obj);
         });
     }
+    */
 
     // 13.)
     function create_repo_record(obj, callback) {
@@ -1075,6 +1083,8 @@ exports.create_repo_record = function (req, callback) {
         if (obj.mods === null && obj.dip_path === null) {
             // TODO: I need some way to indicate that this record could not be created during the import process.
             // TODO: update DB?
+            // TODO: another queue table?
+            // TODO: send email?
             callback(null, obj);
             return false;
         }

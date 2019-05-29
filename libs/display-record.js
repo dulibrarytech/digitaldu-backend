@@ -11,8 +11,6 @@ exports.create_display_record = function (obj, callback) {
         record = {},
         metadata;
 
-    console.log('display record: ', obj);
-
     record.pid = obj.pid;
     record.is_member_of_collection = obj.is_member_of_collection;
     record.object_type = 'object';
