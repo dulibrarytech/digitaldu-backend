@@ -295,10 +295,29 @@ const importModule = (function () {
 
         socket.on('fail_status', function (data) {
 
+            let failData = '';
+
+            $('#message').html('');
+
             if (data.length > 0) {
-                $('#import-failure-count').html('Import failures reported: ' + data[0].count + ' <a href="/dashboard/import/failures">View failure details</a>');
+
+                for (let i = 0; i < data.length; i++) {
+
+                    failData += '<tr>';
+                    failData += '<td>' + data[i].message + '</td>';
+                    failData += '<td>' + data[i].is_member_of_collection + '</td>';
+                    failData += '<td>' + data[i].sip_uuid + '</td>';
+                    failData += '<td>' + data[i].transfer_uuid + '</td>';
+                    failData += '<td>' + data[i].created + '</td>';
+                    failData += '</tr>';
+                }
+
+                $('#import-failures').html(failData);
+
             } else {
-                $('#import-failure-count').html('');
+                $('#import-failures').html('');
+                $('#import-failures').html('<tr><td>No failures reported</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>');
+
             }
         });
 
@@ -634,6 +653,7 @@ const importModule = (function () {
         http.req(request, callback);
     };
 
+    // TODO: ...
     obj.importCollection = function (sip_uuid, pid) {
         // console.log('import collection: ', sip_uuid);
         // console.log('import collection: ', pid);

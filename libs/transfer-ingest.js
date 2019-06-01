@@ -19,6 +19,7 @@
 const config = require('../config/config'),
     archivematica = require('../libs/archivematica'),
     logger = require('../libs/log4'),
+    request = require('request'),
     knexQ = require('knex')({
         client: 'mysql2',
         connection: {
@@ -356,6 +357,13 @@ exports.confirm_transfer_approval = function (response, object, callback) {
         });
 
         return false;
+
+    } else {
+
+        callback({
+            error: true,
+            message: 'Transfer not approved'
+        });
     }
 };
 
@@ -462,8 +470,15 @@ exports.update_transfer_status = function (response, callback) {
         return false;
     }
 
-    // TODO: handle failures
+    if (json.status === 'FAILED' || json.status === 'REJECTED' || json.status === 'USER_INPUT') {
 
+        callback({
+            error: true,
+            message: json.status
+        });
+
+        return false;
+    }
 };
 
 /**
@@ -519,40 +534,6 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
         return false;
     }
 
-    if (json.status === 'FAILED' || json.status === 'REJECTED' || json.status === 'USER_INPUT') {
-
-        let importFailed = {
-            table: QUEUE,
-            where: {
-                sip_uuid: json.uuid,
-                ingest_status: 0
-            },
-            update: {
-                message: json.status,
-                microservice: json.microservice,
-                ingest_status: 1
-            },
-            callback: function (data) {
-
-                if (data !== 1) {
-                    logger.module().error('ERROR: database queue error (update_ingest_status) ' + json.status);
-                    throw 'ERROR: database queue error (update_ingest_status)';
-                }
-
-                return null;
-            }
-        };
-
-        update_queue(importFailed);
-
-        callback({
-            error: true,
-            message: json.status
-        });
-
-        return false;
-    }
-
     if (json.status === 'PROCESSING') {
 
         let importProcessing = {
@@ -584,6 +565,16 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
             complete: false,
             sip_uuid: json.uuid
         });
+    }
+
+    if (json.status === 'FAILED' || json.status === 'REJECTED' || json.status === 'USER_INPUT') {
+
+        callback({
+            error: true,
+            message: json.status
+        });
+
+        return false;
     }
 };
 
@@ -937,6 +928,111 @@ exports.save_to_fail_queue = function (obj) {
         .catch(function (error) {
             logger.module().error('ERROR: unable to save mets (save_mets_data) ' + error);
             throw 'ERROR: unable to save mets (save_mets_data) ' + error;
+        });
+};
+
+/**
+ *
+ * @param callback
+ */
+exports.get_import_collection = function (callback) {
+
+    'use strict';
+
+    knexQ(IMPORT_QUEUE)
+        .select('*')
+        .distinct('is_member_of_collection')
+        .limit(1)
+        .then(function (data) {
+            console.log(data);
+            callback(data[0].is_member_of_collection);
+            return null;
+        })
+        .catch(function (error) {
+            logger.module().error('ERROR: unable to get import collection (get_import_collection) ' + error);
+            throw 'ERROR: unable to get import collection (get_import_collection) ' + error;
+        });
+};
+
+/**
+ * Restarts import queue
+ * @param req
+ * @param callback
+ */
+exports.restart_import = function () {
+
+    'use strict';
+
+    knexQ(IMPORT_QUEUE)
+        .select('*')
+        .distinct('is_member_of_collection')
+        .limit(1)
+        .then(function (data) {
+
+            console.log(data);
+
+            if (data.length === 0) {
+                // cannot restart import
+                return false;
+            }
+
+            request.post({
+                url: config.apiUrl + '/api/admin/v1/import/start_transfer',
+                form: {
+                    'collection': data[0].is_member_of_collection
+                }
+            }, function (error, httpResponse, body) {
+
+                if (error) {
+                    logger.module().fatal('FATAL: unable to restart transfer ' + error + ' (async)');
+                    throw 'ERROR: unable to restart transfer ' + error + ' (async)';
+                }
+
+                if (httpResponse.statusCode === 200) {
+                    logger.module().info('INFO: sending request to restart transfer (async)');
+                    return false;
+                } else {
+                    logger.module().fatal('FATAL: unable to restart transfer ' + body + ' (async)');
+                    throw 'FATAL: unable to begin restart transfer ' + body + ' (async)';
+                }
+            });
+
+
+            return null;
+        })
+        .catch(function (error) {
+            logger.module().error('ERROR: unable to get import collection (get_import_collection) ' + error);
+            throw 'ERROR: unable to get import collection (get_import_collection) ' + error;
+        });
+};
+
+/**
+ * Clears out failed record(s) in import queue
+ * @param obj
+ * @param callback
+ */
+exports.clear_queue_record = function (obj, callback) {
+
+    'use strict';
+
+    knexQ(QUEUE)
+        .where(obj)
+        .del()
+        .then(function (data) {
+
+            console.log('clear queue record: ', data);
+
+            if (data > 0) {
+                callback(true);
+            } else {
+                callback(false);
+            }
+
+            return null;
+        })
+        .catch(function (error) {
+            logger.module().error('ERROR: unable to clean up queue (cleanup) ' + error);
+            throw 'ERROR: unable to clean up queue (cleanup) ' + error;
         });
 };
 

@@ -142,7 +142,10 @@ socketclient.on('connect', function () {
     let id = setInterval(function () {
 
         knexQ(FAIL_QUEUE)
-            .count('id as count')
+            // .count('id as count')
+            .select('*')
+            // .whereRaw('DATE(created) = CURRENT_DATE')
+            .orderBy('created', 'desc')
             .then(function (data) {
                 socketclient.emit('fail_status', data);
             })
@@ -279,7 +282,6 @@ exports.queue_objects = function (req, callback) {
                 }
 
                 if (httpResponse.statusCode === 200) {
-                    // callback(body);
                     return false;
                 } else {
                     logger.module().fatal('FATAL: unable to begin transfer ' + body + ' (queue_objects)');
@@ -304,7 +306,7 @@ exports.queue_objects = function (req, callback) {
 
             let failObj = {
                 is_member_of_collection: obj.collection.replace('_', ':'),
-                message: 'Unable to move forward with import due to no collection or incorrect collection pid.'
+                message: 'Unable to move forward with import due to incorrect collection pid.'
             };
 
             importlib.save_to_fail_queue(failObj);
@@ -337,6 +339,13 @@ exports.start_transfer = function (req, callback) {
 
         logger.module().fatal('FATAL: collection undefined. unable to start transfer (start_transfer)');
 
+        let failObj = {
+            is_member_of_collection: 'No collection',
+            message: 'Collection undefined. unable to start transfer.'
+        };
+
+        importlib.save_to_fail_queue(failObj);
+
         callback({
             status: 400,
             content_type: {'Content-Type': 'application/json'},
@@ -352,10 +361,27 @@ exports.start_transfer = function (req, callback) {
         archivematica.start_tranfser(object, function (response) {
 
             if (response.error !== undefined && response.error === true) {
+
                 logger.module().fatal('FATAL: transfer error ' + response + ' (start_transfer)');
-                // TODO: test and update queue with FAILED message
+
+                let failObj = {
+                    is_member_of_collection: collection,
+                    message: response
+                };
+
+                importlib.save_to_fail_queue(failObj);
+                importlib.clear_queue_record({
+                    is_member_of_collection: collection
+                }, function (result) {
+
+                    if (result === true) {
+                        importlib.restart_import();
+                    }
+
+                });
+
                 throw 'FATAL: transfer error ' + response + ' (start_transfer)';
-                // return false;
+                //return false;
             }
 
             importlib.confirm_transfer(response, object.id);
@@ -403,7 +429,9 @@ exports.approve_transfer = function (req, callback) {
     let collection = req.body.collection;
 
     if (collection === undefined) {
+
         logger.module().error('ERROR: collection undefined (approve_transfer)');
+
         callback({
             status: 400,
             content_type: {'Content-Type': 'application/json'},
@@ -420,8 +448,24 @@ exports.approve_transfer = function (req, callback) {
             importlib.confirm_transfer_approval(response, object, function (result) {
 
                 if (result.error !== undefined && result.error === true) {
+
                     logger.module().error('ERROR: unable to confirm transfer approval ' + result + ' (approve_transfer)');
-                    //*** TODO: update queue with NOT_APPROVED status message and status?
+
+                    let failObj = {
+                        is_member_of_collection: collection,
+                        transfer_uuid: object.transfer_uuid,
+                        message: 'Transfer not approved ' + object.transfer_folder
+                    };
+
+                    importlib.save_to_fail_queue(failObj);
+                    importlib.clear_queue_record({
+                        transfer_uuid: object.transfer_uuid
+                    }, function (result) {
+                        if (result === true) {
+                            importlib.restart_import();
+                        }
+                    });
+
                     return false;
                 }
 
@@ -483,10 +527,26 @@ exports.get_transfer_status = function (req, callback) {
             importlib.update_transfer_status(response, function (result) {
 
                 if (result.error !== undefined && result.error === true) {
-                    logger.module().error('ERROR: unable to get transfer status (get_transfer_status)');
+
+                    logger.module().error('ERROR: transfer status (get_transfer_status): ' + result.message);
                     clearInterval(timer);
-                    // TODO: fail queue
-                    return false;
+
+                    let failObj = {
+                        is_member_of_collection: '',
+                        transfer_uuid: transfer_uuid,
+                        message: 'Transfer status: ' + result.message
+                    };
+
+                    importlib.save_to_fail_queue(failObj);
+                    importlib.clear_queue_record({
+                        transfer_uuid: transfer_uuid
+                    },function (result) {
+                        if (result === true) {
+                            importlib.restart_import();
+                        }
+                    });
+
+                    throw 'ERROR: transfer status (get_transfer_status): ' + result.message;
                 }
 
                 if (result.complete !== undefined && result.complete === true) {
@@ -556,8 +616,26 @@ exports.get_ingest_status = function (req, callback) {
             importlib.update_ingest_status(response, sip_uuid, function (result) {
 
                 if (result.error !== undefined && result.error === true) {
+
                     logger.module().error('ERROR: unable to update ingest status (get_ingest_status)');
-                    return false;
+
+                    let failObj = {
+                        is_member_of_collection: '',
+                        sip_uuid: sip_uuid,
+                        message: 'Transfer status: ' + result.message
+                    };
+
+                    importlib.save_to_fail_queue(failObj);
+                    importlib.clear_queue_record({
+                        sip_uuid: sip_uuid
+                    }, function (result) {
+                        if (result === true) {
+                            importlib.restart_import();
+                        }
+                    });
+
+                    throw 'ERROR: unable to update ingest status (get_ingest_status)';
+                    // return false;
                 }
 
                 if (result.complete !== undefined && result.complete === true) {
@@ -634,8 +712,24 @@ exports.import_dip = function (req, callback) {
         duracloud.get_mets(data, function (response) {
 
             if (response.error !== undefined && response.error === true) {
+
                 logger.module().error('ERROR: unable to get mets (import_dip)');
-                // TODO: log to fail queue
+
+                let failObj = {
+                    is_member_of_collection: '',
+                    sip_uuid: data.sip_uuid,
+                    message: response
+                };
+
+                importlib.save_to_fail_queue(failObj);
+                importlib.clear_queue_record({
+                    sip_uuid: data.sip_uuid
+                }, function (result) {
+                    if (result === true) {
+                        importlib.restart_import();
+                    }
+                });
+
                 throw 'ERROR: unable to get mets (import_dip)';
             }
 
@@ -686,6 +780,7 @@ exports.create_repo_record = function (req, callback) {
         // no need to move forward if sip_uuid is missing
         // TODO: log to fail queue
         logger.module().error('ERROR: sip uuid undefined (create_repo_record)');
+
         callback({
             status: 400,
             content_type: {'Content-Type': 'application/json'},
@@ -705,7 +800,6 @@ exports.create_repo_record = function (req, callback) {
             // TODO: save sip_uuid to error table?
 
             if (result === null || result === undefined) {
-                console.log('Unable to get collection');
                 get_collection(callback);
                 return false;
             }
@@ -1223,7 +1317,6 @@ exports.create_repo_record = function (req, callback) {
         get_pid,
         get_handle,
         create_display_record,
-        // delete_file,
         create_repo_record,
         index,
         cleanup_queue
@@ -1233,7 +1326,6 @@ exports.create_repo_record = function (req, callback) {
             logger.module().error('ERROR: async (create_repo_record)');
         }
 
-        // TODO: ...
         if (results.mods === null && results.dip_path === null) {
 
             let failObj = {
@@ -1243,6 +1335,13 @@ exports.create_repo_record = function (req, callback) {
             };
 
             importlib.save_to_fail_queue(failObj);
+            importlib.clear_queue_record({
+                sip_uuid: results.sip_uuid
+            }, function (result) {
+                if (result === true) {
+                    importlib.restart_import();
+                }
+            });
         }
 
         logger.module().info('INFO: record imported');
@@ -1258,6 +1357,7 @@ exports.create_repo_record = function (req, callback) {
 
         let collection = results.is_member_of_collection.replace(':', '_');
 
+        // start next transfer
         // get queue record count for current collection
         importlib.check_queue(collection, function (result) {
 
