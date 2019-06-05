@@ -39,6 +39,7 @@ module.exports = {
     elasticSearchReplicas: process.env.ELASTIC_SEARCH_REPLICAS,
     indexTimer: process.env.INDEX_TIMER,
     apiUrl: process.env.API_URL,
+    uuidDomain: process.env.UUID_DOMAIN,
     namespace: process.env.REPO_NAMESPACE,
     sftpHost: process.env.SFTP_HOST,
     sftpId: process.env.SFTP_ID,

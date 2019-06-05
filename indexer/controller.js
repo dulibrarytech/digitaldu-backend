@@ -44,3 +44,9 @@ exports.create_repo_index = function (req, res) {
         res.status(data.status).send(data);
     });
 };
+
+exports.reset_display_record = function (req, res) {
+    Indexer.reset_display_record(req, function (data) {
+        res.status(data.status).send(data);
+    })
+};

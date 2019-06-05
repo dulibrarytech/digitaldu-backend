@@ -229,7 +229,7 @@ exports.queue_objects = function (req, callback) {
 
         callback({
             status: 404,
-            content_type: {'Content-Type': 'application/json'},
+            // content_type: {'Content-Type': 'application/json'},
             message: 'Nothing to see here...',
             data: []
         });
@@ -805,6 +805,7 @@ exports.create_repo_record = function (req, callback) {
             }
 
             let obj = {};
+            obj.pid = sip_uuid;
             obj.sip_uuid = sip_uuid;
             obj.is_member_of_collection = result;
             callback(null, obj);
@@ -1314,7 +1315,7 @@ exports.create_repo_record = function (req, callback) {
         get_object_file_data,
         get_token,
         get_mods,
-        get_pid,
+        // get_pid,
         get_handle,
         create_display_record,
         create_repo_record,

@@ -156,6 +156,7 @@ exports.start_transfer = function (collection, callback) {
                 },
                 callback: function (data) {
                     if (data !== 1) {
+                        // TODO: clear queue and log to fail queue
                         logger.module().fatal('FATAL: database transfer queue error (start transfer)');
                         throw 'Database transfer queue error';
                     }

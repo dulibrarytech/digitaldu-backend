@@ -27,6 +27,7 @@
     "method-override": "^2.3.10",
     "moment": "^2.24.0",
     "mysql2": "^1.4.2",
+    "node-uuid": "^1.4.8",
     "nodemailer": "^4.1.1",
     "request": "^2.83.0",
     "shelljs": "^0.7.8",

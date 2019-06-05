@@ -6,14 +6,15 @@ const fs = require('fs'),
     pid = require('../libs/next-pid'),
     permissions = require('../libs/object-permissions'),
     async = require('async'),
-    pids = require('../libs/next-pid'),
+    // pids = require('../libs/next-pid'),
+    uuid = require('node-uuid'),
     handles = require('../libs/handles'),
     modslibdisplay = require('../libs/display-record'),
     archivematica = require('../libs/archivematica'),
     logger = require('../libs/log4'),
     knex =require('../config/db')();
 
-/**
+/** DEPRECATED
  * Gets next pid and increments pid value
  * @param req
  * @param callback
@@ -92,7 +93,7 @@ exports.get_objects = function (req, callback) {
         .then(function (data) {
             callback({
                 status: 200,
-                content_type: {'Content-Type': 'application/json'},
+                // content_type: {'Content-Type': 'application/json'},
                 data: data,
                 message: 'Objects retrieved.'
             });
@@ -122,7 +123,7 @@ exports.get_object = function (req, callback) {
         .then(function (data) {
             callback({
                 status: 200,
-                content_type: {'Content-Type': 'application/json'},
+                // content_type: {'Content-Type': 'application/json'},
                 data: data,
                 message: 'Object retrieved.'
             });
@@ -151,7 +152,7 @@ exports.get_admin_objects = function (req, callback) {
         .then(function (data) {
             callback({
                 status: 200,
-                content_type: {'Content-Type': 'application/json'},
+                // content_type: {'Content-Type': 'application/json'},
                 data: data,
                 message: 'Collections for administrators'
             });
@@ -180,7 +181,7 @@ exports.get_admin_object = function (req, callback) {
         .then(function (data) {
             callback({
                 status: 200,
-                content_type: {'Content-Type': 'application/json'},
+                // content_type: {'Content-Type': 'application/json'},
                 data: data,
                 message: 'Object retrieved.'
             });
@@ -198,13 +199,13 @@ exports.get_admin_object = function (req, callback) {
  */
 exports.update_admin_collection_object = function (req, callback) {
 
-    var data = req.body;
+    let data = req.body;
 
     if (data.is_member_of_collection === undefined || data.is_member_of_collection.length === 0) {
 
         callback({
             status: 400,
-            content_type: {'Content-Type': 'application/json'},
+            // content_type: {'Content-Type': 'application/json'},
             data: [],
             message: 'Missing collection PID.'
         });
@@ -212,12 +213,12 @@ exports.update_admin_collection_object = function (req, callback) {
         return false;
     }
 
-    var mods = {
+    let mods = {
         title: data.title,
         abstract: data.abstract
     };
 
-    var obj = {};
+    let obj = {};
         obj.pid = data.pid;
         obj.is_member_of_collection = data.is_member_of_collection;
         obj.object_type = data.object_type;
@@ -238,7 +239,7 @@ exports.update_admin_collection_object = function (req, callback) {
             .then(function (data) {
                 callback({
                     status: 201,
-                    content_type: {'Content-Type': 'application/json'},
+                    // content_type: {'Content-Type': 'application/json'},
                     data: [{'pid': obj.pid}],
                     message: 'Object updated.'
                 });
@@ -274,11 +275,11 @@ exports.save_admin_collection_object = function (req, callback) {
 
     function create_record_object(callback) {
 
+        // TODO: get collection metadata from archivespace
         var obj = {};
 
         obj.is_member_of_collection = data.is_member_of_collection;
 
-        // TODO: more fields for collection record?
         var modsObj = {
             title: data.mods_title,
             abstract: data.mods_abstract
@@ -292,12 +293,14 @@ exports.save_admin_collection_object = function (req, callback) {
 
     function get_pid(obj, callback) {
 
-        logger.module().info('INFO: getting pid');
-
-        pids.get_next_pid(function (pid) {
-            obj.pid = pid;
+        try {
+            obj.pid = uuid(config.uuidDomain, uuid.DNS);
             callback(null, obj);
-        });
+        } catch (error) {
+            logger.module().error('ERROR: handle error');
+            obj.pid = null;
+            callback(null, obj);
+        }
     }
 
     function get_handle(obj, callback) {

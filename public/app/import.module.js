@@ -58,7 +58,8 @@ const importModule = (function () {
                     }
 
                     // list collection folders only
-                    if (collection === null && data.list[i].name.search('codu') !== -1) {
+                    // if (collection === null && data.list[i].name.search('codu') !== -1) {
+                    if (collection === null && data.list[i].name.length > 30) {
                         html += '<td>';
                         html += '&nbsp;&nbsp;&nbsp;<a href="/dashboard/import?collection=' + data.list[i].name + '"><i class="fa fa-folder"></i>&nbsp;&nbsp;' + data.list[i].name + '</a>';
                         html += '</td>';
@@ -67,6 +68,7 @@ const importModule = (function () {
                         html += '&nbsp;&nbsp;&nbsp;<i class="fa fa-folder"></i>&nbsp;&nbsp;' + data.list[i].name;
                         html += '</td>';
                     }
+
                 }
 
                 html += '</tr>';

@@ -13,7 +13,6 @@ exports.create_display_record = function (obj, callback) {
 
     record.pid = obj.pid;
     record.is_member_of_collection = obj.is_member_of_collection;
-    record.object_type = 'object';
     record.handle = obj.handle;
     record.thumbnail = obj.thumbnail;
     record.object = obj.file_name;
@@ -22,7 +21,11 @@ exports.create_display_record = function (obj, callback) {
 
     metadata = JSON.parse(mods);
 
-    if (metadata.title !== undefined) {
+    if (obj.object_type !== undefined) {
+        record.object_type = obj.object_type;
+    }
+
+    if (metadata.title !== undefined || metadata.title !== null) {
         record.title = metadata.title;
     }
 
@@ -39,10 +42,19 @@ exports.create_display_record = function (obj, callback) {
         record.f_subjects = subjectsArr;
     }
 
-    if (metadata.abstract !== undefined) {
-        record.abstract = metadata.abstract;
+    // TODO: refactor... drill into notes field
+    if (metadata.notes !== undefined) {
+
+        let notes = metadata.notes;
+
+        for (let i=0;i<notes.length;i++) {
+            if (notes[i].type !== undefined && notes[i].type === 'abstract') {
+                record.abstract = notes[i].content;
+            }
+        }
     }
 
+    // TODO: find in archivespace record
     if (metadata.type !== undefined) {
         record.type = metadata.type;
     }

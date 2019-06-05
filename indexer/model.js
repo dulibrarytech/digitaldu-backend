@@ -20,8 +20,10 @@
 
 const config = require('../config/config'),
     service = require('../indexer/service'),
+    async = require('async'),
     knex =require('../config/db')(),
     logger = require('../libs/log4'),
+    modslibdisplay = require('../libs/display-record'),
     REPO_OBJECTS = 'tbl_objects';
 
 /**
@@ -186,11 +188,16 @@ exports.index_records = function (req, callback) {
         })
         .then(function (data) {
 
+            console.log(data);
+            index(index_name);
+
+            /*
             if (data > 0) {
                 index(index_name);
             } else {
                 logger.module().error('ERROR: unable to reset is_indexed fields (index)');
             }
+            */
 
         })
         .catch(function (error) {
@@ -202,4 +209,126 @@ exports.index_records = function (req, callback) {
         status: 200,
         message: 'Indexing repository records...'
     });
+};
+
+// TODO: reset display records
+/**
+ *
+ * @param req
+ * @param callback
+ */
+exports.reset_display_record = function (req, callback) {
+
+    let params = {};
+
+    if (req.body.pid !== undefined) {
+        params.pid = req.body.pid;
+    } else if (req.body.is_member_of_collection !== undefined) {
+        params.is_member_of_collection = req.body.is_member_of_collection;
+    } else if (req.body.pid === undefined && req.body.is_member_of_collection === undefined) {
+        params.none = true;
+    } else {
+        // TODO: 400 error
+        return false;
+    }
+
+    function get_data (callback) {
+
+        let obj = {};
+
+        if (params.none !== undefined) {
+
+            // console.log('meow');
+
+            knex(REPO_OBJECTS)
+                .select('is_member_of_collection', 'pid', 'handle', 'object_type', 'mods', 'thumbnail', 'file_name', 'mime_type')
+                .whereNot({
+                    mods: null
+                })
+                .then(function (data) {
+                    // TODO: check data
+                    obj.data = data;
+                    callback(null, obj);
+                })
+                .catch(function (error) {
+                    logger.module().error('ERROR: unable to get record ' + error);
+                    throw 'ERROR: unable to get record ' + error;
+                });
+
+        } else {
+
+            knex(REPO_OBJECTS)
+                .select('is_member_of_collection', 'pid', 'handle', 'object_type', 'mods', 'thumbnail', 'file_name', 'mime_type')
+                .where(params)
+                .whereNot({
+                    mods: null
+                })
+                .then(function (data) {
+                    // TODO: check data
+                    obj.data = data;
+                    callback(null, obj);
+                })
+                .catch(function (error) {
+                    logger.module().error('ERROR: unable to get record ' + error);
+                    throw 'ERROR: unable to get record ' + error;
+                });
+        }
+    }
+
+    function create_display_record (obj, callback) {
+
+        let timer = setInterval(function () {
+
+            if (obj.data.length === 0) {
+                clearInterval(timer);
+                console.log('complete');
+                return false;
+            }
+
+            let record = obj.data.pop();
+
+            modslibdisplay.create_display_record(record, function (display_record) {
+
+                let recordObj = JSON.parse(display_record);
+
+                knex(REPO_OBJECTS)
+                    .where({
+                        is_member_of_collection: recordObj.is_member_of_collection,
+                        pid: recordObj.pid
+                    })
+                    .update({
+                        display_record: display_record
+                    })
+                    .then(function (data) {
+
+                        // TODO: check data
+                        // console.log(data);
+
+                    })
+                    .catch(function (error) {
+                        logger.module().error('ERROR: unable to save collection record ' + error);
+                        throw 'ERROR: unable to save collection record ' + error;
+                    });
+            });
+
+        }, 3000);
+    }
+
+    async.waterfall([
+        get_data,
+        create_display_record
+    ], function (error, obj) {
+
+        if (error) {
+            logger.module().error('ERROR: async (reset_display_record)');
+        }
+
+        console.log(obj);
+    });
+
+    callback({
+        status: 201,
+        message: 'updating display record(s).'
+    });
+
 };

@@ -12,4 +12,8 @@ module.exports = function (app) {
 
     app.route('/api/admin/v1/indexer/index/create')
         .post(Indexer.create_repo_index);
+
+    // TODO: figure out better function name (creates new display records)
+    app.route('/api/admin/v1/indexer/reset')
+        .post(Indexer.reset_display_record);
 };
