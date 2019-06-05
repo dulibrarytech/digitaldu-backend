@@ -212,6 +212,8 @@ const objectsModule = (function () {
                     for (let i = 0; i < record.display_record.parts.length; i++) {
                         html += '<li>' + record.display_record.parts[i].title + ' ( ' + record.display_record.parts[i].type + ' ) order: ' + record.display_record.parts[i].order + '</li>';
                     }
+
+                    html += '</ul>';
                 }
 
                 if (record.display_record.subjects !== undefined && record.display_record.subjects.length !== 0) {
@@ -239,7 +241,6 @@ const objectsModule = (function () {
 
             html += '</div>';
             html += '<div class="col-md-3" style="padding: 5px">';
-            html += '<p>' + data[i].pid + '</p>';
 
             if (data[i].object_type === 'collection') {
                 html += '<p><small style="background: skyblue; padding: 3px; color: white">Collection</small></p>';
@@ -258,6 +259,7 @@ const objectsModule = (function () {
             if (data[i].object_type === 'collection') {
                 html += '<p><a href="' + api + '/dashboard/object/edit?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Edit collection</a></p>';
             } else if (data[i].object_type === 'object') {
+                // TODO...
                 // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=tn"><i class="fa fa-code"></i>&nbsp;Technical Metadata</a></p>';
                 // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=mods"><i class="fa fa-code"></i>&nbsp;MODS</a></p>';
             }

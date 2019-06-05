@@ -41,7 +41,6 @@ const collectionsModule = (function () {
 
             html += '</div>';
             html += '<div class="col-md-3" style="padding: 5px">';
-            html += '<p>' + data[i].pid + '</p>';
 
             if (data[i].is_published === 1) {
                 html += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';

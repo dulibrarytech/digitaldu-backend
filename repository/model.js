@@ -385,7 +385,7 @@ exports.save_admin_collection_object = function (req, callback) {
     });
 };
 
-/**
+/** TODO: refactor to make use of archivematica download link
  * Downloads AIP from archivematica
  * @param req
  * @param callback
