@@ -26,7 +26,6 @@ const userModule = (function () {
             }
 
             html += '<td>';
-            // html += '<a class="btn btn-xs btn-primary" href="/dashboard/users/detail?id=' + data[i].id + '" title="User Details"><i class="fa fa-user"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;';
             html += '&nbsp;';
             html += '<a class="btn btn-xs btn-default" href="/dashboard/users/edit?id=' + data[i].id + '" title="Edit User"><i class="fa fa-edit"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;';
             html += '<a class="btn btn-xs btn-danger" href="/dashboard/users/delete?id=' + data[i].id + '" title="Delete User"><i class="fa fa-times"></i></a>';
@@ -40,24 +39,21 @@ const userModule = (function () {
 
     const renderUserDetails = function (data) {
 
-        let html = '';
         for (let i = 0; i < data.length; i++) {
 
-            $('#user-name').html(data[i].first_name + ' ' + data[i].last_name);
-
-            html += '<p><strong>DU ID:</strong> ' + data[i].du_id + '</p>';
-            html += '<p><strong>Email:</strong> ' + data[i].email + '</p>';
+            $('#id').val(data[i].id);
+            $('#du_id').val(data[i].du_id);
+            $('#email').val(data[i].email);
+            $('#first_name').val(data[i].first_name);
+            $('#last_name').val(data[i].last_name);
 
             if (data[i].status === 1) {
-                html += '<p><strong>Status:</strong> Active</p>';
+                $('#is_active').attr('checked', true);
             } else {
-                html += '<p><strong>Status:</strong> Inactive</p>';
+                $('#is_active').attr('checked', false);
             }
-
-            html += '<hr>';
         }
 
-        $('#user-details').html(html);
         $('.loading').html('');
     };
 
@@ -77,7 +73,7 @@ const userModule = (function () {
     obj.getUserDetails = function () {
 
         // TODO: sanitize
-        let id = getParameterByName('id');
+        let id = helperModule.getParameterByName('id');
 
         userModule.setHeaderUserToken();
 
@@ -237,7 +233,6 @@ const userModule = (function () {
 
     obj.init = function () {
         obj.renderUserName();
-        // helperModule.ping();
     };
 
     return obj;

@@ -196,9 +196,9 @@ const importModule = (function () {
             let tn = helperModule.getTn(data[i].thumbnail, data[i].mime_type, data[i].pid);
 
             if (data[i].thumbnail !== null) {
-                html += '<td ' + alignTd + '><img style="border: solid 1px;" src="' + tn + '" width="100" height="100"></td>';
+                html += '<td ' + alignTd + '><img style="border: solid 1px;" src="' + tn + '" width="75" height="75"></td>';
             } else {
-                html += '<td ' + alignTd + '><img style="border: solid 1px;" src="' + tn + '" width="100" height="100"></td>';
+                html += '<td ' + alignTd + '><img style="border: solid 1px;" src="' + tn + '" width="75" height="75"></td>';
             }
 
             html += '<td ' + alignTd + '>' + data[i].is_member_of_collection + '</td>';
