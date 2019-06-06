@@ -35,6 +35,9 @@ module.exports = function (app) {
     app.route('/api/admin/v1/import/incomplete')
         .get(Import.get_import_incomplete);
 
+    app.route('/api/admin/v1/import/complete')
+        .get(Import.get_import_complete);
+
     app.route('/api/admin/v1/import/mods')
         .post(Import.import_mods);
 

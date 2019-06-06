@@ -42,6 +42,35 @@ exports.get_import_incomplete = function (req, callback) {
         });
 };
 
+/**
+ * TODO: get completed records by date range
+ * @param req
+ * @param callback
+ */
+exports.get_import_complete = function (req, callback) {
+
+    knex(REPO_OBJECTS)
+        .select('id', 'sip_uuid', 'is_member_of_collection', 'pid', 'handle', 'mods_id', 'mods', 'display_record', 'thumbnail', 'file_name', 'mime_type', 'created')
+        // .whereRaw('DATE(created) = CURRENT_DATE')
+        .where({
+            is_complete: 1,
+            object_type: 'object'
+        })
+        .then(function (data) {
+
+            callback({
+                status: 200,
+                // content_type: {'Content-Type': 'application/json'},
+                message: 'Complete records.',
+                data: data
+            });
+
+            return null;
+        })
+        .catch(function (error) {
+            logger.module().error('ERROR: unable to get complete records ' + error);
+        });
+};
 
 /**
  * Saves missing mods id to repository record

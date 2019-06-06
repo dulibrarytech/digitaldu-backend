@@ -179,6 +179,53 @@ const importModule = (function () {
     };
 
     /**
+     * Gets completed records after an ingest/import
+     * @param data
+     */
+    const renderCompleteRecords = function (data) {
+
+        let html = '',
+            // TODO: add styles to css
+            alignTd = 'style="text-align: center; vertical-align: middle"',
+            complete = [];
+
+        for (let i = 0; i < data.length; i++) {
+
+            html += '<tr>';
+
+            let tn = helperModule.getTn(data[i].thumbnail, data[i].mime_type, data[i].pid);
+
+            if (data[i].thumbnail !== null) {
+                html += '<td ' + alignTd + '><img style="border: solid 1px;" src="' + tn + '" width="100" height="100"></td>';
+            } else {
+                html += '<td ' + alignTd + '><img style="border: solid 1px;" src="' + tn + '" width="100" height="100"></td>';
+            }
+
+            html += '<td ' + alignTd + '>' + data[i].is_member_of_collection + '</td>';
+
+            if (data[i].sip_uuid !== null) {
+                html += '<td ' + alignTd + '>' + data[i].sip_uuid + '</td>';
+            }
+
+            if (data[i].mods_id !== null) {
+                html += '<td ' + alignTd + '>/repositories/2/archival_objects/' + data[i].mods_id + '</i></td>';
+            }
+
+            if (data[i].mime_type !== null) {
+                html += '<td ' + alignTd + '>' + data[i].mime_type + '</td>';
+            }
+
+            // TODO: format date
+            html += '<td ' + alignTd + '>' + data[i].created + '</td>';
+            html += '</tr>';
+        }
+
+        $('#complete-records').html(html);
+        $('#message').html('');
+    };
+
+
+    /**
      * Starts the Archivematica transfer/ingest process
      * @param objects
      * @returns {boolean}
@@ -421,6 +468,46 @@ const importModule = (function () {
 
         http.req(request, callback);
     };
+
+    obj.getCompleteImportRecords = function () {
+
+        $('#message').html('<p><strong>Loading...</strong></p>');
+
+        let url = api + '/api/admin/v1/import/complete',
+            request = new Request(url, {
+                method: 'GET',
+                mode: 'cors'
+            });
+
+        const callback = function (response) {
+
+            if (response.status === 200) {
+
+                response.json().then(function (data) {
+
+                    $('#message').html('');
+
+                    if (data.length === 0) {
+                        let message = '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No complete records found.</div>';
+                        $('table').empty();
+                        $('#message').html(message);
+                    } else {
+                        // $('#complete-records').show();
+                        renderCompleteRecords(data);
+                    }
+                });
+
+            } else {
+
+                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '. Unable to get complete records.</div>';
+                renderError(message);
+            }
+
+        };
+
+        http.req(request, callback);
+    };
+
 
     obj.import = function () {
 

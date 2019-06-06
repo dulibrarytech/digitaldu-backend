@@ -297,7 +297,7 @@ exports.save_admin_collection_object = function (req, callback) {
             obj.pid = uuid(config.uuidDomain, uuid.DNS);
             callback(null, obj);
         } catch (error) {
-            logger.module().error('ERROR: handle error');
+            logger.module().error('ERROR: unable to generate uuid');
             obj.pid = null;
             callback(null, obj);
         }
@@ -394,6 +394,7 @@ exports.get_object_download = function (req, callback) {
 
     let pid = req.query.pid;
 
+    // keep query to handle legacy pids
     knex('tbl_objects')
         .select('sip_uuid')
         .where({
@@ -420,7 +421,8 @@ exports.get_object_download = function (req, callback) {
                         message: 'Unable to download AIP.',
                     });
 
-                    throw aip.error;
+                    return false;
+                    // throw aip.error;
                 }
 
                 callback({

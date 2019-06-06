@@ -71,6 +71,12 @@ exports.get_dashboard_import_incomplete = function (req, res) {
     });
 };
 
+exports.get_dashboard_import_complete = function (req, res) {
+    res.render('dashboard-import-complete', {
+        host: config.host
+    });
+};
+
 exports.get_dashboard_users = function (req, res) {
     res.render('dashboard-users', {
         host: config.host

@@ -459,7 +459,7 @@ exports.clear_ingest = function (uuid) {
     });
 };
 
-/**
+/** TODO: refactor.  make use of shell.js and curl and run as OS process
  * Downloads AIP from archivematica
  * @param sip_uuid
  * @param callback
@@ -477,7 +477,7 @@ exports.download_aip = function (sip_uuid, callback) {
 
     request.get({
         url: apiUrl,
-        timeout: 60000
+        timeout: 600000
     }, function (error, httpResponse, body) {
 
         if (error) {

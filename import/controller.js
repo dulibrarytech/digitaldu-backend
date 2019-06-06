@@ -63,6 +63,12 @@ exports.get_import_incomplete = function (req, res) {
     });
 };
 
+exports.get_import_complete = function (req, res) {
+    Model.get_import_complete(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
 exports.import_mods = function (req, res) {
     Model.import_mods(req, function (data) {
         res.status(data.status).send(data.data);
