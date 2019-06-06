@@ -305,9 +305,8 @@ exports.save_admin_collection_object = function (req, callback) {
 
         callback({
             status: 400,
-            content_type: {'Content-Type': 'application/json'},
-            data: [],
-            message: 'Missing collection PID.'
+            message: 'Missing collection PID.',
+            data: []
         });
 
         return false;
@@ -408,18 +407,16 @@ exports.save_admin_collection_object = function (req, callback) {
 
             callback({
                 status: 201,
-                content_type: {'Content-Type': 'application/json'},
-                data: [{'pid': results.pid}],
-                message: 'Object created.'
+                message: 'Object created.',
+                data: [{'pid': results.pid}]
             });
 
         } else {
 
             callback({
                 status: 500,
-                content_type: {'Content-Type': 'application/json'},
-                data: [{'pid': 'no pid'}],
-                message: 'A database error occurred. ' + error
+                message: 'A database error occurred. ' + error,
+                data: [{'pid': 'no pid'}]
             });
         }
     });
@@ -433,6 +430,17 @@ exports.save_admin_collection_object = function (req, callback) {
 exports.get_object_download = function (req, callback) {
 
     let pid = req.query.pid;
+
+    if (pid === undefined || pid.length === 0) {
+
+        callback({
+            status: 400,
+            message: 'Missing PID.',
+            data: []
+        });
+
+        return false;
+    }
 
     // keep query to handle legacy pids
     knex(REPO_OBJECTS)

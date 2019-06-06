@@ -20,8 +20,6 @@ All other content is released under [CC-BY-4.0](https://creativecommons.org/lice
 go into digitaldu-backend
 npm install
 if it doesn't work the first time delete the node_modules folder and npm install
-install redis https://redis.io/download
-src/redis-server
 have mysql 5.7
 add .env file in root folder
 add mysql schema and db "repo" and "repo_queue" to db, import .sql export
