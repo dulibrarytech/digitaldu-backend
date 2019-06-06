@@ -12,13 +12,15 @@ const fs = require('fs'),
     modslibdisplay = require('../libs/display-record'),
     archivematica = require('../libs/archivematica'),
     logger = require('../libs/log4'),
-    knex =require('../config/db')();
+    knex =require('../config/db')(),
+    REPO_OBJECTS = 'tbl_objects';
 
 /** DEPRECATED
  * Gets next pid and increments pid value
  * @param req
  * @param callback
  */
+/*
 exports.get_next_pid = function (req, callback) {
 
     let namespace = config.namespace;
@@ -72,6 +74,7 @@ exports.get_next_pid = function (req, callback) {
             throw 'ERROR: Unable to get next pid ' + error;
         });
 };
+*/
 
 /**
  * Gets objects by collection
@@ -80,10 +83,20 @@ exports.get_next_pid = function (req, callback) {
  */
 exports.get_objects = function (req, callback) {
 
-    // Collection pid
-    let pid = req.query.pid; // TODO: sanitize
+    let pid = req.query.pid;
 
-    knex('tbl_objects')
+    if (pid === undefined || pid.length === 0) {
+
+        callback({
+            status: 400,
+            message: 'Missing PID.',
+            data: []
+        });
+
+        return false;
+    }
+
+    knex(REPO_OBJECTS)
         .select('is_member_of_collection', 'pid', 'object_type', 'display_record', 'thumbnail', 'mime_type', 'is_compound', 'created')
         .where({
             is_member_of_collection: pid,
@@ -93,9 +106,8 @@ exports.get_objects = function (req, callback) {
         .then(function (data) {
             callback({
                 status: 200,
-                // content_type: {'Content-Type': 'application/json'},
-                data: data,
-                message: 'Objects retrieved.'
+                message: 'Objects retrieved.',
+                data: data
             });
         })
         .catch(function (error) {
@@ -111,9 +123,20 @@ exports.get_objects = function (req, callback) {
  */
 exports.get_object = function (req, callback) {
 
-    let pid = req.query.pid;  // TODO: sanitize
+    let pid = req.query.pid;
 
-    knex('tbl_objects')
+    if (pid === undefined || pid.length === 0) {
+
+        callback({
+            status: 400,
+            message: 'Missing PID.',
+            data: []
+        });
+
+        return false;
+    }
+
+    knex(REPO_OBJECTS)
         .select('is_member_of_collection', 'pid', 'object_type', 'display_record', 'mime_type', 'is_compound', 'created')
         .where({
             pid: pid,
@@ -123,9 +146,8 @@ exports.get_object = function (req, callback) {
         .then(function (data) {
             callback({
                 status: 200,
-                // content_type: {'Content-Type': 'application/json'},
-                data: data,
-                message: 'Object retrieved.'
+                message: 'Object retrieved.',
+                data: data
             });
         })
         .catch(function (error) {
@@ -143,7 +165,18 @@ exports.get_admin_objects = function (req, callback) {
 
     let pid = req.query.pid;
 
-    knex('tbl_objects')
+    if (pid === undefined || pid.length === 0) {
+
+        callback({
+            status: 400,
+            message: 'Missing PID.',
+            data: []
+        });
+
+        return false;
+    }
+
+    knex(REPO_OBJECTS)
         .select('id', 'is_member_of_collection', 'pid', 'object_type', 'display_record', 'thumbnail', 'mime_type', 'is_compound', 'is_published', 'created')
         .where({
             is_member_of_collection: pid,
@@ -152,9 +185,8 @@ exports.get_admin_objects = function (req, callback) {
         .then(function (data) {
             callback({
                 status: 200,
-                // content_type: {'Content-Type': 'application/json'},
-                data: data,
-                message: 'Collections for administrators'
+                message: 'Collections for administrators',
+                data: data
             });
         })
         .catch(function (error) {
@@ -170,9 +202,20 @@ exports.get_admin_objects = function (req, callback) {
  */
 exports.get_admin_object = function (req, callback) {
 
-    var pid = req.query.pid;  // TODO: sanitize
+    let pid = req.query.pid;
 
-    knex('tbl_objects')
+    if (pid === undefined || pid.length === 0) {
+
+        callback({
+            status: 400,
+            message: 'Missing PID.',
+            data: []
+        });
+
+        return false;
+    }
+
+    knex(REPO_OBJECTS)
         .select('is_member_of_collection', 'pid', 'handle', 'object_type', 'display_record', 'is_published', 'created')
         .where({
             pid: pid,
@@ -181,9 +224,8 @@ exports.get_admin_object = function (req, callback) {
         .then(function (data) {
             callback({
                 status: 200,
-                // content_type: {'Content-Type': 'application/json'},
-                data: data,
-                message: 'Object retrieved.'
+                message: 'Object retrieved.',
+                data: data
             });
         })
         .catch(function (error) {
@@ -205,9 +247,8 @@ exports.update_admin_collection_object = function (req, callback) {
 
         callback({
             status: 400,
-            // content_type: {'Content-Type': 'application/json'},
-            data: [],
-            message: 'Missing collection PID.'
+            message: 'Missing collection PID.',
+            data: []
         });
 
         return false;
@@ -227,7 +268,7 @@ exports.update_admin_collection_object = function (req, callback) {
 
     modslibdisplay.create_display_record(obj, function (display_record) {
 
-        knex('tbl_objects')
+        knex(REPO_OBJECTS)
             .where({
                 is_member_of_collection: data.is_member_of_collection,
                 pid: data.pid
@@ -239,9 +280,8 @@ exports.update_admin_collection_object = function (req, callback) {
             .then(function (data) {
                 callback({
                     status: 201,
-                    // content_type: {'Content-Type': 'application/json'},
-                    data: [{'pid': obj.pid}],
-                    message: 'Object updated.'
+                    message: 'Object updated.',
+                    data: [{'pid': obj.pid}]
                 });
             })
             .catch(function (error) {
@@ -337,7 +377,7 @@ exports.save_admin_collection_object = function (req, callback) {
 
     function save_record(obj, callback) {
 
-        knex('tbl_objects')
+        knex(REPO_OBJECTS)
             .insert(obj)
             .then(function (data) {
                 callback(null, obj);
@@ -385,7 +425,7 @@ exports.save_admin_collection_object = function (req, callback) {
     });
 };
 
-/** TODO: refactor to make use of archivematica download link
+/** TODO: refactor to make use of archivematica download link. make use of shell.js
  * Downloads AIP from archivematica
  * @param req
  * @param callback
@@ -395,7 +435,7 @@ exports.get_object_download = function (req, callback) {
     let pid = req.query.pid;
 
     // keep query to handle legacy pids
-    knex('tbl_objects')
+    knex(REPO_OBJECTS)
         .select('sip_uuid')
         .where({
             pid: pid,
@@ -422,7 +462,6 @@ exports.get_object_download = function (req, callback) {
                     });
 
                     return false;
-                    // throw aip.error;
                 }
 
                 callback({

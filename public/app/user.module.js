@@ -95,6 +95,7 @@ const userModule = (function () {
     };
 
     obj.renderUserName = function () {
+
         let data = JSON.parse(window.sessionStorage.getItem('repo_user'));
 
         if (data !== null) {

@@ -30,8 +30,10 @@ module.exports = function (app) {
     app.route('/api/v1/object/download')
         .get(Repo.get_object_download);
 
+    /*
     app.route('/api/admin/v1/repo/pid')
-        .post(Repo.get_next_pid);  // token.verify, // TODO: API key?
+        .post(Repo.get_next_pid);  // token.verify,
+    */
 
     app.route('/api/admin/v1/repo/ping/services')
         .get(Repo.ping);
