@@ -41,14 +41,11 @@
 
                 <div class="page-title">
                     <div class="title_left">
-                        <!--<h3> Media Gallery <small> gallery design</small> </h3>-->
+                        <h3> Search Results </h3>
                     </div>
 
                     <div class="title_right">
-                        <!--<div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">-->
-
                         <% include partials/search.ejs %>
-
                     </div>
                 </div>
 
@@ -57,13 +54,14 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div class="x_panel">
+                            <div id="search-results-total"></div>
                             <div class="x_title">
-                                <h2>Search Results</h2>
+                                <!--<h2>Search Results</h2>-->
                                 <div class="clearfix"></div>
                             </div>
                             <div class="x_content">
                                 <div id="message"></div>
-                                <div class="row" id="objects"><!-- objects are rendered here --></div>
+                                <div class="row" id="search-results"><!-- search results are rendered here --></div>
                             </div>
                         </div>
                     </div>
@@ -77,35 +75,21 @@
     </div>
 </div>
 
-<!-- jQuery -->
-<script src="../vendors/jquery/dist/jquery.min.js"></script>
-<!-- Bootstrap -->
-<script src="../vendors/bootstrap/dist/js/bootstrap.min.js"></script>
-<!-- FastClick -->
-<script src="../vendors/fastclick/lib/fastclick.js"></script>
-<!-- NProgress -->
-<script src="../vendors/nprogress/nprogress.js"></script>
-<!-- Chart.js -->
-<script src="../vendors/Chart.js/dist/Chart.min.js"></script>
-<!-- jQuery Sparklines -->
-<script src="../vendors/jquery-sparkline/dist/jquery.sparkline.min.js"></script>
-<!-- DateJS -->
-<script src="../vendors/DateJS/build/date.js"></script>
-<!-- bootstrap-daterangepicker -->
-<script src="../vendors/moment/min/moment.min.js"></script>
-<script src="../vendors/bootstrap-daterangepicker/daterangepicker.js"></script>
-<!-- Datatables -->
-<script src="../vendors/datatables.net/js/jquery.dataTables.min.js"></script>
-<script src="../vendors/datatables.net-bs/js/dataTables.bootstrap.min.js"></script>
-<script src="../vendors/datatables.net-responsive/js/dataTables.responsive.min.js"></script>
-<!-- app -->
-<script src="../app/libs/helper.js"></script>
-<script src="../app/libs/config.js"></script>
-<script src="../app/search.module.js"></script>
-<!-- Custom Theme Scripts -->
-<script src="../build/js/custom.js"></script>
+<script src="../../vendors/jquery/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.17.0/dist/jquery.validate.js"></script>
+<script src="../../vendors/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="../../vendors/nprogress/nprogress.js"></script>
+<script src="../../vendors/moment/min/moment.min.js"></script>
+<script src="../../assets/js/custom.js"></script>
+<script src="../../app/libs/config.js"></script>
+<script src="../../app/libs/http.js"></script>
+<script src="../../app/libs/dom.js"></script>
+<script src="../../app/libs/helper.js"></script>
+<script src="../../app/user.module.js"></script>
+<script src="../../app/search.module.js"></script>
 <script>
     searchModule.search();
 </script>
+
 </body>
 </html>

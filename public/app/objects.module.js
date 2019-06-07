@@ -108,7 +108,7 @@ const objectsModule = (function () {
         for (let i = 0; i < data.length; i++) {
 
             if (data.length > 0 && data[i].display_record === null) {
-                $('#message').html('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i>&nbsp; Some display record are not available.  Review incomplete records.</div>');
+                $('#message').html('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i>&nbsp; Some display records are not available.  Review incomplete records.</div>');
                 continue;
             }
 

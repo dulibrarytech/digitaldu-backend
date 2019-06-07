@@ -155,6 +155,18 @@ const userModule = (function () {
         });
     };
 
+    obj.getUserToken = function () {
+
+        let data = JSON.parse(window.sessionStorage.getItem('repo_token'));
+
+        if (data.token === null) {
+            // TODO: redirect to login
+            window.alert('token not found');
+        } else {
+            return data.token;
+        }
+    };
+
     obj.setHeaderUserToken = function () {
 
         let data = JSON.parse(window.sessionStorage.getItem('repo_token'));

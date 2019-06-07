@@ -6,18 +6,6 @@ var Repo = require('../repository/controller'),
 // TODO: apply api security.  i.e. API key
 module.exports = function (app) {
 
-    /* Gets objects */
-    /*
-    app.route('/api/v1/objects')
-        .get(Repo.get_objects);
-    */
-
-    /* Gets single object (Collection or Object) */
-    /*
-    app.route('/api/v1/object')
-        .get(Repo.get_object);
-    */
-
     app.route('/api/admin/v1/repo/objects')
         .get(token.verify, Repo.get_admin_objects);
 
@@ -26,8 +14,7 @@ module.exports = function (app) {
         .post(token.verify, Repo.save_admin_collection_object)
         .put(token.verify, Repo.update_admin_collection_object);
 
-    // TODO: add "admin" to route
-    app.route('/api/v1/object/download')
+    app.route('/api/admin/v1/object/download')
         .get(Repo.get_object_download);
 
     /*

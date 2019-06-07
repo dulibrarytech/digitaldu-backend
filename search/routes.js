@@ -1,13 +1,10 @@
 'use strict';
 
-var Stats = require('../stats/controller');
+const Search = require('../search/controller');
 
 module.exports = function (app) {
 
-    app.route('/api/v1/stats/collection/count')
-        .get(Stats.get_collection_count);
-
-    app.route('/api/v1/stats/object/count')
-        .get(Stats.get_object_count);
+    app.route('/api/admin/v1/search')
+        .get(Search.get_search_results);
 
 };

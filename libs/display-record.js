@@ -20,10 +20,7 @@ exports.create_display_record = function (obj, callback) {
     record.entry_id = obj.entry_id;
 
     metadata = JSON.parse(mods);
-
-    if (obj.object_type !== undefined) {
-        record.object_type = obj.object_type;
-    }
+    record.object_type = obj.object_type;
 
     if (metadata.title !== undefined || metadata.title !== null) {
         record.title = metadata.title;
@@ -42,7 +39,6 @@ exports.create_display_record = function (obj, callback) {
         record.f_subjects = subjectsArr;
     }
 
-    // TODO: refactor... drill into notes field
     if (metadata.notes !== undefined) {
 
         let notes = metadata.notes;

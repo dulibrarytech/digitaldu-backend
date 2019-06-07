@@ -1,15 +1,9 @@
 'use strict';
 
-var Stats = require('../stats/model');
+var Search = require('../search/service');
 
-exports.get_collection_count = function (req, res) {
-    Stats.get_collection_count(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.get_object_count = function (req, res) {
-    Stats.get_object_count(req, function (data) {
+exports.get_search_results = function (req, res) {
+    Search.get_search_results(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };

@@ -72,6 +72,7 @@ module.exports = function () {
     require('../dashboard/routes.js')(app);
     require('../stats/routes.js')(app);
     require('../import/routes.js')(app);
+    require('../search/routes.js')(app);
 
     return server;
 };

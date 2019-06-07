@@ -1,85 +1,238 @@
-var searchModule = (function () {
+const searchModule = (function () {
 
     'use strict';
 
-    var obj = {};
+    let obj = {};
 
-    var renderError = function () {
+    let renderError = function () {
         $('#objects').html('Error: Unable to retrieve objects');
     };
 
-    // TODO: move to lib...
-    var getParameterByName = function (name, url) {
-        if (!url) url = window.location.href;
-        name = name.replace(/[\[\]]/g, "\\$&");
-        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-            results = regex.exec(url);
-        if (!results) return null;
-        if (!results[2]) return '';
-        return decodeURIComponent(results[2].replace(/\+/g, " "));
-    };
+    let api = configModule.getApi();
 
-    var api = configModule.getApi();
+    const renderSearchResults = function (data) {
 
-    var renderSearchResults = function (data) {
+        let total = data.total,
+            hits = data.hits,
+            html = '';
 
-        if (data.length === 0) {
-            $('#message').html('<h4>No results found.</h4>');
-            return false;
-        }
+        $('#search-results-total').html('<strong>Total results</strong>: ' + total);
 
-        var html = '';
+        for (let i = 0; i < hits.length; i++) {
 
-        for (var i=0;i<data.length;i++) {
-
-            // console.log(JSON.parse(data[i]._source.display_record));
-            var record = JSON.parse(data[i]._source.display_record);
-            var title = 'Title not found';
-
-            if ( record.title !== undefined) {
-                title = record.title[0].toString();
+            if (hits.length > 0 && hits[i]._source.display_record === null) {
+                $('#message').html('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i>&nbsp; Some display records are not available.</div>');
+                continue;
             }
 
-            var pid = 'codu:' + record.id;
+            let record = hits[i]._source.display_record,
+                tn = helperModule.getTn(hits[i]._source.thumbnail, hits[i]._source.mime_type, hits[i]._source.pid);
 
-            html += '<div class="col-md-55">';
-            html += '<div class="thumbnail">';
-            html += '<div class="image view view-first">';
-            html += '<img style="width: 100%; display: block;" src="' + api + '/api/object/tn?pid=' + pid + '" alt="image" />';
-            html += '<div class="mask">';
-            html += '<div class="tools tools-bottom">';
-            html += '<a href="/dashboard/object?pid=' + pid + '" title="View Object Details"><i class="fa fa-th-list"></i></a>';
-            html += '</div></div></div>';
-            html += '<div class="caption">';
-            html += '<p><strong>' + title + '</strong></p>';
-            html += '<p>&nbsp;</p></div></div></div>';
+            html += '<div class="row">';
+            html += '<div class="col-md-3"><img style="max-height: 250px; max-width: 250px;" display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
+            html += '<div class="col-md-6" style="padding: 5px">';
 
+            if (record.title !== undefined) {
 
+                if (hits[i]._source.object_type === 'collection') {
+                    html += '<h4><a href="' + api + '/dashboard/objects/?pid=' + hits[i]._source.pid + '">' + record.title + '</a></h4>';
+                } else if (hits[i]._source.object_type === 'object') {
+                    html += '<h4>' + record.title + '</h4>';
+                }
+
+            } else {
+                html += '<h4>No Title</h4>';
+            }
+
+            if (hits[i]._source.object_type === 'object') {
+
+                html += '<ul>';
+                html += '<li><strong>Pid:</strong>&nbsp;<a target="_blank" href="' + hits[i]._source.handle + '">' + hits[i]._source.pid + '</a>&nbsp;&nbsp;<i class="fa fa-external-link"></i></li>';
+                html += '<li><strong>Uri:</strong>&nbsp;' + record.uri + '</li>';
+
+                if (record.dates !== undefined && record.dates.length !== 0) {
+
+                    html += '<li><strong>Dates:</strong></li>';
+                    html += '<ul>';
+
+                    for (let i = 0; i < record.dates.length; i++) {
+                        html += '<li>' + record.dates[i].expression + ' ( ' + record.dates[i].type + '</a> )</li>';
+                    }
+
+                    html += '</ul>';
+                }
+
+                if (record.extents !== undefined && record.extents.length !== 0) {
+
+                    html += '<li><strong>Extents:</strong></li>';
+                    html += '<ul>';
+
+                    for (let i = 0; i < record.extents.length; i++) {
+                        html += '<li>' + record.extents[i] + '</li>';
+                    }
+
+                    html += '</ul>';
+                }
+
+                if (record.identifiers !== undefined && record.identifiers.length !== 0) {
+
+                    html += '<li><strong>Identifiers:</strong></li>';
+                    html += '<ul>';
+
+                    for (let i = 0; i < record.identifiers.length; i++) {
+                        html += '<li>' + record.identifiers[i].identifier + ' ( ' + record.identifiers[i].type + ' )</li>';
+                    }
+
+                    html += '</ul>';
+                }
+
+                if (record.language !== undefined && record.language.length !== 0) {
+
+                    for (let i = 0; i < record.language.length; i++) {
+                        html += '<li><strong>Language:</strong> ' + record.language[i].text + ' ( ' + record.language[i].authority + ' )</li>';
+                    }
+                }
+
+                if (record.names !== undefined && record.names.length !== 0) {
+
+                    html += '<li><strong>Names:</strong></li>';
+                    html += '<ul>';
+
+                    for (let i = 0; i < record.names.length; i++) {
+                        html += '<li>' + record.names[i].title + ' ( ' + record.names[i].source + ' )</li>';
+                    }
+
+                    html += '</ul>';
+                }
+
+                if (record.notes !== undefined && record.notes.length !== 0) {
+
+                    html += '<li><strong>Notes:</strong></li>';
+                    html += '<ul>';
+
+                    for (let i = 0; i < record.notes.length; i++) {
+                        html += '<li>' + record.notes[i].content + ' ( ' + record.notes[i].type + ' )</li>';
+                    }
+
+                    html += '</ul>';
+                }
+
+                if (record.parts !== undefined && record.parts.length !== 0) {
+
+                    html += '<li><strong>Parts:</strong></li>';
+                    html += '<ul>';
+
+                    for (let i = 0; i < record.parts.length; i++) {
+                        html += '<li>' + record.parts[i].title + ' ( ' + record.parts[i].type + ' ) order: ' + record.parts[i].order + '</li>';
+                    }
+
+                    html += '</ul>';
+                }
+
+                if (record.subjects !== undefined && record.subjects.length !== 0) {
+
+                    html += '<li><strong>Subjects:</strong></li>';
+                    html += '<ul>';
+
+                    for (let i = 0; i < record.subjects.length; i++) {
+                        if (record.subjects[i].authority_id !== undefined) {
+                            html += '<li>' + record.subjects[i].title + ' ( <a target="_blank" href="' + record.subjects[i].authority_id + '">' + record.subjects[i].authority + '</a> )</li>';
+                        } else {
+                            html += '<li>' + record.subjects[i].title + ' ( ' + record.subjects[i].authority + ' )</li>';
+                        }
+                    }
+
+                    html += '</ul>';
+                }
+
+                html += '</ul>';
+            }
+
+            if (hits[i]._source.object_type === 'collection' && record.abstract !== undefined) {
+                html += '<p style="min-height: 75px">' + record.abstract + '</p>';
+            }
+
+            html += '</div>';
+            html += '<div class="col-md-3" style="padding: 5px">';
+
+            if (hits[i]._source.object_type === 'collection') {
+                html += '<p><small style="background: skyblue; padding: 3px; color: white">Collection</small></p>';
+            } else if (hits[i]._source.object_type === 'object') {
+                html += '<p><small style="background: cadetblue; padding: 3px; color: white">Object</small></p>';
+            }
+
+            if (hits[i]._source.is_published === 1) {
+                html += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
+                html += '<p><a href="#"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
+            } else {
+                html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
+                html += '<p><a href="#"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
+            }
+
+            if (hits[i]._source.object_type === 'collection') {
+                html += '<p><a href="' + api + '/dashboard/object/edit?pid=' + hits[i]._source.pid + '"><i class="fa fa-edit"></i>&nbsp;Edit collection</a></p>';
+            } else if (hits[i]._source.object_type === 'object') {
+                // TODO...
+                // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=tn"><i class="fa fa-code"></i>&nbsp;Technical Metadata</a></p>';
+                // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=mods"><i class="fa fa-code"></i>&nbsp;MODS</a></p>';
+            }
+
+            if (hits[i]._source.object_type === 'object') {
+                html += '<p><a href="' + api + '/dashboard/object/download?pid=' + hits[i]._source.pid + '"><i class="fa fa-download"></i>&nbsp;Download AIP</a></p>';
+            }
+
+            html += '</div>';
+            html += '</div>';
+            html += '<hr>';
         }
 
-        // TODO: implement pagination
-        $('#objects').html(html);
-        $('a').tooltip();
-
+        // TODO: implement pagination or infinite scroll
+        $('#search-results').html(html);
     };
 
     obj.search = function () {
 
-        var q = getParameterByName('q');
+        let q = helperModule.getParameterByName('q'); // TODO: sanitize
+        let token = userModule.getUserToken();
 
-        userModule.setHeaderUserToken();
-
-        $.ajax(api + '/api/search?q=' + q)
-            .done(function(data) {
-                renderSearchResults(data);
-            })
-            .fail(function() {
-                renderError();
+        let url = api + '/api/admin/v1/search?q=' + q,
+            request = new Request(url, {
+                method: 'GET',
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
             });
+
+        const callback = function (response) {
+
+            if (response.status === 200) {
+
+                response.json().then(function (data) {
+
+                    $('#message').html('');
+
+                    if (data.length === 0) {
+                        let message = '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No records found.</div>';
+                        $('#message').html(message);
+                    } else {
+                        renderSearchResults(data);
+                    }
+                });
+
+            } else {
+
+                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '. Unable to get incomplete records.</div>';
+                renderError(message);
+            }
+
+        };
+
+        http.req(request, callback);
     };
 
     obj.init = function () {
-        // userModule.setHeaderUserToken();
         userModule.renderUserName();
     };
 

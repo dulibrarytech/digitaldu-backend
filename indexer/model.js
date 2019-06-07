@@ -238,8 +238,6 @@ exports.reset_display_record = function (req, callback) {
 
         if (params.none !== undefined) {
 
-            // console.log('meow');
-
             knex(REPO_OBJECTS)
                 .select('is_member_of_collection', 'pid', 'handle', 'object_type', 'mods', 'thumbnail', 'file_name', 'mime_type')
                 .whereNot({
