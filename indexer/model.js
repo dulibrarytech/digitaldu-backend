@@ -187,18 +187,7 @@ exports.index_records = function (req, callback) {
             is_indexed: 0
         })
         .then(function (data) {
-
-            console.log(data);
             index(index_name);
-
-            /*
-            if (data > 0) {
-                index(index_name);
-            } else {
-                logger.module().error('ERROR: unable to reset is_indexed fields (index)');
-            }
-            */
-
         })
         .catch(function (error) {
             logger.module().error('ERROR: unable to reset is_indexed fields (index) ' + error);
@@ -211,7 +200,6 @@ exports.index_records = function (req, callback) {
     });
 };
 
-// TODO: reset display records
 /**
  *
  * @param req
@@ -221,15 +209,19 @@ exports.reset_display_record = function (req, callback) {
 
     let params = {};
 
-    if (req.body.pid !== undefined) {
+    if (req.body === undefined) {
+
+        callback({
+            status: 400,
+            message: 'Bad request'
+        });
+
+    } else if (req.body.pid !== undefined) {
         params.pid = req.body.pid;
     } else if (req.body.is_member_of_collection !== undefined) {
         params.is_member_of_collection = req.body.is_member_of_collection;
     } else if (req.body.pid === undefined && req.body.is_member_of_collection === undefined) {
         params.none = true;
-    } else {
-        // TODO: 400 error
-        return false;
     }
 
     function get_data (callback) {
@@ -244,7 +236,6 @@ exports.reset_display_record = function (req, callback) {
                     mods: null
                 })
                 .then(function (data) {
-                    // TODO: check data
                     obj.data = data;
                     callback(null, obj);
                 })
@@ -262,7 +253,6 @@ exports.reset_display_record = function (req, callback) {
                     mods: null
                 })
                 .then(function (data) {
-                    // TODO: check data
                     obj.data = data;
                     callback(null, obj);
                 })
@@ -297,12 +287,7 @@ exports.reset_display_record = function (req, callback) {
                     .update({
                         display_record: display_record
                     })
-                    .then(function (data) {
-
-                        // TODO: check data
-                        // console.log(data);
-
-                    })
+                    .then(function (data) {})
                     .catch(function (error) {
                         logger.module().error('ERROR: unable to save collection record ' + error);
                         throw 'ERROR: unable to save collection record ' + error;
@@ -321,7 +306,7 @@ exports.reset_display_record = function (req, callback) {
             logger.module().error('ERROR: async (reset_display_record)');
         }
 
-        console.log(obj);
+        logger.module().info('INFO: display record reset');
     });
 
     callback({

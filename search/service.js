@@ -20,6 +20,8 @@ exports.get_search_results = function (req, callback) {
     }
 
     client.search({
+        from: 0,
+        size: 5000,
         index: config.elasticSearchIndex,
         q: q
     }).then(function (results) {
