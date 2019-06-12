@@ -103,7 +103,7 @@ exports.index_records = function (req, callback) {
     if (req.body.index_name !== undefined) {
         index_name = req.body.index_name;
     } else {
-        index_name = config.elasticSearchIndex;
+        index_name = config.elasticSearchBackIndex;
     }
 
     function index (index_name) {
