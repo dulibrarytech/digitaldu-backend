@@ -129,6 +129,17 @@ exports.get_mods = function (id, session, callback) {
     });
 };
 
+/** I MAY NOT NEED THIS
+ * Gets collection metadata
+ *
+ */
+exports.get_collection_metadata = function () {
+
+    'use strict';
+
+
+};
+
 /**
  * Gets session token from archivespace
  * @param callback

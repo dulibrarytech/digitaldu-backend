@@ -37,13 +37,20 @@ exports.get_index_record = function (req, callback) {
     if (req.body.sip_uuid === undefined) {
         callback({
             status: 400,
-            message: 'missing sip uuid.'
+            message: 'Bad request. missing sip uuid.'
         });
 
         return false;
     }
 
-    let sip_uuid = req.body.sip_uuid;
+    let sip_uuid = req.body.sip_uuid,
+        elasticSearchIndex;
+
+    if (req.body.publish !== undefined && req.body.publish === 'true') {
+        elasticSearchIndex = config.elasticSearchFrontIndex;
+    } else {
+        elasticSearchIndex = config.elasticSearchBackIndex;
+    }
 
     knex(REPO_OBJECTS)
         .select('display_record')
@@ -59,7 +66,7 @@ exports.get_index_record = function (req, callback) {
             delete record.display_record.language;
 
             service.index_record({
-                index: config.elasticSearchIndex,
+                index: elasticSearchIndex,
                 type: 'data',
                 id: record.pid.replace('codu:', ''),
                 body: record

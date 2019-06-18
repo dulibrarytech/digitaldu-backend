@@ -422,6 +422,130 @@ exports.save_admin_collection_object = function (req, callback) {
     });
 };
 
+/**
+ * Publishes object(s)
+ * @param req
+ * @param callback
+ */
+exports.publish_object = function (req, callback) {
+
+    let obj = {},
+        message;
+
+    // publish collection and all of its objects
+    if (req.body.is_member_of_collection !== undefined && req.body.is_member_of_collection.length !== 0) {
+
+        // TODO: sanitize payload
+        obj.is_member_of_collection = req.body.is_member_of_collection;
+        message = 'Collection published';
+
+    } else if (req.body.pid !== undefined && req.body.pid !== 0) {
+
+        // TODO: sanitize payload
+        // publish single object
+        obj.pid = req.body.pid;
+        message = 'Record published';
+
+    } else {
+        // bad request
+        callback({
+            status: 400,
+            message: 'Bad request'
+        });
+
+        return false;
+    }
+
+    knex(REPO_OBJECTS)
+        .where(obj)
+        .update({
+            is_published: 1
+        })
+        .then(function (data) {
+
+            if (data > 0) {
+                get_repo_objects(obj);
+            }
+
+            callback({
+                status: 201,
+                message: message
+            });
+
+        })
+        .catch(function (error) {
+            logger.module().error('ERROR: unable to save collection record ' + error);
+            throw 'ERROR: unable to save collection record ' + error;
+        });
+};
+
+/**
+ * Gets objects to index
+ * @param obj
+ */
+const get_repo_objects = function (obj) {
+
+    let whereObj = {};
+
+    if (obj.is_member_of_collection !== undefined) {
+
+        whereObj.is_member_of_collection = obj.is_member_of_collection;
+
+    } else if (obj.pid !== undefined) {
+
+        whereObj.pid = obj.pid;
+    }
+
+    whereObj.is_published = 1;
+    whereObj.is_active = 1;
+
+    knex(REPO_OBJECTS)
+        .select('sip_uuid')
+        .where(whereObj)
+        .then(function (data) {
+
+            let timer = setInterval(function () {
+
+                if (data.length !== 0) {
+
+                    let record = data.pop(),
+                        apiUrl = config.apiUrl + '/api/admin/v1/indexer';
+
+                    request.post({
+                        url: apiUrl,
+                        form: {
+                            'sip_uuid': record.sip_uuid,
+                            'publish': true
+                        },
+                        timeout: 25000
+                    }, function (error, httpResponse, body) {
+
+                        if (error) {
+                            logger.module().error('ERROR: unable to index record ' + error);
+                            return false;
+                        }
+
+                        if (httpResponse.statusCode === 200) {
+                            return false;
+                        } else {
+                            logger.module().error('ERROR: unable to index record ' + body);
+                        }
+
+                    });
+
+                } else {
+                    clearInterval(timer);
+                }
+
+            }, 1000);
+
+        })
+        .catch(function (error) {
+            logger.module().error('ERROR: Unable to get sip uuids  ' + error);
+            throw 'ERROR: Unable to get sip uuids ' + error;
+        });
+};
+
 /** TODO: refactor to make use of archivematica download link. make use of shell.js
  * Downloads AIP from archivematica
  * @param req

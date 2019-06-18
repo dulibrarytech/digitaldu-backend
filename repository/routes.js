@@ -14,14 +14,17 @@ module.exports = function (app) {
         .post(token.verify, Repo.save_admin_collection_object)
         .put(token.verify, Repo.update_admin_collection_object);
 
+    app.route('/api/admin/v1/repo/publish')
+        .post(Repo.publish_object);  // token.verify,
+
     app.route('/api/admin/v1/object/download')
         .get(Repo.get_object_download);
 
-    /*
-    app.route('/api/admin/v1/repo/pid')
-        .post(Repo.get_next_pid);  // token.verify,
-    */
-
     app.route('/api/admin/v1/repo/ping/services')
         .get(Repo.ping);
+
+    /*
+     app.route('/api/admin/v1/repo/pid')
+     .post(Repo.get_next_pid);  // token.verify,
+     */
 };

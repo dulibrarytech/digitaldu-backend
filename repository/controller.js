@@ -50,8 +50,15 @@ exports.get_import_admin_objects = function (req, res) {
     });
 };
 
+// DEPRECATED
 exports.get_next_pid = function (req, res) {
     Repo.get_next_pid(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.publish_object = function (req, res) {
+    Repo.publish_object(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
