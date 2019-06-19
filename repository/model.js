@@ -6,11 +6,11 @@ const fs = require('fs'),
     pid = require('../libs/next-pid'),
     permissions = require('../libs/object-permissions'),
     async = require('async'),
-    // pids = require('../libs/next-pid'),
     uuid = require('node-uuid'),
     handles = require('../libs/handles'),
     modslibdisplay = require('../libs/display-record'),
     archivematica = require('../libs/archivematica'),
+    archivespace = require('../libs/archivespace'),
     logger = require('../libs/log4'),
     knex =require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects';
@@ -234,7 +234,7 @@ exports.get_admin_object = function (req, callback) {
         });
 };
 
-/**
+/** TODO: DEPRECATE use archivespace
  * Updates collection object
  * @param req
  * @param callback
@@ -299,9 +299,9 @@ exports.update_admin_collection_object = function (req, callback) {
  */
 exports.save_admin_collection_object = function (req, callback) {
 
-    var data = req.body;
+    let data = req.body;
 
-    if (data.is_member_of_collection === undefined || data.is_member_of_collection.length === 0) {
+    if (data.mods_id === undefined || data.mods_id.length === 0) {
 
         callback({
             status: 400,
@@ -312,22 +312,81 @@ exports.save_admin_collection_object = function (req, callback) {
         return false;
     }
 
-    function create_record_object(callback) {
+    // TODO: sanitize mods_id
 
-        // TODO: get collection metadata from archivespace
-        var obj = {};
+    function get_session_token(callback) {
 
-        obj.is_member_of_collection = data.is_member_of_collection;
+        archivespace.get_session_token(function (response) {
 
-        var modsObj = {
-            title: data.mods_title,
-            abstract: data.mods_abstract
-        };
+            let result = response.data,
+                obj = {},
+                token;
 
-        obj.mods = JSON.stringify(modsObj);
-        obj.object_type = data.object_type;
+            if (data === undefined) {
+                obj.session = null;
+                callback(null, obj);
+                return false;
+            }
 
-        callback(null, obj);
+            try {
+
+                token = JSON.parse(result);
+
+                if (token.session === undefined) {
+                    logger.module().error('ERROR: session token is undefined');
+                    obj.session = null;
+                    callback(null, obj);
+                    return false;
+                }
+
+                if (token.error === true) {
+                    logger.module().error('ERROR: session token error' + token.error_message);
+                    obj.session = null;
+                    callback(null, obj);
+                    return false;
+                }
+
+                obj.mods_id = data.mods_id;
+                obj.session = token.session;
+                callback(null, obj);
+                return false;
+
+            } catch (error) {
+                logger.module().error('ERROR: session token error ' + error);
+            }
+        });
+
+    }
+
+    function get_mods(obj, callback) {
+
+        // skip mods retrieval if session is not available
+        if (obj.session === null) {
+            callback(null, obj);
+            return false;
+        }
+
+        setTimeout(function () {
+
+            archivespace.get_mods(obj.mods_id, obj.session, function (response) {
+
+                if (response.error !== undefined && response.error === true) {
+
+                    logger.module().error('ERROR: unable to get mods ' + response.error_message);
+
+                    obj.mods = null;
+                    callback(null, obj);
+                    return false;
+                }
+
+                obj.object_type = 'collection';
+                obj.mods = response.mods;
+                obj.is_member_of_collection = data.is_member_of_collection;
+                delete obj.session;
+                callback(null, obj);
+            });
+
+        }, 5000);
     }
 
     function get_pid(obj, callback) {
@@ -389,7 +448,8 @@ exports.save_admin_collection_object = function (req, callback) {
     }
 
     async.waterfall([
-        create_record_object,
+        get_session_token,
+        get_mods,
         get_pid,
         get_handle,
         create_display_record,

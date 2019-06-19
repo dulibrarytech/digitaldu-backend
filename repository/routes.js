@@ -15,7 +15,7 @@ module.exports = function (app) {
         .put(token.verify, Repo.update_admin_collection_object);
 
     app.route('/api/admin/v1/repo/publish')
-        .post(Repo.publish_object);  // token.verify,
+        .post(token.verify, Repo.publish_object);
 
     app.route('/api/admin/v1/object/download')
         .get(Repo.get_object_download);
