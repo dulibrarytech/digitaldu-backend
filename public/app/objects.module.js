@@ -25,6 +25,7 @@ const objectsModule = (function () {
             });
     };
 
+    // TODO: DEPRECATE
     const renderObjectEditForm = function (data) {
 
         if (data.length > 1) {
@@ -44,10 +45,10 @@ const objectsModule = (function () {
         }
 
         let modsForm = '';
-            modsForm += '<p><strong>Handle:</strong> ' + handle + '</p>';
-            modsForm += '<p><strong>Pid:</strong> ' + data[0].pid + '</p>';
+        modsForm += '<p><strong>Handle:</strong> ' + handle + '</p>';
+        modsForm += '<p><strong>Pid:</strong> ' + data[0].pid + '</p>';
 
-        for (let i = 0;i<data.length;i++) {
+        for (let i = 0; i < data.length; i++) {
 
             let display_record = JSON.parse(data[i].display_record);
             let title = '';
@@ -92,191 +93,11 @@ const objectsModule = (function () {
         $('#collection-edit-form').html(modsForm);
     };
 
+    /*
     const renderObjects = function (data) {
-
-        let is_member_of_collection = helperModule.getParameterByName('pid'),
-            html = '';
-
-        $('#current-collection').prop('href', '/dashboard/collections/add?is_member_of_collection=' + is_member_of_collection);
-
-        if (data.length === 0) {
-            html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; There are no objects in this collection.</strong></div>';
-            $('#objects').html(html);
-            return false;
-        }
-
-        for (let i = 0; i < data.length; i++) {
-
-            if (data.length > 0 && data[i].display_record === null) {
-                $('#message').html('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i>&nbsp; Some display records are not available.  Review incomplete records.</div>');
-                continue;
-            }
-
-            let record = JSON.parse(data[i].display_record),
-                tn = helperModule.getTn(data[i].thumbnail, data[i].mime_type, data[i].pid);
-
-            html += '<div class="row">';
-            html += '<div class="col-md-3"><img style="max-height: 250px; max-width: 250px;" display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
-            html += '<div class="col-md-6" style="padding: 5px">';
-
-            if (record.display_record.title !== undefined) {
-
-                if (data[i].object_type === 'collection') {
-                    html += '<h4><a href="' + api + '/dashboard/objects/?pid=' + data[i].pid + '">' + record.display_record.title + '</a></h4>';
-                } else if (data[i].object_type === 'object') {
-                    html += '<h4>' + record.display_record.title + '</h4>';
-                }
-
-            } else {
-                html += '<h4>No Title</h4>';
-            }
-
-            if (data[i].object_type === 'object') {
-
-                html += '<ul>';
-                html += '<li><strong>Pid:</strong>&nbsp;<a target="_blank" href="' + record.handle + '">' + record.pid + '</a>&nbsp;&nbsp;<i class="fa fa-external-link"></i></li>';
-                html += '<li><strong>Uri:</strong>&nbsp;' + record.display_record.uri + '</li>';
-
-                if (record.display_record.dates !== undefined && record.display_record.dates.length !== 0) {
-
-                    html += '<li><strong>Dates:</strong></li>';
-                    html += '<ul>';
-
-                    for (let i = 0; i < record.display_record.dates.length; i++) {
-                        html += '<li>' + record.display_record.dates[i].expression + ' ( ' + record.display_record.dates[i].type + '</a> )</li>';
-                    }
-
-                    html += '</ul>';
-                }
-
-                if (record.display_record.extents !== undefined && record.display_record.extents.length !== 0) {
-
-                    html += '<li><strong>Extents:</strong></li>';
-                    html += '<ul>';
-
-                    for (let i = 0; i < record.display_record.extents.length; i++) {
-                        html += '<li>' + record.display_record.extents[i] + '</li>';
-                    }
-
-                    html += '</ul>';
-                }
-
-                if (record.display_record.identifiers !== undefined && record.display_record.identifiers.length !== 0) {
-
-                    html += '<li><strong>Identifiers:</strong></li>';
-                    html += '<ul>';
-
-                    for (let i = 0; i < record.display_record.identifiers.length; i++) {
-                        html += '<li>' + record.display_record.identifiers[i].identifier + ' ( ' + record.display_record.identifiers[i].type + ' )</li>';
-                    }
-
-                    html += '</ul>';
-                }
-
-                if (record.display_record.language !== undefined && record.display_record.language.length !== 0) {
-
-                    for (let i = 0; i < record.display_record.language.length; i++) {
-                        html += '<li><strong>Language:</strong> ' + record.display_record.language[i].text + ' ( ' + record.display_record.language[i].authority + ' )</li>';
-                    }
-                }
-
-                if (record.display_record.names !== undefined && record.display_record.names.length !== 0) {
-
-                    html += '<li><strong>Names:</strong></li>';
-                    html += '<ul>';
-
-                    for (let i = 0; i < record.display_record.names.length; i++) {
-                        html += '<li>' + record.display_record.names[i].title + ' ( ' + record.display_record.names[i].source + ' )</li>';
-                    }
-
-                    html += '</ul>';
-                }
-
-                if (record.display_record.notes !== undefined && record.display_record.notes.length !== 0) {
-
-                    html += '<li><strong>Notes:</strong></li>';
-                    html += '<ul>';
-
-                    for (let i = 0; i < record.display_record.notes.length; i++) {
-                        html += '<li>' + record.display_record.notes[i].content + ' ( ' + record.display_record.notes[i].type + ' )</li>';
-                    }
-
-                    html += '</ul>';
-                }
-
-                if (record.display_record.parts !== undefined && record.display_record.parts.length !== 0) {
-
-                    html += '<li><strong>Parts:</strong></li>';
-                    html += '<ul>';
-
-                    for (let i = 0; i < record.display_record.parts.length; i++) {
-                        html += '<li>' + record.display_record.parts[i].title + ' ( ' + record.display_record.parts[i].type + ' ) order: ' + record.display_record.parts[i].order + '</li>';
-                    }
-
-                    html += '</ul>';
-                }
-
-                if (record.display_record.subjects !== undefined && record.display_record.subjects.length !== 0) {
-
-                    html += '<li><strong>Subjects:</strong></li>';
-                    html += '<ul>';
-
-                    for (let i = 0; i < record.display_record.subjects.length; i++) {
-                        if (record.display_record.subjects[i].authority_id !== undefined) {
-                            html += '<li>' + record.display_record.subjects[i].title + ' ( <a target="_blank" href="' + record.display_record.subjects[i].authority_id + '">' + record.display_record.subjects[i].authority + '</a> )</li>';
-                        } else {
-                            html += '<li>' + record.display_record.subjects[i].title + ' ( ' + record.display_record.subjects[i].authority + ' )</li>';
-                        }
-                    }
-
-                    html += '</ul>';
-                }
-
-                html += '</ul>';
-            }
-
-            if (data[i].object_type === 'collection' && record.abstract !== undefined) {
-                html += '<p style="min-height: 75px">' + record.abstract + '</p>';
-            }
-
-            html += '</div>';
-            html += '<div class="col-md-3" style="padding: 5px">';
-
-            if (data[i].object_type === 'collection') {
-                html += '<p><small style="background: skyblue; padding: 3px; color: white">Collection</small></p>';
-            } else if (data[i].object_type === 'object') {
-                html += '<p><small style="background: cadetblue; padding: 3px; color: white">Object</small></p>';
-            }
-
-            if (data[i].is_published === 1) {
-                html += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
-                html += '<p><a href="#"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
-            } else {
-                html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
-                html += '<p><a href="#"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
-            }
-
-            if (data[i].object_type === 'collection') {
-                html += '<p><a href="' + api + '/dashboard/object/edit?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Edit collection</a></p>';
-            } else if (data[i].object_type === 'object') {
-                // TODO...
-                // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=tn"><i class="fa fa-code"></i>&nbsp;Technical Metadata</a></p>';
-                // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=mods"><i class="fa fa-code"></i>&nbsp;MODS</a></p>';
-            }
-
-            if (data[i].object_type === 'object') {
-                html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '"><i class="fa fa-download"></i>&nbsp;Download AIP</a></p>';
-            }
-
-            html += '</div>';
-            html += '</div>';
-            html += '<hr>';
-        }
-
-        // TODO: implement pagination or infinite scroll
-        $('#objects').html(html);
-        $('a').tooltip();
+        helperModule.renderDisplayRecord(api, data);
     };
+    */
 
     obj.getObjects = function () {
 
@@ -288,7 +109,7 @@ const objectsModule = (function () {
 
         $.ajax(api + '/api/admin/v1/repo/objects?pid=' + pid)
             .done(function (data) {
-                renderObjects(data);
+                helperModule.renderDisplayRecords(api, data);
             })
             .fail(function () {
                 renderError();
