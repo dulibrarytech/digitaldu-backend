@@ -26,6 +26,7 @@ const objectsModule = (function () {
     };
 
     // TODO: DEPRECATE
+    // TODO: pull in metadata updates from archivespace
     const renderObjectEditForm = function (data) {
 
         if (data.length > 1) {
@@ -92,12 +93,6 @@ const objectsModule = (function () {
 
         $('#collection-edit-form').html(modsForm);
     };
-
-    /*
-    const renderObjects = function (data) {
-        helperModule.renderDisplayRecord(api, data);
-    };
-    */
 
     obj.getObjects = function () {
 

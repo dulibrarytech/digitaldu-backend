@@ -11,72 +11,77 @@ exports.login = function (req, res) {
 
     if (!_.isEmpty(req.body)) {
 
-        var username = validator.trim(req.body.username),
+        let username = validator.trim(req.body.username),
             password = validator.trim(req.body.password);
 
         if (username.length === 0) {
 
-            res.render('login', {
-                host: config.host,
-                message: 'Please enter your DU ID.',
-                username: ''
+            res.status(401).send({
+                message: 'Authenticate failed. Please enter your DU ID.'
             });
 
             return false;
 
         } else if (password.length === 0) {
 
-            res.render('login', {
-                message: 'Please enter your passcode.',
-                username: username
+            res.status(401).send({
+                message: 'Authenticate failed. Please enter your passcode.'
             });
 
             return false;
 
         } else if (!validator.isNumeric(username)) {
 
-            res.render('login', {
-                host: config.host,
-                message: 'Please enter a DU ID. i.e. 871******',
-                username: ''
+            res.status(401).send({
+                message: 'Authenticate failed due to invalid username.  Please enter a DU ID. i.e. 871******'
             });
 
             return false;
+
+        } else {
+
+            Service.authenticate(username, password, function (isAuth) {
+
+                if (isAuth.auth === true) {
+
+                    let token = Token.create(username);
+                    token = encodeURIComponent(token);
+                    let uid = username.trim();
+
+                    /* check if user has access to repo */
+                    User.check_auth_user(username, function (result) {
+
+                        if (result.auth === true) {
+
+                            res.status(200).send({
+                                message: 'Authenticated',
+                                redirect: '/dashboard/home?t=' + token + '&uid=' + result.data
+                            });
+
+                        } else {
+
+                            res.status(401).send({
+                                message: 'Authenticate failed.'
+                            });
+                        }
+                    });
+
+                } else if (isAuth.auth === false) {
+
+                    res.status(401).send({
+                        message: 'Authenticate failed.'
+                    });
+                }
+            });
         }
-
-        Service.authenticate(username, password, function (isAuth) {
-
-            if (isAuth.auth === true) {
-
-                var token = Token.create(username);
-                token = encodeURIComponent(token);
-                var uid = username.trim();
-
-                /* check if user has access to repo */
-                User.check_auth_user(username, function (result) {
-
-                    if (result.auth === true) {
-                        res.redirect('/dashboard/home?t=' + token + '&uid=' + result.data);
-                    } else {
-                        res.redirect('/login?error=true');
-                    }
-                });
-
-            } else if (isAuth.auth === false) {
-
-                res.render('login', {
-                    host: config.host,
-                    message: '',
-                    username: ''
-                });
-            }
-        });
-
-    } else {
-        res.render('login', {
-            host: config.host,
-            message: '',
-            username: ''
-        });
     }
+};
+
+exports.login_form = function (req, res) {
+
+    res.render('login', {
+        host: config.host,
+        message: '',
+        username: ''
+    });
 };

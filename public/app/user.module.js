@@ -203,6 +203,7 @@ const userModule = (function () {
                     // TODO: redirect
                     renderError();
                 });
+
         } else {
             userModule.renderUserName();
         }
@@ -242,6 +243,69 @@ const userModule = (function () {
     /* used when user logs out */
     obj.reset = function () {
         window.sessionStorage.clear();
+    };
+
+    const authenticate = function () {
+
+        document.getElementById('login-button').disabled = true;
+
+        let user = {
+            username: $('#username').val(),
+            password: $('#password').val()
+        };
+
+        let url = api + '/api/authenticate',
+            request = new Request(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(user),
+                mode: 'cors'
+            });
+
+        const callback = function (response) {
+
+            if (response.status === 200) {
+
+                response.json().then(function (response) {
+
+                    let message = '<div class="alert alert-success"><i class="fa fa-check-circle"></i> ' + response.message + '</div>';
+                    $('#message').html(message);
+
+                    setTimeout(function () {
+                        window.location.replace(response.redirect);
+                    }, 500);
+
+                });
+
+            } else if (response.status === 401) {
+
+                response.json().then(function (response) {
+                    document.getElementById('login-button').disabled = false;
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + response.message + '</div>';
+                    renderError(message);
+                });
+
+            } else {
+                document.getElementById('login-button').disabled = false;
+                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '. Unable to import MODS.</div>';
+                renderError(message);
+            }
+        };
+
+        http.req(request, callback);
+    };
+
+    /**
+     * Enable validation on login form
+     */
+    obj.loginFormValidation = function () {
+        $('#login-form').validate({
+            submitHandler: function () {
+                authenticate();
+            }
+        });
     };
 
     obj.init = function () {

@@ -166,7 +166,6 @@ const helperModule = (function () {
                 html += '<h4>No Title</h4>';
             }
 
-
             html += '<ul>';
             html += '<li><strong>Pid:</strong>&nbsp;<a target="_blank" href="' + record.handle + '">' + record.pid + '</a>&nbsp;&nbsp;<i class="fa fa-external-link"></i></li>';
             html += '<li><strong>Uri:</strong>&nbsp;' + record.display_record.uri + '</li>';

@@ -5,16 +5,17 @@
 <div class="login_wrapper">
     <div class="animate form login_form">
         <section class="login_content">
-            <form action="/login" method="post">
+            <div id="message"></div>
+            <form id="login-form" action="/login/authenticate" method="post">
                 <h1>Login</h1>
                 <div>
-                    <input name="username" type="text" class="form-control" placeholder="DU ID" required=""/>
+                    <input id="username" name="username" type="text" class="form-control" placeholder="DU ID" required=""/>
                 </div>
                 <div>
-                    <input name="password" type="password" class="form-control" placeholder="Passcode" required=""/>
+                    <input id="password" name="password" type="password" class="form-control" placeholder="Passcode" required=""/>
                 </div>
                 <div>
-                    <input class="btn btn-default submit" type="submit" value="Log in">
+                    <input id="login-button" class="btn btn-default submit" type="submit" value="Login">
                 </div>
 
                 <div class="clearfix"></div>
@@ -35,9 +36,12 @@
 </div>
 
 <script src="../vendors/jquery/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.17.0/dist/jquery.validate.js"></script>
 <script src="app/libs/config.js"></script>
 <script src="app/libs/helper.js"></script>
+<script src="app/libs/http.js"></script>
 <script src="app/user.module.js"></script>
+<script>userModule.loginFormValidation()</script>
 <script>userModule.reset();</script>
 <script>helperModule.getCurrentYear();</script>
 </body>
