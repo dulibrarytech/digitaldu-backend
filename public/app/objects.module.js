@@ -104,7 +104,7 @@ const objectsModule = (function () {
 
         $.ajax(api + '/api/admin/v1/repo/objects?pid=' + pid)
             .done(function (data) {
-                helperModule.renderDisplayRecords(api, data);
+                helperModule.renderDisplayRecords(data);
             })
             .fail(function () {
                 renderError();

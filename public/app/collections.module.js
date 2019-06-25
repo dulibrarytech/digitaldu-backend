@@ -27,7 +27,7 @@ const collectionsModule = (function () {
                     let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> No collections found.</div>';
                     $('#collections').html(message);
                 } else {
-                    helperModule.renderDisplayRecords(api, data);
+                    helperModule.renderDisplayRecords(data);
                 }
             })
             .fail(function (jqXHR, textStatus) {

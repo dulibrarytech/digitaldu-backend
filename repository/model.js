@@ -299,20 +299,19 @@ exports.update_admin_collection_object = function (req, callback) {
  */
 exports.save_admin_collection_object = function (req, callback) {
 
-    let data = req.body;
+    let data = req.body,
+        mods_id = parseInt(data.mods_id, 10);
 
-    if (data.mods_id === undefined || data.mods_id.length === 0) {
+    if (isNaN(mods_id)) {
 
         callback({
             status: 400,
-            message: 'Missing collection PID.',
+            message: 'Id error',
             data: []
         });
 
         return false;
     }
-
-    // TODO: sanitize mods_id
 
     function get_session_token(callback) {
 
@@ -393,6 +392,7 @@ exports.save_admin_collection_object = function (req, callback) {
 
         try {
             obj.pid = uuid(config.uuidDomain, uuid.DNS);
+            obj.sip_uuid = obj.pid;
             callback(null, obj);
         } catch (error) {
             logger.module().error('ERROR: unable to generate uuid');
@@ -492,21 +492,20 @@ exports.publish_object = function (req, callback) {
     let obj = {},
         message;
 
-    // publish collection and all of its objects
-    if (req.body.is_member_of_collection !== undefined && req.body.is_member_of_collection.length !== 0) {
+    if (req.body.pid.length !== 0 && req.body.type === 'collection') {
 
-        // TODO: sanitize payload
-        obj.is_member_of_collection = req.body.is_member_of_collection;
+        // publish collection and all of its objects
+        obj.is_member_of_collection = req.body.pid;
         message = 'Collection published';
 
-    } else if (req.body.pid !== undefined && req.body.pid !== 0) {
+    } else if (req.body.pid !== 0 && req.body.type === 'object') {
 
-        // TODO: sanitize payload
         // publish single object
         obj.pid = req.body.pid;
-        message = 'Record published';
+        message = 'Object published';
 
     } else {
+
         // bad request
         callback({
             status: 400,
@@ -559,6 +558,8 @@ const get_repo_objects = function (obj) {
     whereObj.is_published = 1;
     whereObj.is_active = 1;
 
+    // TODO: account for collections (they don't have sip_uuids)
+    // TODO: save collection pid to sip_uuid field too
     knex(REPO_OBJECTS)
         .select('sip_uuid')
         .where(whereObj)
@@ -570,6 +571,10 @@ const get_repo_objects = function (obj) {
 
                     let record = data.pop(),
                         apiUrl = config.apiUrl + '/api/admin/v1/indexer';
+
+
+                    console.log(data);
+                    return false;
 
                     request.post({
                         url: apiUrl,
