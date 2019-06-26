@@ -11,53 +11,14 @@ const collectionsModule = (function () {
     let api = configModule.getApi();
 
     /**
-     * Gets root collections
-     */
-    obj.getRootCollections = function () {
-
-        userModule.setHeaderUserToken();
-
-        $.ajax({
-            url: api + '/api/admin/v1/repo/objects?pid=codu:root',
-            type: 'GET'
-        })
-            .done(function (data) {
-
-                if (data.length === 0) {
-                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> No collections found.</div>';
-                    $('#collections').html(message);
-                } else {
-                    helperModule.renderDisplayRecords(data);
-                }
-            })
-            .fail(function (jqXHR, textStatus) {
-
-                if (jqXHR.status !== 201) {
-
-                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve collections.</div>';
-
-                    if (jqXHR.status === 401) {
-                        renderError(message);
-
-                        setTimeout(function () {
-                            window.location.replace('/dashboard/error');
-                        }, 2000);
-
-                        return false;
-                    }
-
-                    renderError(message);
-                }
-            });
-    };
-
-    /**
      * Gets collection name
      * @param pid
      */
     obj.getCollectionName = function (pid) {
 
-        if (pid === undefined) {
+        if (pid === null) {
+            return false;
+        } else if (pid === undefined) {
             let pid = helperModule.getParameterByName('pid');
         }
 
@@ -178,7 +139,7 @@ const collectionsModule = (function () {
     };
     */
 
-    /**
+    /** // TODO: wire into archivespace updates
      * Enables collection update form validation
      */
     obj.collectionUpdateFormValidation = function () {
@@ -186,7 +147,7 @@ const collectionsModule = (function () {
         $(document).ready(function () {
             $('#collection-edit-form').validate({
                 submitHandler: function () {
-                    updateCollection();
+                    // updateCollection();
                 }
             });
         });
@@ -206,17 +167,6 @@ const collectionsModule = (function () {
         });
     };
 
-    /**
-     * Invokes desired functions on every page load
-     */
-    obj.init = function () {
-        userModule.renderUserName();
-        collectionsModule.getRootCollections();
-        helperModule.ping();
-    };
-
     return obj;
 
 }());
-
-collectionsModule.init();

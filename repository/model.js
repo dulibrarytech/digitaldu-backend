@@ -502,7 +502,7 @@ exports.publish_object = function (req, callback) {
 
         // publish single object
         obj.pid = req.body.pid;
-        message = 'Object published';
+        message = 'Published';
 
     } else {
 
@@ -523,14 +523,21 @@ exports.publish_object = function (req, callback) {
         .then(function (data) {
 
             if (data > 0) {
-                get_repo_objects(obj);
+                get_repo_objects(obj, function (status) {
+                    console.log(status);
+                    if (status === 'done') {
+                        callback({
+                            status: 201,
+                            message: message,
+                            data: []
+                        });
+                    } else {
+                        // TODO:
+                    }
+                });
+            } else {
+                // TODO:
             }
-
-            callback({
-                status: 201,
-                message: message
-            });
-
         })
         .catch(function (error) {
             logger.module().error('ERROR: unable to save collection record ' + error);
@@ -542,7 +549,7 @@ exports.publish_object = function (req, callback) {
  * Gets objects to index
  * @param obj
  */
-const get_repo_objects = function (obj) {
+const get_repo_objects = function (obj, callback) {
 
     let whereObj = {};
 
@@ -558,8 +565,6 @@ const get_repo_objects = function (obj) {
     whereObj.is_published = 1;
     whereObj.is_active = 1;
 
-    // TODO: account for collections (they don't have sip_uuids)
-    // TODO: save collection pid to sip_uuid field too
     knex(REPO_OBJECTS)
         .select('sip_uuid')
         .where(whereObj)
@@ -572,9 +577,11 @@ const get_repo_objects = function (obj) {
                     let record = data.pop(),
                         apiUrl = config.apiUrl + '/api/admin/v1/indexer';
 
+                    if (record.sip_uuid === null) {
+                        return false;
+                    }
 
-                    console.log(data);
-                    return false;
+                    console.log(record);
 
                     request.post({
                         url: apiUrl,
@@ -600,6 +607,7 @@ const get_repo_objects = function (obj) {
 
                 } else {
                     clearInterval(timer);
+                    callback('done');
                 }
 
             }, 1000);

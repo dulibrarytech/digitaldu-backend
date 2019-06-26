@@ -123,20 +123,23 @@ const helperModule = (function () {
             });
     };
 
+    // TODO: move to object module
     /**
      *
      * @param pid
      */
-    obj.publishCollection = function (pid, type) {
+    obj.publishObject = function (pid, type) {
 
-        if (type === 'collection' && pid === 'null') {
-            pid = 'codu:root';
-        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
 
         let obj = {
             pid: pid,
             type: type
         };
+
+        // TODO: show status message i.e. Publishing...
+        let message = '<div class="alert alert-info"><i class="fa fa-check-circle"></i> Publishing...</div>';
+        $('#message').html(message);
 
         let url = api + '/api/admin/v1/repo/publish',
             request = new Request(url, {
@@ -155,20 +158,21 @@ const helperModule = (function () {
 
                 response.json().then(function (response) {
 
-                    let message = '<div class="alert alert-success"><i class="fa fa-check-circle"></i> ' + response.message + '</div>';
+                    let message = '<div class="alert alert-success"><i class="fa fa-check-circle"></i> Published</div>';
                     $('#message').html(message);
 
                     setTimeout(function () {
-
-                    }, 400);
+                        $('#message').html('');
+                        // TODO: reload objects
+                    }, 4000);
 
                 });
 
             } else if (response.status === 401) {
 
                 response.json().then(function (response) {
-                    // document.getElementById('login-button').disabled = false;
-                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + response.message + '</div>';
+
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Unable to publish object(s)</div>';
                     renderError(message);
                 });
 
@@ -180,9 +184,9 @@ const helperModule = (function () {
         };
 
         http.req(request, callback);
-
     };
 
+    // TODO: move to object module
     /**
      * Renders object metadata
      * @param data
@@ -335,7 +339,7 @@ const helperModule = (function () {
             html += '</div>';
             html += '<div class="col-md-3" style="padding: 5px">';
 
-            // TODO: refactor
+            console.log(data[i].is_published);
 
             if (data[i].object_type === 'collection') {
 
@@ -346,7 +350,7 @@ const helperModule = (function () {
                     html += '<p><a href="#"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
                 } else {
                     html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
-                    html += '<p><a href="#" onclick="helperModule.publishCollection(\'' + is_member_of_collection + '\', \'collection\');"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
+                    html += '<p><a href="#" onclick="helperModule.publishObject(\'' + data[i].pid + '\', \'collection\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
                 }
 
                 html += '<p><a href="' + api + '/dashboard/object/edit?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Update collection</a></p>';
@@ -360,37 +364,13 @@ const helperModule = (function () {
                     html += '<p><a href="#"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
                 } else {
                     html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
-                    html += '<p><a href="#" onclick="helperModule.publishCollection(\'' + data[i].pid + '\', \'object\');"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
+                    html += '<p><a href="#" onclick="helperModule.publishObject(\'' + data[i].pid + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
                 }
 
                 html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '"><i class="fa fa-download"></i>&nbsp;Download AIP</a></p>';
-            }
-
-            /*
-            if (data[i].is_published === 1) {
-                html += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
-                html += '<p><a href="#"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
-            } else {
-                html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
-                html += '<p><a href="#" onclick="helperModule.publishCollection(\'' + is_member_of_collection + '\');"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
-            }
-            */
-
-            /*
-            if (data[i].object_type === 'collection') {
-                html += '<p><a href="' + api + '/dashboard/object/edit?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Update collection</a></p>';
-            } else if (data[i].object_type === 'object') {
-                // TODO...
                 // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=tn"><i class="fa fa-code"></i>&nbsp;Technical Metadata</a></p>';
                 // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=mods"><i class="fa fa-code"></i>&nbsp;MODS</a></p>';
             }
-            */
-
-            /*
-            if (data[i].object_type === 'object') {
-                html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '"><i class="fa fa-download"></i>&nbsp;Download AIP</a></p>';
-            }
-            */
 
             html += '</div>';
             html += '</div>';
