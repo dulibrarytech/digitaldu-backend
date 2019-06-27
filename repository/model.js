@@ -490,19 +490,34 @@ exports.save_admin_collection_object = function (req, callback) {
 exports.publish_object = function (req, callback) {
 
     let obj = {},
-        message;
+        message = 'Published';
 
     if (req.body.pid.length !== 0 && req.body.type === 'collection') {
 
         // publish collection and all of its objects
         obj.is_member_of_collection = req.body.pid;
-        message = 'Collection published';
+
+        let collection = {};
+        collection.pid = req.body.pid;
+
+        knex(REPO_OBJECTS)
+            .where(collection)
+            .update({
+                is_published: 1
+            })
+            .then(function (data) {
+                console.log(data);
+            })
+            .catch(function (error) {
+                logger.module().error('ERROR: unable to publish collection pid ' + error);
+                throw 'ERROR: unable to publish collection pid ' + error;
+            });
+
 
     } else if (req.body.pid !== 0 && req.body.type === 'object') {
 
         // publish single object
         obj.pid = req.body.pid;
-        message = 'Published';
 
     } else {
 
