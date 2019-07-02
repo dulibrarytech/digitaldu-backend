@@ -117,7 +117,6 @@ const objectsModule = (function () {
         http.req(request, callback);
     };
 
-    // TODO: move to object module
     /**
      * Renders object metadata
      * @param data
@@ -269,8 +268,6 @@ const objectsModule = (function () {
 
             html += '</div>';
             html += '<div class="col-md-3" style="padding: 5px">';
-
-            console.log(data[i].is_published);
 
             if (data[i].object_type === 'collection') {
 

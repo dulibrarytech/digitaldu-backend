@@ -91,7 +91,7 @@ exports.get_mods = function (id, session, callback) {
         headers: {
             'X-ArchivesSpace-Session': session
         },
-        timeout: 5000
+        timeout: 45000
     }, function(error, httpResponse, body) {
 
         if (error) {

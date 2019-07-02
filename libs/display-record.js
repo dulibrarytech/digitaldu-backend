@@ -22,6 +22,10 @@ exports.create_display_record = function (obj, callback) {
     metadata = JSON.parse(mods);
     record.object_type = obj.object_type;
 
+    if (metadata.is_compound !== undefined && metadata.is_compound === true) {
+        record.is_compound = 1;
+    }
+
     if (metadata.title !== undefined || metadata.title !== null) {
         record.title = metadata.title;
     }
@@ -50,9 +54,8 @@ exports.create_display_record = function (obj, callback) {
         }
     }
 
-    // TODO: find in archivespace record
-    if (metadata.type !== undefined) {
-        record.type = metadata.type;
+    if (metadata.resource_type !== undefined) {
+        record.type = metadata.resource_type;
     }
 
     record.display_record = JSON.parse(obj.mods);

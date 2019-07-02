@@ -1215,8 +1215,24 @@ exports.create_repo_record = function (req, callback) {
         }
 
         modslibdisplay.create_display_record(obj, function (result) {
-            obj.display_record = result;
-            callback(null, obj);
+
+            let tmp = JSON.parse(result);
+
+            if (tmp.is_compound === 1) {
+
+                let parts = tmp.display_record.parts;
+
+                importlib.get_compound_object_parts(obj.sip_uuid, parts, function (parts) {
+
+                    tmp.compound = parts;
+                    obj.display_record = JSON.stringify(tmp);
+                    callback(null, obj);
+                });
+
+            } else {
+                obj.display_record = result;
+                callback(null, obj);
+            }
         });
     }
 

@@ -471,6 +471,7 @@ exports.update_transfer_status = function (response, callback) {
         return false;
     }
 
+    // TODO: test (github issue #104)
     if (json.status === 'FAILED' || json.status === 'REJECTED' || json.status === 'USER_INPUT') {
 
         callback({
@@ -998,7 +999,6 @@ exports.restart_import = function () {
                 }
             });
 
-
             return null;
         })
         .catch(function (error) {
@@ -1006,6 +1006,55 @@ exports.restart_import = function () {
             throw 'ERROR: unable to get import collection (get_import_collection) ' + error;
         });
 };
+
+/**
+ * gets compound object parts from import queue
+ * @param sip_uuid
+ * @param callback
+ */
+exports.get_compound_object_parts = function (sip_uuid, parts, callback) {
+
+    'use strict';
+
+    knexQ(IMPORT_QUEUE)
+        .select('uuid', 'file', 'dip_path')
+        .where({
+            type: 'object',
+            sip_uuid: sip_uuid
+        })
+        .then(function (data) {
+
+            let partsArr = [];
+
+            for (let i=0;i<data.length;i++) {
+
+                let file = data[i].file;
+
+                if (file.indexOf('tif') !== -1) {
+                    file = file.replace('tif', 'jp2');
+                }
+
+                if (file.indexOf('wav') !== -1) {
+                    file = file.replace('wav', 'mp3');
+                }
+
+                for (let j=0;j<parts.length;j++) {
+                    if (parts[j].title === data[i].file) {
+                        parts[j].url = data[i].dip_path + '/objects/' + data[i].uuid + '-' + file;
+                        partsArr.push(parts);
+                    }
+                }
+            }
+
+            callback(partsArr);
+            return null;
+        })
+        .catch(function (error) {
+            logger.module().error('ERROR: unable to get compound object parts ' + error);
+            throw 'ERROR: unable to get compound object parts ' + error;
+        });
+};
+
 
 /**
  * Clears out failed record(s) in import queue
