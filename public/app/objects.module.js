@@ -269,6 +269,9 @@ const objectsModule = (function () {
             html += '</div>';
             html += '<div class="col-md-3" style="padding: 5px">';
 
+            console.log(data[i]);
+
+            // TODO: optimize this block
             if (data[i].object_type === 'collection') {
 
                 html += '<p><small style="background: skyblue; padding: 3px; color: white">Collection</small></p>';
@@ -283,7 +286,7 @@ const objectsModule = (function () {
 
                 html += '<p><a href="' + api + '/dashboard/object/edit?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Update collection</a></p>';
 
-            } else if (data[i].object_type === 'object') {
+            } else if (data[i].object_type === 'object' && data[i].is_compound === 0) {
 
                 html += '<p><small style="background: cadetblue; padding: 3px; color: white">Object</small></p>';
 
@@ -298,6 +301,18 @@ const objectsModule = (function () {
                 html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '"><i class="fa fa-download"></i>&nbsp;Download AIP</a></p>';
                 // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=tn"><i class="fa fa-code"></i>&nbsp;Technical Metadata</a></p>';
                 // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=mods"><i class="fa fa-code"></i>&nbsp;MODS</a></p>';
+
+            } else if (data[i].object_type === 'object' && data[i].is_compound === 1) {
+
+                html += '<p><small style="background: cadetblue; padding: 3px; color: white">Compound Object</small></p>';
+
+                if (data[i].is_published === 1) {
+                    html += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
+                    html += '<p><a href="#"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
+                } else {
+                    html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
+                    html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data[i].pid + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
+                }
             }
 
             html += '</div>';

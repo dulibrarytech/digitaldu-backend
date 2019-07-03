@@ -1040,7 +1040,8 @@ exports.get_compound_object_parts = function (sip_uuid, parts, callback) {
 
                 for (let j=0;j<parts.length;j++) {
                     if (parts[j].title === data[i].file) {
-                        parts[j].url = data[i].dip_path + '/objects/' + data[i].uuid + '-' + file;
+                        parts[j].object = data[i].dip_path + '/objects/' + data[i].uuid + '-' + file;
+                        parts[j].thumbnail = data[i].dip_path + '/thumbnails/' + data[i].uuid + '.jpg';
                         partsArr.push(parts);
                     }
                 }
