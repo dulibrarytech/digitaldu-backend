@@ -1045,7 +1045,6 @@ exports.create_repo_record = function (req, callback) {
             if (st_expire_date_time.isBefore(now)) {
 
                 // if token is expired, delete existing one and get new one.
-
                 let fileObj = {
                     file: 'st.txt'
                 };

@@ -13,7 +13,17 @@ const fs = require('fs'),
     archivespace = require('../libs/archivespace'),
     logger = require('../libs/log4'),
     knex =require('../config/db')(),
-    REPO_OBJECTS = 'tbl_objects';
+    REPO_OBJECTS = 'tbl_objects',
+    ARCHIVESSPACE_QUEUE = 'tbl_archivesspace_queue',
+    knexQ = require('knex')({
+        client: 'mysql2',
+        connection: {
+            host: config.dbQueueHost,
+            user: config.dbQueueUser,
+            password: config.dbQueuePassword,
+            database: config.dbQueueName
+        }
+    });
 
 /** DEPRECATED
  * Gets next pid and increments pid value
@@ -234,60 +244,218 @@ exports.get_admin_object = function (req, callback) {
         });
 };
 
-/** TODO: DEPRECATE use archivespace
- * Updates collection object
+/**
+ * Updates object metadata
  * @param req
  * @param callback
  */
-exports.update_admin_collection_object = function (req, callback) {
+exports.update_object_metadata = function (req, callback) {
 
-    let data = req.body;
+    function get_session_token(callback) {
 
-    if (data.is_member_of_collection === undefined || data.is_member_of_collection.length === 0) {
+        archivespace.get_session_token(function (response) {
 
-        callback({
-            status: 400,
-            message: 'Missing collection PID.',
-            data: []
+            let result = response.data,
+                obj = {},
+                token;
+
+            try {
+
+                token = JSON.parse(result);
+
+                if (token.session === undefined) {
+                    logger.module().error('ERROR: session token is undefined');
+                    obj.session = null;
+                    callback(null, obj);
+                    return false;
+                }
+
+                if (token.error === true) {
+                    logger.module().error('ERROR: session token error' + token.error_message);
+                    obj.session = null;
+                    callback(null, obj);
+                    return false;
+                }
+
+                obj.session = token.session;
+                callback(null, obj);
+                return false;
+
+            } catch (error) {
+                logger.module().error('ERROR: session token error ' + error);
+            }
         });
-
-        return false;
     }
 
-    let mods = {
-        title: data.title,
-        abstract: data.abstract
-    };
+    function get_record_updates (obj, callback) {
 
-    let obj = {};
-        obj.pid = data.pid;
-        obj.is_member_of_collection = data.is_member_of_collection;
-        obj.object_type = data.object_type;
-        obj.handle = data.handle;
-        obj.mods = JSON.stringify(mods);
+        if (obj.session === null) {
+            callback(null, obj);
+            return false;
+        }
 
-    modslibdisplay.create_display_record(obj, function (display_record) {
+        setTimeout(function () {
 
-        knex(REPO_OBJECTS)
-            .where({
-                is_member_of_collection: data.is_member_of_collection,
-                pid: data.pid
-            })
-            .update({
-                mods: JSON.stringify(mods),
-                display_record: display_record
-            })
+            archivespace.get_record_updates(obj.session, function (records) {
+
+                let data = JSON.parse(records.updates),
+                    uriArr = [];
+
+                for (let i=0;i<data.length;i++) {
+
+                    let tmp = data[i].record.uri.split('/'),
+                        mods_id = tmp[tmp.length - 1];
+
+                    // collection metadata
+                    if (data[i].record.jsonmodel_type === 'resource') {
+
+                        uriArr.push({
+                            type: 'collection',
+                            mods_id: mods_id,
+                            is_updated: 0
+                        });
+                    }
+
+                    // archival object metadata
+                    if (data[i].record.jsonmodel_type === 'archival_object') {
+
+                        uriArr.push({
+                            type: 'object',
+                            mods_id: mods_id,
+                            is_updated: 0
+                        });
+                    }
+                }
+
+                obj.records = uriArr;
+                callback(null, obj);
+            });
+
+        }, 4000);
+    }
+
+    function save_record_updates(obj, callback) {
+
+        knexQ(ARCHIVESSPACE_QUEUE)
+            .insert(obj.records)
             .then(function (data) {
-                callback({
-                    status: 201,
-                    message: 'Object updated.',
-                    data: [{'pid': obj.pid}]
-                });
+                obj.data_saved = true;
+                callback(null, obj);
             })
             .catch(function (error) {
-                logger.module().error('ERROR: unable to save collection record ' + error);
-                throw 'ERROR: unable to save collection record ' + error;
+                logger.module().error('ERROR: unable to save record updates' + error);
+                obj.error = 'ERROR: unable to save record updates' + error;
+                callback(null, obj);
             });
+    }
+
+    function update_records (obj, callback) {
+
+        if (obj.data_saved !== undefined && obj.data_saved === true) {
+
+            knexQ(ARCHIVESSPACE_QUEUE)
+                .select('*')
+                .where({
+                    is_updated: 0
+                })
+                .then(function (data) {
+
+                    let timer = setInterval(function () {
+
+                        if (data.length === 0) {
+                            clearInterval(timer);
+                            callback(null, obj);
+                            return false;
+                        } else {
+
+                            let record = data.pop();
+
+                            archivespace.get_mods(record.mods_id, obj.session, function (updated_record) {
+
+                                knex(REPO_OBJECTS)
+                                    .select('*')
+                                    .where({
+                                        mods_id: record.mods_id
+                                    })
+                                    .then(function (data) {
+
+                                        if (data.length === 0) {
+                                            logger.module().info('INFO: There were no repository records to update');
+                                            return false;
+                                        }
+
+                                        let recordObj = {};
+                                        recordObj.pid = data[0].pid;
+                                        recordObj.is_member_of_collection = data[0].is_member_of_collection;
+                                        recordObj.object_type = data[0].object_type;
+                                        recordObj.handle = data[0].handle;
+                                        recordObj.mods = updated_record.mods;
+
+                                        modslibdisplay.create_display_record(recordObj, function (display_record) {
+
+                                            knex(REPO_OBJECTS)
+                                                .where({
+                                                    is_member_of_collection: data[0].is_member_of_collection,
+                                                    mods_id: record.mods_id
+                                                })
+                                                .update({
+                                                    mods: updated_record.mods,
+                                                    display_record: display_record
+                                                })
+                                                .then(function (data) {
+                                                    obj.updates = true;
+                                                    // TODO: flag record as updated in queue
+                                                    callback(null, obj);
+                                                    return null;
+                                                })
+                                                .catch(function (error) {
+                                                    logger.module().error('ERROR: unable to update mods records ' + error);
+                                                    throw 'ERROR: unable to update records ' + error;
+                                                });
+                                        });
+
+                                        return null;
+                                    })
+                                    .catch(function (error) {
+                                        logger.module().error('ERROR: Unable to get mods update records ' + error);
+                                        throw 'ERROR: Unable to get mods update records ' + error;
+                                    });
+                            });
+                        }
+
+                    }, 1000);
+
+                    return null;
+                })
+                .catch(function (error) {
+                    logger.module().error('ERROR: Unable to get update records ' + error);
+                    throw 'ERROR: Unable to get update records ' + error;
+                });
+
+        } else {
+            logger.module().info('INFO: No mods record updates found.');
+            callback(null, obj);
+        }
+    }
+
+    async.waterfall([
+        get_session_token,
+        get_record_updates,
+        save_record_updates,
+        update_records
+    ], function (error, results) {
+
+        if (error) {
+            logger.module().error('ERROR: async (get_record_updates)');
+            throw 'ERROR: async (get_record_updates)';
+        }
+
+        logger.module().info('INFO: records updated');
+    });
+
+    callback({
+        status: 201,
+        message: 'Looking for Updated records'
     });
 };
 

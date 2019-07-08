@@ -37,8 +37,8 @@ exports.save_admin_collection_object = function (req, res) {
     });
 };
 
-exports.update_admin_collection_object = function (req, res) {
-    Repo.update_admin_collection_object(req, function (data) {
+exports.update_object_metadata = function (req, res) {
+    Repo.update_object_metadata(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };

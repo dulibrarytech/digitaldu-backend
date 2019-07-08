@@ -130,6 +130,58 @@ exports.get_mods = function (id, session, callback) {
 };
 
 /**
+ * Gets record updates that have occurred in archivespace
+ */
+exports.get_record_updates = function (session, callback) {
+
+    'use strict';
+
+    let apiUrl = config.archivespaceHost + '/update-feed';
+
+    request.get({
+        url: apiUrl,
+        headers: {
+            'X-ArchivesSpace-Session': session
+        },
+        timeout: 45000
+    }, function(error, httpResponse, body) {
+
+        if (error) {
+
+            logger.module().error('ERROR: request to archivespace failed ' + error);
+
+            callback({
+                error: true,
+                error_message: error
+            });
+
+            return false;
+        }
+
+        if (httpResponse.statusCode === 200) {
+
+            callback({
+                error: false,
+                updates: body
+            });
+
+            return false;
+
+        } else {
+
+            logger.module().error('ERROR: unable to fetch record updates ' + error);
+
+            callback({
+                error: true,
+                error_message: body
+            });
+
+            return false;
+        }
+    });
+};
+
+/**
  * Gets session token from archivespace
  * @param callback
  */
