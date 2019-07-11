@@ -119,7 +119,7 @@ socketclient.on('connect', function () {
     let id = setInterval(function () {
 
         knexQ(IMPORT_QUEUE)
-            .select('*')
+            .select('sip_uuid', 'uuid', 'file', 'file_id', 'type', 'type', 'dip_path', 'mime_type', 'message', 'status', 'created')
             .whereRaw('DATE(created) = CURRENT_DATE')
             .orderBy('created', 'desc')
             .groupBy('sip_uuid')
@@ -1165,6 +1165,7 @@ exports.create_repo_record = function (req, callback) {
     }
 
     // 9.)
+    /*
     function get_pid(obj, callback) {
 
         // TODO: at this point check how many props are null
@@ -1180,6 +1181,7 @@ exports.create_repo_record = function (req, callback) {
             callback(null, obj);
         });
     }
+    */
 
     // 10.)
     function get_handle(obj, callback) {

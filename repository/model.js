@@ -11,8 +11,9 @@ const fs = require('fs'),
     modslibdisplay = require('../libs/display-record'),
     archivematica = require('../libs/archivematica'),
     archivespace = require('../libs/archivespace'),
+    importlib = require('../libs/transfer-ingest'),
     logger = require('../libs/log4'),
-    knex =require('../config/db')(),
+    knex = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects',
     ARCHIVESSPACE_QUEUE = 'tbl_archivesspace_queue',
     knexQ = require('knex')({
@@ -31,60 +32,60 @@ const fs = require('fs'),
  * @param callback
  */
 /*
-exports.get_next_pid = function (req, callback) {
+ exports.get_next_pid = function (req, callback) {
 
-    let namespace = config.namespace;
+ let namespace = config.namespace;
 
-    knex.transaction(function (trx) {
+ knex.transaction(function (trx) {
 
-        return knex('tbl_pid_gen')
-            .select('namespace', 'current_pid')
-            .where({
-                namespace: namespace
-            })
-            .limit(1)
-            .transacting(trx)
-            .then(function (data) {
+ return knex('tbl_pid_gen')
+ .select('namespace', 'current_pid')
+ .where({
+ namespace: namespace
+ })
+ .limit(1)
+ .transacting(trx)
+ .then(function (data) {
 
-                // increment pid
-                let new_id = (parseInt(data[0].current_pid) + 1),
-                    new_pid = data[0].namespace + ':' + new_id;
+ // increment pid
+ let new_id = (parseInt(data[0].current_pid) + 1),
+ new_pid = data[0].namespace + ':' + new_id;
 
-                // update current pid with new pid value
-                return knex('tbl_pid_gen')
-                    .where({
-                        namespace: data[0].namespace
-                    })
-                    .update({
-                        current_pid: new_id
-                    })
-                    .then(function () {
-                        return new_pid;
-                    })
-                    .catch(function (error) {
-                        logger.module().error('ERROR: Unable to get next pid ' + error);
-                        throw 'ERROR: Unable to get next pid ' + error;
-                    });
+ // update current pid with new pid value
+ return knex('tbl_pid_gen')
+ .where({
+ namespace: data[0].namespace
+ })
+ .update({
+ current_pid: new_id
+ })
+ .then(function () {
+ return new_pid;
+ })
+ .catch(function (error) {
+ logger.module().error('ERROR: Unable to get next pid ' + error);
+ throw 'ERROR: Unable to get next pid ' + error;
+ });
 
-            })
-            .then(trx.commit)
-            .catch(trx.rollback);
-    })
-        .then(function (pid) {
+ })
+ .then(trx.commit)
+ .catch(trx.rollback);
+ })
+ .then(function (pid) {
 
-            callback({
-                status: 200,
-                content_type: {'Content-Type': 'application/json'},
-                data: {pid: pid},
-                message: 'PID retrieved.'
-            });
-        })
-        .catch(function (error) {
-            logger.module().error('ERROR: Unable to get next pid ' + error);
-            throw 'ERROR: Unable to get next pid ' + error;
-        });
-};
-*/
+ callback({
+ status: 200,
+ content_type: {'Content-Type': 'application/json'},
+ data: {pid: pid},
+ message: 'PID retrieved.'
+ });
+ })
+ .catch(function (error) {
+ logger.module().error('ERROR: Unable to get next pid ' + error);
+ throw 'ERROR: Unable to get next pid ' + error;
+ });
+ };
+ */
 
 /**
  * Gets objects by collection
@@ -244,7 +245,7 @@ exports.get_admin_object = function (req, callback) {
         });
 };
 
-/**
+/** // TODO: read st.txt file first?
  * Updates object metadata
  * @param req
  * @param callback
@@ -287,7 +288,7 @@ exports.update_object_metadata = function (req, callback) {
         });
     }
 
-    function get_record_updates (obj, callback) {
+    function get_record_updates(obj, callback) {
 
         if (obj.session === null) {
             callback(null, obj);
@@ -301,7 +302,11 @@ exports.update_object_metadata = function (req, callback) {
                 let data = JSON.parse(records.updates),
                     uriArr = [];
 
-                for (let i=0;i<data.length;i++) {
+                for (let i = 0; i < data.length; i++) {
+
+                    if (data[i].record.uri === undefined) {
+                        continue;
+                    }
 
                     let tmp = data[i].record.uri.split('/'),
                         mods_id = tmp[tmp.length - 1];
@@ -349,10 +354,11 @@ exports.update_object_metadata = function (req, callback) {
             });
     }
 
-    function update_records (obj, callback) {
+    function update_records(obj, callback) {
 
         if (obj.data_saved !== undefined && obj.data_saved === true) {
 
+            // Get updated record id's from queue
             knexQ(ARCHIVESSPACE_QUEUE)
                 .select('*')
                 .where({
@@ -372,6 +378,7 @@ exports.update_object_metadata = function (req, callback) {
 
                             archivespace.get_mods(record.mods_id, obj.session, function (updated_record) {
 
+                                // Get existing record from repository
                                 knex(REPO_OBJECTS)
                                     .select('*')
                                     .where({
@@ -388,30 +395,38 @@ exports.update_object_metadata = function (req, callback) {
                                         recordObj.pid = data[0].pid;
                                         recordObj.is_member_of_collection = data[0].is_member_of_collection;
                                         recordObj.object_type = data[0].object_type;
+                                        recordObj.sip_uuid = data[0].sip_uuid;
                                         recordObj.handle = data[0].handle;
+                                        recordObj.entry_id = data[0].entry_id;
+                                        recordObj.thumbnail = data[0].thumbnail;
+                                        recordObj.object = data[0].file_name;
+                                        recordObj.mime_type = data[0].mime_type;
                                         recordObj.mods = updated_record.mods;
 
-                                        modslibdisplay.create_display_record(recordObj, function (display_record) {
+                                        modslibdisplay.create_display_record(recordObj, function (result) {
 
-                                            knex(REPO_OBJECTS)
-                                                .where({
-                                                    is_member_of_collection: data[0].is_member_of_collection,
-                                                    mods_id: record.mods_id
-                                                })
-                                                .update({
-                                                    mods: updated_record.mods,
-                                                    display_record: display_record
-                                                })
-                                                .then(function (data) {
-                                                    obj.updates = true;
-                                                    // TODO: flag record as updated in queue
-                                                    callback(null, obj);
-                                                    return null;
-                                                })
-                                                .catch(function (error) {
-                                                    logger.module().error('ERROR: unable to update mods records ' + error);
-                                                    throw 'ERROR: unable to update records ' + error;
+                                            let tmp = JSON.parse(result);
+
+                                            if (tmp.is_compound === 1) {
+
+                                                let parts = tmp.display_record.parts;
+
+                                                importlib.get_compound_object_parts(recordObj.sip_uuid, parts, function (parts) {
+
+                                                    tmp.compound = parts;
+                                                    obj.display_record = JSON.stringify(tmp);
+
+                                                    update_mods(record, updated_record, obj, function (result) {
+                                                        // console.log(result);
+                                                    });
                                                 });
+
+                                            } else {
+
+                                                update_mods(record, updated_record, obj, function (result) {
+                                                    // console.log(result);
+                                                });
+                                            }
                                         });
 
                                         return null;
@@ -457,6 +472,50 @@ exports.update_object_metadata = function (req, callback) {
         status: 201,
         message: 'Looking for Updated records'
     });
+};
+
+/**
+ *
+ * @param record
+ * @param updated_record
+ * @param obj
+ * @param callback
+ */
+const update_mods = function (record, updated_record, obj, callback) {
+
+    knex(REPO_OBJECTS)
+        .where({
+            mods_id: record.mods_id
+        })
+        .update({
+            mods: updated_record.mods,
+            display_record: obj.display_record
+        })
+        .then(function (data) {
+
+            knexQ(ARCHIVESSPACE_QUEUE)
+                .where({
+                    mods_id: record.mods_id
+                })
+                .update({
+                    is_updated: 1
+                })
+                .then(function (data) {
+                    obj.updates = true;
+                    callback(obj);
+                    return null;
+                })
+                .catch(function (error) {
+                    logger.module().error('ERROR: unable to update mods records ' + error);
+                    throw 'ERROR: unable to update records ' + error;
+                });
+
+            return null;
+        })
+        .catch(function (error) {
+            logger.module().error('ERROR: unable to update mods records ' + error);
+            throw 'ERROR: unable to update records ' + error;
+        });
 };
 
 /**

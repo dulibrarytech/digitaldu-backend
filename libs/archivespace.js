@@ -130,7 +130,7 @@ exports.get_mods = function (id, session, callback) {
 };
 
 /**
- * Gets record updates that have occurred in archivespace
+ * Gets record updates that have occurred in archivesspace
  */
 exports.get_record_updates = function (session, callback) {
 
@@ -148,7 +148,7 @@ exports.get_record_updates = function (session, callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: request to archivespace failed ' + error);
+            logger.module().error('ERROR: request to archivesspace failed ' + error);
 
             callback({
                 error: true,
