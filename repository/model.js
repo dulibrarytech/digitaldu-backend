@@ -407,25 +407,37 @@ exports.update_object_metadata = function (req, callback) {
 
                                             let tmp = JSON.parse(result);
 
-                                            if (tmp.is_compound === 1) {
+                                            if (tmp.is_compound === 1 && tmp.object_type !== 'collection') {
 
-                                                let parts = tmp.display_record.parts;
+                                                let currentRecord = JSON.parse(data[0].display_record),
+                                                    currentCompoundParts = currentRecord.display_record.parts;
 
-                                                importlib.get_compound_object_parts(recordObj.sip_uuid, parts, function (parts) {
+                                                delete tmp.display_record.parts;
+                                                delete tmp.compound;
 
-                                                    tmp.compound = parts;
-                                                    obj.display_record = JSON.stringify(tmp);
+                                                if (currentCompoundParts !== undefined) {
+                                                    tmp.display_record.parts = currentCompoundParts;
+                                                    tmp.compound = currentCompoundParts;
+                                                }
 
-                                                    update_mods(record, updated_record, obj, function (result) {
-                                                        // console.log(result);
-                                                    });
-                                                });
-
-                                            } else {
+                                                obj.display_record = JSON.stringify(tmp);
 
                                                 update_mods(record, updated_record, obj, function (result) {
-                                                    // console.log(result);
+                                                    if (result.updates !== true) {
+                                                        logger.module().error('ERROR: Unable to update mods records');
+                                                    }
                                                 });
+
+                                            } else if (tmp.is_compound === 0 || tmp.object_type === 'collection') {
+
+                                                obj.display_record = result;
+
+                                                update_mods(record, updated_record, obj, function (result) {
+                                                    if (result.updates !== true) {
+                                                        logger.module().error('ERROR: Unable to update mods records');
+                                                    }
+                                                });
+
                                             }
                                         });
 
@@ -501,6 +513,7 @@ const update_mods = function (record, updated_record, obj, callback) {
                     is_updated: 1
                 })
                 .then(function (data) {
+                    console.log(data);
                     obj.updates = true;
                     callback(obj);
                     return null;

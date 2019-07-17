@@ -24,6 +24,8 @@ exports.create_display_record = function (obj, callback) {
 
     if (metadata.is_compound !== undefined && metadata.is_compound === true) {
         record.is_compound = 1;
+    } else {
+        record.is_compound = 0;
     }
 
     if (metadata.title !== undefined || metadata.title !== null) {
