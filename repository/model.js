@@ -422,23 +422,39 @@ exports.update_object_metadata = function (req, callback) {
 
                                                 obj.display_record = JSON.stringify(tmp);
 
-                                                update_mods(record, updated_record, obj, function (result) {
-                                                    if (result.updates !== true) {
-                                                        logger.module().error('ERROR: Unable to update mods records');
-                                                    }
-                                                });
-
                                             } else if (tmp.is_compound === 0 || tmp.object_type === 'collection') {
 
                                                 obj.display_record = result;
 
-                                                update_mods(record, updated_record, obj, function (result) {
-                                                    if (result.updates !== true) {
-                                                        logger.module().error('ERROR: Unable to update mods records');
-                                                    }
-                                                });
-
                                             }
+
+                                            update_mods(record, updated_record, obj, function (result) {
+                                                if (result.updates !== true) {
+                                                    logger.module().error('ERROR: Unable to update mods record ' + data[0].mods_id);
+                                                } else {
+
+                                                    request.post({
+                                                        url: config.apiUrl + '/api/admin/v1/indexer',
+                                                        form: {
+                                                            'sip_uuid': data[0].sip_uuid
+                                                        }
+                                                    }, function (error, httpResponse, body) {
+
+                                                        if (error) {
+                                                            logger.module().fatal('FATAL: indexer error ' + error + ' (create_repo_record)');
+                                                            return false;
+                                                        }
+
+                                                        if (httpResponse.statusCode === 200) {
+                                                            return false;
+                                                        } else {
+                                                            logger.module().fatal('FATAL: http error ' + body + ' (update_mods)');
+                                                            return false;
+                                                        }
+                                                    });
+                                                }
+                                            });
+
                                         });
 
                                         return null;
@@ -478,6 +494,7 @@ exports.update_object_metadata = function (req, callback) {
         }
 
         logger.module().info('INFO: records updated');
+
     });
 
     callback({
