@@ -1226,6 +1226,7 @@ exports.create_repo_record = function (req, callback) {
                 importlib.get_compound_object_parts(obj.sip_uuid, parts, function (parts) {
 
                     tmp.compound = parts;
+                    obj.is_compound = 1;
                     obj.display_record = JSON.stringify(tmp);
                     callback(null, obj);
                 });
@@ -1264,9 +1265,6 @@ exports.create_repo_record = function (req, callback) {
         }
 
         logger.module().info('INFO: saving repository record to db');
-
-        // TODO: determine why is_compound value is not being saved to db
-        // console.log(obj);
 
         importlib.create_repo_record(obj, function (result) {
 

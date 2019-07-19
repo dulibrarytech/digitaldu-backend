@@ -530,7 +530,6 @@ const update_mods = function (record, updated_record, obj, callback) {
                     is_updated: 1
                 })
                 .then(function (data) {
-                    console.log(data);
                     obj.updates = true;
                     callback(obj);
                     return null;
