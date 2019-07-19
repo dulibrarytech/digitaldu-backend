@@ -4,13 +4,13 @@ const objectsModule = (function () {
 
     let obj = {};
 
-    let renderError = function () {
-        $('#objects').html('Error: Unable to retrieve objects');
+    let renderError = function (message) {
+        $('#objects').html(message);
     };
 
     let api = configModule.getApi();
 
-    // TODO: DEPRECATE
+    // TODO: DEPRECATE // RENAME to updateObject? or updateMetatdata
     obj.editObject = function () {
 
         let pid = helperModule.getParameterByName('pid');
@@ -19,10 +19,25 @@ const objectsModule = (function () {
 
         $.ajax(api + '/api/admin/v1/repo/object?pid=' + pid)
             .done(function (data) {
-                renderObjectEditForm(data);
+                // renderObjectEditForm(data);
             })
-            .fail(function () {
-                renderError();
+            .fail(function (error) {
+
+                if (error.status === 401) {
+
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + error.status + '). Your session has expired.  You will be redirected to the login page momentarily.</div>';
+                    renderError(message);
+
+                    setTimeout(function () {
+                        window.location.replace('/login');
+                    }, 4000);
+
+                } else {
+
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + error.status + '). An error has occurred. Unable to get objects.</div>';
+                    renderError(message);
+                }
+
             });
     };
 
@@ -44,11 +59,27 @@ const objectsModule = (function () {
             .done(function (data) {
                 objectsModule.renderDisplayRecords(data);
             })
-            .fail(function () {
-                renderError();
+            .fail(function (error) {
+
+                if (error.status === 401) {
+
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + error.status + '). Your session has expired.  You will be redirected to the login page momentarily.</div>';
+                    renderError(message);
+
+                    setTimeout(function () {
+                        window.location.replace('/login');
+                    }, 4000);
+
+                } else {
+
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + error.status + '). An error has occurred. Unable to get objects.</div>';
+                    renderError(message);
+                }
+
             });
     };
 
+    // TODO:...
     obj.downloadObject = function () {
         let pid = helperModule.getParameterByName('pid'); // TODO: sanitize
         window.location.replace(api + '/api/v1/object/download?pid=' + pid);
@@ -105,6 +136,10 @@ const objectsModule = (function () {
 
                     let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Unable to publish object(s)</div>';
                     renderError(message);
+
+                    setTimeout(function () {
+                        window.location.replace('/login');
+                    }, 4000);
                 });
 
             } else {
