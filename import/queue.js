@@ -1223,9 +1223,9 @@ exports.create_repo_record = function (req, callback) {
 
                 let parts = tmp.display_record.parts;
 
-                importlib.get_compound_object_parts(obj.sip_uuid, parts, function (parts) {
+                importlib.get_compound_object_parts(obj.sip_uuid, parts, function (compound) {
 
-                    tmp.compound = parts;
+                    tmp.compound = compound;
                     obj.is_compound = 1;
                     obj.display_record = JSON.stringify(tmp);
                     callback(null, obj);

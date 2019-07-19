@@ -1024,8 +1024,6 @@ exports.get_compound_object_parts = function (sip_uuid, parts, callback) {
         })
         .then(function (data) {
 
-            let partsArr = [];
-
             for (let i=0;i<data.length;i++) {
 
                 let file = data[i].file;
@@ -1042,12 +1040,11 @@ exports.get_compound_object_parts = function (sip_uuid, parts, callback) {
                     if (parts[j].title === data[i].file) {
                         parts[j].object = data[i].dip_path + '/objects/' + data[i].uuid + '-' + file;
                         parts[j].thumbnail = data[i].dip_path + '/thumbnails/' + data[i].uuid + '.jpg';
-                        partsArr.push(parts);
                     }
                 }
             }
 
-            callback(partsArr);
+            callback(parts);
             return null;
         })
         .catch(function (error) {
