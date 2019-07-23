@@ -37,8 +37,14 @@ exports.save_admin_collection_object = function (req, res) {
     });
 };
 
-exports.update_object_metadata = function (req, res) {
-    Repo.update_object_metadata(req, function (data) {
+exports.update_metadata = function (req, res) {
+    Repo.update_metadata(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.update_metadata_cron = function (req, res) {
+    Repo.update_metadata_cron(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };

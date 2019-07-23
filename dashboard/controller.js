@@ -34,8 +34,8 @@ exports.get_dashboard_download = function (req, res) {
     });
 };
 
-exports.edit_dashboard_object = function (req, res) {
-    res.render('dashboard-edit-object', {
+exports.update_dashboard_metadata = function (req, res) {
+    res.render('dashboard-update-metadata', {
         host: config.host
     });
 };

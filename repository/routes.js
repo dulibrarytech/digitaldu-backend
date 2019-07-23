@@ -12,7 +12,10 @@ module.exports = function (app) {
     app.route('/api/admin/v1/repo/object')
         .get(token.verify, Repo.get_admin_object)
         .post(token.verify, Repo.save_admin_collection_object)
-        .put(Repo.update_object_metadata);  // token.verify,
+        .put(Repo.update_metadata);  // token.verify,
+
+    app.route('/api/admin/v1/repo/object/cron')
+        .put(Repo.update_metadata_cron);
 
     app.route('/api/admin/v1/repo/publish')
         .post(token.verify, Repo.publish_object);

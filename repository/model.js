@@ -11,7 +11,7 @@ const fs = require('fs'),
     modslibdisplay = require('../libs/display-record'),
     archivematica = require('../libs/archivematica'),
     archivespace = require('../libs/archivespace'),
-    importlib = require('../libs/transfer-ingest'),
+    // importlib = require('../libs/transfer-ingest'),
     logger = require('../libs/log4'),
     knex = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects',
@@ -245,12 +245,277 @@ exports.get_admin_object = function (req, callback) {
         });
 };
 
-/** // TODO: read st.txt file first?
- * Updates object metadata
+/**
+ * Updates single metadata record
+ */
+exports.update_metadata = function (req, callback) {
+
+    // TODO: query db by pid and get mods_id
+    let pid = req.body.pid;
+
+    // console.log(pid);
+
+    return false;
+
+    function get_session_token(callback) {
+
+        archivespace.get_session_token(function (response) {
+
+            let result = response.data,
+                obj = {},
+                token;
+
+            try {
+
+                token = JSON.parse(result);
+
+                if (token.session === undefined) {
+                    logger.module().error('ERROR: session token is undefined');
+                    obj.session = null;
+                    callback(null, obj);
+                    return false;
+                }
+
+                if (token.error === true) {
+                    logger.module().error('ERROR: session token error' + token.error_message);
+                    obj.session = null;
+                    callback(null, obj);
+                    return false;
+                }
+
+                obj.session = token.session;
+                callback(null, obj);
+                return false;
+
+            } catch (error) {
+                logger.module().error('ERROR: session token error ' + error);
+            }
+        });
+    }
+
+    function get_record_update(obj, callback) {
+
+        if (obj.session === null) {
+            callback(null, obj);
+            return false;
+        }
+
+        setTimeout(function () {
+
+            // TODO: get record via URI
+            archivespace.get_record_update(obj.session, function (records) {
+
+                let data = JSON.parse(records.updates),
+                    uriArr = [];
+
+                for (let i = 0; i < data.length; i++) {
+
+                    if (data[i].record.uri === undefined) {
+                        continue;
+                    }
+
+                    let tmp = data[i].record.uri.split('/'),
+                        mods_id = tmp[tmp.length - 1];
+
+                    // collection metadata
+                    if (data[i].record.jsonmodel_type === 'resource') {
+
+                        uriArr.push({
+                            type: 'collection',
+                            mods_id: mods_id,
+                            is_updated: 0
+                        });
+                    }
+
+                    // archival object metadata
+                    if (data[i].record.jsonmodel_type === 'archival_object') {
+
+                        uriArr.push({
+                            type: 'object',
+                            mods_id: mods_id,
+                            is_updated: 0
+                        });
+                    }
+                }
+
+                obj.records = uriArr;
+                callback(null, obj);
+            });
+
+        }, 4000);
+    }
+
+    function save_record_update(obj, callback) {
+
+        knexQ(ARCHIVESSPACE_QUEUE)
+            .insert(obj.records)
+            .then(function (data) {
+                obj.data_saved = true;
+                callback(null, obj);
+            })
+            .catch(function (error) {
+                logger.module().error('ERROR: unable to save record updates' + error);
+                obj.error = 'ERROR: unable to save record updates' + error;
+                callback(null, obj);
+            });
+    }
+
+    function update_record(obj, callback) {
+
+        if (obj.data_saved !== undefined && obj.data_saved === true) {
+
+            // Get updated record id's from queue
+            knexQ(ARCHIVESSPACE_QUEUE)
+                .select('*')
+                .where({
+                    is_updated: 0
+                })
+                .then(function (data) {
+
+                    let timer = setInterval(function () {
+
+                        if (data.length === 0) {
+                            clearInterval(timer);
+                            callback(null, obj);
+                            return false;
+                        } else {
+
+                            let record = data.pop();
+
+                            archivespace.get_mods(record.mods_id, obj.session, function (updated_record) {
+
+                                // Get existing record from repository
+                                knex(REPO_OBJECTS)
+                                    .select('*')
+                                    .where({
+                                        mods_id: record.mods_id
+                                    })
+                                    .then(function (data) {
+
+                                        if (data.length === 0) {
+                                            logger.module().info('INFO: There were no repository records to update');
+                                            return false;
+                                        }
+
+                                        let recordObj = {};
+                                        recordObj.pid = data[0].pid;
+                                        recordObj.is_member_of_collection = data[0].is_member_of_collection;
+                                        recordObj.object_type = data[0].object_type;
+                                        recordObj.sip_uuid = data[0].sip_uuid;
+                                        recordObj.handle = data[0].handle;
+                                        recordObj.entry_id = data[0].entry_id;
+                                        recordObj.thumbnail = data[0].thumbnail;
+                                        recordObj.object = data[0].file_name;
+                                        recordObj.mime_type = data[0].mime_type;
+                                        recordObj.mods = updated_record.mods;
+
+                                        modslibdisplay.create_display_record(recordObj, function (result) {
+
+                                            let tmp = JSON.parse(result);
+
+                                            if (tmp.is_compound === 1 && tmp.object_type !== 'collection') {
+
+                                                let currentRecord = JSON.parse(data[0].display_record),
+                                                    currentCompoundParts = currentRecord.display_record.parts;
+
+                                                delete tmp.display_record.parts;
+                                                delete tmp.compound;
+
+                                                if (currentCompoundParts !== undefined) {
+                                                    tmp.display_record.parts = currentCompoundParts;
+                                                    tmp.compound = currentCompoundParts;
+                                                }
+
+                                                obj.display_record = JSON.stringify(tmp);
+
+                                            } else if (tmp.is_compound === 0 || tmp.object_type === 'collection') {
+
+                                                obj.display_record = result;
+
+                                            }
+
+                                            update_mods(record, updated_record, obj, function (result) {
+                                                if (result.updates !== true) {
+                                                    logger.module().error('ERROR: Unable to update mods record ' + data[0].mods_id);
+                                                } else {
+
+                                                    request.post({
+                                                        url: config.apiUrl + '/api/admin/v1/indexer',
+                                                        form: {
+                                                            'sip_uuid': data[0].sip_uuid
+                                                        }
+                                                    }, function (error, httpResponse, body) {
+
+                                                        if (error) {
+                                                            logger.module().fatal('FATAL: indexer error ' + error + ' (create_repo_record)');
+                                                            return false;
+                                                        }
+
+                                                        if (httpResponse.statusCode === 200) {
+                                                            return false;
+                                                        } else {
+                                                            logger.module().fatal('FATAL: http error ' + body + ' (update_mods)');
+                                                            return false;
+                                                        }
+                                                    });
+                                                }
+                                            });
+
+                                        });
+
+                                        return null;
+                                    })
+                                    .catch(function (error) {
+                                        logger.module().error('ERROR: Unable to get mods update records ' + error);
+                                        throw 'ERROR: Unable to get mods update records ' + error;
+                                    });
+                            });
+                        }
+
+                    }, 1000);
+
+                    return null;
+                })
+                .catch(function (error) {
+                    logger.module().error('ERROR: Unable to get update records ' + error);
+                    throw 'ERROR: Unable to get update records ' + error;
+                });
+
+        } else {
+            logger.module().info('INFO: No mods record updates found.');
+            callback(null, obj);
+        }
+    }
+
+    async.waterfall([
+        get_session_token,
+        get_record_update,
+        save_record_update,
+        update_record
+    ], function (error, results) {
+
+        if (error) {
+            logger.module().error('ERROR: async (get_record_update)');
+            throw 'ERROR: async (get_record_update)';
+        }
+
+        logger.module().info('INFO: record updated');
+
+    });
+
+    callback({
+        status: 201,
+        message: 'Looking for Updated records'
+    });
+
+};
+
+/**
+ * Gets metadata updates from archivesspace
  * @param req
  * @param callback
  */
-exports.update_object_metadata = function (req, callback) {
+exports.update_metadata_cron = function (req, callback) {
 
     function get_session_token(callback) {
 
@@ -555,18 +820,10 @@ const update_mods = function (record, updated_record, obj, callback) {
  */
 exports.save_admin_collection_object = function (req, callback) {
 
-    let data = req.body,
-        mods_id = parseInt(data.mods_id, 10);
+    let data = req.body;
 
-    if (isNaN(mods_id)) {
-
-        callback({
-            status: 400,
-            message: 'Id error',
-            data: []
-        });
-
-        return false;
+    if (data.uri === undefined || data.is_member_of_collection) {
+        // TODO: 400 response
     }
 
     function get_session_token(callback) {
@@ -577,7 +834,7 @@ exports.save_admin_collection_object = function (req, callback) {
                 obj = {},
                 token;
 
-            if (data === undefined) {
+            if (result === undefined) {
                 obj.session = null;
                 callback(null, obj);
                 return false;
@@ -601,7 +858,11 @@ exports.save_admin_collection_object = function (req, callback) {
                     return false;
                 }
 
-                obj.mods_id = data.mods_id;
+                let uriArr = data.uri.split('/'),
+                    mods_id = uriArr[uriArr.length - 1];
+
+                obj.mods_id = mods_id;
+                obj.uri = data.uri;
                 obj.session = token.session;
                 callback(null, obj);
                 return false;
@@ -623,7 +884,7 @@ exports.save_admin_collection_object = function (req, callback) {
 
         setTimeout(function () {
 
-            archivespace.get_mods(obj.mods_id, obj.session, function (response) {
+            archivespace.get_mods(obj.uri, obj.session, function (response) {
 
                 if (response.error !== undefined && response.error === true) {
 
@@ -637,6 +898,8 @@ exports.save_admin_collection_object = function (req, callback) {
                 obj.object_type = 'collection';
                 obj.mods = response.mods;
                 obj.is_member_of_collection = data.is_member_of_collection;
+
+                delete obj.uri;
                 delete obj.session;
                 callback(null, obj);
             });

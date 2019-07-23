@@ -10,16 +10,68 @@ const objectsModule = (function () {
 
     let api = configModule.getApi();
 
-    // TODO: DEPRECATE // RENAME to updateObject? or updateMetatdata
-    obj.editObject = function () {
+    // TODO: test
+    obj.updateMetadata = function () {
 
-        let pid = helperModule.getParameterByName('pid');
+        let obj = {};
+            obj.pid = helperModule.getParameterByName('pid');
 
         userModule.setHeaderUserToken();
 
+        let url = api + '/api/admin/v1/repo/object',
+            request = new Request(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': userModule.getUserToken()
+                },
+                body: JSON.stringify(obj),
+                mode: 'cors'
+            });
+
+        const callback = function (response) {
+
+            console.log('response: ', response);
+
+            if (response.status === 201) {
+
+                response.json().then(function (response) {
+
+                    let message = '<div class="alert alert-success"><i class="fa fa-check-circle"></i> Metadata updated</div>';
+                    $('#message').html(message);
+
+                    setTimeout(function () {
+                        $('#message').html('');
+                        objectsModule.getObjects();
+                    }, 4000);
+
+                });
+
+            } else if (response.status === 401) {
+
+                response.json().then(function (response) {
+
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.</div>';
+                    renderError(message);
+
+                    setTimeout(function () {
+                        window.location.replace('/login');
+                    }, 4000);
+                });
+
+            } else {
+                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '). An error has occurred. Unable to update metadata.</div>';
+                renderError(message);
+            }
+        };
+
+        http.req(request, callback);
+
+        /*
         $.ajax(api + '/api/admin/v1/repo/object?pid=' + pid)
             .done(function (data) {
                 // renderObjectEditForm(data);
+                // TODO: ...
             })
             .fail(function (error) {
 
@@ -34,11 +86,12 @@ const objectsModule = (function () {
 
                 } else {
 
-                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + error.status + '). An error has occurred. Unable to get objects.</div>';
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + error.status + '). An error has occurred. Unable to update metadata.</div>';
                     renderError(message);
                 }
 
             });
+            */
     };
 
     /**
@@ -304,8 +357,6 @@ const objectsModule = (function () {
             html += '</div>';
             html += '<div class="col-md-3" style="padding: 5px">';
 
-            console.log(data[i]);
-
             // TODO: optimize this block
             if (data[i].object_type === 'collection') {
 
@@ -319,7 +370,8 @@ const objectsModule = (function () {
                     html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data[i].pid + '\', \'collection\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
                 }
 
-                html += '<p><a href="' + api + '/dashboard/object/edit?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Update collection</a></p>';
+                html += '<p><a href="' + api + '/dashboard/object/update?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Update metadata</a></p>';
+                html += '<p><a href="' + api + '/dashboard/object/tn?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Change Thumbnail</a></p>';
 
             } else if (data[i].object_type === 'object' && data[i].is_compound === 0) {
 
@@ -333,7 +385,8 @@ const objectsModule = (function () {
                     html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data[i].pid + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
                 }
 
-                html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '"><i class="fa fa-download"></i>&nbsp;Download AIP</a></p>';
+                html += '<p><a href="' + api + '/dashboard/object/update?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Update metadata</a></p>';
+                // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '"><i class="fa fa-download"></i>&nbsp;Download AIP</a></p>';
                 // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=tn"><i class="fa fa-code"></i>&nbsp;Technical Metadata</a></p>';
                 // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=mods"><i class="fa fa-code"></i>&nbsp;MODS</a></p>';
 
@@ -348,6 +401,8 @@ const objectsModule = (function () {
                     html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
                     html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data[i].pid + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
                 }
+
+                html += '<p><a href="' + api + '/dashboard/object/update?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Update metadata</a></p>';
             }
 
             html += '</div>';
