@@ -107,7 +107,7 @@ const collectionsModule = (function () {
 
         let obj = {};
         obj.pid = helperModule.getParameterByName('pid');
-        obj.collection_thumbnail_url = $('#collection-thumbnail-url').val();
+        obj.thumbnail_url = $('#thumbnail-url').val();
 
         userModule.setHeaderUserToken();
 
