@@ -67,34 +67,13 @@ const helperModule = (function () {
 
         let tnObj = configModule.getTnUrls();
 
-        // http://libspecc01-vlp.du.edu/discovery_v2/datastream/codu:111352/tn
-
-        // set default TN based on mime type
-        /*
-        if (mime_type === 'audio/x-wav') {
-            return tnObj.default_audio;
-        } else if (mime_type === 'application/pdf') {
-            return tnObj.default_pdf;
-        } else if (mime_type === 'video/mp4') {
-            return tnObj.default_video;
-        } else if (tn === 'collection') {
-            return tnObj.default_collection;
-        } else if (tn === null) {
-            return tnObj.default;
-            //return 'http://librepo01-vlp.du.edu:8080/fedora/objects/' + pid + '/datastreams/TN/content';
-        } else {
-            return tnObj.duracloud + tn;
-        }
-        */
-
         if (tn !== null && tn.indexOf('http') !== -1) {
             return tn;
+        } else if (tn === null) {
+            return tnObj.default;
         } else {
-            console.log('tn service');
-            // return tnObj.tn_service + pid + '/tn';
-            return tnObj.tn_service + 'codu:111352/tn';
+            return tnObj.tn_service + pid + '/tn';
         }
-
     };
 
     obj.ping = function () {
