@@ -72,5 +72,6 @@ module.exports = {
     ingestStatusTimer: process.env.INGEST_STATUS_TIMER,
     transferApprovalTimer: process.env.TRANSFER_APPROVAL_TIMER,
     transferStatusCheckInterval: process.env.TRANSFER_STATUS_CHECK_INTERVAL,
-    ingestStatusCheckInterval: process.env.INGEST_STATUS_CHECK_INTERVAL
+    ingestStatusCheckInterval: process.env.INGEST_STATUS_CHECK_INTERVAL,
+    thumbnailService: process.env.THUMBNAIL_SERVICE
 };

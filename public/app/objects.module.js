@@ -10,7 +10,8 @@ const objectsModule = (function () {
 
     let api = configModule.getApi();
 
-    // TODO: test
+
+    /*
     obj.updateMetadata = function () {
 
         let obj = {};
@@ -66,6 +67,7 @@ const objectsModule = (function () {
         };
 
         http.req(request, callback);
+        */
 
         /*
         $.ajax(api + '/api/admin/v1/repo/object?pid=' + pid)
@@ -91,8 +93,9 @@ const objectsModule = (function () {
                 }
 
             });
-            */
+
     };
+         */
 
     /**
      *
@@ -322,11 +325,13 @@ const objectsModule = (function () {
 
             if (record.display_record.parts !== undefined && record.display_record.parts.length !== 0) {
 
+                // TODO: add change tn links when rendered
                 html += '<li><strong>Parts:</strong></li>';
                 html += '<ul>';
 
                 for (let i = 0; i < record.display_record.parts.length; i++) {
                     html += '<li>' + record.display_record.parts[i].title + ' ( ' + record.display_record.parts[i].type + ' ) order: ' + record.display_record.parts[i].order + '</li>';
+                    console.log(record.display_record.parts[i]);
                 }
 
                 html += '</ul>';
@@ -370,8 +375,8 @@ const objectsModule = (function () {
                     html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data[i].pid + '\', \'collection\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
                 }
 
-                html += '<p><a href="' + api + '/dashboard/object/update?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Update metadata</a></p>';
-                html += '<p><a href="' + api + '/dashboard/object/tn?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Change Thumbnail</a></p>';
+                // html += '<p><a href="' + api + '/dashboard/object/update?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Update metadata</a></p>';
+                html += '<p><a href="' + api + '/dashboard/object/thumbnail?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Change Thumbnail</a></p>';
 
             } else if (data[i].object_type === 'object' && data[i].is_compound === 0) {
 
@@ -385,7 +390,7 @@ const objectsModule = (function () {
                     html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data[i].pid + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
                 }
 
-                html += '<p><a href="' + api + '/dashboard/object/update?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Update metadata</a></p>';
+                // html += '<p><a href="' + api + '/dashboard/object/update?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Update metadata</a></p>';
                 // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '"><i class="fa fa-download"></i>&nbsp;Download AIP</a></p>';
                 // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=tn"><i class="fa fa-code"></i>&nbsp;Technical Metadata</a></p>';
                 // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=mods"><i class="fa fa-code"></i>&nbsp;MODS</a></p>';
@@ -403,6 +408,8 @@ const objectsModule = (function () {
                 }
 
                 html += '<p><a href="' + api + '/dashboard/object/update?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Update metadata</a></p>';
+                html += '<p><a href="' + api + '/dashboard/object/thumbnail?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Change Thumbnail</a></p>';
+
             }
 
             html += '</div>';

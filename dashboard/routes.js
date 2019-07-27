@@ -23,9 +23,9 @@ module.exports = function (app) {
     app.route('/dashboard/object')
         .get(Dashboard.get_dashboard_object_detail);
 
-    /* update metadata */
-    app.route('/dashboard/object/update')
-        .get(Dashboard.update_dashboard_metadata);
+    /* update thumbnail */
+    app.route('/dashboard/object/thumbnail')
+        .get(Dashboard.update_dashboard_thumbnail);
 
     /* download objects */
     app.route('/dashboard/object/download')

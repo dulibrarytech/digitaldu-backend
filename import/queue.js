@@ -916,6 +916,7 @@ exports.create_repo_record = function (req, callback) {
         if (obj.mime_type.indexOf('audio') !== -1 || obj.mime_type.indexOf('video') !== -1) {
 
             // get kaltura entry_id
+            // TODO: get entry_id from archivespace record
             const get_entry_id = function (callback) {
 
                 importlib.get_entry_id_txt(obj.sip_uuid, function (data) {
@@ -1205,6 +1206,12 @@ exports.create_repo_record = function (req, callback) {
             callback(null, obj);
         });
     }
+
+    // TODO: generate thumbnails http://libspecc01-vlp.du.edu/discovery_v2/datastream/codu:111352/tn
+    function create_thumbnail_reference(obj, callback) {
+        // TODO:...
+    }
+
 
     // 11.)
     function create_display_record(obj, callback) {

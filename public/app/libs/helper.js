@@ -67,7 +67,10 @@ const helperModule = (function () {
 
         let tnObj = configModule.getTnUrls();
 
+        // http://libspecc01-vlp.du.edu/discovery_v2/datastream/codu:111352/tn
+
         // set default TN based on mime type
+        /*
         if (mime_type === 'audio/x-wav') {
             return tnObj.default_audio;
         } else if (mime_type === 'application/pdf') {
@@ -82,6 +85,16 @@ const helperModule = (function () {
         } else {
             return tnObj.duracloud + tn;
         }
+        */
+
+        if (tn !== null && tn.indexOf('http') !== -1) {
+            return tn;
+        } else {
+            console.log('tn service');
+            // return tnObj.tn_service + pid + '/tn';
+            return tnObj.tn_service + 'codu:111352/tn';
+        }
+
     };
 
     obj.ping = function () {
