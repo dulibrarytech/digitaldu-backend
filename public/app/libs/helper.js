@@ -63,7 +63,7 @@ const helperModule = (function () {
      * @param pid
      * @returns {string}
      */
-    obj.getTn = function (tn, mime_type, pid) {
+    obj.getTn = function (tn, pid) {  // mime_type,
 
         let tnObj = configModule.getTnUrls();
 

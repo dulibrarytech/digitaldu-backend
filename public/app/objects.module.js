@@ -234,7 +234,7 @@ const objectsModule = (function () {
             }
 
             let record = JSON.parse(data[i].display_record),
-                tn = helperModule.getTn(data[i].thumbnail, data[i].mime_type, data[i].pid);
+                tn = helperModule.getTn(data[i].thumbnail, data[i].pid);  // data[i].mime_type,
 
             html += '<div class="row">';
             html += '<div class="col-md-3"><img style="max-height: 250px; max-width: 250px;" display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
