@@ -650,7 +650,7 @@ const update_mods = function (record, updated_record, obj, callback) {
  * @param callback
  * @returns {boolean}
  */
-exports.save_admin_collection_object = function (req, callback) {
+exports.create_collection_object = function (req, callback) {
 
     let data = req.body;
 

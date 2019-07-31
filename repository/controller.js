@@ -31,8 +31,8 @@ exports.get_admin_object = function (req, res) {
     });
 };
 
-exports.save_admin_collection_object = function (req, res) {
-    Repo.save_admin_collection_object(req, function (data) {
+exports.create_collection_object = function (req, res) {
+    Repo.create_collection_object(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };

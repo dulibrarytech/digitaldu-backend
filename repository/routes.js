@@ -11,7 +11,7 @@ module.exports = function (app) {
 
     app.route('/api/admin/v1/repo/object')
         .get(token.verify, Repo.get_admin_object)
-        .post(token.verify, Repo.save_admin_collection_object)
+        .post(token.verify, Repo.create_collection_object)
         .put(Repo.update_metadata_cron);  // token.verify,  api-key
 
     app.route('/api/admin/v1/repo/object/thumbnail')
