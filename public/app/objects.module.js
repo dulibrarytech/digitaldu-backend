@@ -208,7 +208,7 @@ const objectsModule = (function () {
         http.req(request, callback);
     };
 
-    /**
+    /** TODO: account for differences between collection and object records
      * Renders object metadata
      * @param data
      * @returns {boolean}
@@ -221,7 +221,7 @@ const objectsModule = (function () {
         $('#current-collection').prop('href', '/dashboard/collections/add?is_member_of_collection=' + is_member_of_collection);
 
         if (data.length === 0) {
-            html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; There are no objects in this collection.</strong></div>';
+            html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; No objects or collections found.</strong></div>';
             $('#objects').html(html);
             return false;
         }
@@ -234,7 +234,7 @@ const objectsModule = (function () {
             }
 
             let record = JSON.parse(data[i].display_record),
-                tn = helperModule.getTn(data[i].thumbnail, data[i].pid);  // data[i].mime_type,
+                tn = helperModule.getTn(data[i].thumbnail, data[i].pid);
 
             html += '<div class="row">';
             html += '<div class="col-md-3"><img style="max-height: 250px; max-width: 250px;" display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
@@ -254,7 +254,10 @@ const objectsModule = (function () {
 
             html += '<ul>';
             html += '<li><strong>Pid:</strong>&nbsp;<a target="_blank" href="' + record.handle + '">' + record.pid + '</a>&nbsp;&nbsp;<i class="fa fa-external-link"></i></li>';
-            html += '<li><strong>Uri:</strong>&nbsp;' + record.display_record.uri + '</li>';
+
+            if (record.display_record.uri !== undefined) {
+                html += '<li><strong>Uri:</strong>&nbsp;' + record.display_record.uri + '</li>';
+            }
 
             if (record.display_record.dates !== undefined && record.display_record.dates.length !== 0) {
 
@@ -262,7 +265,13 @@ const objectsModule = (function () {
                 html += '<ul>';
 
                 for (let i = 0; i < record.display_record.dates.length; i++) {
-                    html += '<li>' + record.display_record.dates[i].expression + ' ( ' + record.display_record.dates[i].type + '</a> )</li>';
+
+                    if (data[i].object_type === 'collection') {
+                        html += '<li>' + record.display_record.dates[i].expression + ' ( ' + record.display_record.dates[i].date_type + '</a> )</li>';
+
+                    } else {
+                        html += '<li>' + record.display_record.dates[i].expression + ' ( ' + record.display_record.dates[i].type + '</a> )</li>';
+                    }
                 }
 
                 html += '</ul>';
@@ -274,7 +283,16 @@ const objectsModule = (function () {
                 html += '<ul>';
 
                 for (let i = 0; i < record.display_record.extents.length; i++) {
-                    html += '<li>' + record.display_record.extents[i] + '</li>';
+
+                    if (typeof record.display_record.extents[i] === 'object') {
+
+                        for (let prop in record.display_record.extents[i]) {
+                            html += '<li>' + prop + ': ' + record.display_record.extents[i][prop] + '</li>';
+                        }
+
+                    } else {
+                        html += '<li>' + record.display_record.extents[i] + '</li>';
+                    }
                 }
 
                 html += '</ul>';
@@ -294,9 +312,16 @@ const objectsModule = (function () {
 
             if (record.display_record.language !== undefined && record.display_record.language.length !== 0) {
 
-                for (let i = 0; i < record.display_record.language.length; i++) {
-                    html += '<li><strong>Language:</strong> ' + record.display_record.language[i].text + ' ( ' + record.display_record.language[i].authority + ' )</li>';
+                if (typeof record.display_record.language === 'object') {
+
+                    for (let i = 0; i < record.display_record.language.length; i++) {
+                        html += '<li><strong>Language:</strong> ' + record.display_record.language[i].text + ' ( ' + record.display_record.language[i].authority + ' )</li>';
+                    }
+
+                } else {
+                    html += '<li><strong>Language:</strong> ' + record.display_record.language + '</li>';
                 }
+
             }
 
             if (record.display_record.names !== undefined && record.display_record.names.length !== 0) {
@@ -317,7 +342,9 @@ const objectsModule = (function () {
                 html += '<ul>';
 
                 for (let i = 0; i < record.display_record.notes.length; i++) {
-                    html += '<li>' + record.display_record.notes[i].content + ' ( ' + record.display_record.notes[i].type + ' )</li>';
+                    if (record.display_record.notes[i].content !== undefined) {
+                        html += '<li>' + record.display_record.notes[i].content.toString() + ' ( ' + record.display_record.notes[i].type + ' )</li>';
+                    }
                 }
 
                 html += '</ul>';
@@ -337,7 +364,7 @@ const objectsModule = (function () {
                 html += '</ul>';
             }
 
-            if (record.display_record.subjects !== undefined && record.display_record.subjects.length !== 0) {
+            if (data[i].object_type !== 'collection' && record.display_record.subjects !== undefined && record.display_record.subjects.length !== 0) {
 
                 html += '<li><strong>Subjects:</strong></li>';
                 html += '<ul>';
@@ -353,11 +380,12 @@ const objectsModule = (function () {
                 html += '</ul>';
             }
 
-            html += '</ul>';
-
-            if (data[i].object_type === 'collection' && record.abstract !== undefined) {
-                html += '<p style="min-height: 75px">' + record.abstract + '</p>';
+            if (record.abstract !== undefined) { // data[i].object_type === 'collection' &&
+                html += '<li><strong>Abstract:</strong></li>';
+                html += '<ul><li style="min-height: 75px">' + record.abstract + '</li></ul>';
             }
+
+            html += '</ul>';
 
             html += '</div>';
             html += '<div class="col-md-3" style="padding: 5px">';
@@ -375,7 +403,7 @@ const objectsModule = (function () {
                     html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data[i].pid + '\', \'collection\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
                 }
 
-                // html += '<p><a href="' + api + '/dashboard/object/update?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Update metadata</a></p>';
+                html += '<p><a href="' + api + '/dashboard/object/update?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Update metadata</a></p>';
                 html += '<p><a href="' + api + '/dashboard/object/thumbnail?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Change Thumbnail</a></p>';
 
             } else if (data[i].object_type === 'object' && data[i].is_compound === 0) {
@@ -390,7 +418,7 @@ const objectsModule = (function () {
                     html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data[i].pid + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
                 }
 
-                // html += '<p><a href="' + api + '/dashboard/object/update?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Update metadata</a></p>';
+                html += '<p><a href="' + api + '/dashboard/object/update?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Update metadata</a></p>';
                 // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '"><i class="fa fa-download"></i>&nbsp;Download AIP</a></p>';
                 // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=tn"><i class="fa fa-code"></i>&nbsp;Technical Metadata</a></p>';
                 // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=mods"><i class="fa fa-code"></i>&nbsp;MODS</a></p>';

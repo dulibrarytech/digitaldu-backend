@@ -10,7 +10,7 @@ module.exports = function (app) {
         .get(Dashboard.get_dashboard_home);
 
     /* collections */
-    app.route('/dashboard/root-collections')
+    app.route('/dashboard/collections')
         .get(Dashboard.get_dashboard_collections);
 
     app.route('/dashboard/collections/add')
