@@ -284,10 +284,24 @@ const objectsModule = (function () {
 
                 for (let i = 0; i < record.display_record.extents.length; i++) {
 
+                    // collection object
                     if (typeof record.display_record.extents[i] === 'object') {
 
                         for (let prop in record.display_record.extents[i]) {
-                            html += '<li>' + prop + ': ' + record.display_record.extents[i][prop] + '</li>';
+
+                            if (prop === 'number') {
+                                html += '<li>number: ' + record.display_record.extents[i][prop] + '</li>';
+                            } else if (prop === 'container_summary') {
+                                html += '<li>container summary: ' + record.display_record.extents[i][prop] + '</li>';
+                            } else if (prop === 'created_by') {
+                                html += '<li>created by: ' + record.display_record.extents[i][prop] + '</li>';
+                            } else if (prop === 'last_modified_by') {
+                                html += '<li>last modified by: ' + record.display_record.extents[i][prop] + '</li>';
+                            } else if (prop === 'portion') {
+                                html += '<li>portion: ' + record.display_record.extents[i][prop] + '</li>';
+                            } else if (prop ==='extent_type') {
+                                html += '<li>extent type: ' + record.display_record.extents[i][prop] + '</li>';
+                            }
                         }
 
                     } else {
