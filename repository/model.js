@@ -654,12 +654,14 @@ exports.create_collection_object = function (req, callback) {
 
     let data = req.body;
 
-    if (data.uri === undefined || data.is_member_of_collection) {
+    if (data.uri === undefined || data.is_member_of_collection === undefined) {
 
         callback({
             status: 400,
             message: 'Bad request'
         });
+
+        return false;
     }
 
     function get_session_token(callback) {
@@ -700,6 +702,7 @@ exports.create_collection_object = function (req, callback) {
                 obj.mods_id = mods_id;
                 obj.uri = data.uri;
                 obj.session = token.session;
+
                 callback(null, obj);
                 return false;
 
@@ -812,11 +815,13 @@ exports.create_collection_object = function (req, callback) {
     ], function (error, results) {
 
         if (error) {
-            logger.module().error('ERROR: async (save_admin_collection_object)');
-            throw 'ERROR: async (save_admin_collection_object)';
+            logger.module().error('ERROR: async (create_collection_object)');
+            throw 'ERROR: async (create_collection_object)';
         }
 
         logger.module().info('INFO: collection record saved');
+
+        console.log(results);
 
         if (results.error === undefined) {
 

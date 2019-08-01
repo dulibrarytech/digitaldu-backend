@@ -86,10 +86,14 @@ const collectionsModule = (function () {
             $('#message').html(message);
             $('#collection-form').hide();
 
+            return false;
+
+            /*
             setTimeout(function () {
                 $('#message').html('');
                 window.location.replace(api + '/dashboard/root-collections');
             }, 3000);
+            */
 
         }).fail(function (jqXHR, textStatus) {
 
