@@ -10,93 +10,6 @@ const objectsModule = (function () {
 
     let api = configModule.getApi();
 
-
-    /*
-    obj.updateMetadata = function () {
-
-        let obj = {};
-            obj.pid = helperModule.getParameterByName('pid');
-
-        userModule.setHeaderUserToken();
-
-        let url = api + '/api/admin/v1/repo/object',
-            request = new Request(url, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': userModule.getUserToken()
-                },
-                body: JSON.stringify(obj),
-                mode: 'cors'
-            });
-
-        const callback = function (response) {
-
-            console.log('response: ', response);
-
-            if (response.status === 201) {
-
-                response.json().then(function (response) {
-
-                    let message = '<div class="alert alert-success"><i class="fa fa-check-circle"></i> Metadata updated</div>';
-                    $('#message').html(message);
-
-                    setTimeout(function () {
-                        $('#message').html('');
-                        objectsModule.getObjects();
-                    }, 4000);
-
-                });
-
-            } else if (response.status === 401) {
-
-                response.json().then(function (response) {
-
-                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.</div>';
-                    renderError(message);
-
-                    setTimeout(function () {
-                        window.location.replace('/login');
-                    }, 4000);
-                });
-
-            } else {
-                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '). An error has occurred. Unable to update metadata.</div>';
-                renderError(message);
-            }
-        };
-
-        http.req(request, callback);
-        */
-
-        /*
-        $.ajax(api + '/api/admin/v1/repo/object?pid=' + pid)
-            .done(function (data) {
-                // renderObjectEditForm(data);
-                // TODO: ...
-            })
-            .fail(function (error) {
-
-                if (error.status === 401) {
-
-                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + error.status + '). Your session has expired.  You will be redirected to the login page momentarily.</div>';
-                    renderError(message);
-
-                    setTimeout(function () {
-                        window.location.replace('/login');
-                    }, 4000);
-
-                } else {
-
-                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + error.status + '). An error has occurred. Unable to update metadata.</div>';
-                    renderError(message);
-                }
-
-            });
-
-    };
-         */
-
     /**
      *
      */
@@ -208,7 +121,7 @@ const objectsModule = (function () {
         http.req(request, callback);
     };
 
-    /** TODO: account for differences between collection and object records
+    /**
      * Renders object metadata
      * @param data
      * @returns {boolean}
@@ -234,7 +147,8 @@ const objectsModule = (function () {
             }
 
             let record = JSON.parse(data[i].display_record),
-                tn = helperModule.getTn(data[i].thumbnail, data[i].pid);
+                tn = helperModule.getTn(data[i].thumbnail, data[i].pid),
+                pid = data[i].pid;
 
             html += '<div class="row">';
             html += '<div class="col-md-3"><img style="max-height: 250px; max-width: 250px;" display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
@@ -366,13 +280,14 @@ const objectsModule = (function () {
 
             if (record.display_record.parts !== undefined && record.display_record.parts.length !== 0) {
 
-                // TODO: add change tn links when rendered
                 html += '<li><strong>Parts:</strong></li>';
                 html += '<ul>';
 
                 for (let i = 0; i < record.display_record.parts.length; i++) {
-                    html += '<li>' + record.display_record.parts[i].title + ' ( ' + record.display_record.parts[i].type + ' ) order: ' + record.display_record.parts[i].order + '</li>';
-                    console.log(record.display_record.parts[i]);
+                    html += '<li>' + record.display_record.parts[i].title + ' ( ' + record.display_record.parts[i].type + ' ) order: ' + record.display_record.parts[i].order;
+
+                    let tn = helperModule.getTn(record.display_record.parts[i].thumbnail, pid);
+                    html += '<br><img src="' + tn + '" width="150px" height="150px"></li>';
                 }
 
                 html += '</ul>';

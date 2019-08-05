@@ -25,13 +25,13 @@ const configModule = (function () {
      */
     obj.getTnUrls = function () {
         return {
-            tn_service: 'http://libspecc01-vlp.du.edu/discovery_v2/datastream/',
             duracloud: 'https://archivesdu.duracloud.org/durastore/dip-store/dip-store/',
-            default_collection: configModule.getApi() + '/images/media.jpg',
-            default: configModule.getApi() + '/images/media.jpg',
-            default_pdf: configModule.getApi() + '/images/media.jpg',
-            default_audio: configModule.getApi() + '/images/media.jpg',
-            default_video: configModule.getApi() + '/images/media.jpg'
+            default: configModule.getApi() + '/images/media.jpg'
+            // tn_service: 'http://libspecc01-vlp.du.edu/discovery_v2/datastream/',
+            // default_collection: configModule.getApi() + '/images/media.jpg'
+            // default_pdf: configModule.getApi() + '/images/media.jpg',
+            // default_audio: configModule.getApi() + '/images/media.jpg',
+            // default_video: configModule.getApi() + '/images/media.jpg'
         };
     };
 

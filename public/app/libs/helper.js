@@ -72,7 +72,7 @@ const helperModule = (function () {
         } else if (tn === null) {
             return tnObj.default;
         } else {
-            return tnObj.tn_service + pid + '/tn';
+            return tnObj.duracloud + tn;
         }
     };
 
