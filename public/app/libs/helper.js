@@ -65,9 +65,6 @@ const helperModule = (function () {
      */
     obj.getTn = function (tn, pid) {
 
-        console.log('tn: ', tn);
-        console.log('pid: ', pid);
-
         let tnObj = configModule.getTnUrls();
 
         if (tn !== null && tn !== undefined && tn.indexOf('http') !== -1) {
