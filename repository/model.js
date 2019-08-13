@@ -805,6 +805,8 @@ exports.create_collection_object = function (req, callback) {
             });
     }
 
+    // TODO: index collection object
+
     async.waterfall([
         get_session_token,
         get_mods,
@@ -820,8 +822,6 @@ exports.create_collection_object = function (req, callback) {
         }
 
         logger.module().info('INFO: collection record saved');
-
-        console.log(results);
 
         if (results.error === undefined) {
 

@@ -17,15 +17,19 @@ exports.create_display_record = function (obj, callback) {
     record.thumbnail = obj.thumbnail;
     record.object = obj.file_name;
     record.mime_type = obj.mime_type;
-    record.entry_id = obj.entry_id;
 
     metadata = JSON.parse(mods);
+
     record.object_type = obj.object_type;
 
     if (metadata.is_compound !== undefined && metadata.is_compound === true) {
         record.is_compound = 1;
     } else {
         record.is_compound = 0;
+    }
+
+    if (metadata.parts[0].kaltura_id !== undefined) {
+        record.entry_id = metadata.parts[0].kaltura_id;
     }
 
     if (metadata.title !== undefined || metadata.title !== null) {

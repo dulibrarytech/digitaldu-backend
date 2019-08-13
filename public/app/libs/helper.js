@@ -65,11 +65,14 @@ const helperModule = (function () {
      */
     obj.getTn = function (tn, pid) {
 
+        console.log('tn: ', tn);
+        console.log('pid: ', pid);
+
         let tnObj = configModule.getTnUrls();
 
-        if (tn !== null && tn.indexOf('http') !== -1) {
+        if (tn !== null && tn !== undefined && tn.indexOf('http') !== -1) {
             return tn;
-        } else if (tn === null) {
+        } else if (tn === null || tn === undefined) {
             return tnObj.default;
         } else {
             return tnObj.duracloud + tn;

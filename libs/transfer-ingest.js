@@ -649,7 +649,7 @@ exports.get_uri_txt = function (sip_uuid, callback) {
         });
 };
 
-/**
+/** DEPRECATE
  * Gets kalturaid.txt containing mods id (used to get metadata from archivespace)
  * @param sip_uuid
  * @param callback

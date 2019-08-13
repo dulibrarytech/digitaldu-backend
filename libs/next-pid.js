@@ -2,7 +2,7 @@ var config = require('../config/config'),
     logger = require('../libs/log4'),
     request = require('request');
 
-/**
+/** DEPRECATE
  * Makes HTTP request to get pid
  * @param callback
  */

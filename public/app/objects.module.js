@@ -151,7 +151,7 @@ const objectsModule = (function () {
                 pid = data[i].pid;
 
             html += '<div class="row">';
-            html += '<div class="col-md-3"><img style="max-height: 250px; max-width: 250px;" display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
+            html += '<div class="col-md-3"><img style="max-height: 250px; max-width: 250px; border: solid 1px;" display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
             html += '<div class="col-md-6" style="padding: 5px">';
 
             if (record.display_record.title !== undefined) {
@@ -286,6 +286,7 @@ const objectsModule = (function () {
                 for (let i = 0; i < record.display_record.parts.length; i++) {
                     html += '<li>' + record.display_record.parts[i].title + ' ( ' + record.display_record.parts[i].type + ' ) order: ' + record.display_record.parts[i].order;
 
+                    // TODO: toggle default thumbnails if not an image.  i.e. pdf, audio and video
                     let tn = helperModule.getTn(record.display_record.parts[i].thumbnail, pid);
                     html += '<br><img src="' + tn + '" width="150px" height="150px"></li>';
                 }

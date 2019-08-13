@@ -86,7 +86,7 @@ exports.get_mods = function (id, session, callback) {
 
     let apiUrl = config.archivespaceHost + '/repositories/' + config.archivespaceRepositoryid + '/archival_objects/' + id + '/repository';
 
-    // check if id is collection uri
+    // check if id is a collection uri
     let uri = id.split('/');
 
     if (uri.length > 1) {

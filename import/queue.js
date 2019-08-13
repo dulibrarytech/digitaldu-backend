@@ -381,7 +381,6 @@ exports.start_transfer = function (req, callback) {
                 });
 
                 throw 'FATAL: transfer error ' + response + ' (start_transfer)';
-                //return false;
             }
 
             importlib.confirm_transfer(response, object.id);
@@ -635,7 +634,6 @@ exports.get_ingest_status = function (req, callback) {
                     });
 
                     throw 'ERROR: unable to update ingest status (get_ingest_status)';
-                    // return false;
                 }
 
                 if (result.complete !== undefined && result.complete === true) {
@@ -915,46 +913,7 @@ exports.create_repo_record = function (req, callback) {
         // process larger files. checks if there is a manifest available for chunked files
         if (obj.mime_type.indexOf('audio') !== -1 || obj.mime_type.indexOf('video') !== -1) {
 
-            // get kaltura entry_id
-            // TODO: get entry_id from archivespace record
-            const get_entry_id = function (callback) {
-
-                importlib.get_entry_id_txt(obj.sip_uuid, function (data) {
-
-                    // kalturaid.txt is not present
-                    if (data.length === 0) {
-                        obj.sip_uuid = sip_uuid;
-                        obj.dip_path = null;
-                        obj.file = null;
-                        obj.uuid = null;
-                        obj.entry_id = null;
-                        callback(null, obj);
-                        return false;
-                    }
-
-                    // gets entry_id (kalturaid) data from db
-                    let dc_data = data.pop();
-                    obj.sip_uuid = sip_uuid;
-                    obj.dip_path = dc_data.dip_path;
-                    obj.file = dc_data.file;
-                    obj.uuid = dc_data.uuid;
-
-                    duracloud.get_entry_id(obj, function (response) {
-
-                        if (response.error !== undefined && response.error === true) {
-                            logger.module().error('ERROR: unable to get kaltura id  ' + response.error_message);
-                            obj.entry_id = null;
-                            callback(null, obj);
-                            return false;
-                        } else {
-                            obj.entry_id = response;
-                            callback(null, obj);
-                            return false;
-                        }
-                    });
-                });
-            };
-
+            // TODO: check file size to determine if manifest is present
             const get_manifest = function (obj, callback) {
 
                 if (obj.dip_path === null) {
@@ -990,17 +949,8 @@ exports.create_repo_record = function (req, callback) {
                 });
             };
 
-            async.waterfall([
-                get_entry_id,
-                get_manifest
-            ], function (error, obj) {
-
-                if (error) {
-                    logger.module().error('ERROR: async (kaltura id / manifest)');
-                }
-
-                callback(null, obj);
-            });
+            // get_manifest(obj);
+            get_duracloud_object(obj, 5000);
 
         } else {
             get_duracloud_object(obj, 5000);
@@ -1206,12 +1156,6 @@ exports.create_repo_record = function (req, callback) {
             callback(null, obj);
         });
     }
-
-    // TODO: generate thumbnails http://libspecc01-vlp.du.edu/discovery_v2/datastream/codu:111352/tn
-    function create_thumbnail_reference(obj, callback) {
-        // TODO:...
-    }
-
 
     // 11.)
     function create_display_record(obj, callback) {

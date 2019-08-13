@@ -177,7 +177,7 @@ exports.get_object_info = function (data, callback) {
     });
 };
 
-/**
+/** DEPRECATE
  * Get entry id (kaltura)
  * @param data
  * @param callback
