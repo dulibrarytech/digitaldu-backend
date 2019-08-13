@@ -291,7 +291,7 @@ const objectsModule = (function () {
                     html += '<li>' + record.display_record.parts[i].title + ' ( ' + record.display_record.parts[i].type + ' ) order: ' + record.display_record.parts[i].order;
 
                     // TODO: toggle default thumbnails if not an image.  i.e. pdf, audio and video
-                    let tn = helperModule.getTn(record.display_record.parts[i].thumbnail, data[i].mime_type);
+                    let tn = helperModule.getTn(record.display_record.parts[i].thumbnail, '');
                     html += '<br><img src="' + tn + '" width="100px" height="100px"></li>';
                 }
 
