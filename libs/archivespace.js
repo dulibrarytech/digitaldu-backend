@@ -208,7 +208,7 @@ exports.get_session_token = function (callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: unable get archivespace session token ' + error);
+            logger.module().error('ERROR: unable get archivesspace session token ' + error);
 
             callback({
                 error: true,
@@ -227,7 +227,7 @@ exports.get_session_token = function (callback) {
 
         } else {
 
-            logger.module().error('ERROR: unable get archivespace session token ' + error);
+            logger.module().error('ERROR: unable get archivesspace session token ' + error);
 
             callback({
                 error: true,

@@ -24,9 +24,9 @@ const fs = require('fs'),
     modslibdisplay = require('../libs/display-record'),
     metslib = require('../libs/mets'),
     importlib = require('../libs/transfer-ingest'),
-    mimetypelib = require('../libs/mime_types'),
+    mimetypelib = require('../libs/mime-types'),
     manifestlib = require('../libs/manifest'),
-    pids = require('../libs/next-pid'),
+    // pids = require('../libs/next-pid'),
     handles = require('../libs/handles'),
     archivematica = require('../libs/archivematica'),
     duracloud = require('../libs/duracloud'),
@@ -229,7 +229,6 @@ exports.queue_objects = function (req, callback) {
 
         callback({
             status: 404,
-            // content_type: {'Content-Type': 'application/json'},
             message: 'Nothing to see here...',
             data: []
         });

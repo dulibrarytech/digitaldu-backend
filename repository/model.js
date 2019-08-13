@@ -1,17 +1,32 @@
+/**
+
+ Copyright 2019 University of Denver
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+
+ */
+
 'use strict';
 
 const fs = require('fs'),
     request = require('request'),
     config = require('../config/config'),
-    pid = require('../libs/next-pid'),
-    permissions = require('../libs/object-permissions'),
     async = require('async'),
     uuid = require('node-uuid'),
     handles = require('../libs/handles'),
     modslibdisplay = require('../libs/display-record'),
     archivematica = require('../libs/archivematica'),
     archivespace = require('../libs/archivespace'),
-    // importlib = require('../libs/transfer-ingest'),
     logger = require('../libs/log4'),
     knex = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects',
@@ -25,67 +40,6 @@ const fs = require('fs'),
             database: config.dbQueueName
         }
     });
-
-/** DEPRECATED
- * Gets next pid and increments pid value
- * @param req
- * @param callback
- */
-/*
- exports.get_next_pid = function (req, callback) {
-
- let namespace = config.namespace;
-
- knex.transaction(function (trx) {
-
- return knex('tbl_pid_gen')
- .select('namespace', 'current_pid')
- .where({
- namespace: namespace
- })
- .limit(1)
- .transacting(trx)
- .then(function (data) {
-
- // increment pid
- let new_id = (parseInt(data[0].current_pid) + 1),
- new_pid = data[0].namespace + ':' + new_id;
-
- // update current pid with new pid value
- return knex('tbl_pid_gen')
- .where({
- namespace: data[0].namespace
- })
- .update({
- current_pid: new_id
- })
- .then(function () {
- return new_pid;
- })
- .catch(function (error) {
- logger.module().error('ERROR: Unable to get next pid ' + error);
- throw 'ERROR: Unable to get next pid ' + error;
- });
-
- })
- .then(trx.commit)
- .catch(trx.rollback);
- })
- .then(function (pid) {
-
- callback({
- status: 200,
- content_type: {'Content-Type': 'application/json'},
- data: {pid: pid},
- message: 'PID retrieved.'
- });
- })
- .catch(function (error) {
- logger.module().error('ERROR: Unable to get next pid ' + error);
- throw 'ERROR: Unable to get next pid ' + error;
- });
- };
- */
 
 /**
  * Gets objects by collection

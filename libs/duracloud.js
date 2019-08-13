@@ -177,52 +177,6 @@ exports.get_object_info = function (data, callback) {
     });
 };
 
-/** DEPRECATE
- * Get entry id (kaltura)
- * @param data
- * @param callback
- */
-exports.get_entry_id = function (data, callback) {
-
-    'use strict';
-
-    let dip_path = data.dip_path,
-        apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + 'dip-store/' + dip_path + '/objects/' + data.uuid + '-kalturaid.txt';
-
-    request.get({
-        url: apiUrl,
-        timeout: 25000
-    }, function (error, httpResponse, body) {
-
-        if (error) {
-
-            logger.module().error('ERROR: Unable to get duracloud kalturaid object ' + error);
-
-            callback({
-                error: true,
-                error_message: error
-            });
-        }
-
-        if (httpResponse.statusCode === 200) {
-
-            callback(body);
-            return false;
-
-        } else {
-
-            logger.module().error('ERROR: Unable to get duracloud kalturaid object ' + body);
-
-            callback({
-                error: true,
-                error_message: body
-            });
-
-            return false;
-        }
-    });
-};
-
 /**
  * Used for archivespace uri.txt retrieval
  * @param data

@@ -1,3 +1,21 @@
+/**
+
+ Copyright 2019 University of Denver
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+
+ */
+
 const collectionsModule = (function () {
 
     'use strict';
@@ -66,45 +84,6 @@ const collectionsModule = (function () {
     };
 
     /**
-     * Adds collection
-     */
-    const addCollection = function () {
-
-        let message = '<div class="alert alert-info">Saving Collection...</div>';
-        $('#collection-form').hide();
-        $('#message').html(message);
-
-        userModule.setHeaderUserToken();
-
-        $.ajax({
-            url: api + '/api/admin/v1/repo/object',
-            type: 'post',
-            data: getCollectionFormData()
-        }).done(function (data) {
-
-            let message = '<div class="alert alert-success">Collection created (' + data[0].pid + ')</div>';
-            $('#message').html(message);
-            $('#collection-form').hide();
-
-            return false;
-
-            /*
-            setTimeout(function () {
-                $('#message').html('');
-                window.location.replace(api + '/dashboard/root-collections');
-            }, 3000);
-            */
-
-        }).fail(function (jqXHR, textStatus) {
-
-            if (jqXHR.status !== 201) {
-                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to add collection.</div>';
-                renderError(message);
-            }
-        });
-    };
-
-    /**
      * Updates collection thumbnail
      */
     obj.updateThumbnail = function () {
@@ -138,20 +117,6 @@ const collectionsModule = (function () {
                     // objectsModule.getObjects();
                 }, 4000);
 
-                /*
-                response.json().then(function (response) {
-
-                    let message = '<div class="alert alert-success"><i class="fa fa-check-circle"></i> Thumbnail updated</div>';
-                    $('#message').html(message);
-
-                    setTimeout(function () {
-                        $('#message').html('');
-                        objectsModule.getObjects();
-                    }, 4000);
-
-                });
-                */
-
             } else if (response.status === 401) {
 
                 response.json().then(function (response) {
@@ -173,34 +138,29 @@ const collectionsModule = (function () {
         http.req(request, callback);
     };
 
-    /** TODO: refactor to work with archivespace
-     * Updates collection thumbnail
+    /**
+     * Adds collection
      */
-    /*
-    const updateCollection = function () {
+    const addCollection = function () {
 
-        let message = '<div class="alert alert-info">Updating Collection...</div>';
-        $('#object-edit-form').hide();
+        let message = '<div class="alert alert-info">Saving Collection...</div>';
+        $('#collection-form').hide();
         $('#message').html(message);
 
         userModule.setHeaderUserToken();
 
         $.ajax({
             url: api + '/api/admin/v1/repo/object',
-            type: 'put',
-            data: getCollectionEditFormData()
+            type: 'post',
+            data: getCollectionFormData()
         }).done(function (data) {
 
-            objectsModule.editObject(data[0].pid);
--
-            let message = '<div class="alert alert-success">Collection updated</div>';
+            // TODO: create link to collection
+            let message = '<div class="alert alert-success">Collection created (' + data[0].pid + ')</div>';
             $('#message').html(message);
-            $('#collection-edit-form').show();
-            $('#collection-edit-form')[0].reset();
+            $('#collection-form').hide();
 
-            setTimeout(function () {
-                $('#message').html('');
-            }, 3000);
+            return false;
 
         }).fail(function (jqXHR, textStatus) {
 
@@ -208,21 +168,6 @@ const collectionsModule = (function () {
                 let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to add collection.</div>';
                 renderError(message);
             }
-        });
-    };
-    */
-
-    /** // TODO: wire into archivespace updates
-     * Enables collection update form validation
-     */
-    obj.collectionUpdateFormValidation = function () {
-
-        $(document).ready(function () {
-            $('#collection-edit-form').validate({
-                submitHandler: function () {
-                    // updateCollection();
-                }
-            });
         });
     };
 
