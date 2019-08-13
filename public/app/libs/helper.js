@@ -63,8 +63,9 @@ const helperModule = (function () {
      * @param pid
      * @returns {string}
      */
-    obj.getTn = function (tn, pid) {
+    obj.getTn = function (tn, mime_type) {  // pid
 
+        // TODO: set default TN for audio and video objects
         let tnObj = configModule.getTnUrls();
 
         if (tn !== null && tn !== undefined && tn.indexOf('http') !== -1) {
@@ -72,10 +73,22 @@ const helperModule = (function () {
         } else if (tn === null || tn === undefined) {
             return tnObj.default;
         } else {
-            return tnObj.duracloud + tn;
+
+            if (mime_type.indexOf('video') !== -1) {
+                return tnObj.default_video;
+            } else if (mime_type.indexOf('audio') !== -1) {
+                return tnObj.default_audio;
+            } else if (mime_type.indexOf('pdf') !== -1) {
+                return tnObj.default_pdf;
+            } else {
+                return tnObj.duracloud + tn;
+            }
         }
     };
 
+    /**
+     * Checks availability of third-party systems (Archivesspace/Archivematica)
+     */
     obj.ping = function () {
 
         $.ajax({

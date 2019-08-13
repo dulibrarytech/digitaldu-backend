@@ -11,7 +11,7 @@ const objectsModule = (function () {
     let api = configModule.getApi();
 
     /**
-     *
+     * Gets repository objects
      */
     obj.getObjects = function () {
 
@@ -49,6 +49,10 @@ const objectsModule = (function () {
     };
 
     // TODO:...
+    /**
+     *
+     * @returns {boolean}
+     */
     obj.downloadObject = function () {
         let pid = helperModule.getParameterByName('pid'); // TODO: sanitize
         window.location.replace(api + '/api/v1/object/download?pid=' + pid);
@@ -56,7 +60,7 @@ const objectsModule = (function () {
     };
 
     /**
-     *
+     * Publishes admin object
      * @param pid
      */
     obj.publishObject = function (pid, type) {
@@ -147,11 +151,11 @@ const objectsModule = (function () {
             }
 
             let record = JSON.parse(data[i].display_record),
-                tn = helperModule.getTn(data[i].thumbnail, data[i].pid),
+                tn = helperModule.getTn(data[i].thumbnail, data[i].mime_type), // data[i].pid
                 pid = data[i].pid;
 
             html += '<div class="row">';
-            html += '<div class="col-md-3"><img style="max-height: 250px; max-width: 250px; border: solid 1px;" display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
+            html += '<div class="col-md-3"><img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
             html += '<div class="col-md-6" style="padding: 5px">';
 
             if (record.display_record.title !== undefined) {
@@ -287,8 +291,8 @@ const objectsModule = (function () {
                     html += '<li>' + record.display_record.parts[i].title + ' ( ' + record.display_record.parts[i].type + ' ) order: ' + record.display_record.parts[i].order;
 
                     // TODO: toggle default thumbnails if not an image.  i.e. pdf, audio and video
-                    let tn = helperModule.getTn(record.display_record.parts[i].thumbnail, pid);
-                    html += '<br><img src="' + tn + '" width="150px" height="150px"></li>';
+                    let tn = helperModule.getTn(record.display_record.parts[i].thumbnail, data[i].mime_type);
+                    html += '<br><img src="' + tn + '" width="100px" height="100px"></li>';
                 }
 
                 html += '</ul>';
