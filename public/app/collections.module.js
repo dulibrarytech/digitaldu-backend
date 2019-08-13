@@ -155,8 +155,7 @@ const collectionsModule = (function () {
             data: getCollectionFormData()
         }).done(function (data) {
 
-            // TODO: create link to collection
-            let message = '<div class="alert alert-success">Collection created (' + data[0].pid + ')</div>';
+            let message = '<div class="alert alert-success">Collection created ( <a href="' + configModule.getApi() + '/dashboard/objects/?pid=' + data[0].pid + '">' + data[0].pid + '</a> )';
             $('#message').html(message);
             $('#collection-form').hide();
 
