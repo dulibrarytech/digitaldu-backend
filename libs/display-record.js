@@ -28,7 +28,7 @@ exports.create_display_record = function (obj, callback) {
         record.is_compound = 0;
     }
 
-    if (metadata.parts[0].kaltura_id !== undefined) {
+    if (metadata.parts !== undefined && metadata.parts[0].kaltura_id !== undefined) {
         record.entry_id = metadata.parts[0].kaltura_id;
     }
 
