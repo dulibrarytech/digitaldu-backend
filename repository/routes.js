@@ -36,7 +36,7 @@ module.exports = function (app) {
         .post(token.verify, Repo.update_thumbnail);
 
     app.route('/api/admin/v1/repo/publish')
-        .post(token.verify, Repo.publish_object);
+        .post(token.verify, Repo.publish_objects);
 
     app.route('/api/admin/v1/repo/object/download')
         .get(Repo.get_object_download);

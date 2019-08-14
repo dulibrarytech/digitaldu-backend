@@ -83,8 +83,8 @@ exports.get_next_pid = function (req, res) {
 };
 */
 
-exports.publish_object = function (req, res) {
-    Repo.publish_object(req, function (data) {
+exports.publish_objects = function (req, res) {
+    Repo.publish_objects(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };

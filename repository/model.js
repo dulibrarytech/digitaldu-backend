@@ -801,41 +801,200 @@ exports.create_collection_object = function (req, callback) {
  * @param req
  * @param callback
  */
-exports.publish_object = function (req, callback) {
+exports.publish_objects = function (req, callback) {
 
-    let obj = {},
-        message = 'Published';
+    var api_url = config.apiUrl + '/api/admin/v1/indexer';
 
-    if (req.body.pid.length !== 0 && req.body.type === 'collection') {
+    function publish_collection (callback) {
 
-        // publish collection and all of its objects
+        let obj = {};
         obj.is_member_of_collection = req.body.pid;
-
-        let collection = {};
-        collection.pid = req.body.pid;
+        obj.api_url = api_url;
 
         knex(REPO_OBJECTS)
-            .where(collection)
+            .where({
+                pid: obj.is_member_of_collection
+            })
             .update({
                 is_published: 1
             })
             .then(function (data) {
-                console.log(data);
+                callback(null, obj);
             })
             .catch(function (error) {
                 logger.module().error('ERROR: unable to publish collection pid ' + error);
-                throw 'ERROR: unable to publish collection pid ' + error;
+                callback(null, 'failed');
             });
+    }
 
+    function publish_child_objects (obj, callback) {
+
+        if (obj.status !== undefined && obj.status === 'failed') {
+            callback(null, obj);
+            return false;
+        }
+
+        knex(REPO_OBJECTS)
+            .where({
+                is_member_of_collection: obj.is_member_of_collection
+            })
+            .update({
+                is_published: 1
+            })
+            .then(function (data) {
+                callback(null, obj);
+            })
+            .catch(function (error) {
+                logger.module().error('ERROR: unable to publish collection pid ' + error);
+                callback(null, 'failed');
+            });
+    }
+
+    function index_collection (obj, callback) {
+
+        if (obj.status === 'failed') {
+            callback(null, obj);
+            return false;
+        }
+
+        knex(REPO_OBJECTS)
+            .select('sip_uuid')
+            .where({
+                pid: obj.is_member_of_collection,
+                is_published: 1
+            })
+            .then(function (data) {
+
+                request.post({
+                    url: obj.api_url,
+                    form: {
+                        'sip_uuid': data[0].sip_uuid,
+                        'publish': true
+                    },
+                    timeout: 25000
+                }, function (error, httpResponse, body) {
+
+                    if (error) {
+                        logger.module().error('ERROR: unable to index published record ' + error);
+                        obj.status = 'failed';
+                        callback(null, obj);
+                        return false;
+                    }
+
+                    if (httpResponse.statusCode === 200) {
+                        callback(null, obj);
+                        return false;
+                    } else {
+                        logger.module().error('ERROR: unable to index published record ' + body);
+                        obj.status = 'failed';
+                        callback(null, obj);
+                    }
+
+                });
+
+            })
+            .catch(function (error) {
+                logger.module().error('ERROR: unable to index published collection object ' + error);
+                callback(null, obj);
+            });
+    }
+
+    function index_objects (obj, callback) {
+
+        if (obj.status === 'failed') {
+            callback(null, obj);
+            return false;
+        }
+
+        knex(REPO_OBJECTS)
+            .select('sip_uuid')
+            .where({
+                is_member_of_collection: obj.is_member_of_collection,
+                is_published: 1
+            })
+            .then(function (data) {
+
+                let timer = setInterval(function () {
+
+                    if (data.length > 0) {
+
+                        let record = data.pop();
+
+                        if (record.sip_uuid === null) {
+                            return false;
+                        }
+
+                        request.post({
+                            url: obj.api_url,
+                            form: {
+                                'sip_uuid': record.sip_uuid,
+                                'publish': true
+                            },
+                            timeout: 25000
+                        }, function (error, httpResponse, body) {
+
+                            if (error) {
+                                logger.module().error('ERROR: unable to index published record ' + error);
+                                return false;
+                            }
+
+                            if (httpResponse.statusCode === 200) {
+                                return false;
+                            } else {
+                                logger.module().error('ERROR: unable to index published record ' + body);
+                            }
+
+                        });
+
+                    } else {
+
+                        clearInterval(timer);
+                        callback(null, obj);
+                        return false;
+                    }
+
+                }, 1000);
+
+            })
+            .catch(function (error) {
+                logger.module().error('ERROR: unable to index published object ' + error);
+                callback(null, obj);
+            });
+    }
+
+    // publish collection and all of its objects
+    if (req.body.pid.length !== 0 && req.body.type === 'collection') {
+
+        async.waterfall([
+            publish_collection,
+            publish_child_objects,
+            index_collection,
+            index_objects
+        ], function (error, results) {
+
+            if (error) {
+                logger.module().error('ERROR: async (publish_object)');
+                throw 'ERROR: async (publish_object)';
+            }
+
+            logger.module().info('INFO: collection published');
+
+            callback({
+                status: 201,
+                message: 'Collection published'
+            });
+        });
+
+        return false;
 
     } else if (req.body.pid !== 0 && req.body.type === 'object') {
 
+        // TODO:...
         // publish single object
-        obj.pid = req.body.pid;
+        // obj.pid = req.body.pid;
 
     } else {
 
-        // bad request
         callback({
             status: 400,
             message: 'Bad request'
@@ -843,41 +1002,13 @@ exports.publish_object = function (req, callback) {
 
         return false;
     }
-
-    knex(REPO_OBJECTS)
-        .where(obj)
-        .update({
-            is_published: 1
-        })
-        .then(function (data) {
-
-            if (data > 0) {
-                get_repo_objects(obj, function (status) {
-                    console.log(status);
-                    if (status === 'done') {
-                        callback({
-                            status: 201,
-                            message: message,
-                            data: []
-                        });
-                    } else {
-                        // TODO:
-                    }
-                });
-            } else {
-                // TODO:
-            }
-        })
-        .catch(function (error) {
-            logger.module().error('ERROR: unable to save collection record ' + error);
-            throw 'ERROR: unable to save collection record ' + error;
-        });
 };
 
-/**
+/** REMOVE
  * Gets objects to index
  * @param obj
  */
+/*
 const get_repo_objects = function (obj, callback) {
 
     let whereObj = {};
@@ -947,6 +1078,7 @@ const get_repo_objects = function (obj, callback) {
             throw 'ERROR: Unable to get sip uuids ' + error;
         });
 };
+*/
 
 /** TODO: refactor to make use of archivematica download link. make use of shell.js
  * Downloads AIP from archivematica

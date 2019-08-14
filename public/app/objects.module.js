@@ -66,9 +66,8 @@ const objectsModule = (function () {
             });
     };
 
-    // TODO:...
     /**
-     *
+     * // TODO:...
      * @returns {boolean}
      */
     obj.downloadObject = function () {
