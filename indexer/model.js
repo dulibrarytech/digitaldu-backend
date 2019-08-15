@@ -178,8 +178,22 @@ exports.index_records = function (req, callback) {
 
                     } else {
 
-                        record.display_record.t_language = record.display_record.language;
-                        delete record.display_record.language;
+                        if (record.display_record.language !== undefined) {
+
+                            if (typeof record.display_record.language !== 'object') {
+
+                                let language = {
+                                    language: record.display_record.language
+                                };
+
+                                record.display_record.t_language = language;
+                                delete record.display_record.language;
+
+                            } else {
+                                record.display_record.t_language = record.display_record.language;
+                                delete record.display_record.language;
+                            }
+                        }
                     }
 
                     /*
@@ -224,10 +238,14 @@ exports.index_records = function (req, callback) {
 
                         } else {
 
+                            // TODO: log
+                            console.log('unable to index record.');
+                            /*
                             callback({
                                 status: 500,
                                 data: 'unable to index record'
                             });
+                            */
                         }
                     });
 
