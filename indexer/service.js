@@ -147,6 +147,30 @@ exports.index_record = function (obj, callback) {
 };
 
 /**
+ * Unindexes record
+ * @param obj
+ * @param callback
+ */
+exports.unindex_record = function (obj, callback) {
+
+    client.delete(obj, function (error, response) {
+
+        if (error) {
+
+            logger.module().error('ERROR: unable to unindex record ' + error);
+
+            callback({
+                message: 'unable to unindex record ' + error
+            });
+
+            return false;
+        }
+
+        callback(response);
+    });
+};
+
+/**
  *  Returns field mappings
  */
 function get_mapping () {

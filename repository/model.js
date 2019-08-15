@@ -478,7 +478,6 @@ exports.update_thumbnail = function (req, callback) {
         })
         .then(function (data) {
 
-            console.log(data);
             // TODO: update display_record
 
             // Get existing record from repository
@@ -1004,81 +1003,204 @@ exports.publish_objects = function (req, callback) {
     }
 };
 
-/** REMOVE
- * Gets objects to index
- * @param obj
+/**
+ *
+ * @param req
+ * @param callback
  */
-/*
-const get_repo_objects = function (obj, callback) {
+exports.unpublish_objects = function (req, callback) {
 
-    let whereObj = {};
+    var api_url = config.apiUrl + '/api/admin/v1/indexer';
 
-    if (obj.is_member_of_collection !== undefined) {
+    function unpublish_collection (callback) {
 
-        whereObj.is_member_of_collection = obj.is_member_of_collection;
+        let obj = {};
+        obj.is_member_of_collection = req.body.pid; // TODO: sanitize
+        obj.api_url = api_url;
 
-    } else if (obj.pid !== undefined) {
-
-        whereObj.pid = obj.pid;
+        knex(REPO_OBJECTS)
+            .where({
+                pid: obj.is_member_of_collection
+            })
+            .update({
+                is_published: 0
+            })
+            .then(function (data) {
+                callback(null, obj);
+            })
+            .catch(function (error) {
+                logger.module().error('ERROR: unable to unpublish collection pid ' + error);
+                callback(null, 'failed');
+            });
     }
 
-    whereObj.is_published = 1;
-    whereObj.is_active = 1;
+    function unpublish_child_objects (obj, callback) {
 
-    knex(REPO_OBJECTS)
-        .select('sip_uuid')
-        .where(whereObj)
-        .then(function (data) {
+        if (obj.status !== undefined && obj.status === 'failed') {
+            callback(null, obj);
+            return false;
+        }
 
-            let timer = setInterval(function () {
+        knex(REPO_OBJECTS)
+            .where({
+                is_member_of_collection: obj.is_member_of_collection
+            })
+            .update({
+                is_published: 0
+            })
+            .then(function (data) {
+                callback(null, obj);
+            })
+            .catch(function (error) {
+                logger.module().error('ERROR: unable to unpublish collection pid ' + error);
+                callback(null, 'failed');
+            });
+    }
 
-                if (data.length !== 0) {
+    function unindex_collection (obj, callback) {
 
-                    let record = data.pop(),
-                        apiUrl = config.apiUrl + '/api/admin/v1/indexer';
+        if (obj.status === 'failed') {
+            callback(null, obj);
+            return false;
+        }
 
-                    if (record.sip_uuid === null) {
+        knex(REPO_OBJECTS)
+            .select('pid')
+            .where({
+                pid: obj.is_member_of_collection,
+                is_published: 0
+            })
+            .then(function (data) {
+
+                request.delete({
+                    url: obj.api_url + '?pid=' + data[0].pid,
+                    timeout: 25000
+                }, function (error, httpResponse, body) {
+
+                    if (error) {
+                        logger.module().error('ERROR: unable to remove published record from index ' + error);
+                        obj.status = 'failed';
+                        callback(null, obj);
                         return false;
                     }
 
-                    console.log(record);
+                    if (httpResponse.statusCode === 204) {
+                        callback(null, obj);
+                        return false;
+                    } else {
+                        logger.module().error('ERROR: unable to remove published record from index ' + body);
+                        obj.status = 'failed';
+                        callback(null, obj);
+                    }
 
-                    request.post({
-                        url: apiUrl,
-                        form: {
-                            'sip_uuid': record.sip_uuid,
-                            'publish': true
-                        },
-                        timeout: 25000
-                    }, function (error, httpResponse, body) {
+                });
+            })
+            .catch(function (error) {
+                logger.module().error('ERROR: unable to index published collection object ' + error);
+                callback(null, obj);
+            });
+    }
 
-                        if (error) {
-                            logger.module().error('ERROR: unable to index record ' + error);
+    function unindex_objects (obj, callback) {
+
+        if (obj.status === 'failed') {
+            callback(null, obj);
+            return false;
+        }
+
+        knex(REPO_OBJECTS)
+            .select('pid')
+            .where({
+                is_member_of_collection: obj.is_member_of_collection,
+                is_published: 0
+            })
+            .then(function (data) {
+
+                let timer = setInterval(function () {
+
+                    if (data.length > 0) {
+
+                        let record = data.pop();
+
+                        if (record.pid === null) {
                             return false;
                         }
 
-                        if (httpResponse.statusCode === 200) {
-                            return false;
-                        } else {
-                            logger.module().error('ERROR: unable to index record ' + body);
-                        }
+                        request.delete({
+                            url: obj.api_url + '?pid=' + record.pid,
+                            timeout: 25000
+                        }, function (error, httpResponse, body) {
 
-                    });
+                            if (error) {
+                                logger.module().error('ERROR: unable to remove published record from index ' + error);
+                                return false;
+                            }
 
-                } else {
-                    clearInterval(timer);
-                    callback('done');
-                }
+                            if (httpResponse.statusCode === 204) {
+                                return false;
+                            } else {
+                                logger.module().error('ERROR: unable to remove published record from index ' + body);
+                            }
 
-            }, 1000);
+                        });
 
-        })
-        .catch(function (error) {
-            logger.module().error('ERROR: Unable to get sip uuids  ' + error);
-            throw 'ERROR: Unable to get sip uuids ' + error;
+                    } else {
+
+                        clearInterval(timer);
+                        callback(null, obj);
+                        return false;
+                    }
+
+                }, 1000);
+
+            })
+            .catch(function (error) {
+                logger.module().error('ERROR: unable to remove published record from index (unindex_objects) ' + error);
+                callback(null, obj);
+            });
+    }
+
+    // unpublish collection and all of its objects
+    if (req.body.pid.length !== 0 && req.body.type === 'collection') {
+
+        async.waterfall([
+            unpublish_collection,
+            unpublish_child_objects,
+            unindex_collection,
+            unindex_objects
+        ], function (error, results) {
+
+            if (error) {
+                logger.module().error('ERROR: async (unpublish_object)');
+                throw 'ERROR: async (unpublish_object)';
+            }
+
+            logger.module().info('INFO: collection unpublished');
+
+            callback({
+                status: 201,
+                message: 'Collection unpublished'
+            });
         });
+
+        return false;
+
+    } else if (req.body.pid !== 0 && req.body.type === 'object') {
+
+        // TODO:...
+        // publish single object
+        // obj.pid = req.body.pid;
+
+    } else {
+
+        callback({
+            status: 400,
+            message: 'Bad request'
+        });
+
+        return false;
+    }
 };
-*/
 
 /** TODO: refactor to make use of archivematica download link. make use of shell.js
  * Downloads AIP from archivematica

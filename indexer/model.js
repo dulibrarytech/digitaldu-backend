@@ -378,3 +378,36 @@ exports.reset_display_record = function (req, callback) {
     });
 
 };
+
+/**
+ * Removes record from public index
+ * @param req
+ * @param callback
+ */
+exports.unindex_record = function (req, callback) {
+
+    let pid = req.query.pid;
+
+    service.unindex_record({
+        index: config.elasticSearchFrontIndex,
+        type: 'data',
+        id: pid.replace('codu:', '')
+    }, function (response) {
+
+        if (response.result === 'deleted') {
+
+            callback({
+                status: 204,
+                message: 'record unindexed'
+            });
+
+        } else {
+
+            callback({
+                status: 500,
+                data: 'unable to remove record from index'
+            });
+        }
+    });
+
+};

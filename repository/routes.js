@@ -21,7 +21,6 @@
 var Repo = require('../repository/controller'),
     token = require('../libs/tokens');
 
-// TODO: apply api security.  i.e. API key
 module.exports = function (app) {
 
     app.route('/api/admin/v1/repo/objects')
@@ -38,19 +37,17 @@ module.exports = function (app) {
     app.route('/api/admin/v1/repo/publish')
         .post(token.verify, Repo.publish_objects);
 
+    app.route('/api/admin/v1/repo/unpublish')
+        .post(token.verify, Repo.unpublish_objects);
+
+    app.route('/api/admin/v1/repo/ping/services')
+        .get(Repo.ping); //TODO: add token verify
+
     app.route('/api/admin/v1/repo/object/download')
         .get(Repo.get_object_download);
 
-    app.route('/api/admin/v1/repo/ping/services')
-        .get(Repo.ping);
-
     /*
      app.route('/api/admin/v1/repo/object/cron')
-     .put(Repo.update_metadata_cron);
-     */
-
-    /*
-     app.route('/api/admin/v1/repo/pid')
-     .post(Repo.get_next_pid);  // token.verify,
+     .put(Repo.update_metadata_cron); api-key
      */
 };

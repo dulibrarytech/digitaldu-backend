@@ -77,7 +77,7 @@ const objectsModule = (function () {
     };
 
     /**
-     * Publishes admin object
+     * Publishes admin objects
      * @param pid
      */
     obj.publishObject = function (pid, type) {
@@ -126,6 +126,63 @@ const objectsModule = (function () {
             } else {
 
                 let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + ').  Unable to publish object(s).</div>';
+                renderError(message);
+            }
+        };
+
+        http.req(request, callback);
+    };
+
+    /**
+     * Unpublishes admin objects
+     * @param pid
+     */
+    obj.unpublishObject = function (pid, type) {
+
+        // TODO: flag collection pid too
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        let obj = {
+            pid: pid,
+            type: type
+        };
+
+        let message = '<div class="alert alert-info"><i class="fa fa-check-circle"></i> Unpublishing...</div>';
+        $('#message').html(message);
+
+        let url = api + '/api/admin/v1/repo/unpublish',
+            request = new Request(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': userModule.getUserToken()
+                },
+                body: JSON.stringify(obj),
+                mode: 'cors'
+            });
+
+        const callback = function (response) {
+
+            if (response.status === 201) {
+
+                $('#message').html('');
+                objectsModule.getObjects();
+
+            } else if (response.status === 401) {
+
+                response.json().then(function (response) {
+
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.</div>';
+                    renderError(message);
+
+                    setTimeout(function () {
+                        window.location.replace('/login');
+                    }, 4000);
+                });
+
+            } else {
+
+                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + ').  Unable to unpublish object(s).</div>';
                 renderError(message);
             }
         };
@@ -339,7 +396,8 @@ const objectsModule = (function () {
 
                 if (data[i].is_published === 1) {
                     html += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
-                    html += '<p><a href="#"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
+                    html += '<p><a href="#" onclick="objectsModule.unpublishObject(\'' + data[i].pid + '\', \'collection\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Unpublish</a></p>';
+                    // html += '<p><a href="#"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
                 } else {
                     html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
                     html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data[i].pid + '\', \'collection\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';

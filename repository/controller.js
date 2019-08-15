@@ -74,17 +74,14 @@ exports.get_import_admin_objects = function (req, res) {
     });
 };
 
-// DEPRECATED
-/*
-exports.get_next_pid = function (req, res) {
-    Repo.get_next_pid(req, function (data) {
+exports.publish_objects = function (req, res) {
+    Repo.publish_objects(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
-*/
 
-exports.publish_objects = function (req, res) {
-    Repo.publish_objects(req, function (data) {
+exports.unpublish_objects = function (req, res) {
+    Repo.unpublish_objects(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
