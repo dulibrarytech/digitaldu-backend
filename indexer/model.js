@@ -129,8 +129,6 @@ exports.get_index_record = function (req, callback) {
  */
 exports.index_records = function (req, callback) {
 
-    // TODO: handle collection metadata
-
     let index_name;
 
     if (req.body.index_name !== undefined) {
@@ -142,7 +140,7 @@ exports.index_records = function (req, callback) {
     function index (index_name) {
 
         knex(REPO_OBJECTS)
-            .select('display_record')
+            .select('pid', 'is_member_of_collection', 'handle', 'object_type', 'display_record')
             .where({
                 is_indexed: 0
             })
@@ -155,8 +153,40 @@ exports.index_records = function (req, callback) {
                 if (data.length > 0) {
 
                     let record = JSON.parse(data[0].display_record);
+
+                    if (record.display_record.jsonmodel_type !== undefined && record.display_record.jsonmodel_type === 'resource') {
+
+                        let collection_record = {};
+                        collection_record.pid = data[0].pid;
+                        collection_record.is_member_of_collection = data[0].is_member_of_collection;
+                        collection_record.handle = data[0].handle;
+                        collection_record.object_type = data[0].object_type;
+                        collection_record.title = record.display_record.title;
+
+                        // get collection abstract
+                        if (record.display_record.notes !== undefined) {
+
+                            for (let i=0;i<record.display_record.notes.length;i++) {
+
+                                if (record.display_record.notes[i].type === 'abstract') {
+                                    collection_record.abstract = record.display_record.notes[i].content.toString();
+                                }
+                            }
+                        }
+
+                        record = collection_record;
+
+                    } else {
+
+                        record.display_record.t_language = record.display_record.language;
+                        delete record.display_record.language;
+                    }
+
+                    /*
+                    let record = JSON.parse(data[0].display_record);
                     record.display_record.t_language = record.display_record.language;
                     delete record.display_record.language;
+                    */
 
                     service.index_record({
                         index: index_name,

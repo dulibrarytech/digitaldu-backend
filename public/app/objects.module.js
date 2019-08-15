@@ -108,23 +108,14 @@ const objectsModule = (function () {
 
             if (response.status === 201) {
 
-                response.json().then(function (response) {
-
-                    let message = '<div class="alert alert-success"><i class="fa fa-check-circle"></i> Published</div>';
-                    $('#message').html(message);
-
-                    setTimeout(function () {
-                        $('#message').html('');
-                        objectsModule.getObjects();
-                    }, 4000);
-
-                });
+                $('#message').html('');
+                objectsModule.getObjects();
 
             } else if (response.status === 401) {
 
                 response.json().then(function (response) {
 
-                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Unable to publish object(s)</div>';
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.</div>';
                     renderError(message);
 
                     setTimeout(function () {
@@ -133,8 +124,8 @@ const objectsModule = (function () {
                 });
 
             } else {
-                document.getElementById('login-button').disabled = false;
-                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '. Unable to import MODS.</div>';
+
+                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + ').  Unable to publish object(s).</div>';
                 renderError(message);
             }
         };
