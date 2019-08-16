@@ -852,10 +852,11 @@ exports.flag_incomplete_record = function (obj) {
 
 };
 
-/**
+/** TODO:...DEPRECATE
  * Flags failed ingest records
  * @param obj
  */
+/*
 exports.flag_failed_record = function (obj) {
 
     'use strict';
@@ -863,7 +864,7 @@ exports.flag_failed_record = function (obj) {
     knexQ(QUEUE)
         .where({
             sip_uuid: obj.sip_uuid,
-            status: 0
+            transfer_status: 0
         })
         .update({
             message: 'FAILED'
@@ -877,7 +878,7 @@ exports.flag_failed_record = function (obj) {
         });
 
 };
-
+*/
 
 /**
  * Checks queue to determine if another transfer should be started

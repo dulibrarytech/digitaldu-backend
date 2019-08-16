@@ -282,7 +282,7 @@ exports.index_records = function (req, callback) {
 };
 
 /**
- *
+ * TODO: move to repository module
  * @param req
  * @param callback
  */
@@ -394,7 +394,6 @@ exports.reset_display_record = function (req, callback) {
         status: 201,
         message: 'updating display record(s).'
     });
-
 };
 
 /**

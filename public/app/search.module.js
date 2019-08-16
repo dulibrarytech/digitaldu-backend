@@ -43,8 +43,11 @@ const searchModule = (function () {
                 continue;
             }
 
-            let record = hits[i]._source.display_record,
-                tn = helperModule.getTn(hits[i]._source.thumbnail, hits[i]._source.mime_type, hits[i]._source.pid);
+            // Depends on issue #111
+            console.log(hits[i]._source);
+
+            let record = hits[i]._source,
+                tn = helperModule.getTn(hits[i]._source.thumbnail, hits[i]._source.mime_type);
 
             html += '<div class="row">';
             html += '<div class="col-md-3"><img style="max-height: 250px; max-width: 250px;" display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
@@ -62,7 +65,10 @@ const searchModule = (function () {
                 html += '<h4>No Title</h4>';
             }
 
-            if (hits[i]._source.object_type === 'object') {
+            // TODO: ensure that object_type for "objects" is indexed
+            console.log(hits[i]._source.object_type);
+
+            // if (hits[i]._source.object_type === 'object') {
 
                 html += '<ul>';
                 html += '<li><strong>Pid:</strong>&nbsp;<a target="_blank" href="' + hits[i]._source.handle + '">' + hits[i]._source.pid + '</a>&nbsp;&nbsp;<i class="fa fa-external-link"></i></li>';
@@ -164,11 +170,11 @@ const searchModule = (function () {
                 }
 
                 html += '</ul>';
-            }
+            // }
 
-            if (hits[i]._source.object_type === 'collection' && record.abstract !== undefined) {
+            // if (hits[i]._source.object_type === 'collection' && record.abstract !== undefined) {
                 html += '<p style="min-height: 75px">' + record.abstract + '</p>';
-            }
+            // }
 
             html += '</div>';
             html += '<div class="col-md-3" style="padding: 5px">';
@@ -188,7 +194,7 @@ const searchModule = (function () {
             }
 
             if (hits[i]._source.object_type === 'collection') {
-                html += '<p><a href="' + api + '/dashboard/object/edit?pid=' + hits[i]._source.pid + '"><i class="fa fa-edit"></i>&nbsp;Edit collection</a></p>';
+                // html += '<p><a href="' + api + '/dashboard/object/edit?pid=' + hits[i]._source.pid + '"><i class="fa fa-edit"></i>&nbsp;Edit collection</a></p>';
             } else if (hits[i]._source.object_type === 'object') {
                 // TODO...
                 // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=tn"><i class="fa fa-code"></i>&nbsp;Technical Metadata</a></p>';
@@ -196,7 +202,7 @@ const searchModule = (function () {
             }
 
             if (hits[i]._source.object_type === 'object') {
-                html += '<p><a href="' + api + '/dashboard/object/download?pid=' + hits[i]._source.pid + '"><i class="fa fa-download"></i>&nbsp;Download AIP</a></p>';
+                // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + hits[i]._source.pid + '"><i class="fa fa-download"></i>&nbsp;Download AIP</a></p>';
             }
 
             html += '</div>';

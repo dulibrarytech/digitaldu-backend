@@ -964,7 +964,22 @@ exports.create_repo_record = function (req, callback) {
 
                     if (response.error === true) {
                         logger.module().error('ERROR: Unable to get object ' + response.error_message);
-                        importlib.flag_failed_record(obj);
+
+                        let failObj = {
+                            is_member_of_collection: '',
+                            sip_uuid: sip_uuid,
+                            message: 'ERROR: Unable to get object ' + response.error_message
+                        };
+
+                        importlib.save_to_fail_queue(failObj);
+                        importlib.clear_queue_record({
+                            sip_uuid: sip_uuid
+                        }, function (result) {
+                            if (result === true) {
+                                importlib.restart_import();
+                            }
+                        });
+
                         return false;
                     }
 
