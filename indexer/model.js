@@ -53,7 +53,7 @@ exports.get_index_record = function (req, callback) {
     }
 
     knex(REPO_OBJECTS)
-        .select('pid', 'is_member_of_collection', 'handle', 'object_type', 'display_record')
+        .select('pid', 'is_member_of_collection', 'uri', 'handle', 'object_type', 'display_record')
         .where({
             sip_uuid: sip_uuid
         })
@@ -65,6 +65,7 @@ exports.get_index_record = function (req, callback) {
 
                 let collection_record = {};
                 collection_record.pid = data[0].pid;
+                collection_record.uri = data[0].uri;
                 collection_record.is_member_of_collection = data[0].is_member_of_collection;
                 collection_record.handle = data[0].handle;
                 collection_record.object_type = data[0].object_type;
@@ -140,7 +141,7 @@ exports.index_records = function (req, callback) {
     function index (index_name) {
 
         knex(REPO_OBJECTS)
-            .select('pid', 'is_member_of_collection', 'handle', 'object_type', 'display_record')
+            .select('pid', 'is_member_of_collection', 'uri', 'handle', 'object_type', 'display_record')
             .where({
                 is_indexed: 0
             })
@@ -158,6 +159,7 @@ exports.index_records = function (req, callback) {
 
                         let collection_record = {};
                         collection_record.pid = data[0].pid;
+                        collection_record.uir = data[0].uri;
                         collection_record.is_member_of_collection = data[0].is_member_of_collection;
                         collection_record.handle = data[0].handle;
                         collection_record.object_type = data[0].object_type;
@@ -312,7 +314,7 @@ exports.reset_display_record = function (req, callback) {
         if (params.none !== undefined) {
 
             knex(REPO_OBJECTS)
-                .select('is_member_of_collection', 'pid', 'handle', 'object_type', 'mods', 'thumbnail', 'file_name', 'mime_type')
+                .select('is_member_of_collection', 'pid', 'uri', 'handle', 'object_type', 'mods', 'thumbnail', 'file_name', 'mime_type')
                 .whereNot({
                     mods: null
                 })
@@ -328,7 +330,7 @@ exports.reset_display_record = function (req, callback) {
         } else {
 
             knex(REPO_OBJECTS)
-                .select('is_member_of_collection', 'pid', 'handle', 'object_type', 'mods', 'thumbnail', 'file_name', 'mime_type')
+                .select('is_member_of_collection', 'pid', 'uri', 'handle', 'object_type', 'mods', 'thumbnail', 'file_name', 'mime_type')
                 .where(params)
                 .whereNot({
                     mods: null

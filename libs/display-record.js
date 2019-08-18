@@ -35,10 +35,10 @@ exports.create_display_record = function (obj, callback) {
     record.thumbnail = obj.thumbnail;
     record.object = obj.file_name;
     record.mime_type = obj.mime_type;
+    record.uri = obj.uri;
+    record.object_type = obj.object_type;
 
     metadata = JSON.parse(mods);
-
-    record.object_type = obj.object_type;
 
     if (metadata.is_compound !== undefined && metadata.is_compound === true) {
         record.is_compound = 1;

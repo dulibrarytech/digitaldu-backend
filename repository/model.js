@@ -567,7 +567,7 @@ const update_mods = function (record, updated_record, obj, callback) {
             mods_id: record.mods_id
         })
         .update({
-            mods: updated_record.mods,
+            mods: updated_record.mods, // TODO: remove
             display_record: obj.display_record
         })
         .then(function (data) {
@@ -691,7 +691,7 @@ exports.create_collection_object = function (req, callback) {
                 obj.mods = response.mods;
                 obj.is_member_of_collection = data.is_member_of_collection;
 
-                delete obj.uri;
+                // delete obj.uri;
                 delete obj.session;
                 callback(null, obj);
             });
@@ -758,7 +758,33 @@ exports.create_collection_object = function (req, callback) {
             });
     }
 
-    // TODO: index collection object
+    function index_collection (obj, callback) {
+
+        request.post({
+            url: config.apiUrl + '/api/admin/v1/indexer',
+            form: {
+                'sip_uuid': obj.sip_uuid
+            },
+            timeout: 25000
+        }, function (error, httpResponse, body) {
+
+            if (error) {
+                logger.module().error('ERROR: unable to index collection record ' + error);
+                obj.indexed = false;
+                return false;
+            }
+
+            if (httpResponse.statusCode === 200) {
+                obj.indexed = true;
+                callback(null, obj);
+                return false;
+            } else {
+                obj.indexed = false;
+                logger.module().error('ERROR: unable to index collection record ' + body);
+            }
+
+        });
+    }
 
     async.waterfall([
         get_session_token,
@@ -766,7 +792,8 @@ exports.create_collection_object = function (req, callback) {
         get_pid,
         get_handle,
         create_display_record,
-        save_record
+        save_record,
+        index_collection
     ], function (error, results) {
 
         if (error) {
