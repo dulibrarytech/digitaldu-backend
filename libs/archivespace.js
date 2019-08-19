@@ -84,6 +84,7 @@ exports.get_mods = function (id, session, callback) {
 
     'use strict';
 
+    // TODO: refactor to make use of full uri by default for both resources and archival_objects
     let apiUrl = config.archivespaceHost + '/repositories/' + config.archivespaceRepositoryid + '/archival_objects/' + id + '/repository';
 
     // check if id is a collection uri

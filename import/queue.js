@@ -848,6 +848,7 @@ exports.create_repo_record = function (req, callback) {
         // downloads uri.txt file
         duracloud.get_uri(obj, function (response) {
             let uriArr = response.split('/');
+            obj.uri = response;
             obj.mods_id = uriArr[uriArr.length - 1].trim();
             callback(null, obj);
         });
@@ -1130,7 +1131,7 @@ exports.create_repo_record = function (req, callback) {
     }
 
     // 9.)
-    /*
+    /* TODO: remove
     function get_pid(obj, callback) {
 
         // TODO: at this point check how many props are null
@@ -1179,6 +1180,8 @@ exports.create_repo_record = function (req, callback) {
             callback(null, obj);
             return false;
         }
+
+        obj.object_type = 'object';
 
         modslibdisplay.create_display_record(obj, function (result) {
 
