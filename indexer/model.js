@@ -319,6 +319,7 @@ exports.reset_display_record = function (req, callback) {
                     mods: null
                 })
                 .then(function (data) {
+                    // console.log(data);
                     obj.data = data;
                     callback(null, obj);
                 })
