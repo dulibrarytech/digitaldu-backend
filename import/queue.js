@@ -1182,6 +1182,7 @@ exports.create_repo_record = function (req, callback) {
         }
 
         obj.object_type = 'object';
+        obj.is_published = 0;
 
         modslibdisplay.create_display_record(obj, function (result) {
 

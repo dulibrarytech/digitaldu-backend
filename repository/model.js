@@ -876,6 +876,55 @@ exports.publish_objects = function (req, callback) {
             });
     }
 
+    function reindex_admin_collection (obj, callback) {
+
+        if (obj.status === 'failed') {
+            callback(null, obj);
+            return false;
+        }
+
+        knex(REPO_OBJECTS)
+            .select('sip_uuid')
+            .where({
+                pid: obj.is_member_of_collection,
+                is_published: 1
+            })
+            .then(function (data) {
+
+                request.post({
+                    url: obj.api_url,
+                    form: {
+                        'sip_uuid': data[0].sip_uuid
+                    },
+                    timeout: 25000
+                }, function (error, httpResponse, body) {
+
+                    if (error) {
+                        logger.module().error('ERROR: unable to reindex admin record ' + error);
+                        obj.status = 'failed';
+                        callback(null, obj);
+                        return false;
+                    }
+
+                    if (httpResponse.statusCode === 200) {
+                        callback(null, obj);
+                        return false;
+                    } else {
+                        logger.module().error('ERROR: unable to reindex admin record ' + body);
+                        obj.status = 'failed';
+                        callback(null, obj);
+                    }
+
+                });
+
+            })
+            .catch(function (error) {
+                logger.module().error('ERROR: unable to index published collection object ' + error);
+                callback(null, obj);
+            });
+
+    }
+
     function index_collection (obj, callback) {
 
         if (obj.status === 'failed') {
@@ -994,6 +1043,7 @@ exports.publish_objects = function (req, callback) {
         async.waterfall([
             publish_collection,
             publish_child_objects,
+            reindex_admin_collection,
             index_collection,
             index_objects
         ], function (error, results) {

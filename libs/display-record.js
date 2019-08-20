@@ -37,6 +37,7 @@ exports.create_display_record = function (obj, callback) {
     record.mime_type = obj.mime_type;
     record.uri = obj.uri;
     record.object_type = obj.object_type;
+    record.is_published = obj.is_published;
 
     metadata = JSON.parse(mods);
 

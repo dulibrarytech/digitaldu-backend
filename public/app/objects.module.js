@@ -247,13 +247,13 @@ const objectsModule = (function () {
                 html += '<li><strong>Dates:</strong></li>';
                 html += '<ul>';
 
-                for (let i = 0; i < record.display_record.dates.length; i++) {
+                for (let j = 0; j < record.display_record.dates.length; j++) {
 
                     if (data[i].object_type === 'collection') {
-                        html += '<li>' + record.display_record.dates[i].expression + ' ( ' + record.display_record.dates[i].date_type + '</a> )</li>';
+                        html += '<li>' + record.display_record.dates[j].expression + ' ( ' + record.display_record.dates[j].date_type + '</a> )</li>';
 
                     } else {
-                        html += '<li>' + record.display_record.dates[i].expression + ' ( ' + record.display_record.dates[i].type + '</a> )</li>';
+                        html += '<li>' + record.display_record.dates[j].expression + ' ( ' + record.display_record.dates[j].type + '</a> )</li>';
                     }
                 }
 

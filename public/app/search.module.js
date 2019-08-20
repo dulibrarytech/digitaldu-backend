@@ -226,6 +226,9 @@ const searchModule = (function () {
             html += '<div class="col-md-3" style="padding: 5px">';
 
             // TODO: optimize this block
+
+            console.log(record.object_type);
+
             if (record.object_type === 'collection') {
 
                 html += '<p><small style="background: skyblue; padding: 3px; color: white">Collection</small></p>';

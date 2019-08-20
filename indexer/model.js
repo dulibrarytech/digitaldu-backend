@@ -53,7 +53,7 @@ exports.get_index_record = function (req, callback) {
     }
 
     knex(REPO_OBJECTS)
-        .select('pid', 'is_member_of_collection', 'uri', 'handle', 'object_type', 'display_record')
+        .select('pid', 'is_member_of_collection', 'uri', 'handle', 'object_type', 'display_record', 'is_published')
         .where({
             sip_uuid: sip_uuid
         })
@@ -70,6 +70,7 @@ exports.get_index_record = function (req, callback) {
                 collection_record.handle = data[0].handle;
                 collection_record.object_type = data[0].object_type;
                 collection_record.title = record.display_record.title;
+                collection_record.is_published = data[0].is_published;
 
                 // get collection abstract
                 if (record.display_record.notes !== undefined) {
@@ -141,7 +142,7 @@ exports.index_records = function (req, callback) {
     function index (index_name) {
 
         knex(REPO_OBJECTS)
-            .select('pid', 'is_member_of_collection', 'uri', 'handle', 'object_type', 'display_record')
+            .select('pid', 'is_member_of_collection', 'uri', 'handle', 'object_type', 'display_record', 'is_published')
             .where({
                 is_indexed: 0
             })
@@ -155,6 +156,7 @@ exports.index_records = function (req, callback) {
 
                     let record = JSON.parse(data[0].display_record);
 
+                    // collection record
                     if (record.display_record.jsonmodel_type !== undefined && record.display_record.jsonmodel_type === 'resource') {
 
                         let collection_record = {};
@@ -164,6 +166,7 @@ exports.index_records = function (req, callback) {
                         collection_record.handle = data[0].handle;
                         collection_record.object_type = data[0].object_type;
                         collection_record.title = record.display_record.title;
+                        collection_record.is_published = data[0].is_published;
 
                         // get collection abstract
                         if (record.display_record.notes !== undefined) {
@@ -197,12 +200,6 @@ exports.index_records = function (req, callback) {
                             }
                         }
                     }
-
-                    /*
-                    let record = JSON.parse(data[0].display_record);
-                    record.display_record.t_language = record.display_record.language;
-                    delete record.display_record.language;
-                    */
 
                     service.index_record({
                         index: index_name,
@@ -239,15 +236,7 @@ exports.index_records = function (req, callback) {
                                 });
 
                         } else {
-
-                            // TODO: log
-                            console.log('unable to index record.');
-                            /*
-                            callback({
-                                status: 500,
-                                data: 'unable to index record'
-                            });
-                            */
+                            logger.module().error('ERROR:unable to index record (index)');
                         }
                     });
 
@@ -314,7 +303,7 @@ exports.reset_display_record = function (req, callback) {
         if (params.none !== undefined) {
 
             knex(REPO_OBJECTS)
-                .select('is_member_of_collection', 'pid', 'uri', 'handle', 'object_type', 'mods', 'thumbnail', 'file_name', 'mime_type')
+                .select('is_member_of_collection', 'pid', 'uri', 'handle', 'object_type', 'mods', 'thumbnail', 'file_name', 'mime_type', 'is_published' )
                 .whereNot({
                     mods: null
                 })
@@ -331,7 +320,7 @@ exports.reset_display_record = function (req, callback) {
         } else {
 
             knex(REPO_OBJECTS)
-                .select('is_member_of_collection', 'pid', 'uri', 'handle', 'object_type', 'mods', 'thumbnail', 'file_name', 'mime_type')
+                .select('is_member_of_collection', 'pid', 'uri', 'handle', 'object_type', 'mods', 'thumbnail', 'file_name', 'mime_type', 'is_published')
                 .where(params)
                 .whereNot({
                     mods: null
