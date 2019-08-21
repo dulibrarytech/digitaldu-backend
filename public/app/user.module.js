@@ -128,6 +128,22 @@ const userModule = (function () {
         return $('#user-form').serialize();
     };
 
+    const getUserFormUpateData = function () {
+
+        let User = {};
+            User.id = $('#id').val();
+            User.first_name = $('#first_name').val();
+            User.last_name = $('#last_name').val();
+
+        if ($('#is_active').prop('checked')) {
+            User.is_active = 1;
+        } else {
+            User.is_active = 0;
+        }
+
+        return User;
+    };
+
     obj.getUserFullName = function () {
         let data = JSON.parse(window.sessionStorage.getItem('repo_user'));
         return data.name;
@@ -162,12 +178,51 @@ const userModule = (function () {
         });
     };
 
+    const updateUser = function () {
+
+        let message = '<div class="alert alert-info">Updating User...</div>';
+        $('#user-form').hide();
+        $('#message').html(message);
+
+        userModule.setHeaderUserToken();
+
+        $.ajax({
+            url: api + '/api/admin/v1/users',
+            type: 'put',
+            data: getUserFormUpateData()
+        }).done(function (data) {
+
+            let message = '<div class="alert alert-success">User updated</div>';
+            $('#message').html(message);
+            $('#user-update-form').hide();
+
+            setTimeout(function () {
+                $('#message').html('');
+                window.location.replace('/dashboard/users');
+            }, 3000);
+
+        }).fail(function () {
+            renderError();
+        });
+    };
+
     obj.userFormValidation = function () {
 
         $(document).ready(function () {
             $('#user-form').validate({
                 submitHandler: function () {
                     addUser();
+                }
+            });
+        });
+    };
+
+    obj.userUpdateFormValidation = function () {
+
+        $(document).ready(function () {
+            $('#user-update-form').validate({
+                submitHandler: function () {
+                    updateUser();
                 }
             });
         });

@@ -55,9 +55,10 @@
                                 <div class="clearfix"></div>
                             </div>
                             <div class="x_content">
+                                <div id="message"></div>
                                 <div class="row" id="user-details">
                                     <!-- user details are rendered here -->
-                                    <form id="user-details">
+                                    <form id="user-update-form">
                                         <input type="hidden" id="id" name="id">
                                         <div class="form-group">
                                             <label for="du_id">DU ID:</label>
@@ -97,6 +98,7 @@
     </div>
 
     <script src="../../vendors/jquery/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.17.0/dist/jquery.validate.js"></script>
     <script src="../../vendors/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="../../vendors/nprogress/nprogress.js"></script>
     <script src="../../vendors/moment/min/moment.min.js"></script>
@@ -105,6 +107,7 @@
     <script src="../../app/libs/helper.js"></script>
     <script src="../../app/user.module.js"></script>
     <script>
+        userModule.userUpdateFormValidation();
         userModule.getUserDetails();
     </script>
 </body>

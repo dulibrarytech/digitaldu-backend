@@ -162,7 +162,35 @@ exports.get_auth_user_data = function (username, callback) {
  * @param callback
  */
 exports.update_user = function (req, callback) {
-    // TODO:...
+
+    let User = req.body,
+        id = User.id;
+
+    delete User.id;
+
+    knex('tbl_users')
+        .where({
+            id: id
+        })
+        .update({
+            email: User.email,
+            first_name: User.first_name,
+            last_name: User.last_name,
+            status: User.is_active
+        })
+        .then(function (data) {
+
+            callback({
+                status: 201,
+                message: 'User updated.'
+            });
+
+            return null;
+        })
+        .catch(function (error) {
+            logger.module().error('ERROR: unable to update mods records ' + error);
+            throw 'ERROR: unable to update records ' + error;
+        });
 };
 
 /**
