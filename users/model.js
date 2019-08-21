@@ -188,8 +188,8 @@ exports.update_user = function (req, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().error('ERROR: unable to update mods records ' + error);
-            throw 'ERROR: unable to update records ' + error;
+            logger.module().error('ERROR: unable to update user record ' + error);
+            throw 'ERROR: unable to update user record ' + error;
         });
 };
 
