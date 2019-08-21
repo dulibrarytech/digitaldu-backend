@@ -66,9 +66,9 @@ const userModule = (function () {
             $('#last_name').val(data[i].last_name);
 
             if (data[i].status === 1) {
-                $('#is_active').attr('checked', true);
+                $('#is_active').prop('checked', true);
             } else {
-                $('#is_active').attr('checked', false);
+                $('#is_active').prop('checked', false);
             }
         }
 

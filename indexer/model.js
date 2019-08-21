@@ -83,6 +83,11 @@ exports.get_index_record = function (req, callback) {
                     }
                 }
 
+                collection_record.display_record = {
+                    title: record.display_record.title,
+                    abstract: collection_record.abstract
+                };
+
                 record = collection_record;
 
             } else {
@@ -178,6 +183,11 @@ exports.index_records = function (req, callback) {
                                 }
                             }
                         }
+
+                        collection_record.display_record = {
+                            title: record.display_record.title,
+                            abstract: collection_record.abstract
+                        };
 
                         record = collection_record;
 
@@ -342,7 +352,6 @@ exports.reset_display_record = function (req, callback) {
 
             if (obj.data.length === 0) {
                 clearInterval(timer);
-                console.log('complete');
                 return false;
             }
 
