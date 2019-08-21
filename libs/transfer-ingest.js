@@ -852,34 +852,6 @@ exports.flag_incomplete_record = function (obj) {
 
 };
 
-/** TODO:...DEPRECATE
- * Flags failed ingest records
- * @param obj
- */
-/*
-exports.flag_failed_record = function (obj) {
-
-    'use strict';
-
-    knexQ(QUEUE)
-        .where({
-            sip_uuid: obj.sip_uuid,
-            transfer_status: 0
-        })
-        .update({
-            message: 'FAILED'
-        })
-        .then(function (data) {
-            return null;
-        })
-        .catch(function (error) {
-            logger.module().error('ERROR: unable to flag failed queue record ' + error);
-            throw 'ERROR: unable to flag failed queue record ' + error;
-        });
-
-};
-*/
-
 /**
  * Checks queue to determine if another transfer should be started
  * @param is_member_of_collection
@@ -942,7 +914,7 @@ exports.get_import_collection = function (callback) {
 
     'use strict';
 
-    knexQ(IMPORT_QUEUE)
+    knexQ(QUEUE)
         .select('*')
         .distinct('is_member_of_collection')
         .limit(1)
