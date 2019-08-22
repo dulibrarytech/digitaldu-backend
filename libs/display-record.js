@@ -55,8 +55,15 @@ exports.create_display_record = function (obj, callback) {
         record.title = metadata.title;
     }
 
-    if (metadata.creator !== undefined) {
-        record.creator = metadata.creator;
+    if (metadata.names !== undefined) {
+
+        let names = metadata.names;
+
+        for (let i=0;i<names.length;i++) {
+            if (names[i].role !== undefined && names[i].role === 'creator') {
+                record.creator = names[i].title;
+            }
+        }
     }
 
     if (metadata.subjects !== undefined) {

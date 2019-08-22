@@ -949,8 +949,9 @@ exports.create_repo_record = function (req, callback) {
                 });
             };
 
-            // get_manifest(obj);
-            get_duracloud_object(obj, 60000);
+            // TODO: test
+            get_manifest(obj);
+            // get_duracloud_object(obj, 5000);
 
         } else {
             get_duracloud_object(obj, 5000);
