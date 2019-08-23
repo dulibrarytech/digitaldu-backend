@@ -913,8 +913,7 @@ exports.create_repo_record = function (req, callback) {
         // process larger files. checks if there is a manifest available for chunked files
         if (obj.mime_type.indexOf('audio') !== -1 || obj.mime_type.indexOf('video') !== -1) {
 
-            // TODO: check file size to determine if manifest is present
-            const get_manifest = function (obj, callback) {
+            const get_manifest = function (obj) {
 
                 if (obj.dip_path === null) {
                     callback(null, obj);
@@ -926,7 +925,7 @@ exports.create_repo_record = function (req, callback) {
 
                     if (response.error !== undefined && response.error === true) {
 
-                        logger.module().error('ERROR: unable to get manifest ' + response.error_message);
+                        logger.module().error('ERROR: unable to get manifest or manifest  ' + response.error_message);
                         obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
                         get_duracloud_object(obj, 5000);
                         return false;
@@ -949,7 +948,6 @@ exports.create_repo_record = function (req, callback) {
                 });
             };
 
-            // TODO: test
             get_manifest(obj);
             // get_duracloud_object(obj, 5000);
 
