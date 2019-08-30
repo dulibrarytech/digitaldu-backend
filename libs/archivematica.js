@@ -23,7 +23,7 @@ const config = require('../config/config'),
     logger = require('../libs/log4');
 
 /**
- * Pings archivematica api
+ * Pings archivematica api to check availability
  * @param callback
  */
 exports.ping_api = function (callback) {
@@ -39,7 +39,7 @@ exports.ping_api = function (callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: unable to ping archivematica ' + error);
+            logger.module().error('ERROR: [/libs/archivematica lib (ping_api)] unable to ping archivematica ' + error);
 
             callback({
                 error: true,
@@ -62,12 +62,12 @@ exports.ping_api = function (callback) {
 
         } else {
 
-            logger.module().error('ERROR: unable to ping archivematica ' + body);
+            logger.module().error('ERROR: [/libs/archivematica lib (ping_api)] unable to ping archivematica ' + body);
 
             callback({
                 error: true,
                 status: 'down',
-                message: 'Error: Unable to ping archivematica'
+                message: 'ERROR: [/libs/archivematica lib (ping_api)] Unable to ping archivematica'
             });
         }
     });
@@ -90,7 +90,7 @@ exports.ping_storage_api = function (callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: unable to ping archivematica storage api ' + error);
+            logger.module().error('ERROR: [/libs/archivematica lib (ping_storage_api)] unable to ping archivematica storage api ' + error);
 
             callback({
                 error: true,
@@ -107,16 +107,17 @@ exports.ping_storage_api = function (callback) {
                 status: 'up',
                 message: 'Archivematica storage api service is available'
             });
+
             return false;
 
         } else {
 
-            logger.module().error('ERROR: unable to ping archivematica storage api ' + body);
+            logger.module().error('ERROR: [/libs/archivematica lib (ping_storage_api)] unable to ping archivematica storage api ' + body);
 
             callback({
                 error: true,
                 status: 'down',
-                message: 'Error: Unable to ping archivematica storage api'
+                message: 'ERROR: [/libs/archivematica lib (ping_storage_api)] Unable to ping archivematica storage api'
             });
         }
     });
@@ -154,23 +155,16 @@ exports.list = function (folder, callback) {
     }).then(function (data) {
         callback(data);
     }).catch(function (error) {
-
-        logger.module().error('ERROR: unable to list sftp folders ' + error);
-
-        callback({
-            error: true,
-            message: error
-        });
-
-        throw 'ERROR: unable to list sftp folders ' + error;
+        logger.module().fatal('FATAL: [/libs/archivematica lib (list)] unable to list sftp folders ' + error);
+        throw 'FATAL: [/libs/archivematica lib (list)] unable to list sftp folders ' + error;
     });
 };
 
 /**
- * Starts transfer
+ * Starts transfer process
  * @param transferObj
  * @param callback
- */
+ */ // TODO: fix typo github issue #159
 exports.start_tranfser = function (transferObj, callback) {
 
     'use strict';
@@ -195,11 +189,11 @@ exports.start_tranfser = function (transferObj, callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: unable to start transfer ' + error);
+            logger.module().fatal('FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer ' + error);
 
             callback({
                 error: true,
-                message: error
+                message: 'FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer ' + error
             });
         }
 
@@ -208,14 +202,14 @@ exports.start_tranfser = function (transferObj, callback) {
             return false;
         } else {
 
-            logger.module().error('ERROR: unable to start transfer ' + error);
+            logger.module().fatal('FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer ' + httpResponse.statusCode + '/' + error);
 
             callback({
                 error: true,
-                message: 'Error: Unable to start transfer'
+                message: 'FATAL: [/libs/archivematica lib (start_transfer)] Unable to start transfer'
             });
 
-            throw 'Error: Unable to start transfer';
+            throw 'FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer ' + httpResponse.statusCode + '/' + error;
         }
     });
 };
@@ -242,7 +236,7 @@ exports.approve_transfer = function (transferFolder, callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: unable to approve transfer ' + error);
+            logger.module().error('ERROR: [/libs/archivematica lib (approve_transfer)] unable to approve transfer ' + error);
 
             callback({
                 error: true,
@@ -257,11 +251,11 @@ exports.approve_transfer = function (transferFolder, callback) {
             return false;
         } else {
 
-            logger.module().error('ERROR: unable to approve transfer ' + body);
+            logger.module().error('ERROR: [/libs/archivematica lib (approve_transfer)] unable to approve transfer ' + httpResponse.statusCode + '/' + body);
 
             callback({
                 error: true,
-                message: 'ERROR: Unable to approve transfer'
+                message: 'ERROR: [/libs/archivematica lib (approve_transfer)] Unable to approve transfer'
             });
         }
     });
@@ -285,7 +279,7 @@ exports.get_transfer_status = function (uuid, callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: unable to get transfer status ' + error);
+            logger.module().error('ERROR: [/libs/archivematica lib (get_transfer_status)] unable to get transfer status ' + error);
 
             callback({
                 error: true,
@@ -301,11 +295,11 @@ exports.get_transfer_status = function (uuid, callback) {
 
         } else {
 
-            logger.module().error('ERROR: unable to get transfer status ' + body);
+            logger.module().error('ERROR: [/libs/archivematica lib (get_transfer_status)] unable to get transfer status ' + httpResponse.statusCode + '/' + body);
 
             callback({
                 error: true,
-                message: 'Error: Unable to get transfer status'
+                message: 'ERROR: [/libs/archivematica lib (get_transfer_status)] Unable to get transfer status'
             });
         }
     });
@@ -329,7 +323,7 @@ exports.get_ingest_status = function (uuid, callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: unable to get ingest status ' + error);
+            logger.module().error('ERROR: [/libs/archivematica lib (get_ingest_status)] unable to get ingest status ' + error);
 
             callback({
                 error: true,
@@ -344,11 +338,11 @@ exports.get_ingest_status = function (uuid, callback) {
             return false;
         } else {
 
-            logger.module().error('ERROR: unable to get ingest status ' + error);
+            logger.module().error('ERROR: [/libs/archivematica lib (get_ingest_status)] unable to get ingest status ' + error);
 
             callback({
                 error: true,
-                message: 'Error: Unable to get ingest status'
+                message: 'ERROR: Unable to get ingest status'
             });
 
             return false;
@@ -374,7 +368,7 @@ exports.get_dip_path = function (uuid, callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: unable to get dip path ' + error);
+            logger.module().error('ERROR: [/libs/archivematica lib (get_dip_path)] unable to get dip path ' + error);
 
             callback({
                 error: true,
@@ -386,11 +380,11 @@ exports.get_dip_path = function (uuid, callback) {
 
         if (httpResponse.statusCode !== 200) {
 
-            logger.module().error('ERROR: unable to get dip path ' + body);
+            logger.module().error('ERROR: [/libs/archivematica lib (get_dip_path)] unable to get dip path ' + httpResponse.statusCode + '/' + body);
 
             callback({
                 error: true,
-                message: 'Error: Unable to get dip path'
+                message: 'ERROR: Unable to get dip path'
             });
 
             return false;
@@ -418,7 +412,7 @@ exports.get_dip_path = function (uuid, callback) {
 };
 
 /**
- * clears archivematica transfer queue
+ * Clears archivematica transfer queue
  * @param uuid
  */
 exports.clear_transfer = function (uuid) {
@@ -433,22 +427,22 @@ exports.clear_transfer = function (uuid) {
     }, function (error, httpResponse, body) {
 
         if (error) {
-            logger.module().error('ERROR: unable to clear transfer queue ' + error);
+            logger.module().error('ERROR: [/libs/archivematica lib (clear_transfer)] unable to clear transfer queue ' + error);
             return false;
         }
 
         if (httpResponse.statusCode === 200) {
-            logger.module().info('INFO: transfer ' + uuid + ' has been cleared.');
+            logger.module().info('INFO: [/libs/archivematica lib (clear_transfer)] transfer ' + uuid + ' has been cleared.');
             return false;
         } else {
-            logger.module().error('ERROR: unable to clear transfer queue ' + error);
+            logger.module().error('ERROR: [/libs/archivematica lib (clear_transfer)] unable to clear transfer queue ' + error);
             return false;
         }
     });
 };
 
 /**
- * clears archivematica ingest queue
+ * Clears archivematica ingest queue
  * @param uuid
  */
 exports.clear_ingest = function (uuid) {
@@ -463,15 +457,15 @@ exports.clear_ingest = function (uuid) {
     }, function (error, httpResponse, body) {
 
         if (error) {
-            logger.module().error('ERROR: unable to clear ingest ' + error);
+            logger.module().error('ERROR: [/libs/archivematica lib (clear_ingest)] unable to clear ingest ' + error);
             return false;
         }
 
         if (httpResponse.statusCode === 200) {
-            logger.module().info('INFO: ingest ' + uuid + ' has been cleared.');
+            logger.module().info('INFO: [/libs/archivematica lib (clear_ingest)] ingest ' + uuid + ' has been cleared.');
             return false;
         } else {
-            logger.module().error('ERROR: unable to clear ingest ' + error);
+            logger.module().error('ERROR: [/libs/archivematica lib (clear_ingest)] unable to clear ingest ' + httpResponse.statusCode + '/' + error);
             return false;
         }
     });
@@ -500,7 +494,7 @@ exports.download_aip = function (sip_uuid, callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: unable to get dip path ' + error);
+            logger.module().error('ERROR: [/libs/archivematica lib (download_aip)] unable to download aip ' + error);
 
             callback({
                 error: true,
@@ -512,11 +506,11 @@ exports.download_aip = function (sip_uuid, callback) {
 
         if (httpResponse.statusCode !== 200) {
 
-            logger.module().error('ERROR: unable to get AIP ' + body);
+            logger.module().error('ERROR: [/libs/archivematica lib (download_aip)] unable to get AIP ' + httpResponse.statusCode + '/' + body);
 
             callback({
                 error: true,
-                message: 'Error: Unable to get AIP'
+                message: 'ERROR: Unable to get AIP'
             });
 
             return false;
@@ -526,7 +520,7 @@ exports.download_aip = function (sip_uuid, callback) {
 
             if (error) {
 
-                logger.module().error('ERROR: Unable to write to tmp folder ' + error);
+                logger.module().error('ERROR: [/libs/archivematica lib (download_aip)] unable to write to tmp folder ' + error);
 
                 callback({
                     error: true,
