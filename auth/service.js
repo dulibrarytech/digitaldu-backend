@@ -34,7 +34,7 @@ exports.authenticate = function (username, password, callback) {
 
             if (error) {
 
-                logger.module().error('ERROR: request to LDAP failed ' + error);
+                logger.module().error('ERROR: [/auth/service module (authenticate)] request to LDAP failed ' + error);
 
                 let errorObj = {
                     status: 500,
