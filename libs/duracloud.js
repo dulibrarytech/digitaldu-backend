@@ -21,7 +21,10 @@ const config = require('../config/config'),
     fs = require('fs'),
     request = require('request');
 
-
+/**
+ * Pings duracloud service to check availability
+ * @param callback
+ */
 exports.ping = function (callback) {
 
     'use strict';
@@ -35,7 +38,7 @@ exports.ping = function (callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: Unable to ping duracloud ' + error);
+            logger.module().error('ERROR: [/libs/duracloud lib (ping)] unable to ping duracloud ' + error);
 
             callback({
                 error: true,
@@ -56,7 +59,7 @@ exports.ping = function (callback) {
 
         } else {
 
-            logger.module().error('ERROR: Unable to ping duracloud ' + body);
+            logger.module().error('ERROR: [/libs/duracloud lib (ping)] Unable to ping duracloud ' + httpResponse.statusCode + '/' + body);
 
             callback({
                 error: true,
@@ -87,7 +90,7 @@ exports.get_mets = function (data, callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: Unable to get METS ' + error);
+            logger.module().error('ERROR: [/libs/duracloud lib (get_mets)] Unable to get METS ' + error);
 
             callback({
                 error: true,
@@ -99,7 +102,7 @@ exports.get_mets = function (data, callback) {
 
         if (httpResponse.statusCode !== 200) {
 
-            logger.module().error('ERROR: Unable to get METS: status code: ' + httpResponse.statusCode);
+            logger.module().error('ERROR: [/libs/duracloud lib (get_mets)] Unable to get METS: status code: ' + httpResponse.statusCode + '/' + body);
 
             callback({
                 error: true,
@@ -140,19 +143,14 @@ exports.get_object_info = function (data, callback) {
 
     let apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + 'dip-store/' + dip_path + '/objects/' + data.uuid + '-' + data.file;
 
-    console.log(apiUrl);
-
     request.head({
         url: apiUrl,
         timeout: 25000
     }, function (error, httpResponse, body) {
 
-        // console.log(body);
-        console.log(error);
-
         if (error) {
 
-            logger.module().error('ERROR: Unable to get duracloud object ' + error);
+            logger.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud object ' + error);
 
             callback({
                 error: true,
@@ -170,7 +168,7 @@ exports.get_object_info = function (data, callback) {
 
         } else {
 
-            logger.module().error('ERROR: Unable to get duracloud object ' + body);
+            logger.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud object ' + httpResponse.statusCode + '/' + body);
 
             callback({
                 error: true,
@@ -201,7 +199,7 @@ exports.get_uri = function (data, callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: Unable to get duracloud uri object ' + error);
+            logger.module().error('ERROR: [/libs/duracloud lib (get_uri)] Unable to get duracloud uri object ' + error);
 
             callback({
                 error: true,
@@ -216,7 +214,7 @@ exports.get_uri = function (data, callback) {
 
         } else {
 
-            logger.module().error('ERROR: Unable to get duracloud uri object ' + body);
+            logger.module().error('ERROR: [/libs/duracloud lib (get_uri)] Unable to get duracloud uri object ' + httpResponse.statusCode + '/' + body);
 
             callback({
                 error: true,
@@ -247,7 +245,7 @@ exports.get_object_manifest = function (data, callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: Unable to get duracloud video manifest ' + error);
+            logger.module().error('ERROR: [/libs/duracloud lib (get_object_manifest)] Unable to get duracloud video manifest ' + error);
 
             callback({
                 error: true,
@@ -262,7 +260,7 @@ exports.get_object_manifest = function (data, callback) {
 
         } else {
 
-            logger.module().error('ERROR: Unable to get manifest ' + body);
+            logger.module().error('ERROR: [/libs/duracloud lib (get_object_manifest)] Unable to get manifest ' + body);
 
             callback({
                 error: true,
