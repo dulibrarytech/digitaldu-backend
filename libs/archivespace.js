@@ -22,7 +22,7 @@ const config = require('../config/config'),
 
 
 /**
- *
+ * Pings Archivesspace to check availability
  * @param callback
  */
 exports.ping = function (callback) {
@@ -38,7 +38,7 @@ exports.ping = function (callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: request to archivespace failed ' + error);
+            logger.module().error('ERROR: [/libs/archivesspace lib (ping)] request to archivesspace failed ' + error);
 
             callback({
                 error: true,
@@ -61,7 +61,7 @@ exports.ping = function (callback) {
 
         } else {
 
-            logger.module().error('ERROR: request to archivespace failed ' + error);
+            logger.module().error('ERROR: [/libs/archivesspace lib (ping)] request to archivesspace failed ' + error);
 
             callback({
                 error: true,
@@ -74,10 +74,10 @@ exports.ping = function (callback) {
     });
 };
 
-
 /**
  * Gets JSON representation of mods record from archivespace
  * @param id
+ * @param session
  * @param callback
  */
 exports.get_mods = function (id, session, callback) {
@@ -104,7 +104,7 @@ exports.get_mods = function (id, session, callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: request to archivespace failed ' + error);
+            logger.module().error('ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed ' + error);
 
             callback({
                 error: true,
@@ -125,7 +125,7 @@ exports.get_mods = function (id, session, callback) {
 
         } else {
 
-            logger.module().error('ERROR: request to archivespace failed ' + error);
+            logger.module().error('ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed ' + httpResponse.statusCode + '/' + error);
 
             callback({
                 error: true,
@@ -139,6 +139,8 @@ exports.get_mods = function (id, session, callback) {
 
 /**
  * Gets record updates that have occurred in archivesspace
+ * @param session
+ * @param callback
  */
 exports.get_record_updates = function (session, callback) {
 
@@ -156,7 +158,7 @@ exports.get_record_updates = function (session, callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: request to archivesspace failed ' + error);
+            logger.module().error('ERROR: [/libs/archivesspace lib (get_record_updates)] request to archivesspace failed ' + error);
 
             callback({
                 error: true,
@@ -177,7 +179,7 @@ exports.get_record_updates = function (session, callback) {
 
         } else {
 
-            logger.module().error('ERROR: unable to fetch record updates ' + error);
+            logger.module().error('ERROR: [/libs/archivesspace lib (get_record_updates)] unable to fetch record updates ' + error);
 
             callback({
                 error: true,
@@ -190,7 +192,7 @@ exports.get_record_updates = function (session, callback) {
 };
 
 /**
- * Gets session token from archivespace
+ * Gets session token from archivesspace
  * @param callback
  */
 exports.get_session_token = function (callback) {
@@ -209,7 +211,7 @@ exports.get_session_token = function (callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: unable get archivesspace session token ' + error);
+            logger.module().error('ERROR: [/libs/archivesspace lib (get_session_token)] unable get archivesspace session token ' + error);
 
             callback({
                 error: true,
@@ -228,7 +230,7 @@ exports.get_session_token = function (callback) {
 
         } else {
 
-            logger.module().error('ERROR: unable get archivesspace session token ' + error);
+            logger.module().error('ERROR: [/libs/archivesspace lib (get_session_token)] unable get archivesspace session token ' + httpResponse.statusCode + '/' + error);
 
             callback({
                 error: true,
