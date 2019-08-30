@@ -18,7 +18,7 @@
 
 'use strict';
 
-var Import = require('../import/queue'),
+const Import = require('../import/queue'),
     Model = require('../import/model');
 
 exports.list = function (req, res) {

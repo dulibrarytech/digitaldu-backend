@@ -48,7 +48,6 @@ exports.get_import_incomplete = function (req, callback) {
 
             callback({
                 status: 200,
-                content_type: {'Content-Type': 'application/json'},
                 message: 'Incomplete records.',
                 data: data
             });
@@ -56,7 +55,8 @@ exports.get_import_incomplete = function (req, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().error('ERROR: unable to get incomplete records ' + error);
+            logger.module().fatal('FATAL: [/import/model module (get_import_incomplete)] unable to get incomplete records ' + error);
+            throw 'FATAL: [/import/model module (get_import_incomplete)] unable to get incomplete records ' + error;
         });
 };
 
@@ -78,7 +78,6 @@ exports.get_import_complete = function (req, callback) {
 
             callback({
                 status: 200,
-                // content_type: {'Content-Type': 'application/json'},
                 message: 'Complete records.',
                 data: data
             });
@@ -86,7 +85,8 @@ exports.get_import_complete = function (req, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().error('ERROR: unable to get complete records ' + error);
+            logger.module().fatal('FATAL: [/import/model module (get_import_complete)] unable to get complete records ' + error);
+            throw 'FATAL: [/import/model module (get_import_complete)] unable to get complete records ' + error;
         });
 };
 
@@ -135,12 +135,13 @@ exports.import_mods_id = function (req, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().error('ERROR: unable to save mods id ' + error);
+            logger.module().fatal('FATAL: [/import/model module (import_mods_id)] unable to save mods id ' + error);
+            throw 'FATAL: [/import/model module (import_mods_id)] unable to save mods id ' + error;
         });
 };
 
 /**
- * Imports mods record from Archivespace
+ * Imports mods record from Archivesspace
  * @param req
  * @param callback
  */
@@ -171,8 +172,8 @@ exports.import_mods = function (req, callback) {
                 token = JSON.parse(data);
                 obj.token = token.session;
                 callback(null, obj);
-            } catch (e) {
-                logger.module().error('ERROR: session token error ' + e);
+            } catch (error) {
+                logger.module().error('ERROR: [/import/model module (import_mods/archivespace.get_session_token)] session token error ' + error);
                 obj.token = null;
                 callback(null, obj);
             }
@@ -190,7 +191,7 @@ exports.import_mods = function (req, callback) {
         archivespace.get_mods(obj.mods_id, obj.token, function (response) {
 
             if (response.error !== undefined && response.error === true) {
-                logger.module().error('ERROR: unable to get mods ' + response.error_message);
+                logger.module().error('ERROR: [/import/model module (import_mods/get_mods/archivespace.get_mods)] unable to get mods ' + response.error_message);
                 obj.mods = null;
                 callback(null, obj);
                 return false;
@@ -292,7 +293,8 @@ exports.import_mods = function (req, callback) {
                             return null;
                         })
                         .catch(function (error) {
-                            logger.module().error('ERROR: unable to save record ' + error);
+                            logger.module().fatal('FATAL: [/import/model module (import_mods/create_display_record/modslibdisplay.create_display_record)] unable to save record ' + error);
+                            throw 'FATAL: [/import/model module (import_mods/create_display_record/modslibdisplay.create_display_record)] unable to save record ' + error;
                         });
                 });
 
@@ -300,7 +302,8 @@ exports.import_mods = function (req, callback) {
                 return null;
             })
             .catch(function (error) {
-                logger.module().error('ERROR: unable to save record ' + error);
+                logger.module().fatal('FATAL: [/import/model module (import_mods/modslibdisplay.create_display_record)] unable to save record ' + error);
+                throw 'FATAL: [/import/model module (import_mods/modslibdisplay.create_display_record)] unable to save record ' + error;
             });
     }
 
@@ -311,7 +314,7 @@ exports.import_mods = function (req, callback) {
     ], function (error, results) {
 
         if (error) {
-            logger.module().error('ERROR: async (import mods)');
+            logger.module().error('ERROR: [/import/model module (import_mods/async.waterfall)] ' + error);
         }
 
         if (results.mods === null) {
@@ -324,7 +327,7 @@ exports.import_mods = function (req, callback) {
             return false;
         }
 
-        logger.module().info('INFO: mods imported');
+        logger.module().info('INFO: [/import/model module (import_mods/async.waterfall)] mods imported');
 
         callback({
             status: 201,
@@ -345,8 +348,8 @@ exports.import_thumbnail = function (req, callback) {
     archivematica.get_dip_path(sip_uuid, function (dip_path) {
 
         if (dip_path.error !== undefined && dip_path.error === true) {
-            logger.module().error('ERROR: dip path error ' + dip_path.error.message + ' (import_dip)');
-            throw 'ERROR: dip path error ' + dip_path.error.message + ' (import_dip)';
+            logger.module().fatal('FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path)] dip path error ' + dip_path.error.message);
+            throw 'FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path)] dip path error ' + dip_path.error.message;
         }
 
         let data = {
@@ -357,8 +360,8 @@ exports.import_thumbnail = function (req, callback) {
         duracloud.get_mets(data, function (response) {
 
             if (response.error !== undefined && response.error === true) {
-                logger.module().error('ERROR: unable to get mets (import_dip)');
-                throw 'ERROR: unable to get mets (import_dip)';
+                logger.module().fatal('FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to get mets');
+                throw 'FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to get mets';
             }
 
             let metsResults = metslib.process_mets(sip_uuid, dip_path, response.mets),
@@ -437,12 +440,14 @@ exports.import_thumbnail = function (req, callback) {
                             return null;
                         })
                         .catch(function (error) {
-                            logger.module().error('ERROR: unable to save record ' + error);
+                            logger.module().fatal('FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to save record ' + error);
+                            throw 'FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to save record ' + error;
                         });
 
                 })
                 .catch(function (error) {
-                    logger.module().error('ERROR: unable to save record ' + error);
+                    logger.module().fatal('FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to save record ' + error);
+                    throw 'FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to save record ' + error;
                 });
         });
     });

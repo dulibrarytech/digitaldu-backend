@@ -18,9 +18,8 @@
 
 'use strict';
 
-var Import = require('../import/controller');
+const Import = require('../import/controller');
 
-// TODO: apply api security.  i.e. API key
 module.exports = function (app) {
 
     app.route('/api/admin/v1/import/list')
