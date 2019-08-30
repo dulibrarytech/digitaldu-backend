@@ -43,7 +43,11 @@ const config = require('../config/config'),
     FAIL_QUEUE = 'tbl_fail_queue',
     REPO_OBJECTS = 'tbl_objects';
 
-
+/**
+ * Checks if there is a collection is actively being ingested
+ * @param pid
+ * @param callback
+ */
 exports.check_collection = function (pid, callback) {
 
     'use strict';
@@ -65,8 +69,8 @@ exports.check_collection = function (pid, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().error('ERROR: database queue error (check_collection) ' + error);
-            throw 'ERROR: database queue error (check_collection) ' + error;
+            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (check_collection)] database queue error ' + error);
+            throw 'FATAL: [/libs/transfer-ingest lib (check_collection)] database queue error ' + error;
         });
 };
 
@@ -108,22 +112,23 @@ exports.save_transfer_records = function (transfer_data, callback) {
 
             if (data.length === 0) {
                 obj.message = 'Data not saved.';
-                logger.module().fatal('FATAL: unable to save queue data (save_transfer_records)');
-                throw 'FATAL: unable to save queue data (save_transfer_records)';
+                logger.module().fatal('FATAL: [/libs/transfer-ingest lib (save_transfer_records)] unable to save queue data');
+                throw 'FATAL: [/libs/transfer-ingest lib (save_transfer_records)] unable to save queue data';
+                // TODO: clear queue and log to fail queue
             }
 
             callback(obj);
             return null;
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: unable to save queue data (save_transfer_records)');
-            throw 'FATAL: unable to save queue data (save_transfer_records) ' + error;
+            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (save_transfer_records)] unable to save queue data');
+            throw 'FATAL: [/libs/transfer-ingest lib (save_transfer_records)] unable to save queue data' + error;
         });
 };
 
 /**
  * Starts Archivematica transfer process
- * @param obj
+ * @param collection
  * @param callback
  */
 exports.start_transfer = function (collection, callback) {
@@ -157,8 +162,8 @@ exports.start_transfer = function (collection, callback) {
                 callback: function (data) {
                     if (data !== 1) {
                         // TODO: clear queue and log to fail queue
-                        logger.module().fatal('FATAL: database transfer queue error (start transfer)');
-                        throw 'Database transfer queue error';
+                        logger.module().fatal('FATAL: [/libs/transfer-ingest lib (start_transfer)] database transfer queue error. data !== 1');
+                        return false;
                     }
 
                     callback(object);
@@ -173,8 +178,8 @@ exports.start_transfer = function (collection, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().error('FATAL: database transfer queue error (start transfer) ' + error );
-            throw 'FATAL: database transfer queue error (start transfer) ' + error ;
+            logger.module().error('FATAL: [/libs/transfer-ingest lib (start_transfer)] database transfer queue error' + error);
+            throw 'FATAL: [/libs/transfer-ingest lib (start_transfer)] database transfer queue error' + error ;
         });
 };
 
@@ -210,8 +215,8 @@ exports.confirm_transfer = function (response, id) {
             callback: function (data) {
 
                 if (data !== 1) {
-                    logger.module().fatal('FATAL: database transfer queue error (confirm_transfer)');
-                    throw 'FATAL: database transfer queue error (confirm_transfer)';
+                    logger.module().error('ERROR: [/libs/transfer-ingest lib (confirm_transfer)] database transfer queue error. data !==1');
+                    return false;
                 }
 
                 return null;
@@ -250,9 +255,10 @@ exports.confirm_transfer = function (response, id) {
             transfer_status: 1
         },
         callback: function (data) {
+
             if (data !== 1) {
-                logger.module().fatal('FATAL: database transfer queue error (confirm_transfer)');
-                throw 'FATAL: database transfer queue error (confirm_transfer)';
+                logger.module().error('ERROR: [/libs/transfer-ingest lib (confirm_transfer)] database transfer queue error. data !==1');
+                return false;
             }
 
             return null;
@@ -265,7 +271,7 @@ exports.confirm_transfer = function (response, id) {
 
 /**
  * Gets transferred record from local queue
- * @param obj
+ * @param collection
  * @param callback
  */
 exports.get_transferred_record = function (collection, callback) {
@@ -295,8 +301,8 @@ exports.get_transferred_record = function (collection, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: database transfer queue error (get_transferred_record) ' + error);
-            throw 'FATAL: database transfer queue error (get_transferred_record) ' + error;
+            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (get_transferred_record)] database transfer queue error' + error);
+            throw 'FATAL: [/libs/transfer-ingest lib (get_transferred_record)] database transfer queue error' + error;
         });
 };
 
@@ -305,7 +311,6 @@ exports.get_transferred_record = function (collection, callback) {
  * @param response
  * @param object
  * @param callback
- * @returns {boolean}
  */
 exports.confirm_transfer_approval = function (response, object, callback) {
 
@@ -320,7 +325,7 @@ exports.confirm_transfer_approval = function (response, object, callback) {
     try {
         json = JSON.parse(response);
     } catch (e) {
-        logger.module().error('ERROR: unable to parse confirmation response (confirm_transfer_approval)');
+        logger.module().error('ERROR: [/libs/transfer-ingest lib (confirm_transfer_approval)] unable to parse confirmation response');
         return false;
     }
 
@@ -341,7 +346,7 @@ exports.confirm_transfer_approval = function (response, object, callback) {
             callback: function (data) {
 
                 if (data !== 1) {
-                    logger.module().error('ERROR: unable to update database queue (confirm_transfer_approval)');
+                    logger.module().error('ERROR: [/libs/transfer-ingest lib (confirm_transfer_approval)] unable to update database queue. data !==1');
                     return false;
                 }
 
@@ -371,9 +376,7 @@ exports.confirm_transfer_approval = function (response, object, callback) {
 /**
  * Updates transfer queue status
  * @param response
- * @param transfer_uuid
  * @param callback
- * @returns {boolean}
  */
 exports.update_transfer_status = function (response, callback) {
 
@@ -411,8 +414,14 @@ exports.update_transfer_status = function (response, callback) {
                         callback: function (data) {
 
                             if (data !== 1) {
-                                logger.module().error('ERROR: updated more than one record in database queue (update_transfer_status)');
-                                throw 'ERROR: updated more than one record in database queue (update_transfer_status)';
+                                logger.module().error('ERROR: [/libs/transfer-ingest lib (update_transfer_status)] updated more than one record in database queue. data !==1');
+                                return false;
+                            } else {
+
+                                callback({
+                                    complete: true,
+                                    sip_uuid: json.sip_uuid
+                                });
                             }
 
                             return null;
@@ -421,18 +430,13 @@ exports.update_transfer_status = function (response, callback) {
 
                     // Flag transfer as COMPLETE in queue
                     update_queue(transferCompleteObj);
-
-                    callback({
-                        complete: true,
-                        sip_uuid: json.sip_uuid
-                    });
                 }
 
                 return null;
             })
             .catch(function (error) {
-                logger.module().error('ERROR: database queue error (update_transfer_status) ' + error);
-                throw 'ERROR: database queue error (update_transfer_status) ' + error;
+                logger.module().fatal('FATAL: [/libs/transfer-ingest lib (update_transfer_status)] database queue error ' + error);
+                throw 'FATAL: [/libs/transfer-ingest lib (update_transfer_status)] database queue error ' + error;
             });
 
         return false;
@@ -453,8 +457,8 @@ exports.update_transfer_status = function (response, callback) {
             callback: function (data) {
 
                 if (data !== 1) {
-                    logger.module().error('ERROR: database queue error (update_transfer_status)');
-                    throw 'ERROR: database queue error (update_transfer_status)';
+                    logger.module().error('ERROR: [/libs/transfer-ingest lib (update_transfer_status)] database queue error. data !==1');
+                    return false;
                 }
 
                 return null;
@@ -474,6 +478,8 @@ exports.update_transfer_status = function (response, callback) {
     // TODO: test (github issue #104)
     if (json.status === 'FAILED' || json.status === 'REJECTED' || json.status === 'USER_INPUT') {
 
+        // TODO: clear queue and add to fail queue
+
         callback({
             error: true,
             message: json.status
@@ -488,7 +494,6 @@ exports.update_transfer_status = function (response, callback) {
  * @param response
  * @param sip_uuid
  * @param callback
- * @returns {boolean}
  */
 exports.update_ingest_status = function (response, sip_uuid, callback) {
 
@@ -499,6 +504,14 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
     }
 
     var json = JSON.parse(response);
+
+    console.log('update ingest status: ', json);
+
+    /* TODO: test this
+     if (json.message.code !== undefined && json.message.code === 'ESOCKETTIMEDOUT') {
+        return false;
+     }
+     */
 
     if (json.status === 'COMPLETE') {
 
@@ -518,8 +531,19 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
             callback: function (data) {
 
                 if (data !== 1) {
-                    logger.module().error('ERROR: database queue error (update_ingest_status) ' + json.status);
-                    throw 'ERROR: database queue error (update_ingest_status)';
+                    logger.module().error('ERROR: [/libs/transfer-ingest lib (update_ingest_status)] database queue error. data!==1 ' + json.status);
+
+                    callback({
+                        complete: false
+                    });
+
+                } else {
+
+                    callback({
+                        complete: true,
+                        sip_uuid: sip_uuid
+                    });
+
                 }
 
                 return null;
@@ -527,11 +551,6 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
         };
 
         update_queue(importCompleteQueue);
-
-        callback({
-            complete: true,
-            sip_uuid: sip_uuid
-        });
 
         return false;
     }
@@ -553,8 +572,8 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
             callback: function (data) {
 
                 if (data !== 1) {
-                    logger.module().error('ERROR: database queue error (update_ingest_status) ' + json.status);
-                    throw 'ERROR: database queue error (update_ingest_status)';
+                    logger.module().error('ERROR: [/libs/transfer-ingest lib (update_ingest_status)] database queue error data!==1 ' + json.status);
+                    return false;
                 }
 
                 return null;
@@ -584,7 +603,6 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
  * Saves object data retrieved from Archivematica METS file
  * @param obj
  * @param callback
- * @returns {boolean}
  */
 exports.save_mets_data = function (obj, callback) {
 
@@ -606,16 +624,16 @@ exports.save_mets_data = function (obj, callback) {
                         return null;
                     })
                     .catch(function (error) {
-                        logger.module().error('ERROR: unable to save mets (save_mets_data) ' + error);
-                        throw 'ERROR: unable to save mets (save_mets_data) ' + error;
+                        logger.module().fatal('FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save mets ' + error);
+                        throw 'FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save mets ' + error;
                     });
             }
 
             return null;
         })
         .catch(function (error) {
-            logger.module().error('ERROR: unable to save mets (save_mets_data) ' + error);
-            throw 'ERROR: unable to save mets (save_mets_data) ' + error;
+            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save mets ' + error);
+            throw 'FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save mets ' + error;
         });
 
     return false;
@@ -644,36 +662,8 @@ exports.get_uri_txt = function (sip_uuid, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().error('ERROR: unable to get uri txt file (get_uri_txt) ' + error);
-            throw 'ERROR: unable to get uri txt file (get_uri_txt) ' + error;
-        });
-};
-
-/** DEPRECATE
- * Gets kalturaid.txt containing mods id (used to get metadata from archivespace)
- * @param sip_uuid
- * @param callback
- */
-exports.get_entry_id_txt = function (sip_uuid, callback) {
-
-    'use strict';
-
-    knexQ(IMPORT_QUEUE)
-        .select('*')
-        .where({
-            sip_uuid: sip_uuid,
-            type: 'txt',
-            file: 'kalturaid.txt',
-            status: 0
-        })
-        .limit(1)
-        .then(function (data) {
-            callback(data);
-            return null;
-        })
-        .catch(function (error) {
-            logger.module().error('ERROR: unable to get kalturaid txt file (get_entry_id_txt) ' + error);
-            throw 'ERROR: unable to get kalturaid txt file (get_entry_id_txt) ' + error;
+            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (get_uri_txt)] unable to get uri txt file ' + error);
+            throw 'FATAL: [/libs/transfer-ingest lib (get_uri_txt)] unable to get uri txt file ' + error;
         });
 };
 
@@ -696,13 +686,13 @@ exports.get_collection = function (sip_uuid, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().error('ERROR: unable to get collection (get_collection) ' + error);
-            throw 'ERROR: unable to get collection (get_collection) ' + error;
+            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (get_collection)] unable to get collection ' + error);
+            throw 'FATAL: [/libs/transfer-ingest lib (get_collection)] unable to get collection ' + error;
         });
 };
 
 /**
- * Saves mods_id used to get metadata from Archivespace
+ * Saves mods_id used to get metadata from Archivesspace
  * @param mods_id
  * @param sip_uuid
  * @param callback
@@ -723,8 +713,8 @@ exports.save_mods_id = function (mods_id, sip_uuid, callback) {
         callback: function (data) {
 
             if (data !== 1) {
-                logger.module().error('ERROR: unable to save mods id (save_mods_id)');
-                throw 'ERROR: unable to save mods id (save_mods_id)';
+                logger.module().error('ERROR: [/libs/transfer-ingest lib (save_mods_id)] unable to save mods id.  data !==1');
+                throw 'ERROR: [/libs/transfer-ingest lib (save_mods_id)] unable to save mods id.  data !==1';
             }
 
             callback(true);
@@ -758,8 +748,8 @@ exports.get_object = function (sip_uuid, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().error('ERROR: unable to get object (get_object) ' + error);
-            throw 'ERROR: unable to get object (get_object) ' + error;
+            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (get_object)] unable to get object ' + error);
+            throw 'FATAL: [/libs/transfer-ingest lib (get_object)] unable to get object ' + error;
         });
 };
 
@@ -784,8 +774,8 @@ exports.create_repo_record = function (obj, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().error('ERROR: unable to create repo record (create_repo_record) ' + error);
-            throw 'ERROR: unable to create repo record (create_repo_record) ' + error;
+            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (create_repo_record)] unable to create repo record ' + error);
+            throw 'FATAL: [/libs/transfer-ingest lib (create_repo_record)] unable to create repo record ' + error;
         });
 };
 
@@ -815,15 +805,15 @@ exports.cleanup = function (obj, callback) {
                     return null;
                 })
                 .catch(function (error) {
-                    logger.module().error('ERROR: unable to clean up queue (cleanup) ' + error);
-                    throw 'ERROR: unable to clean up queue (cleanup) ' + error;
+                    logger.module().fatal('FATAL: [/libs/transfer-ingest lib (cleanup/QUEUE)] unable to clean up queue ' + error);
+                    throw 'FATAL: [/libs/transfer-ingest lib (cleanup/QUEUE)] unable to clean up queue ' + error;
                 });
 
             return null;
         })
         .catch(function (error) {
-            logger.module().error('ERROR: unable to clean up queue (cleanup) ' + error);
-            throw 'ERROR: unable to clean up queue (cleanup) ' + error;
+            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (cleanup/IMPORT_QUEUE)] unable to clean up queue ' + error);
+            throw 'FATAL: [/libs/transfer-ingest lib (cleanup/IMPORT_QUEUE)] unable to clean up queue ' + error;
         });
 };
 
@@ -846,8 +836,8 @@ exports.flag_incomplete_record = function (obj) {
             return null;
         })
         .catch(function (error) {
-            logger.module().error('ERROR: unable to flag incomplete record ' + error);
-            throw 'ERROR: unable to flag incomplete record ' + error;
+            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (flag_incomplete_record)] unable to flag incomplete record ' + error);
+            throw 'FATAL: [/libs/transfer-ingest lib (flag_incomplete_record)] unable to flag incomplete record ' + error;
         });
 
 };
@@ -881,13 +871,13 @@ exports.check_queue = function (is_member_of_collection, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().error('ERROR: unable to save mets (save_mets_data) ' + error);
-            throw 'ERROR: unable to save mets (save_mets_data) ' + error;
+            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (check_queue)] unable to check queue ' + error);
+            throw 'FATAL: [/libs/transfer-ingest lib (check_queue)] unable to check queue ' + error;
         });
 };
 
 /**
- *
+ * Saves data to fail queue
  * @param obj
  */
 exports.save_to_fail_queue = function (obj) {
@@ -897,17 +887,16 @@ exports.save_to_fail_queue = function (obj) {
     knexQ(FAIL_QUEUE)
         .insert(obj)
         .then(function (data) {
-            // callback('done');
             return null;
         })
         .catch(function (error) {
-            logger.module().error('ERROR: unable to save mets (save_mets_data) ' + error);
-            throw 'ERROR: unable to save mets (save_mets_data) ' + error;
+            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (save_to_fail_queue)] unable to save to fail queue ' + error);
+            throw 'FATAL: [/libs/transfer-ingest lib (save_to_fail_queue)] unable to save to fail queue ' + error;
         });
 };
 
 /**
- *
+ * Gets a collection from the queue
  * @param callback
  */
 exports.get_import_collection = function (callback) {
@@ -924,27 +913,23 @@ exports.get_import_collection = function (callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().error('ERROR: unable to get import collection (get_import_collection) ' + error);
-            throw 'ERROR: unable to get import collection (get_import_collection) ' + error;
+            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (get_import_collection)] unable to get import collection ' + error);
+            throw 'FATAL: [/libs/transfer-ingest lib (get_import_collection)] unable to get import collection ' + error;
         });
 };
 
 /**
- * Restarts import queue
- * @param req
- * @param callback
+ * Restarts import queue process
  */
 exports.restart_import = function () {
 
     'use strict';
 
-    knexQ(IMPORT_QUEUE)
+    knexQ(QUEUE)
         .select('*')
         .distinct('is_member_of_collection')
         .limit(1)
         .then(function (data) {
-
-            console.log(data);
 
             if (data.length === 0) {
                 // cannot restart import
@@ -959,30 +944,31 @@ exports.restart_import = function () {
             }, function (error, httpResponse, body) {
 
                 if (error) {
-                    logger.module().fatal('FATAL: unable to restart transfer ' + error + ' (async)');
-                    throw 'ERROR: unable to restart transfer ' + error + ' (async)';
+                    logger.module().fatal('FATAL: [/libs/transfer-ingest lib (restart_import)] unable to restart transfer (request async)' + error);
+                    throw 'FATAL: [/libs/transfer-ingest lib (restart_import)] unable to restart transfer (request async)' + error;
                 }
 
                 if (httpResponse.statusCode === 200) {
-                    logger.module().info('INFO: sending request to restart transfer (async)');
+                    logger.module().info('INFO: [/libs/transfer-ingest lib (restart_import)] sending request to restart transfer (request async)');
                     return false;
                 } else {
-                    logger.module().fatal('FATAL: unable to restart transfer ' + body + ' (async)');
-                    throw 'FATAL: unable to begin restart transfer ' + body + ' (async)';
+                    logger.module().fatal('FATAL: [/libs/transfer-ingest lib (restart_import)] unable to restart transfer ' + httpResponse.statusCode + '/' + body + ' (request async)');
+                    throw 'FATAL: [/libs/transfer-ingest lib (restart_import)] unable to begin restart transfer ' + httpResponse.statusCode + '/' + body + ' (request async)';
                 }
             });
 
             return null;
         })
         .catch(function (error) {
-            logger.module().error('ERROR: unable to get import collection (get_import_collection) ' + error);
-            throw 'ERROR: unable to get import collection (get_import_collection) ' + error;
+            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (restart_import)] unable unable to restart import ' + error);
+            throw 'FATAL: [/libs/transfer-ingest lib (restart_import)] unable to restart import ' + error;
         });
 };
 
 /**
  * gets compound object parts from import queue
  * @param sip_uuid
+ * @param parts
  * @param callback
  */
 exports.get_compound_object_parts = function (sip_uuid, parts, callback) {
@@ -1021,11 +1007,10 @@ exports.get_compound_object_parts = function (sip_uuid, parts, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().error('ERROR: unable to get compound object parts ' + error);
-            throw 'ERROR: unable to get compound object parts ' + error;
+            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (get_compound_object_parts)] unable to get compound object parts ' + error);
+            throw 'FATAL: [/libs/transfer-ingest lib (get_compound_object_parts)] unable to get compound object parts ' + error;
         });
 };
-
 
 /**
  * Clears out failed record(s) in import queue
@@ -1041,8 +1026,6 @@ exports.clear_queue_record = function (obj, callback) {
         .del()
         .then(function (data) {
 
-            console.log('clear queue record: ', data);
-
             if (data > 0) {
                 callback(true);
             } else {
@@ -1052,8 +1035,8 @@ exports.clear_queue_record = function (obj, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().error('ERROR: unable to clean up queue (cleanup) ' + error);
-            throw 'ERROR: unable to clean up queue (cleanup) ' + error;
+            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (clear_queue_record)] unable to clean up queue ' + error);
+            throw 'FATAL: [/libs/transfer-ingest lib (clear_queue_record)] unable to clean up queue ' + error;
         });
 };
 
@@ -1070,7 +1053,7 @@ const update_queue = function (obj) {
         .update(obj.update)
         .then(obj.callback)
         .catch(function (error) {
-            logger.module().error('ERROR: unable to update queue ' + error);
-            throw 'ERROR: unable to update queue ' + error;
+            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (update_queue)] unable to update queue ' + error);
+            throw 'FATAL: [/libs/transfer-ingest lib (update_queue)] unable to update queue ' + error;
         });
 };

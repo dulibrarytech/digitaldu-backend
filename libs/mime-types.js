@@ -43,5 +43,9 @@ exports.get_mime_type = function (file) {
         mime_type = 'video/mp4';
     }
 
+    if (file.indexOf('mov') !== -1) {
+        mime_type = 'video/quicktime';
+    }
+
     return mime_type;
 };

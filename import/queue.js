@@ -620,7 +620,7 @@ exports.get_ingest_status = function (req, callback) {
                     let failObj = {
                         is_member_of_collection: '',
                         sip_uuid: sip_uuid,
-                        message: 'Transfer status: ' + result.message
+                        message: 'Ingest status: ' + result.message
                     };
 
                     importlib.save_to_fail_queue(failObj);
@@ -657,6 +657,11 @@ exports.get_ingest_status = function (req, callback) {
 
                     });
 
+                    return false;
+
+                }
+
+                if (result.complete === false) {
                     return false;
                 }
             });
@@ -796,6 +801,9 @@ exports.create_repo_record = function (req, callback) {
             // TODO: if pid was not returned set collection to null? or try again
             // TODO: save sip_uuid to error table?
 
+            console.log('queue get collection sip uuid: ', sip_uuid);
+            console.log('queue get collection: ', result);
+
             if (result === null || result === undefined) {
                 get_collection(callback);
                 return false;
@@ -913,6 +921,8 @@ exports.create_repo_record = function (req, callback) {
         // process larger files. checks if there is a manifest available for chunked files
         if (obj.mime_type.indexOf('audio') !== -1 || obj.mime_type.indexOf('video') !== -1) {
 
+            console.log('processing video: ', obj);
+
             const get_manifest = function (obj) {
 
                 if (obj.dip_path === null) {
@@ -927,6 +937,7 @@ exports.create_repo_record = function (req, callback) {
 
                         logger.module().error('ERROR: unable to get manifest or manifest  ' + response.error_message);
                         obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
+                        console.log('no manifest: ', obj);
                         get_duracloud_object(obj, 5000);
                         return false;
 
@@ -949,7 +960,6 @@ exports.create_repo_record = function (req, callback) {
             };
 
             get_manifest(obj);
-            // get_duracloud_object(obj, 5000);
 
         } else {
             get_duracloud_object(obj, 5000);
@@ -959,16 +969,18 @@ exports.create_repo_record = function (req, callback) {
 
             setTimeout(function () {
 
+                console.log('queue get duracloud object: ', obj);
+
                 // gets headers only
                 duracloud.get_object_info(obj, function (response) {
 
                     if (response.error === true) {
-                        logger.module().error('ERROR: Unable to get object ' + response.error_message);
+                        logger.module().error('ERROR: Unable to get duracloud object ' + response.error_message);
 
                         let failObj = {
                             is_member_of_collection: '',
                             sip_uuid: sip_uuid,
-                            message: 'ERROR: Unable to get object ' + response.error_message
+                            message: 'ERROR: Unable to get duracloud object ' + response.error_message
                         };
 
                         importlib.save_to_fail_queue(failObj);
@@ -976,7 +988,9 @@ exports.create_repo_record = function (req, callback) {
                             sip_uuid: sip_uuid
                         }, function (result) {
                             if (result === true) {
-                                importlib.restart_import();
+                                // TODO: test when object is not found, but proceed with metadata import
+                                // importlib.restart_import();
+                                callback(null, obj);
                             }
                         });
 

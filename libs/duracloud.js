@@ -140,10 +140,15 @@ exports.get_object_info = function (data, callback) {
 
     let apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + 'dip-store/' + dip_path + '/objects/' + data.uuid + '-' + data.file;
 
+    console.log(apiUrl);
+
     request.head({
         url: apiUrl,
         timeout: 25000
     }, function (error, httpResponse, body) {
+
+        // console.log(body);
+        console.log(error);
 
         if (error) {
 
