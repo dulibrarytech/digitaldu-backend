@@ -112,7 +112,7 @@ exports.get_index_record = function (req, callback) {
 
                 } else {
 
-                    logger.module().error('ERROR: unable to index record');
+                    logger.module().error('ERROR: [/indexer/model module (get_index_record)] unable to index record');
 
                     callback({
                         status: 200,
@@ -123,8 +123,8 @@ exports.get_index_record = function (req, callback) {
             });
         })
         .catch(function (error) {
-            logger.module().error('ERROR: unable get index record ' + error);
-            throw error;
+            logger.module().fatal('FATAL: [/indexer/model module (get_index_record)] unable get index record ' + error);
+            throw 'FATAL: [/indexer/model module (get_index_record)] unable get index record ' + error;
         });
 };
 
@@ -236,26 +236,26 @@ exports.index_records = function (req, callback) {
                                         }, config.indexTimer);
 
                                     } else {
-                                        logger.module().error('ERROR: more than one record was updated (index)');
+                                        logger.module().error('ERROR: [/indexer/model module (index_records)] more than one record was updated');
                                     }
 
                                 })
                                 .catch(function (error) {
-                                    logger.module().error('ERROR: unable to update is_indexed field (index) ' + error);
-                                    throw error;
+                                    logger.module().fatal('FATAL: [/indexer/model module (index_records)] unable to update is_indexed field ' + error);
+                                    throw 'FATAL: [/indexer/model module (index_records)] unable to update is_indexed field ' + error;
                                 });
 
                         } else {
-                            logger.module().error('ERROR:unable to index record (index)');
+                            logger.module().error('ERROR: [/indexer/model module (index_records)] unable to index record');
                         }
                     });
 
                 } else {
-                    logger.module().info('INFO: indexing complete');
+                    logger.module().info('INFO: [/indexer/model module (index_records)] indexing complete');
                 }
             })
             .catch(function (error) {
-                logger.module().error('ERROR: unable to get record (index) ' + error);
+                logger.module().error('ERROR: [/indexer/model module (index_records)] unable to get record ' + error);
                 throw error;
             });
     }
@@ -272,128 +272,13 @@ exports.index_records = function (req, callback) {
             index(index_name);
         })
         .catch(function (error) {
-            logger.module().error('ERROR: unable to reset is_indexed fields (index) ' + error);
+            logger.module().error('ERROR: [/indexer/model module (index_records)] unable to reset is_indexed fields ' + error);
             throw error;
         });
 
     callback({
         status: 200,
         message: 'Indexing repository records...'
-    });
-};
-
-/**
- * TODO: move to repository module
- * @param req
- * @param callback
- */
-exports.reset_display_record = function (req, callback) {
-
-    let params = {};
-
-    if (req.body === undefined) {
-
-        callback({
-            status: 400,
-            message: 'Bad request'
-        });
-
-    } else if (req.body.pid !== undefined) {
-        params.pid = req.body.pid;
-    } else if (req.body.is_member_of_collection !== undefined) {
-        params.is_member_of_collection = req.body.is_member_of_collection;
-    } else if (req.body.pid === undefined && req.body.is_member_of_collection === undefined) {
-        params.none = true;
-    }
-
-    function get_data (callback) {
-
-        let obj = {};
-
-        if (params.none !== undefined) {
-
-            knex(REPO_OBJECTS)
-                .select('is_member_of_collection', 'pid', 'uri', 'handle', 'object_type', 'mods', 'thumbnail', 'file_name', 'mime_type', 'is_published' )
-                .whereNot({
-                    mods: null
-                })
-                .then(function (data) {
-                    // console.log(data);
-                    obj.data = data;
-                    callback(null, obj);
-                })
-                .catch(function (error) {
-                    logger.module().error('ERROR: unable to get record ' + error);
-                    throw 'ERROR: unable to get record ' + error;
-                });
-
-        } else {
-
-            knex(REPO_OBJECTS)
-                .select('is_member_of_collection', 'pid', 'uri', 'handle', 'object_type', 'mods', 'thumbnail', 'file_name', 'mime_type', 'is_published')
-                .where(params)
-                .whereNot({
-                    mods: null
-                })
-                .then(function (data) {
-                    obj.data = data;
-                    callback(null, obj);
-                })
-                .catch(function (error) {
-                    logger.module().error('ERROR: unable to get record ' + error);
-                    throw 'ERROR: unable to get record ' + error;
-                });
-        }
-    }
-
-    function create_display_record (obj, callback) {
-
-        let timer = setInterval(function () {
-
-            if (obj.data.length === 0) {
-                clearInterval(timer);
-                return false;
-            }
-
-            let record = obj.data.pop();
-
-            modslibdisplay.create_display_record(record, function (display_record) {
-
-                let recordObj = JSON.parse(display_record);
-
-                knex(REPO_OBJECTS)
-                    .where({
-                        is_member_of_collection: recordObj.is_member_of_collection,
-                        pid: recordObj.pid
-                    })
-                    .update({
-                        display_record: display_record
-                    })
-                    .then(function (data) {})
-                    .catch(function (error) {
-                        logger.module().error('ERROR: unable to save collection record ' + error);
-                        throw 'ERROR: unable to save collection record ' + error;
-                    });
-            });
-
-        }, 3000);
-    }
-
-    async.waterfall([
-        get_data,
-        create_display_record
-    ], function (error, obj) {
-
-        if (error) {
-            logger.module().error('ERROR: async (reset_display_record)');
-        }
-
-        logger.module().info('INFO: display record reset');
-    });
-
-    callback({
-        status: 201,
-        message: 'updating display record(s).'
     });
 };
 

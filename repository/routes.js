@@ -43,6 +43,10 @@ module.exports = function (app) {
     app.route('/api/admin/v1/repo/ping/services')
         .get(Repo.ping); //TODO: add token verify
 
+    // TODO: figure out better function name (creates new display records)
+    app.route('/api/admin/v1/repo/reset')
+        .post(Repo.reset_display_record);
+
     app.route('/api/admin/v1/repo/object/download')
         .get(Repo.get_object_download);
 

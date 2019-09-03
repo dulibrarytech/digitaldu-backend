@@ -125,7 +125,7 @@ socketclient.on('connect', function () {
                 socketclient.emit('import_status', data);
             })
             .catch(function (error) {
-                logger.module().fatal('FATAL: [/import/queue module (import status broadcasts)] import queue database error');
+                logger.module().fatal('FATAL: [/import/queue module (import status broadcasts)] import queue database error ' + error);
                 throw 'FATAL: [/import/queue module (import status broadcasts)] import queue database error ' + error;
             });
 
@@ -506,6 +506,8 @@ exports.get_transfer_status = function (req, callback) {
 
         return false;
     }
+
+    logger.module().info('INFO: [/import/queue module (get_transfer_status)] checking transfer status');
 
     let timer = setInterval(function () {
 

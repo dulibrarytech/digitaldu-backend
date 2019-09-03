@@ -1279,6 +1279,121 @@ exports.unpublish_objects = function (req, callback) {
     }
 };
 
+/**
+ * Recreates display record
+ * @param req
+ * @param callback
+ */
+exports.reset_display_record = function (req, callback) {
+
+    let params = {};
+
+    if (req.body === undefined) {
+
+        callback({
+            status: 400,
+            message: 'Bad request'
+        });
+
+    } else if (req.body.pid !== undefined) {
+        params.pid = req.body.pid;
+    } else if (req.body.is_member_of_collection !== undefined) {
+        params.is_member_of_collection = req.body.is_member_of_collection;
+    } else if (req.body.pid === undefined && req.body.is_member_of_collection === undefined) {
+        params.none = true;
+    }
+
+    function get_data (callback) {
+
+        let obj = {};
+
+        if (params.none !== undefined) {
+
+            knex(REPO_OBJECTS)
+                .select('is_member_of_collection', 'pid', 'uri', 'handle', 'object_type', 'mods', 'thumbnail', 'file_name', 'mime_type', 'is_published' )
+                .whereNot({
+                    mods: null
+                })
+                .then(function (data) {
+                    // console.log(data);
+                    obj.data = data;
+                    callback(null, obj);
+                })
+                .catch(function (error) {
+                    logger.module().error('ERROR: unable to get record ' + error);
+                    throw 'ERROR: unable to get record ' + error;
+                });
+
+        } else {
+
+            knex(REPO_OBJECTS)
+                .select('is_member_of_collection', 'pid', 'uri', 'handle', 'object_type', 'mods', 'thumbnail', 'file_name', 'mime_type', 'is_published')
+                .where(params)
+                .whereNot({
+                    mods: null
+                })
+                .then(function (data) {
+                    obj.data = data;
+                    callback(null, obj);
+                })
+                .catch(function (error) {
+                    logger.module().error('ERROR: unable to get record ' + error);
+                    throw 'ERROR: unable to get record ' + error;
+                });
+        }
+    }
+
+    function create_display_record (obj, callback) {
+
+        let timer = setInterval(function () {
+
+            if (obj.data.length === 0) {
+                clearInterval(timer);
+                return false;
+            }
+
+            let record = obj.data.pop();
+
+            modslibdisplay.create_display_record(record, function (display_record) {
+
+                let recordObj = JSON.parse(display_record);
+
+                knex(REPO_OBJECTS)
+                    .where({
+                        is_member_of_collection: recordObj.is_member_of_collection,
+                        pid: recordObj.pid
+                    })
+                    .update({
+                        display_record: display_record
+                    })
+                    .then(function (data) {})
+                    .catch(function (error) {
+                        logger.module().error('ERROR: unable to save collection record ' + error);
+                        throw 'ERROR: unable to save collection record ' + error;
+                    });
+            });
+
+        }, 3000);
+    }
+
+    async.waterfall([
+        get_data,
+        create_display_record
+    ], function (error, obj) {
+
+        if (error) {
+            logger.module().error('ERROR: async (reset_display_record)');
+        }
+
+        logger.module().info('INFO: display record reset');
+    });
+
+    callback({
+        status: 201,
+        message: 'updating display record(s).'
+    });
+};
+
 /** TODO: refactor to make use of archivematica download link. make use of shell.js
  * Downloads AIP from archivematica
  * @param req

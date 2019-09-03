@@ -33,8 +33,4 @@ module.exports = function (app) {
 
     app.route('/api/admin/v1/indexer/')
         .delete(Indexer.unindex_record);
-
-    // TODO: figure out better function name (creates new display records)
-    app.route('/api/admin/v1/indexer/reset')
-        .post(Indexer.reset_display_record);
 };
