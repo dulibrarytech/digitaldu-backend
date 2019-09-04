@@ -38,13 +38,12 @@ exports.get_stats = function (req, callback) {
     ], function (error, results) {
 
         if (error) {
-            logger.module().error('ERROR: unable to generate stats ' + error);
+            logger.module().error('ERROR: [/stats/model module (get_stats/async.waterfall)] unable to generate stats ' + error);
             return false;
         }
 
         callback({
             status: 200,
-            content_type: {'Content-Type': 'application/json'},
             data: results,
             message: 'Counts retrieved.'
         });
@@ -67,8 +66,8 @@ exports.get_stats = function (req, callback) {
 
             })
             .catch(function (error) {
-                logger.module().error('ERROR: unable to get published collection count ' + error);
-                throw 'ERROR: unable to get published collection count ' + error;
+                logger.module().fatal('FATAL: [/stats/model module (get_stats/getPublishedCollectionCount)] unable to get published collection count ' + error);
+                throw 'FATAL: [/stats/model module (get_stats/getPublishedCollectionCount)] unable to get published collection count ' + error;
             });
     }
 
@@ -89,8 +88,8 @@ exports.get_stats = function (req, callback) {
                 return null;
             })
             .catch(function (error) {
-                logger.module().error('ERROR: unable to get published object count ' + error);
-                throw 'ERROR: unable to get published object count ' + error;
+                logger.module().fatal('FATAL: [/stats/model module (get_stats/getPublishedObjectCount)] unable to get published object count ' + error);
+                throw 'FATAL: [/stats/model module (get_stats/getPublishedObjectCount)] unable to get published object count ' + error;
             });
     }
 
@@ -110,8 +109,8 @@ exports.get_stats = function (req, callback) {
                 return null;
             })
             .catch(function (error) {
-                logger.module().error('ERROR: unable to get total collection count ' + error);
-                throw 'ERROR: unable to get total collection count ' + error;
+                logger.module().fatal('FATAL: [/stats/model module (get_stats/getTotalCollectionCount)] unable to get total collection count ' + error);
+                throw 'FATAL: [/stats/model module (get_stats/getTotalCollectionCount)] unable to get total collection count ' + error;
             });
     }
 
@@ -131,8 +130,8 @@ exports.get_stats = function (req, callback) {
                 return null;
             })
             .catch(function (error) {
-                logger.module().error('ERROR: unable to get total object count ' + error);
-                throw 'ERROR: unable to get total object count ' + error;
+                logger.module().fatal('FATAL: [/stats/model module (get_stats/getTotalObjectCount)] unable to get total object count ' + error);
+                throw 'FATAL: [/stats/model module (get_stats/getTotalObjectCount)] unable to get total object count ' + error;
             });
     }
 
@@ -159,8 +158,8 @@ exports.get_stats = function (req, callback) {
                 return null;
             })
             .catch(function (error) {
-                logger.module().error('ERROR: unable to get total image count ' + error);
-                throw 'ERROR: unable to get total image count ' + error;
+                logger.module().fatal('FATAL: [/stats/model module (get_stats/getTotalImageCount)] unable to get total image count ' + error);
+                throw 'FATAL: [/stats/model module (get_stats/getTotalImageCount)] unable to get total image count ' + error;
             });
     }
 
@@ -179,8 +178,8 @@ exports.get_stats = function (req, callback) {
                 return null;
             })
             .catch(function (error) {
-                logger.module().error('ERROR: unable to get total pdf count ' + error);
-                throw 'ERROR: unable to get total pdf count ' + error;
+                logger.module().fatal('FATAL: [/stats/model module (get_stats/getTotalPdfCount)] unable to get total pdf count ' + error);
+                throw 'FATAL: [/stats/model module (get_stats/getTotalPdfCount)] unable to get total pdf count ' + error;
             });
     }
 
@@ -199,8 +198,8 @@ exports.get_stats = function (req, callback) {
                 return null;
             })
             .catch(function (error) {
-                logger.module().error('ERROR: unable to get total audio count ' + error);
-                throw 'ERROR: unable to get total audio count ' + error;
+                logger.module().fatal('FATAL: [/stats/model module (get_stats/getTotalAudioCount)] unable to get total audio count ' + error);
+                throw 'FATAL: [/stats/model module (get_stats/getTotalAudioCount)] unable to get total audio count ' + error;
             });
     }
 
@@ -219,8 +218,8 @@ exports.get_stats = function (req, callback) {
                 return null;
             })
             .catch(function (error) {
-                logger.module().error('ERROR: unable to get total video count ' + error);
-                throw 'ERROR: unable to get total video count ' + error;
+                logger.module().fatal('FATAL: [/stats/model module (get_stats/getTotalVideoCount)] unable to get total video count ' + error);
+                throw 'FATAL: [/stats/model module (get_stats/getTotalVideoCount)] unable to get total video count ' + error;
             });
     }
 };
