@@ -18,7 +18,7 @@
 
 'use strict';
 
-var Repo = require('../repository/controller'),
+const Repo = require('../repository/controller'),
     token = require('../libs/tokens');
 
 module.exports = function (app) {
@@ -50,8 +50,4 @@ module.exports = function (app) {
     app.route('/api/admin/v1/repo/object/download')
         .get(Repo.get_object_download);
 
-    /*
-     app.route('/api/admin/v1/repo/object/cron')
-     .put(Repo.update_metadata_cron); api-key
-     */
 };

@@ -18,7 +18,7 @@
 
 'use strict';
 
-var Repo = require('../repository/model'),
+const Repo = require('../repository/model'),
     Service = require('../repository/service');
 
 /* gets objects by is_member_of_collection pid for discovery layer */
