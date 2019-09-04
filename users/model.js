@@ -53,14 +53,13 @@ exports.get_users = function (req, callback) {
         .then(function (data) {
             callback({
                 status: 200,
-                content_type: {'Content-Type': 'application/json'},
                 data: data,
                 message: 'Users retrieved.'
             });
         })
         .catch(function (error) {
-            logger.module().error('ERROR: unable to get users ' + error);
-            throw 'ERROR: unable to get users ' + error;
+            logger.module().fatal('FATAL: [/users/model module (get_users)] unable to get users ' + error);
+            throw 'FATAL: [/users/model module (get_users)] unable to get users ' + error;
         });
 };
 
@@ -71,7 +70,15 @@ exports.get_users = function (req, callback) {
  */
 const get_user = function (req, callback) {
 
-    let id = req.query.id; // TODO: sanitize
+    let id = req.query.id;
+
+    if (id === undefined) {
+
+        callback({
+            status: 400,
+            message: 'Bad Request.'
+        });
+    }
 
     knex('tbl_users')
         .select('id', 'du_id', 'email', 'first_name', 'last_name', 'status', 'created')
@@ -81,14 +88,13 @@ const get_user = function (req, callback) {
         .then(function (data) {
             callback({
                 status: 200,
-                content_type: {'Content-Type': 'application/json'},
                 data: data,
                 message: 'User retrieved.'
             });
         })
         .catch(function (error) {
-            logger.module().error('ERROR: unable to get user ' + error);
-            throw 'ERROR: unable to get user ' + error;
+            logger.module().fatal('FATAL: [/users/model module (get_user)] unable to get user ' + error);
+            throw 'FATAL: [/users/model module (get_user)] unable to get user ' + error;
         });
 };
 
@@ -120,8 +126,8 @@ exports.check_auth_user = function (username, callback) {
             }
         })
         .catch(function (error) {
-            logger.module().error('ERROR: unable to check auth ' + error);
-            throw 'ERROR: unable to check auth ' + error;
+            logger.module().error('FATAL: [/users/model module (check_auth_user)] unable to check auth ' + error);
+            throw 'FATAL: [/users/model module (check_auth_user)] unable to check auth ' + error;
         });
 };
 
@@ -151,8 +157,8 @@ exports.get_auth_user_data = function (username, callback) {
             }
         })
         .catch(function (error) {
-            logger.module().error('ERROR: unable to get user data ' + error);
-            throw 'ERROR: unable to get user data ' + error;
+            logger.module().fatal('FATAL: [/users/model module (get_auth_user_data)] unable to get user data ' + error);
+            throw 'FATAL: [/users/model module (get_auth_user_data)] unable to get user data ' + error;
         });
 };
 
@@ -188,8 +194,8 @@ exports.update_user = function (req, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().error('ERROR: unable to update user record ' + error);
-            throw 'ERROR: unable to update user record ' + error;
+            logger.module().fatal('FATAL: [/users/model module (update_user)] unable to update user record ' + error);
+            throw 'FATAL: [/users/model module (update_user)] unable to update user record ' + error;
         });
 };
 
@@ -207,17 +213,12 @@ exports.save_user = function (req, callback) {
         .then(function (data) {
             callback({
                 status: 201,
-                content_type: {'Content-Type': 'application/json'},
                 message: 'User created.'
             });
         })
         .catch(function (error) {
-            logger.module().error('ERROR: unable to get user data ' + error);
 
-            callback({
-                status: 500,
-                content_type: {'Content-Type': 'application/json'},
-                message: 'Database error occurred.'
-            });
+            logger.module().error('FATAL: [/users/model module (save_user)] unable to get user data ' + error);
+            throw 'FATAL: [/users/model module (save_user)] unable to get user data ' + error;
         });
 };
