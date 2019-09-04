@@ -59,7 +59,7 @@ exports.create_repo_index = function (req, callback) {
         }).then(function (result) {
 
             if (result.acknowledged === true) {
-                logger.module().info('INFO: new index created');
+                logger.module().info('INFO: [/indexer/service module (create_repo_index/create_index)] new index created');
                 obj.index_created = true;
                 callback(null, obj);
             } else {

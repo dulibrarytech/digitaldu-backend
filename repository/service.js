@@ -39,7 +39,7 @@ exports.ping_services = function (req, callback) {
     ], function (error, results) {
 
         if (error) {
-            logger.module().error('ERROR: unable to ping third-party services ' + error);
+            logger.module().error('ERROR: [/repository/service module (ping_services/async.waterfall)] unable to ping third-party services ' + error);
             return false;
         }
 
