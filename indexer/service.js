@@ -97,7 +97,7 @@ exports.create_repo_index = function (req, callback) {
                 callback(null, obj);
                 return false;
             } else {
-                logger.module().error('ERROR: unable to create mapping (createMapping)');
+                logger.module().error('ERROR: [/indexer/service module (create_repo_index/create_mapping)] unable to create mapping');
                 obj.mappingCreated = false;
                 return false;
             }
@@ -110,10 +110,10 @@ exports.create_repo_index = function (req, callback) {
     ], function (error, results) {
 
         if (error) {
-            logger.module().error('ERROR: async (indexVocabs)');
+            logger.module().error('ERROR: [/indexer/service module (create_repo_index/async.waterfall)] ' + error);
         }
 
-        logger.module().info('INFO: index created');
+        logger.module().info('INFO: [/indexer/service module (create_repo_index/async.waterfall)] index created');
     });
 
     callback({
@@ -133,10 +133,10 @@ exports.index_record = function (obj, callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: unable to index record ' + error);
+            logger.module().error('ERROR: [/indexer/service module (index_record/client.index)] unable to index record ' + error);
 
             callback({
-                message: 'unable to index record ' + error
+                message: 'ERROR: unable to index record ' + error
             });
 
             return false;
@@ -157,10 +157,10 @@ exports.unindex_record = function (obj, callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: unable to unindex record ' + error);
+            logger.module().error('ERROR: [/indexer/service module (unindex_record/client.delete)] unable to unindex record ' + error);
 
             callback({
-                message: 'unable to unindex record ' + error
+                message: 'ERROR: unable to unindex record ' + error
             });
 
             return false;
