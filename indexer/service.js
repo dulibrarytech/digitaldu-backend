@@ -63,7 +63,7 @@ exports.create_repo_index = function (req, callback) {
                 obj.index_created = true;
                 callback(null, obj);
             } else {
-                logger.module().error('ERROR: unable to create new index (createIndex)');
+                logger.module().error('ERROR: [/indexer/service module (create_repo_index/create_index)] unable to create new index (createIndex)');
                 obj.index_created = false;
                 callback(null, obj);
             }
@@ -92,7 +92,7 @@ exports.create_repo_index = function (req, callback) {
         }).then(function (result) {
 
             if (result.acknowledged === true) {
-                logger.module().info('INFO: mapping created');
+                logger.module().info('INFO: [/indexer/service module (create_repo_index/create_mapping)] mapping created');
                 obj.mappingCreated = true;
                 callback(null, obj);
                 return false;

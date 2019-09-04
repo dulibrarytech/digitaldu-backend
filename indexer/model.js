@@ -23,7 +23,6 @@ const config = require('../config/config'),
     async = require('async'),
     knex =require('../config/db')(),
     logger = require('../libs/log4'),
-    modslibdisplay = require('../libs/display-record'),
     REPO_OBJECTS = 'tbl_objects';
 
 /**
