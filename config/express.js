@@ -19,17 +19,34 @@
 'use strict';
 
 const http = require('http'),
+    https = require('https'),
     express = require('express'),
     compress = require('compression'),
     bodyParser = require('body-parser'),
     methodOverride = require('method-override'),
-    helmet = require('helmet');
+    helmet = require('helmet'),
+    fs = require('fs'),
+    config = require('../config/config');
 
 module.exports = function () {
 
-    var app = express(),
-        server = http.createServer(app),
-        io = require('socket.io')(server);
+    const app = express();
+    let server = http.createServer(app);
+
+    if (process.env.NODE_ENV === 'production') {
+
+        const key = fs.readFileSync('./etc/key/librepo01-vlp.du.edu.key', 'utf8'),
+            cert = fs.readFileSync('./etc/key/librepo01-vlp.du.edu.crt', 'utf8');
+
+        let credentials = {
+            key: key,
+            cert: cert
+        };
+
+        server = https.createServer(credentials, app);
+    }
+
+    let io = require('socket.io')(server);
 
     // io.path('/api/admin/v1/import/status');
     server.listen(process.env.APP_PORT);
@@ -92,5 +109,5 @@ module.exports = function () {
     require('../import/routes.js')(app);
     require('../search/routes.js')(app);
 
-    return server;
+    // return server;
 };
