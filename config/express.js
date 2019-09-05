@@ -35,8 +35,8 @@ module.exports = function () {
 
     if (process.env.NODE_ENV === 'production') {
 
-        const key = fs.readFileSync('./etc/key/librepo01-vlp.du.edu.key', 'utf8'),
-            cert = fs.readFileSync('./etc/key/librepo01-vlp.du.edu.crt', 'utf8');
+        const key = fs.readFileSync(config.sslKey, 'utf8'),
+            cert = fs.readFileSync(config.sslCert, 'utf8');
 
         let credentials = {
             key: key,
