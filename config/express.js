@@ -32,7 +32,7 @@ module.exports = function () {
         io = require('socket.io')(server);
 
     // io.path('/api/admin/v1/import/status');
-    server.listen(8000);
+    server.listen(process.env.APP_PORT);
 
     // socket.io route
     app.get('/', function (req, res) {});
