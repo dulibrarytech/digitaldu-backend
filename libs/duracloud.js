@@ -29,9 +29,9 @@ exports.ping = function (callback) {
 
     'use strict';
 
-    let apiUrl = 'https://' + config.duraCloudApi;
+    let apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi;
 
-    request.get({
+        request.get({
         url: apiUrl,
         timeout: 25000
     }, function (error, httpResponse, body) {
