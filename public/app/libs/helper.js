@@ -98,7 +98,7 @@ const helperModule = (function () {
             } else if (mime_type.indexOf('pdf') !== -1) {
                 return tnObj.default_pdf;
             } else {
-                return tnObj.duracloud + tn;
+                return tnObj.duracloud + '?tn=' + tn;
             }
         }
     };

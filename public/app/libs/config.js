@@ -43,7 +43,8 @@ const configModule = (function () {
      */
     obj.getTnUrls = function () {
         return {
-            duracloud: 'https://archivesdu.duracloud.org/durastore/dip-store/dip-store/',
+            // duracloud: 'https://archivesdu.duracloud.org/durastore/dip-store/dip-store/',
+            duracloud: '/api/admin/v1/repo/object/thumbnail',
             default: configModule.getApi() + '/images/media.jpg',
             default_pdf: configModule.getApi() + '/images/pdf-tn.png',
             default_audio: configModule.getApi() + '/images/audio-tn.png',

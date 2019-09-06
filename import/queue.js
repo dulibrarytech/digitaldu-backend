@@ -64,6 +64,8 @@ const fs = require('fs'),
     TRANSFER_STATUS_CHECK_INTERVAL = config.transferStatusCheckInterval,    // Transfer status checks occur every 3 sec.
     INGEST_STATUS_CHECK_INTERVAL = config.ingestStatusCheckInterval;        // Ingest status checks begin 3 sec after the endpoint receives a request.
 
+console.log(config.host);
+
 /**
  * Broadcasts current import record count
  */

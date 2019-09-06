@@ -84,3 +84,28 @@ exports.ping_services = function (req, callback) {
         });
     }
 };
+
+/**
+ * Gets thumbnail
+ * @param req
+ * @param callback
+ * @returns {boolean}
+ */
+exports.get_thumbnail = function (req, callback) {
+
+    let tn = req.query.tn;
+
+    if (tn === undefined) {
+
+        callback({
+            status: 400,
+            message: 'Bad request'
+        });
+
+        return false;
+    }
+
+    duracloud.get_thumbnail(tn, function (response) {
+        callback(response);
+    });
+};

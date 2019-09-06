@@ -19,7 +19,8 @@
 'use strict';
 
 const Repo = require('../repository/model'),
-    Service = require('../repository/service');
+    Service = require('../repository/service'),
+    path = require('path');
 
 /* gets objects by is_member_of_collection pid for discovery layer */
 exports.get_objects = function (req, res) {
@@ -52,6 +53,17 @@ exports.get_admin_object = function (req, res) {
 exports.create_collection_object = function (req, res) {
     Repo.create_collection_object(req, function (data) {
         res.status(data.status).send(data.data);
+    });
+};
+
+exports.get_thumbnail = function (req, res) {
+    Service.get_thumbnail(req, function (data) {
+
+        if (data.error === true) {
+            res.sendFile(path.join(__dirname, '../public', data.data));
+        } else {
+            res.status(data.status).end(data.data, 'binary');
+        }
     });
 };
 

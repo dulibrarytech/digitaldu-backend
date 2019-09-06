@@ -32,6 +32,7 @@ module.exports = function (app) {
         .put(Repo.update_metadata_cron);  // token.verify,  api-key
 
     app.route('/api/admin/v1/repo/object/thumbnail')
+        .get(Repo.get_thumbnail)  // token.verify,
         .post(token.verify, Repo.update_thumbnail);
 
     app.route('/api/admin/v1/repo/publish')

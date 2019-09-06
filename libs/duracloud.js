@@ -271,3 +271,58 @@ exports.get_object_manifest = function (data, callback) {
         }
     });
 };
+
+/**
+ * Gets thumbnail and renders it for client to consume
+ * @param tn
+ * @param callback
+ */
+exports.get_thumbnail = function (tn, callback) {
+
+    'use strict';
+
+    let apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + 'dip-store/' + tn;
+
+    request.get({
+        url: apiUrl,
+        encoding: null,
+        timeout: 35000
+    }, function (error, httpResponse, body) {
+
+        let missing_tn = '/images/image-tn.png';
+
+        if (error) {
+            logger.module().error('ERROR: [/libs/duracloud lib (get_thumbnail)] Unable to get duracloud thumbnail ' + error);
+            callback({
+                error: true,
+                status: 200,
+                data: missing_tn
+            });
+
+            return false;
+        }
+
+        if (httpResponse.statusCode === 200) {
+
+            callback({
+                error: false,
+                status: 200,
+                data: body
+            });
+
+            return false;
+
+        } else {
+
+            logger.module().error('ERROR: [/libs/duracloud lib (get_thumbnail)] Unable to get duracloud thumbnail ' + httpResponse.statusCode + '/' + body);
+
+            callback({
+                error: true,
+                status: 200,
+                data: missing_tn
+            });
+
+            return false;
+        }
+    });
+};
