@@ -188,13 +188,8 @@ exports.start_tranfser = function (transferObj, callback) {
     }, function (error, httpResponse, body) {
 
         if (error) {
-
             logger.module().fatal('FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer ' + error);
-
-            callback({
-                error: true,
-                message: 'FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer ' + error
-            });
+            return false;
         }
 
         if (httpResponse.statusCode === 200) {
@@ -206,10 +201,10 @@ exports.start_tranfser = function (transferObj, callback) {
 
             callback({
                 error: true,
-                message: 'FATAL: [/libs/archivematica lib (start_transfer)] Unable to start transfer'
+                message: 'FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer ' + httpResponse.statusCode + '/' + error
             });
 
-            throw 'FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer ' + httpResponse.statusCode + '/' + error;
+            return false;
         }
     });
 };
@@ -274,18 +269,11 @@ exports.get_transfer_status = function (uuid, callback) {
 
     request.get({
         url: apiUrl,
-        timeout: 55000
+        timeout: 25000
     }, function (error, httpResponse, body) {
 
         if (error) {
-
             logger.module().error('ERROR: [/libs/archivematica lib (get_transfer_status)] unable to get transfer status ' + error);
-
-            callback({
-                error: true,
-                message: error
-            });
-
             return false;
         }
 
@@ -318,18 +306,11 @@ exports.get_ingest_status = function (uuid, callback) {
 
     request.get({
         url: apiUrl,
-        timeout: 55000
+        timeout: 25000
     }, function (error, httpResponse, body) {
 
         if (error) {
-
             logger.module().error('ERROR: [/libs/archivematica lib (get_ingest_status)] unable to get ingest status ' + error);
-
-            callback({
-                error: true,
-                message: error
-            });
-
             return false;
         }
 
@@ -338,11 +319,11 @@ exports.get_ingest_status = function (uuid, callback) {
             return false;
         } else {
 
-            logger.module().error('ERROR: [/libs/archivematica lib (get_ingest_status)] unable to get ingest status ' + error);
+            logger.module().error('ERROR: [/libs/archivematica lib (get_ingest_status)] unable to get ingest status ' + httpResponse.statusCode + '/' + error);
 
             callback({
                 error: true,
-                message: 'ERROR: Unable to get ingest status'
+                message: 'ERROR: [/libs/archivematica lib (get_ingest_status)] unable to get ingest status ' + httpResponse.statusCode + '/' + error
             });
 
             return false;

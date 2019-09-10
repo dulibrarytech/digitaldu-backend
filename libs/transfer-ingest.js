@@ -505,14 +505,6 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
 
     var json = JSON.parse(response);
 
-    console.log('update ingest status: ', json);
-
-    /* TODO: test this
-     if (json.message.code !== undefined && json.message.code === 'ESOCKETTIMEDOUT') {
-        return false;
-     }
-     */
-
     if (json.status === 'COMPLETE') {
 
         let importCompleteQueue = {
@@ -908,7 +900,6 @@ exports.get_import_collection = function (callback) {
         .distinct('is_member_of_collection')
         .limit(1)
         .then(function (data) {
-            console.log(data);
             callback(data[0].is_member_of_collection);
             return null;
         })

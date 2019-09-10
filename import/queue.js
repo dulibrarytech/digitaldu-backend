@@ -64,8 +64,6 @@ const fs = require('fs'),
     TRANSFER_STATUS_CHECK_INTERVAL = config.transferStatusCheckInterval,    // Transfer status checks occur every 3 sec.
     INGEST_STATUS_CHECK_INTERVAL = config.ingestStatusCheckInterval;        // Ingest status checks begin 3 sec after the endpoint receives a request.
 
-console.log(config.host);
-
 /**
  * Broadcasts current import record count
  */
@@ -326,7 +324,7 @@ exports.queue_objects = function (req, callback) {
  */
 exports.start_transfer = function (req, callback) {
 
-    logger.module().info('INFO: starting transfer (start_transfer)');
+    logger.module().info('INFO: [/import/queue module (start_transfer)] starting transfer (start_transfer)');
 
     let collection = req.body.collection;
 
@@ -529,6 +527,8 @@ exports.get_transfer_status = function (req, callback) {
                     };
 
                     importlib.save_to_fail_queue(failObj);
+                    return false;
+                    /*
                     importlib.clear_queue_record({
                         transfer_uuid: transfer_uuid
                     },function (result) {
@@ -536,8 +536,8 @@ exports.get_transfer_status = function (req, callback) {
                             importlib.restart_import();
                         }
                     });
-
-                    throw 'ERROR: [/import/queue module (get_transfer_status/archivematica.get_transfer_status/importlib.update_transfer_status)] transfer status: ' + result.message;
+                    */
+                    // throw 'ERROR: [/import/queue module (get_transfer_status/archivematica.get_transfer_status/importlib.update_transfer_status)] transfer status: ' + result.message;
                 }
 
                 if (result.complete !== undefined && result.complete === true) {
@@ -551,7 +551,7 @@ exports.get_transfer_status = function (req, callback) {
 
                         if (error) {
                             logger.module().error('ERROR: [/import/queue module (get_transfer_status/archivematica.get_transfer_status/importlib.update_transfer_status)] http error ' + error);
-                            throw 'ERROR: [/import/queue module (get_transfer_status/archivematica.get_transfer_status/importlib.update_transfer_status)] http error ' + error;
+                            //throw 'ERROR: [/import/queue module (get_transfer_status/archivematica.get_transfer_status/importlib.update_transfer_status)] http error ' + error;
                         }
 
                         if (httpResponse.statusCode === 200) {
@@ -598,6 +598,8 @@ exports.get_ingest_status = function (req, callback) {
         return false;
     }
 
+    logger.module().info('INFO: [/import/queue module (get_ingest_status)] checking ingest status');
+
     let timer = setInterval(function () {
 
         archivematica.get_ingest_status(sip_uuid, function (response) {
@@ -615,15 +617,7 @@ exports.get_ingest_status = function (req, callback) {
                     };
 
                     importlib.save_to_fail_queue(failObj);
-                    importlib.clear_queue_record({
-                        sip_uuid: sip_uuid
-                    }, function (result) {
-                        if (result === true) {
-                            importlib.restart_import();
-                        }
-                    });
-
-                    throw 'ERROR: [/import/queue module (get_ingest_status/archivematica.get_ingest_status/importlib.update_ingest_status)] unable to update ingest status';
+                    return false;
                 }
 
                 if (result.complete !== undefined && result.complete === true) {
@@ -636,7 +630,7 @@ exports.get_ingest_status = function (req, callback) {
 
                         if (error) {
                             logger.module().error('ERROR: [/import/queue module (get_ingest_status/archivematica.get_ingest_status/importlib.update_ingest_status)] import dip request error ' + error);
-                            throw 'ERROR: import dip error ' + error;
+                            // throw 'ERROR: import dip error ' + error;
                         }
 
                         if (httpResponse.statusCode === 200) {
@@ -649,10 +643,9 @@ exports.get_ingest_status = function (req, callback) {
                     });
 
                     return false;
-
                 }
 
-                if (result.complete === false) {
+                if (result.complete !== undefined && result.complete === false) {
                     return false;
                 }
             });
@@ -917,7 +910,7 @@ exports.create_repo_record = function (req, callback) {
 
                     if (response.error !== undefined && response.error === true) {
 
-                        logger.module().error('ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_manifest)] unable to get manifest or manifest  ' + response.error_message);
+                        logger.module().error('ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_manifest)] unable to get manifest or manifest does not exist ' + response.error_message);
                         obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
                         get_duracloud_object(obj, 5000);
                         return false;
@@ -927,6 +920,10 @@ exports.create_repo_record = function (req, callback) {
                         let manifest = manifestlib.process_manifest(response);
 
                         if (manifest.length > 0) {
+                            // TODO: add path to manifest instead?
+                            // obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
+                            obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file  + '.dura-manifest';
+                            obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
                             obj.checksum = manifest[0].checksum;
                             obj.file_size = manifest[0].file_size;
                         } else {

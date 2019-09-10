@@ -292,7 +292,9 @@ exports.get_thumbnail = function (tn, callback) {
         let missing_tn = '/images/image-tn.png';
 
         if (error) {
+
             logger.module().error('ERROR: [/libs/duracloud lib (get_thumbnail)] Unable to get duracloud thumbnail ' + error);
+
             callback({
                 error: true,
                 status: 200,
