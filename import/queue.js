@@ -259,7 +259,15 @@ exports.queue_objects = function (req, callback) {
         importlib.save_transfer_records(transfer_data, function (result) {
 
             if (result.recordCount === 0) {
-                // TODO: fail queue?
+
+                logger.module().FATAL('FATAL: [/import/queue module (queue_objects/start_transfer/importlib.save_transfer_records)] unable to save records to ingest queue');
+
+                let failObj = {
+                    is_member_of_collection: obj.collection.replace('_', ':'),
+                    message: 'FATAL: [/import/queue module (queue_objects/start_transfer/importlib.save_transfer_records)]Unable to save records to ingest queue'
+                };
+
+                importlib.save_to_fail_queue(failObj);
                 return false;
             }
 
@@ -528,16 +536,6 @@ exports.get_transfer_status = function (req, callback) {
 
                     importlib.save_to_fail_queue(failObj);
                     return false;
-                    /*
-                    importlib.clear_queue_record({
-                        transfer_uuid: transfer_uuid
-                    },function (result) {
-                        if (result === true) {
-                            importlib.restart_import();
-                        }
-                    });
-                    */
-                    // throw 'ERROR: [/import/queue module (get_transfer_status/archivematica.get_transfer_status/importlib.update_transfer_status)] transfer status: ' + result.message;
                 }
 
                 if (result.complete !== undefined && result.complete === true) {
@@ -551,7 +549,6 @@ exports.get_transfer_status = function (req, callback) {
 
                         if (error) {
                             logger.module().error('ERROR: [/import/queue module (get_transfer_status/archivematica.get_transfer_status/importlib.update_transfer_status)] http error ' + error);
-                            //throw 'ERROR: [/import/queue module (get_transfer_status/archivematica.get_transfer_status/importlib.update_transfer_status)] http error ' + error;
                         }
 
                         if (httpResponse.statusCode === 200) {
@@ -561,7 +558,6 @@ exports.get_transfer_status = function (req, callback) {
                             return false;
                         } else {
                             logger.module().error('ERROR: [/import/queue module (get_transfer_status/archivematica.get_transfer_status/importlib.update_transfer_status)] http error ' + httpResponse.statusCode + '/' + body);
-                            // throw 'ERROR: [/import/queue module (get_transfer_status/archivematica.get_transfer_status/importlib.update_transfer_status)] http error ' + httpResponse.statusCode + '/' + body;
                         }
                     });
 
@@ -630,14 +626,12 @@ exports.get_ingest_status = function (req, callback) {
 
                         if (error) {
                             logger.module().error('ERROR: [/import/queue module (get_ingest_status/archivematica.get_ingest_status/importlib.update_ingest_status)] import dip request error ' + error);
-                            // throw 'ERROR: import dip error ' + error;
                         }
 
                         if (httpResponse.statusCode === 200) {
                             return false;
                         } else {
                             logger.module().error('ERROR: [/import/queue module (get_ingest_status/archivematica.get_ingest_status/importlib.update_ingest_status)] import dip request error ' + httpResponse.statusCode + '/' + body);
-                            // throw 'ERROR: [/import/queue module (get_ingest_status/archivematica.get_ingest_status/importlib.update_ingest_status)] import dip request error ' + httpResponse.statusCode + '/' + body;
                         }
 
                     });
@@ -848,7 +842,6 @@ exports.create_repo_record = function (req, callback) {
         }
 
         importlib.save_mods_id(obj.mods_id, obj.sip_uuid, function (result) {
-            // TODO: check result
             callback(null, obj);
         });
     }
@@ -920,8 +913,6 @@ exports.create_repo_record = function (req, callback) {
                         let manifest = manifestlib.process_manifest(response);
 
                         if (manifest.length > 0) {
-                            // TODO: add path to manifest instead?
-                            // obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
                             obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file  + '.dura-manifest';
                             obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
                             obj.checksum = manifest[0].checksum;
@@ -951,6 +942,7 @@ exports.create_repo_record = function (req, callback) {
                 duracloud.get_object_info(obj, function (response) {
 
                     if (response.error === true) {
+
                         logger.module().error('ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_info)] Unable to get duracloud object ' + response.error_message);
 
                         let failObj = {
@@ -964,8 +956,6 @@ exports.create_repo_record = function (req, callback) {
                             sip_uuid: sip_uuid
                         }, function (result) {
                             if (result === true) {
-                                // TODO: test when object is not found, but proceed with metadata import
-                                // importlib.restart_import();
                                 callback(null, obj);
                             }
                         });
@@ -1029,7 +1019,7 @@ exports.create_repo_record = function (req, callback) {
         }
 
         /**
-         * Makes request to archivespace to generate new session token
+         * Makes request to archivesspace to generate new session token
          */
         function new_token() {
 
@@ -1206,8 +1196,6 @@ exports.create_repo_record = function (req, callback) {
         logger.module().info('INFO: [/import/queue module (create_repo_record/create_repo_record)] saving repository record to db');
 
         importlib.create_repo_record(obj, function (result) {
-
-            // TODO: check result...
             callback(null, obj);
         });
     }

@@ -19,7 +19,7 @@
 'use strict';
 
 const http = require('http'),
-    https = require('https'),
+    // https = require('https'),
     express = require('express'),
     compress = require('compression'),
     bodyParser = require('body-parser'),
@@ -33,6 +33,7 @@ module.exports = function () {
     const app = express();
     let server = http.createServer(app);
 
+    /*
     if (process.env.NODE_ENV === 'production') {
 
         const key = fs.readFileSync(config.sslKey, 'utf8'),
@@ -45,14 +46,15 @@ module.exports = function () {
 
         server = https.createServer(credentials, app);
     }
+    */
+    server.listen(process.env.APP_PORT);
 
     let io = require('socket.io')(server);
 
     // io.path('/api/admin/v1/import/status');
-    server.listen(process.env.APP_PORT);
 
     // socket.io route
-    app.get('/', function (req, res) {});
+    // app.get('/socket', function (req, res) {});
 
     // accepts client connections
     io.on('connection', function(socket){
