@@ -49,7 +49,7 @@ module.exports = function () {
     */
     server.listen(process.env.APP_PORT);
 
-    let io = require('socket.io')(server);
+    // let io = require('socket.io')(server);
 
     // io.path('/api/admin/v1/import/status');
 
@@ -57,33 +57,41 @@ module.exports = function () {
     // app.get('/socket', function (req, res) {});
 
     // accepts client connections
+    /*
     io.on('connection', function(socket){
         // sends ingest status to client
         socket.on('ingest_status', function(status) {
             io.emit('ingest_status', status);
         });
     });
+    */
 
+    /*
     io.on('connection', function(socket){
         // sends transfer status to client
         socket.on('transfer_status', function(status) {
             io.emit('transfer_status', status);
         });
     });
+    */
 
+    /*
     io.on('connection', function(socket){
         // sends import status to client
         socket.on('import_status', function(status) {
             io.emit('import_status', status);
         });
     });
+    */
 
+    /*
     io.on('connection', function(socket){
         // sends import fail status to client
         socket.on('fail_status', function(status) {
             io.emit('fail_status', status);
         });
     });
+    */
 
     if (process.env.NODE_ENV === 'development') {
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
@@ -110,6 +118,4 @@ module.exports = function () {
     require('../stats/routes.js')(app);
     require('../import/routes.js')(app);
     require('../search/routes.js')(app);
-
-    // return server;
 };

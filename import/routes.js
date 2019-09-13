@@ -18,7 +18,8 @@
 
 'use strict';
 
-const Import = require('../import/controller');
+const Import = require('../import/controller'),
+    token = require('../libs/tokens');
 
 module.exports = function (app) {
 
@@ -63,5 +64,17 @@ module.exports = function (app) {
 
     app.route('/api/admin/v1/import/thumbnail')
         .post(Import.import_thumbnail);
+
+    app.route('/api/admin/v1/import/poll/transfer_status')
+        .get(token.verify, Import.poll_transfer_status);
+
+    app.route('/api/admin/v1/import/poll/ingest_status')
+        .get(token.verify, Import.poll_ingest_status);
+
+    app.route('/api/admin/v1/import/poll/import_status')
+        .get(token.verify, Import.poll_import_status);
+
+    app.route('/api/admin/v1/import/poll/fail_queue')
+        .get(token.verify, Import.poll_fail_queue);
 
 };

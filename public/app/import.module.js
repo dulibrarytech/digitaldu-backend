@@ -337,9 +337,7 @@ const importModule = (function () {
             });
     };
 
-    /**
-     * Accepts status broadcasts
-     */
+    /** Doesn't work on prod
     obj.getImportStatus = function () {
 
         if (helperModule.getParameterByName('import') === 'true') {
@@ -443,6 +441,7 @@ const importModule = (function () {
             }
         });
     };
+    */
 
     /**
      * Gets incomplete import records
@@ -773,9 +772,296 @@ const importModule = (function () {
         // console.log('import mime type: ', sip_uuid);
     };
 
+    /**
+     * Gets transfer status
+     */
+    const get_transfer_status = function () {
+
+        function transfer_status_http () {
+
+            let url = api + '/api/admin/v1/import/poll/transfer_status',
+                request = new Request(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-access-token': userModule.getUserToken()
+                    },
+                    mode: 'cors'
+                });
+
+            const callback = function (response) {
+
+                if (response.status === 200) {
+
+                    response.json().then(function (response) {
+
+                        let transferData = '';
+
+                        $('#message').html('');
+
+                        if (response.length > 0) {
+
+                            for (let i = 0; i < response.length; i++) {
+
+                                transferData += '<tr>';
+                                transferData += '<td>' + response[i].is_member_of_collection + '</td>';
+                                transferData += '<td>' + response[i].object + '</td>';
+                                transferData += '<td>' + response[i].microservice + '</td>';
+                                transferData += '<td>' + response[i].user + '</td>';
+                                transferData += '<td>' + response[i].message + '</td>';
+                                transferData += '<td>' + response[i].created + '</td>';
+                                transferData += '</tr>';
+                            }
+
+                            $('#transfer-status').html(transferData);
+
+                        } else {
+
+                            $('#transfer-status').html('<tr><td>No ingests in progress</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>');
+
+                        }
+                    });
+
+                } else if (response.status === 401) {
+
+                    response.json().then(function (response) {
+
+                        let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.</div>';
+                        renderError(message);
+
+                        setTimeout(function () {
+                            window.location.replace('/login');
+                        }, 4000);
+                    });
+
+                } else {
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '). An error has occurred. Unable to get transfer status.</div>';
+                    renderError(message);
+                }
+            };
+
+            http.req(request, callback);
+        }
+
+        setInterval(function () {
+            transfer_status_http();
+        }, 4000);
+
+        transfer_status_http();
+    };
+
+    // gets count of remaining import objects
+    const get_ingest_status = function () {
+
+        function ingest_status_http () {
+
+            let url = api + '/api/admin/v1/import/poll/ingest_status',
+                request = new Request(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-access-token': userModule.getUserToken()
+                    },
+                    mode: 'cors'
+                });
+
+            const callback = function (response) {
+
+                if (response.status === 200) {
+
+                    response.json().then(function (response) {
+
+                        if (response.length > 0) {
+                            $('#import-record-count').html('Objects remaining in current batch: ' + response[0].count);
+                        } else {
+                            $('#import-record-count').html('');
+                        }
+                    });
+
+                } else if (response.status === 401) {
+
+                    response.json().then(function (response) {
+
+                        let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.</div>';
+                        renderError(message);
+
+                        setTimeout(function () {
+                            window.location.replace('/login');
+                        }, 4000);
+                    });
+
+                } else {
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '). An error has occurred. Unable to update get ingest status.</div>';
+                    renderError(message);
+                }
+            };
+
+            http.req(request, callback);
+        }
+
+        setInterval(function () {
+            ingest_status_http();
+        }, 4000);
+
+        ingest_status_http();
+    };
+
+    const get_import_status = function () {
+
+        function import_status_http () {
+
+            let url = api + '/api/admin/v1/import/poll/import_status',
+                request = new Request(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-access-token': userModule.getUserToken()
+                    },
+                    mode: 'cors'
+                });
+
+            const callback = function (response) {
+
+                if (response.status === 200) {
+
+                    response.json().then(function (response) {
+
+                        let importData = '';
+
+                        $('#message').html('');
+
+                        if (response.length > 0) {
+
+                            for (let i = 0; i < response.length; i++) {
+
+                                importData += '<tr>';
+                                importData += '<td>' + response[i].sip_uuid + '</td>';
+                                importData += '<td>' + response[i].file + '</td>';
+                                importData += '<td>' + response[i].message + '</td>';
+                                importData += '<td>' + response[i].created + '</td>';
+                                importData += '</tr>';
+                            }
+
+                            $('#import-status').html(importData);
+
+                        } else {
+
+                            $('#import-status').html('<tr><td>No imports in progress</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr></tr>');
+
+                        }
+                    });
+
+                } else if (response.status === 401) {
+
+                    response.json().then(function (response) {
+
+                        let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.</div>';
+                        renderError(message);
+
+                        setTimeout(function () {
+                            window.location.replace('/login');
+                        }, 4000);
+                    });
+
+                } else {
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '). An error has occurred. Unable to get transfer status.</div>';
+                    renderError(message);
+                }
+            };
+
+            http.req(request, callback);
+        }
+
+        setInterval(function () {
+            import_status_http();
+        }, 4000);
+
+        import_status_http();
+    };
+
+    const get_fail_status = function () {
+
+        function fail_status_http () {
+
+            let url = api + '/api/admin/v1/import/poll/fail_queue',
+                request = new Request(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-access-token': userModule.getUserToken()
+                    },
+                    mode: 'cors'
+                });
+
+            const callback = function (response) {
+
+                if (response.status === 200) {
+
+                    response.json().then(function (response) {
+
+                        let failData = '';
+
+                        $('#message').html('');
+
+                        if (response.length > 0) {
+
+                            for (let i = 0; i < response.length; i++) {
+
+                                failData += '<tr>';
+                                failData += '<td>' + response[i].message + '</td>';
+                                failData += '<td>' + response[i].is_member_of_collection + '</td>';
+                                failData += '<td>' + response[i].sip_uuid + '</td>';
+                                failData += '<td>' + response[i].transfer_uuid + '</td>';
+                                failData += '<td>' + response[i].created + '</td>';
+                                failData += '</tr>';
+                            }
+
+                            $('#import-failures').html(failData);
+
+                        } else {
+                            $('#import-failures').html('');
+                            $('#import-failures').html('<tr><td>No failures reported</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>');
+
+                        }
+
+
+                    });
+
+                } else if (response.status === 401) {
+
+                    response.json().then(function (response) {
+
+                        let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.</div>';
+                        renderError(message);
+
+                        setTimeout(function () {
+                            window.location.replace('/login');
+                        }, 4000);
+                    });
+
+                } else {
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '). An error has occurred. Unable to get transfer status.</div>';
+                    renderError(message);
+                }
+            };
+
+            http.req(request, callback);
+        }
+
+        setInterval(function () {
+            fail_status_http();
+        }, 10000);
+
+        fail_status_http();
+    };
+
     obj.init = function () {
         userModule.renderUserName();
         helperModule.ping();
+        get_ingest_status();
+        get_transfer_status();
+        get_import_status();
+        get_fail_status();
     };
 
     return obj;

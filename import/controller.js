@@ -104,3 +104,27 @@ exports.import_thumbnail = function (req, res) {
         res.status(data.status).send(data.data);
     });
 };
+
+exports.poll_transfer_status = function (req, res) {
+    Import.poll_transfer_status(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.poll_ingest_status = function (req, res) {
+    Import.poll_ingest_status(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.poll_import_status = function (req, res) {
+    Import.poll_import_status(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.poll_fail_queue = function (req, res) {
+    Import.poll_fail_queue(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};

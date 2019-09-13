@@ -57,16 +57,16 @@ const fs = require('fs'),
     TRANSFER_QUEUE = 'tbl_archivematica_queue',
     IMPORT_QUEUE = 'tbl_duracloud_queue',
     FAIL_QUEUE = 'tbl_fail_queue',
-    TRANSFER_TIMER = config.transferTimer,                                  // Transfer status is broadcast every 3 sec.
-    IMPORT_TIMER = config.importTimer,                                      // Import status is broadcast every 3 sec.
-    INGEST_STATUS_TIMER = config.ingestStatusTimer,                         // Ingest status (object count) is broadcast every 20 sec.
+    // TRANSFER_TIMER = config.transferTimer,                                  // Transfer status is broadcast every 3 sec.
+    // IMPORT_TIMER = config.importTimer,                                      // Import status is broadcast every 3 sec.
+    // INGEST_STATUS_TIMER = config.ingestStatusTimer,                         // Ingest status (object count) is broadcast every 20 sec.
     TRANSFER_APPROVAL_TIMER = config.transferApprovalTimer,                 // Transfer approval occurs 35 sec. after transfer  (Gives transfer process time to complete)
     TRANSFER_STATUS_CHECK_INTERVAL = config.transferStatusCheckInterval,    // Transfer status checks occur every 3 sec.
     INGEST_STATUS_CHECK_INTERVAL = config.ingestStatusCheckInterval;        // Ingest status checks begin 3 sec after the endpoint receives a request.
 
 /**
  * Broadcasts current import record count
- */
+
 socketclient.on('connect', function () {
 
     let id = setInterval(function () {
@@ -83,10 +83,11 @@ socketclient.on('connect', function () {
 
     }, INGEST_STATUS_TIMER);
 });
+ */
 
 /**
  * Broadcasts archivematica transfer/ingest status
- */
+
 socketclient.on('connect', function () {
 
     let id = setInterval(function () {
@@ -108,10 +109,11 @@ socketclient.on('connect', function () {
 
     }, TRANSFER_TIMER);
 });
+ */
 
 /**
  * Broadcasts duracloud import status
- */
+
 socketclient.on('connect', function () {
 
     let id = setInterval(function () {
@@ -131,10 +133,11 @@ socketclient.on('connect', function () {
 
     }, IMPORT_TIMER);
 });
+ */
 
 /**
  * Broadcasts import failures
- */
+
 socketclient.on('connect', function () {
 
     let id = setInterval(function () {
@@ -154,6 +157,7 @@ socketclient.on('connect', function () {
 
     }, INGEST_STATUS_TIMER);
 });
+ */
 
 /**
  * Gets list of folders from Archivematica sftp server
@@ -1339,4 +1343,98 @@ exports.create_repo_record = function (req, callback) {
         status: 200,
         message: 'Importing object.'
     });
+};
+
+/**
+ * Gets import record count
+ * @param req
+ * @param callback
+ */
+exports.poll_ingest_status = function (req, callback) {
+
+    knexQ(TRANSFER_QUEUE)
+        .count('id as count')
+        .then(function (data) {
+            callback({
+                status: 200,
+                data: data
+            });
+        })
+        .catch(function (error) {
+            logger.module().fatal('FATAL: [/import/queue module (check_ingest_status) transfer queue database error' + error);
+            throw 'FATAL: [/import/queue module (check_ingest_status) transfer queue database error' + error;
+        });
+};
+
+/**
+ * Gets transfer status
+ * @param req
+ * @param callback
+ */
+exports.poll_transfer_status = function (req, callback) {
+
+    knexQ(TRANSFER_QUEUE)
+        .select('*')
+        .whereRaw('DATE(created) = CURRENT_DATE')
+        .where({
+            transfer_status: 1
+        })
+        .orderBy('created', 'asc')
+        .then(function (data) {
+            callback({
+                status: 200,
+                data: data
+            });
+        })
+        .catch(function (error) {
+            logger.module().fatal('FATAL: [/import/queue module (check_transfer_status) transfer queue database error ' + error);
+            throw 'FATAL: [/import/queue module (check_transfer_status) transfer queue database error ' + error;
+        });
+};
+
+/**
+ * Gets import status
+ * @param req
+ * @param callback
+ */
+exports.poll_import_status = function (req, callback) {
+
+    knexQ(IMPORT_QUEUE)
+        .select('sip_uuid', 'uuid', 'file', 'file_id', 'type', 'type', 'dip_path', 'mime_type', 'message', 'status', 'created')
+        .whereRaw('DATE(created) = CURRENT_DATE')
+        .orderBy('created', 'desc')
+        .groupBy('sip_uuid')
+        .then(function (data) {
+            callback({
+                status: 200,
+                data: data
+            });
+        })
+        .catch(function (error) {
+            logger.module().fatal('FATAL: [/import/queue module (import status broadcasts)] import queue database error ' + error);
+            throw 'FATAL: [/import/queue module (import status broadcasts)] import queue database error ' + error;
+        });
+};
+
+/**
+ * Gets data from fail queue
+ * @param req
+ * @param callback
+ */
+exports.poll_fail_queue = function (req, callback) {
+
+    knexQ(FAIL_QUEUE)
+        .select('*')
+        // .whereRaw('DATE(created) = CURRENT_DATE')
+        .orderBy('created', 'desc')
+        .then(function (data) {
+            callback({
+                status: 200,
+                data: data
+            });
+        })
+        .catch(function (error) {
+            logger.module().fatal('FATAL: [/import/queue module (import failure broadcasts)] fail queue database error ' + error);
+            throw 'FATAL: [/import/queue module (import failure broadcasts)] fail queue database error ' + error;
+        });
 };
