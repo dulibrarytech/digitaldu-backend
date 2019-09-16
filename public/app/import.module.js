@@ -504,8 +504,8 @@ const importModule = (function () {
                     $('#message').html('');
 
                     if (data.length === 0) {
-                        let message = '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No complete records found.</div>';
                         $('table').empty();
+                        let message = '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No complete records found.</div>';
                         $('#message').html(message);
                     } else {
                         // $('#complete-records').show();
