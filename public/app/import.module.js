@@ -462,14 +462,11 @@ const importModule = (function () {
 
                 response.json().then(function (data) {
 
-                    $('#message').html('');
-
                     if (data.length === 0) {
-                        let message = '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No incomplete records found.</div>';
                         $('table').empty();
-                        $('#message').html(message);
+                        let message = '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No incomplete records found.</div>';
+                        $('#responses').html(message);
                     } else {
-                        // $('#incomplete-records').show();
                         renderIncompleteRecords(data);
                     }
                 });
@@ -501,12 +498,10 @@ const importModule = (function () {
 
                 response.json().then(function (data) {
 
-                    $('#message').html('');
-
                     if (data.length === 0) {
                         $('table').empty();
                         let message = '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No complete records found.</div>';
-                        $('#message').html(message);
+                        $('#responses').html(message);
                     } else {
                         // $('#complete-records').show();
                         renderCompleteRecords(data);
