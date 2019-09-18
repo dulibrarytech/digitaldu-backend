@@ -29,7 +29,7 @@ module.exports = function (app) {
     app.route('/api/admin/v1/repo/object')
         .get(token.verify, Repo.get_admin_object)
         .post(token.verify, Repo.create_collection_object)
-        .put(Repo.update_metadata_cron);  // token.verify,  api-key
+        .put(Repo.update_metadata_cron);  // TODO: api key
 
     app.route('/api/admin/v1/repo/object/thumbnail')
         .get(Repo.get_thumbnail)  // token.verify,
@@ -42,12 +42,16 @@ module.exports = function (app) {
         .post(token.verify, Repo.unpublish_objects);
 
     app.route('/api/admin/v1/repo/ping/services')
-        .get(Repo.ping); //TODO: add token verify
+        .get(Repo.get_pids); //TODO: add token verify
 
     // TODO: figure out better function name (creates new display records)
     app.route('/api/admin/v1/repo/reset')
         .post(Repo.reset_display_record);
 
+    app.route('/api/admin/v1/repo/uuids')
+        .get(Repo.get_pids); //TODO: add api key
+
+    /* NOT USED */
     app.route('/api/admin/v1/repo/object/download')
         .get(Repo.get_object_download);
 

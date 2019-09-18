@@ -1455,3 +1455,129 @@ exports.get_object_download = function (req, callback) {
             callback(null, obj);
         });
 };
+
+/** http://localhost:8000/api/v1/repo/uuids?start=2019-08-20&end=2019-09-18
+ * Gets repository pids by import date(s)
+ * @param req
+ * @param callback
+ */
+exports.get_pids = function (req, callback) {
+
+    // TODO: API key
+
+    let start = req.query.start,
+        end = req.query.end,
+        sql = 'DATE(created) = CURRENT_DATE';
+
+    function get_collection_pids (callback) {
+
+        if (start !== undefined && end !== undefined) {
+
+            sql = '(created BETWEEN ? AND ?)';
+
+            knex(REPO_OBJECTS)
+                .select('sip_uuid', 'handle', 'uri')
+                .where({
+                    object_type: 'collection'
+                })
+                .andWhereRaw(sql, [start,end])
+                .orderBy('created', 'desc')
+                .then(function (data) {
+
+                    if (data.length === 0) {
+                        data.status = false;
+                    }
+
+                    callback(null, data);
+                })
+                .catch(function (error) {
+                    logger.module().fatal('FATAL: [/repository/model module (get_pids/get_collection_pids)] repository database error ' + error);
+                    throw 'FATAL: [/repository/model module (get_pids/get_collection_pids)] repository database error ' + error;
+                });
+
+        } else if (start !== undefined && end === undefined) {
+
+            sql = 'DATE(created) = ?';
+
+            knex(REPO_OBJECTS)
+                .select('sip_uuid', 'handle', 'uri')
+                .where({
+                    object_type: 'collection'
+                })
+                .andWhereRaw(sql, [start])
+                .orderBy('created', 'desc')
+                .then(function (data) {
+
+                    if (data.length === 0) {
+                        data.status = false;
+                    }
+
+                    callback(null, data);
+                })
+                .catch(function (error) {
+                    logger.module().fatal('FATAL: [/repository/model module (get_pids/get_collection_pids)] repository database error ' + error);
+                    throw 'FATAL: [/repository/model module (get_pids/get_collection_pids)] repository database error ' + error;
+                });
+        }
+    }
+
+    function get_object_pids (data, callback) {
+
+        if (data.status !== undefined && data.status === false) {
+            callback(null, data);
+            return false;
+        }
+
+        let records = [];
+        let timer = setInterval(function () {
+
+            let record = data.pop(),
+                params = {};
+
+            if (data.length === 0) {
+                params.object_type = 'object';
+                params.is_member_of_collection = 0;
+            } else {
+                params.object_type = 'object';
+                params.is_member_of_collection = record.sip_uuid;
+            }
+
+            knex(REPO_OBJECTS)
+                .select('sip_uuid', 'handle', 'uri')
+                .where(params)
+                .then(function (objects) {
+
+                    if (data.length > 0) {
+                        record.objects = objects;
+                        records.push(record);
+                    } else if (data.length === 0) {
+                        clearInterval(timer);
+                        callback(null, records);
+                        return false;
+                    }
+
+                })
+                .catch(function (error) {
+                    logger.module().fatal('FATAL: [/repository/model module (get_pids/get_object_pids)] repository database error ' + error);
+                    throw 'FATAL: [/repository/model module (get_pids/get_object_pids)] repository database error ' + error;
+                });
+
+        }, 100);
+    }
+
+    async.waterfall([
+        get_collection_pids,
+        get_object_pids
+    ], function (error, results) {
+
+        if (error) {
+            logger.module().error('ERROR: [/repository/model module (get_pids/async.waterfall)] ' + error);
+            throw 'ERROR: [/repository/model module (get_pids/async.waterfall)] ' + error;
+        }
+
+        callback({
+            status: 200,
+            data: results
+        });
+    });
+};

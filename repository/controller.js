@@ -104,6 +104,12 @@ exports.reset_display_record = function (req, res) {
     });
 };
 
+exports.get_pids = function (req, res) {
+    Repo.get_pids(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
 exports.get_object_download = function (req, res) {
     Repo.get_object_download(req, function (data) {
 
