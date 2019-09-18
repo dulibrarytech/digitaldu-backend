@@ -19,7 +19,8 @@
 'use strict';
 
 const Repo = require('../repository/controller'),
-    token = require('../libs/tokens');
+    token = require('../libs/tokens'),
+    apikey = require('../libs/api-key');
 
 module.exports = function (app) {
 
@@ -49,7 +50,7 @@ module.exports = function (app) {
         .post(Repo.reset_display_record);
 
     app.route('/api/admin/v1/repo/uuids')
-        .get(Repo.get_pids); //TODO: add api key
+        .get(apikey.verify, Repo.get_pids); //TODO: add api key
 
     /* NOT USED */
     app.route('/api/admin/v1/repo/object/download')
