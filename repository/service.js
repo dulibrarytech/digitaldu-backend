@@ -31,25 +31,6 @@ const archivematica = require('../libs/archivematica'),
  */
 exports.ping_services = function (req, callback) {
 
-    async.waterfall([
-        ping_archivematica,
-        ping_archivematica_storage,
-        ping_archivespace,
-        ping_duracloud
-    ], function (error, results) {
-
-        if (error) {
-            logger.module().error('ERROR: [/repository/service module (ping_services/async.waterfall)] unable to ping third-party services ' + error);
-            return false;
-        }
-
-        callback({
-            status: 200,
-            message: 'Services pinged.',
-            data: results
-        });
-    });
-
     function ping_archivematica(callback) {
 
         archivematica.ping_api(function (response) {
@@ -83,6 +64,25 @@ exports.ping_services = function (req, callback) {
             callback(null, obj);
         });
     }
+
+    async.waterfall([
+        ping_archivematica,
+        ping_archivematica_storage,
+        ping_archivespace,
+        ping_duracloud
+    ], function (error, results) {
+
+        if (error) {
+            logger.module().error('ERROR: [/repository/service module (ping_services/async.waterfall)] unable to ping third-party services ' + error);
+            return false;
+        }
+
+        callback({
+            status: 200,
+            message: 'Services pinged.',
+            data: results
+        });
+    });
 };
 
 /**

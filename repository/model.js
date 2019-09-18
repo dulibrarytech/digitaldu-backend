@@ -1463,8 +1463,6 @@ exports.get_object_download = function (req, callback) {
  */
 exports.get_pids = function (req, callback) {
 
-    // TODO: API key
-
     let start = req.query.start,
         end = req.query.end,
         sql = 'DATE(created) = CURRENT_DATE';
