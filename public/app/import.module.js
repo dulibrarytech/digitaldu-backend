@@ -84,6 +84,10 @@ const importModule = (function () {
                         html += '<td>';
                         html += '&nbsp;&nbsp;&nbsp;<i class="fa fa-folder"></i>&nbsp;&nbsp;' + data.list[i].name;
                         html += '</td>';
+                    } else {
+                        $('#import-objects').html('');
+                        $('#import-objects').html('<div class="alert alert-info"><strong>There are no collections available to import.</strong></div>');
+                        return false;
                     }
 
                 }
@@ -503,7 +507,6 @@ const importModule = (function () {
                         let message = '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No complete records found.</div>';
                         $('#responses').html(message);
                     } else {
-                        // $('#complete-records').show();
                         renderCompleteRecords(data);
                     }
                 });
