@@ -84,7 +84,7 @@ const importModule = (function () {
                         html += '<td>';
                         html += '&nbsp;&nbsp;&nbsp;<i class="fa fa-folder"></i>&nbsp;&nbsp;' + data.list[i].name;
                         html += '</td>';
-                    } else {
+                    } else if (collection !== null && data.list[i].name.length < 30) {
                         $('#import-objects').html('');
                         $('#import-objects').html('<div class="alert alert-info"><strong>There are no collections available to import.</strong></div>');
                         return false;
