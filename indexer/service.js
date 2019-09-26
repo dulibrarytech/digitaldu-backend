@@ -273,6 +273,7 @@ function get_mapping () {
                     }
                 },
                 "dates": {
+                    "type": "nested",
                     "properties": {
                         "begin": {
                             "type": "text",
@@ -293,6 +294,15 @@ function get_mapping () {
                             }
                         },
                         "encoding": {
+                            "type": "text",
+                            "fields": {
+                                "keyword": {
+                                    "type": "keyword",
+                                    "ignore_above": 256
+                                }
+                            }
+                        },
+                        "end": {
                             "type": "text",
                             "fields": {
                                 "keyword": {
@@ -358,6 +368,7 @@ function get_mapping () {
                     }
                 },
                 "identifiers": {
+                    "type": "nested",
                     "properties": {
                         "identifier": {
                             "type": "text",
