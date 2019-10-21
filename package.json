@@ -21,7 +21,7 @@
     "helmet": "^3.8.2",
     "install": "^0.12.2",
     "jsonwebtoken": "^8.0.1",
-    "knex": "^0.16.5",
+    "knex": "^0.19.5",
     "lodash": "^4.17.15",
     "log4js": "^4.0.1",
     "method-override": "^2.3.10",
