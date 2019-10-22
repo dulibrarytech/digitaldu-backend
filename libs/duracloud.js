@@ -145,7 +145,7 @@ exports.get_object_info = function (data, callback) {
 
     request.head({
         url: apiUrl,
-        timeout: 25000
+        timeout: 45000
     }, function (error, httpResponse, body) {
 
         if (error) {
@@ -194,7 +194,7 @@ exports.get_uri = function (data, callback) {
 
     request.get({
         url: apiUrl,
-        timeout: 25000
+        timeout: 45000
     }, function (error, httpResponse, body) {
 
         if (error) {
@@ -240,7 +240,7 @@ exports.get_object_manifest = function (data, callback) {
 
     request.get({
         url: apiUrl,
-        timeout: 25000
+        timeout: 45000
     }, function (error, httpResponse, body) {
 
         if (error) {
@@ -286,7 +286,7 @@ exports.get_thumbnail = function (tn, callback) {
     request.get({
         url: apiUrl,
         encoding: null,
-        timeout: 35000
+        timeout: 45000
     }, function (error, httpResponse, body) {
 
         let missing_tn = '/images/image-tn.png';
