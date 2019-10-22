@@ -909,7 +909,7 @@ exports.create_repo_record = function (req, callback) {
 
                         logger.module().error('ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_manifest)] unable to get manifest or manifest does not exist ' + response.error_message);
                         obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
-                        get_duracloud_object(obj, 15000);
+                        get_duracloud_object(obj);
                         return false;
 
                     } else {
@@ -935,10 +935,10 @@ exports.create_repo_record = function (req, callback) {
             get_manifest(obj);
 
         } else {
-            get_duracloud_object(obj, 5000);
+            get_duracloud_object(obj);
         }
 
-        function get_duracloud_object(obj, TIMER) {
+        function get_duracloud_object(obj) {
 
             setTimeout(function () {
 
@@ -975,7 +975,7 @@ exports.create_repo_record = function (req, callback) {
                     callback(null, obj);
                 });
 
-            }, TIMER);
+            }, 15000);  // TODO: place in .env config
 
             return false;
         }
