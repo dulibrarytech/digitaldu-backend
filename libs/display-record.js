@@ -47,8 +47,14 @@ exports.create_display_record = function (obj, callback) {
         record.is_compound = 0;
     }
 
-    if (metadata.parts !== undefined && metadata.parts[0].kaltura_id !== undefined) {
-        record.entry_id = metadata.parts[0].kaltura_id;
+    if (metadata.parts !== undefined && metadata.parts.length > 0) {
+
+        for (let i=0;i<metadata.parts.length;i++) {
+
+            if (metadata.parts[i].kaltura_id !== undefined) {
+                record.entry_id = metadata.parts[i].kaltura_id;
+            }
+        }
     }
 
     if (metadata.title !== undefined || metadata.title !== null) {
