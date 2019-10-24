@@ -1375,7 +1375,7 @@ exports.poll_transfer_status = function (req, callback) {
 
     knexQ(TRANSFER_QUEUE)
         .select('*')
-        .whereRaw('DATE(created) = CURRENT_DATE')
+        // .whereRaw('DATE(created) = CURRENT_DATE')
         .where({
             transfer_status: 1
         })
