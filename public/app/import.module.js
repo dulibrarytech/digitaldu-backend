@@ -1007,9 +1007,9 @@ const importModule = (function () {
 
                                 failData += '<tr>';
                                 failData += '<td>' + response[i].message + '</td>';
-                                failData += '<td>' + response[i].is_member_of_collection + '</td>';
+                                // failData += '<td>' + response[i].is_member_of_collection + '</td>';
                                 failData += '<td>' + response[i].sip_uuid + '</td>';
-                                failData += '<td>' + response[i].transfer_uuid + '</td>';
+                                // failData += '<td>' + response[i].transfer_uuid + '</td>';
                                 failData += '<td>' + response[i].created + '</td>';
                                 failData += '</tr>';
                             }
