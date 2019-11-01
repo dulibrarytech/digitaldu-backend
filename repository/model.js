@@ -128,7 +128,8 @@ exports.get_object = function (req, callback) {
  */
 exports.get_admin_objects = function (req, callback) {
 
-    let pid = req.query.pid;
+    let pid = req.query.pid,
+        page = req.query.page;
 
     if (pid === undefined || pid.length === 0) {
 
@@ -141,12 +142,26 @@ exports.get_admin_objects = function (req, callback) {
         return false;
     }
 
+    let total_on_page = 10;
+
+    if (req.query.total_on_page !== undefined) {
+        total_on_page = req.query.total_on_page;
+    }
+
+    if (page === undefined) {
+        page = 0;
+    } else {
+        page = (page - 1) * total_on_page;
+    }
+
     knex(REPO_OBJECTS)
         .select('id', 'is_member_of_collection', 'pid', 'object_type', 'display_record', 'thumbnail', 'mime_type', 'is_compound', 'is_published', 'created')
         .where({
             is_member_of_collection: pid,
             is_active: 1
         })
+        .limit(total_on_page)
+        .offset(page)
         .then(function (data) {
             callback({
                 status: 200,
@@ -1052,10 +1067,12 @@ exports.publish_objects = function (req, callback) {
 
             logger.module().info('INFO: [/repository/model module (publish_objects/async.waterfall)] collection published');
 
+            /*
             callback({
                 status: 201,
                 message: 'Collection published'
             });
+            */
         });
 
         return false;
@@ -1076,6 +1093,12 @@ exports.publish_objects = function (req, callback) {
 
         return false;
     }
+
+    callback({
+        status: 201,
+        message: 'Publishing collection',
+        data: []
+    });
 };
 
 /**
@@ -1252,10 +1275,12 @@ exports.unpublish_objects = function (req, callback) {
 
             logger.module().info('INFO: [/repository/model module (unpublish_objects/async.waterfall)] collection unpublished');
 
+            /*
             callback({
                 status: 201,
                 message: 'Collection unpublished'
             });
+            */
         });
 
         return false;
@@ -1275,6 +1300,12 @@ exports.unpublish_objects = function (req, callback) {
 
         return false;
     }
+
+    callback({
+        status: 201,
+        message: 'Collection unpublished',
+        data: []
+    });
 };
 
 /**

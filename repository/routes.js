@@ -25,7 +25,7 @@ const Repo = require('../repository/controller'),
 module.exports = function (app) {
 
     app.route('/api/admin/v1/repo/objects')
-        .get(token.verify, Repo.get_admin_objects);
+        .get(Repo.get_admin_objects);  // token.verify,
 
     app.route('/api/admin/v1/repo/object')
         .get(token.verify, Repo.get_admin_object)
@@ -43,7 +43,7 @@ module.exports = function (app) {
         .post(token.verify, Repo.unpublish_objects);
 
     app.route('/api/admin/v1/repo/ping/services')
-        .get(Repo.ping); //TODO: add token verify
+        .get(Repo.ping);
 
     app.route('/api/admin/v1/repo/reset')
         .post(Repo.reset_display_record);

@@ -33,16 +33,28 @@ const objectsModule = (function () {
      */
     obj.getObjects = function () {
 
-        let pid = helperModule.getParameterByName('pid'); // TODO: sanitize
+        let pid = helperModule.getParameterByName('pid'),
+            page = helperModule.getParameterByName('page'),
+            total_on_page = helperModule.getParameterByName('total_on_page'),
+            sort = helperModule.getParameterByName('sort');
 
-        collectionsModule.getCollectionName(pid);
-        userModule.setHeaderUserToken();
-
-        if (pid === null) {
+        if (pid === null || pid === 'codu:root') {
             pid = 'codu:root';
+        } else {
+            collectionsModule.getCollectionName(pid);
         }
 
-        $.ajax(api + '/api/admin/v1/repo/objects?pid=' + pid)
+        userModule.setHeaderUserToken();
+
+        // http://localhost:8000/api/admin/v1/repo/objects?pid=codu:root&total_on_page=10&sort=title.keyword:desc
+
+        let url = api + '/api/admin/v1/repo/objects?pid=' + pid;
+
+        if (page !== null && total_on_page !== null) {
+            url = api + '/api/admin/v1/repo/objects?pid=' + pid + '&page=' + page + '&total_on_page=' + total_on_page;
+        }
+
+        $.ajax(url)
             .done(function (data) {
                 objectsModule.renderDisplayRecords(data);
             })
@@ -198,6 +210,7 @@ const objectsModule = (function () {
     obj.renderDisplayRecords = function (data) {
 
         let is_member_of_collection = helperModule.getParameterByName('pid'),
+            total_records = data.total,
             html = '';
 
         $('#current-collection').prop('href', '/dashboard/collections/add?is_member_of_collection=' + is_member_of_collection);
@@ -208,16 +221,13 @@ const objectsModule = (function () {
             return false;
         }
 
-        for (let i = 0; i < data.length; i++) {
+        $('#total-records').html('<p>Total Records: ' + total_records + '</p>');
 
-            if (data.length > 0 && data[i].display_record === null) {
-                $('#message').html('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i>&nbsp; Some display records are not available.  Review incomplete records.</div>');
-                continue;
-            }
+        for (let i = 0; i < data.hits.length; i++) {
 
-            let record = JSON.parse(data[i].display_record),
-                tn = helperModule.getTn(data[i].thumbnail, data[i].mime_type), // data[i].pid
-                pid = data[i].pid;
+            let record = data.hits[i]._source,
+                tn = helperModule.getTn(data.hits[i]._source.thumbnail, data.hits[i]._source.mime_type),
+                pid = data.hits[i]._source.pid;
 
             html += '<div class="row">';
             html += '<div class="col-md-3"><img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
@@ -225,9 +235,9 @@ const objectsModule = (function () {
 
             if (record.display_record.title !== undefined) {
 
-                if (data[i].object_type === 'collection') {
-                    html += '<h4><a href="' + api + '/dashboard/objects/?pid=' + data[i].pid + '">' + record.display_record.title + '</a></h4>';
-                } else if (data[i].object_type === 'object') {
+                if (data.hits[i]._source.object_type === 'collection') {
+                    html += '<h4><a href="' + api + '/dashboard/objects/?pid=' + data.hits[i]._source.pid + '">' + record.display_record.title + '</a></h4>';
+                } else if (data.hits[i]._source.object_type === 'object') {
                     html += '<h4>' + record.display_record.title + '</h4>';
                 }
 
@@ -249,9 +259,8 @@ const objectsModule = (function () {
 
                 for (let j = 0; j < record.display_record.dates.length; j++) {
 
-                    if (data[i].object_type === 'collection') {
+                    if (data.hits[i]._source.object_type === 'collection') {
                         html += '<li>' + record.display_record.dates[j].expression + ' ( ' + record.display_record.dates[j].date_type + '</a> )</li>';
-
                     } else {
                         html += '<li>' + record.display_record.dates[j].expression + ' ( ' + record.display_record.dates[j].type + '</a> )</li>';
                     }
@@ -363,7 +372,7 @@ const objectsModule = (function () {
                 html += '</ul>';
             }
 
-            if (data[i].object_type !== 'collection' && record.display_record.subjects !== undefined && record.display_record.subjects.length !== 0) {
+            if (data.hits[i]._source.object_type !== 'collection' && record.display_record.subjects !== undefined && record.display_record.subjects.length !== 0) {
 
                 html += '<li><strong>Subjects:</strong></li>';
                 html += '<ul>';
@@ -385,59 +394,52 @@ const objectsModule = (function () {
             }
 
             html += '</ul>';
-
             html += '</div>';
             html += '<div class="col-md-3" style="padding: 5px">';
 
             // TODO: optimize this block
-            if (data[i].object_type === 'collection') {
+            if (data.hits[i]._source.object_type === 'collection') {
 
                 html += '<p><small style="background: skyblue; padding: 3px; color: white">Collection</small></p>';
 
-                if (data[i].is_published === 1) {
+                if (data.hits[i]._source.is_published === 1) {
                     html += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
-                    html += '<p><a href="#" onclick="objectsModule.unpublishObject(\'' + data[i].pid + '\', \'collection\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Unpublish</a></p>';
-                    // html += '<p><a href="#"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
+                    html += '<p><a href="#" onclick="objectsModule.unpublishObject(\'' + data.hits[i]._source.pid + '\', \'collection\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Unpublish</a></p>';
                 } else {
                     html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
-                    html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data[i].pid + '\', \'collection\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
+                    html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data.hits[i]._source.pid + '\', \'collection\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
                 }
 
-                // html += '<p><a href="' + api + '/dashboard/object/update?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Update metadata</a></p>';
-                html += '<p><a href="' + api + '/dashboard/object/thumbnail?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Change Thumbnail</a></p>';
+                html += '<p><a href="' + api + '/dashboard/object/thumbnail?pid=' + data.hits[i]._source.pid + '"><i class="fa fa-edit"></i>&nbsp;Change Thumbnail</a></p>';
 
-            } else if (data[i].object_type === 'object' && data[i].is_compound === 0) {
+            } else if (data.hits[i]._source.object_type === 'object' && data.hits[i]._source.is_compound === 0) {
 
                 html += '<p><small style="background: cadetblue; padding: 3px; color: white">Object</small></p>';
 
-                if (data[i].is_published === 1) {
+                if (data.hits[i]._source.is_published === 1) {
                     html += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
                     html += '<p><a href="#"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
                 } else {
                     html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
-                    html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data[i].pid + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
+                    html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data.hits[i]._source.pid + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
                 }
 
-                // html += '<p><a href="' + api + '/dashboard/object/update?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Update metadata</a></p>';
-                // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '"><i class="fa fa-download"></i>&nbsp;Download AIP</a></p>';
                 // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=tn"><i class="fa fa-code"></i>&nbsp;Technical Metadata</a></p>';
                 // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=mods"><i class="fa fa-code"></i>&nbsp;MODS</a></p>';
 
-            } else if (data[i].object_type === 'object' && data[i].is_compound === 1) {
+            } else if (data.hits[i]._source.object_type === 'object' && data.hits[i]._source.is_compound === 1) {
 
                 html += '<p><small style="background: cadetblue; padding: 3px; color: white">Compound Object</small></p>';
 
-                if (data[i].is_published === 1) {
+                if (data.hits[i]._source.is_published === 1) {
                     html += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
                     html += '<p><a href="#"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
                 } else {
                     html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
-                    html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data[i].pid + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
+                    html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data.hits[i]._source.pid + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
                 }
 
-                // html += '<p><a href="' + api + '/dashboard/object/update?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Update metadata</a></p>';
-                html += '<p><a href="' + api + '/dashboard/object/thumbnail?pid=' + data[i].pid + '"><i class="fa fa-edit"></i>&nbsp;Change Thumbnail</a></p>';
-
+                html += '<p><a href="' + api + '/dashboard/object/thumbnail?pid=' + data.hits[i]._source.pid + '"><i class="fa fa-edit"></i>&nbsp;Change Thumbnail</a></p>';
             }
 
             html += '</div>';
@@ -445,7 +447,9 @@ const objectsModule = (function () {
             html += '<hr>';
         }
 
-        // TODO: implement pagination
+        html += helperModule.pagination(is_member_of_collection, total_records);
+
+        $('#pagination').html(helperModule.pagination(is_member_of_collection, total_records));
         $('#objects').html(html);
         $('a').tooltip();
     };

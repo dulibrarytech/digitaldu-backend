@@ -118,4 +118,5 @@ module.exports = function () {
     require('../stats/routes.js')(app);
     require('../import/routes.js')(app);
     require('../search/routes.js')(app);
+    require('../utils/routes.js')(app);
 };

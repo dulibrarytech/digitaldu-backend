@@ -38,7 +38,7 @@ exports.get_object = function (req, res) {
 
 /* gets objects for administrators */
 exports.get_admin_objects = function (req, res) {
-    Repo.get_admin_objects(req, function (data) {
+    Service.get_admin_objects(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };

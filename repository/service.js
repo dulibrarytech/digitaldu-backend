@@ -22,7 +22,12 @@ const archivematica = require('../libs/archivematica'),
     archivespace = require('../libs/archivespace'),
     duracloud = require('../libs/duracloud'),
     logger = require('../libs/log4'),
-    async = require('async');
+    async = require('async'),
+    config = require('../config/config'),
+    es = require('elasticsearch'),
+    client = new es.Client({
+        host: config.elasticSearch
+    });
 
 /**
  * Pings third-party services to determine availability
@@ -107,5 +112,61 @@ exports.get_thumbnail = function (req, callback) {
 
     duracloud.get_thumbnail(tn, function (response) {
         callback(response);
+    });
+};
+
+/**
+ *
+ * @param req
+ * @param callback
+ */
+exports.get_admin_objects = function (req, callback) {
+
+    let is_member_of_collection = req.query.pid,
+        page = req.query.page,
+        total_on_page = 10,
+        sort = 'title.keyword:asc';
+
+    if (req.query.total_on_page !== undefined) {
+        total_on_page = req.query.total_on_page;
+    }
+
+    if (req.query.sort !== undefined) {
+        sort = req.query.sort;
+    }
+
+    if (page === undefined) {
+        page = 0;
+    } else {
+        page = (page - 1) * total_on_page;
+    }
+
+    let query = {
+        'query': {
+            'bool': {
+                'must': {
+                    'match': {
+                        'is_member_of_collection': is_member_of_collection
+                    }
+                }
+            }
+        }
+    };
+
+    client.search({
+        from: page,
+        size: total_on_page,
+        index: config.elasticSearchBackIndex,
+        type: 'data',
+        sort: sort,
+        body: query
+    }).then(function (body) {
+
+        callback({
+            status: 200,
+            data: body.hits
+        });
+    }, function (error) {
+        callback(error);
     });
 };
