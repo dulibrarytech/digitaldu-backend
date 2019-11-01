@@ -46,8 +46,6 @@ const objectsModule = (function () {
 
         userModule.setHeaderUserToken();
 
-        // http://localhost:8000/api/admin/v1/repo/objects?pid=codu:root&total_on_page=10&sort=title.keyword:desc
-
         let url = api + '/api/admin/v1/repo/objects?pid=' + pid;
 
         if (page !== null && total_on_page !== null) {
@@ -215,7 +213,7 @@ const objectsModule = (function () {
 
         $('#current-collection').prop('href', '/dashboard/collections/add?is_member_of_collection=' + is_member_of_collection);
 
-        if (data.length === 0) {
+        if (data.total === 0) {
             html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; No objects or collections found.</strong></div>';
             $('#objects').html(html);
             return false;
