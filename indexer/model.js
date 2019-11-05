@@ -231,6 +231,7 @@ exports.index_records = function (req, callback) {
                                     if (data === 1) {
 
                                         setTimeout(function () {
+                                            // index next record
                                             index(index_name);
                                         }, config.indexTimer);
 
@@ -282,6 +283,69 @@ exports.index_records = function (req, callback) {
 };
 
 /**
+ * updates document fragment
+ * @param req
+ * @param callback
+ */
+exports.update_fragment = function (req, callback) {
+
+    let sip_uuid = req.body.sip_uuid,
+        doc_fragment = req.body.fragment;
+
+    service.update_fragment({
+        index: config.elasticSearchBackIndex,
+        type: 'data',
+        id: sip_uuid,
+        body: doc_fragment
+    }, function (response) {
+
+        if (response.result === 'updated') {
+            callback({
+                status: 200,
+                message: 'fragment updated'
+            });
+        } else {
+
+            logger.module().error('ERROR: [/indexer/model module (update_fragment)] unable to update record fragment ' + response);
+
+            callback({
+                status: 200,
+                message: 'fragment update failed'
+            });
+        }
+    });
+};
+
+/**
+ * Copies doc from admin to public index
+ * @param req
+ * @param callback
+ */
+exports.reindex = function (req, callback) {
+
+    let query = req.body.query;
+
+    service.reindex({
+        body: {
+            "source": {
+                "index": config.elasticSearchBackIndex,
+                "type": 'data',
+                "query": query
+            },
+            "dest": {
+                "index": config.elasticSearchFrontIndex
+            }
+        }
+    }, function (response) {
+
+        callback({
+            status: 200,
+            message: 'records reindexed'
+        });
+    });
+};
+
+/**
  * Removes record from public index
  * @param req
  * @param callback
@@ -311,5 +375,4 @@ exports.unindex_record = function (req, callback) {
             });
         }
     });
-
 };

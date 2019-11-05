@@ -92,7 +92,6 @@ const objectsModule = (function () {
      */
     obj.publishObject = function (pid, type) {
 
-        // TODO: flag collection pid too
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
         let obj = {
@@ -118,8 +117,14 @@ const objectsModule = (function () {
 
             if (response.status === 201) {
 
-                $('#message').html('');
-                objectsModule.getObjects();
+                let message = '<div class="alert alert-success">Collection published</div>';
+                $('#message').html(message);
+
+                setTimeout(function () {
+                    $('#message').html('');
+                    objectsModule.getObjects();
+                }, 8000);
+
 
             } else if (response.status === 401) {
 
@@ -175,8 +180,14 @@ const objectsModule = (function () {
 
             if (response.status === 201) {
 
-                $('#message').html('');
-                objectsModule.getObjects();
+                let message = '<div class="alert alert-success">Collection unpublished</div>';
+                $('#message').html(message);
+
+                setTimeout(function () {
+                    $('#message').html('');
+                    objectsModule.getObjects();
+                }, 8000);
+
 
             } else if (response.status === 401) {
 
@@ -400,7 +411,7 @@ const objectsModule = (function () {
 
                 html += '<p><small style="background: skyblue; padding: 3px; color: white">Collection</small></p>';
 
-                if (data.hits[i]._source.is_published === 1) {
+                if (data.hits[i]._source.is_published === '1') {
                     html += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
                     html += '<p><a href="#" onclick="objectsModule.unpublishObject(\'' + data.hits[i]._source.pid + '\', \'collection\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Unpublish</a></p>';
                 } else {
@@ -414,7 +425,7 @@ const objectsModule = (function () {
 
                 html += '<p><small style="background: cadetblue; padding: 3px; color: white">Object</small></p>';
 
-                if (data.hits[i]._source.is_published === 1) {
+                if (data.hits[i]._source.is_published === '1') {
                     html += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
                     html += '<p><a href="#"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
                 } else {
@@ -427,9 +438,13 @@ const objectsModule = (function () {
 
             } else if (data.hits[i]._source.object_type === 'object' && data.hits[i]._source.is_compound === 1) {
 
+                console.log(data.hits[i]._source.is_published);
+                console.log(data.hits[i]._source.object_type);
+                console.log(data.hits[i]._source.is_compound);
+
                 html += '<p><small style="background: cadetblue; padding: 3px; color: white">Compound Object</small></p>';
 
-                if (data.hits[i]._source.is_published === 1) {
+                if (data.hits[i]._source.is_published === '1') {
                     html += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
                     html += '<p><a href="#"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
                 } else {

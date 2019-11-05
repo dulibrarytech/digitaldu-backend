@@ -30,9 +30,8 @@ const config = require('../config/config'),
     knex = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects';
 
-
 /**
- *
+ * confirms that repository files exist on Archivematica service
  * @param req
  * @param callback
  */
@@ -107,4 +106,39 @@ exports.check_objects = function (req, callback) {
             logger.module().fatal('FATAL: [/utils/model module (check_objects)] Unable to get objects ' + error);
             throw 'FATAL: [/utils/model module (check_objects)] Unable to check objects ' + error;
         });
+};
+
+/**
+ * reindexes all repository records
+ * @param req
+ * @param callback
+ */
+exports.reindex = function (req, callback) {
+
+    request.post({
+        url: config.apiUrl + '/api/admin/v1/indexer/all',
+        form: {
+            'reindex': true
+        }
+    }, function (error, httpResponse, body) {
+
+        if (error) {
+            logger.module().error('ERROR: [/import/utils module (reindex)] indexer error ' + error);
+            return false;
+        }
+
+        if (httpResponse.statusCode === 200) {
+            console.log('reindexing repository.');
+            return false;
+        } else {
+            logger.module().error('ERROR: [/import/utils module (reindex)] http error ' + httpResponse.statusCode + '/' + body);
+            return false;
+        }
+    });
+
+    callback({
+        status: 200,
+        message: 'reindexing repository into ' + config.elasticSearchBackIndex,
+        data: []
+    });
 };

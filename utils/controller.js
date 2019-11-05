@@ -25,3 +25,9 @@ exports.check_objects = function (req, res) {
         res.status(data.status).send(data.data);
     });
 };
+
+exports.reindex = function (req, res) {
+    Utils.reindex(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};

@@ -39,6 +39,18 @@ exports.index_records = function (req, res) {
     });
 };
 
+exports.update_fragment = function (req, res) {
+    Indexer.update_fragment(req, function (data) {
+        res.status(data.status).send(data);
+    });
+};
+
+exports.reindex = function (req, res) {
+    Indexer.reindex(req, function (data) {
+        res.status(data.status).send(data);
+    });
+};
+
 exports.index_data = function (req, res) {
     Indexer.index_data(req, function (data) {
         res.status(data.status).send(data);

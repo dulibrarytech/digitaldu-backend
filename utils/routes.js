@@ -25,4 +25,7 @@ module.exports = function (app) {
 
     app.route('/api/admin/v1/utils/objects')
         .get(Utils.check_objects);
+
+    app.route('/api/admin/v1/utils/reindex')
+        .post(Utils.reindex);
 };

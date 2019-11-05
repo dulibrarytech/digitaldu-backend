@@ -147,6 +147,54 @@ exports.index_record = function (obj, callback) {
 };
 
 /**
+ * Updates document fragments
+ * @param obj
+ * @param callback
+ */
+exports.update_fragment = function (obj, callback) {
+
+    client.update(obj, function (error, response) {
+
+        if (error) {
+
+            logger.module().error('ERROR: [/indexer/service module (update_fragment/client.update)] unable to update fragment ' + error);
+
+            callback({
+                message: 'ERROR: unable to update fragment ' + error
+            });
+
+            return false;
+        }
+
+        callback(response);
+    });
+};
+
+/**
+ * Moves document from admin to public index
+ * @param obj
+ * @param callback
+ */
+exports.reindex = function (obj, callback) {
+
+    client.reindex(obj, function (error, response) {
+
+        if (error) {
+
+            logger.module().error('ERROR: [/indexer/service module (reindex/client.reindex)] unable to reindex record ' + error);
+
+            callback({
+                message: 'ERROR: unable to reindex record ' + error
+            });
+
+            return false;
+        }
+
+        callback(response);
+    });
+};
+
+/**
  * Unindexes record
  * @param obj
  * @param callback
