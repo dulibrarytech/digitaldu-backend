@@ -146,7 +146,7 @@ exports.get_admin_objects = function (req, callback) {
             'bool': {
                 'must': {
                     'match': {
-                        'is_member_of_collection': is_member_of_collection
+                        'is_member_of_collection.keyword': is_member_of_collection
                     }
                 }
             }

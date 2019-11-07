@@ -121,7 +121,7 @@ exports.get_object = function (req, callback) {
         });
 };
 
-/**
+/** DEPRECATED.  App is using elasticsearch to render data
  * Get object by collection (admin dashboard)
  * @param req
  * @param callback
