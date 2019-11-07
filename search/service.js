@@ -31,22 +31,37 @@ const config = require('../config/config'),
  */
 exports.get_search_results = function (req, callback) {
 
-    let q = req.query.q;
+    let q = req.query.q,
+        page = req.query.page,
+        total_on_page = 10;
 
     if (q.length === 0) {
         q = '*:*';
     }
 
+    if (req.query.total_on_page !== undefined) {
+        total_on_page = req.query.total_on_page;
+    }
+
+    if (page === undefined) {
+        page = 0;
+    } else {
+        page = (page - 1) * total_on_page;
+    }
+
     client.search({
-        from: 0,
-        size: 5000,
+        from: page,
+        size: total_on_page,
         index: config.elasticSearchBackIndex,
+        type: 'data',
         q: q
-    }).then(function (results) {
+    }).then(function (body) {
+
         callback({
             status: 200,
-            message: 'Search results',
-            data: results.hits
+            data: body.hits
         });
+    }, function (error) {
+        callback(error);
     });
 };

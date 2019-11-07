@@ -28,4 +28,11 @@ module.exports = function (app) {
 
     app.route('/api/admin/v1/utils/reindex')
         .post(Utils.reindex);
+
+    /*
+    app.route('api/admin/v1/utils/restart')
+        .post(Utils.restart);
+        */
 };
+
+// curl --data "collection=9eded850-fb8e-4e39-bf9c-ea26dd7893d4" http://localhost:8000/api/admin/v1/import/start_transfer
