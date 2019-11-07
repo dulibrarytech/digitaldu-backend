@@ -20,6 +20,12 @@
 
 const Utils = require('../utils/model');
 
+exports.get_uuids = function (req, res) {
+    Utils.get_uuids(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
 exports.check_objects = function (req, res) {
     Utils.check_objects(req, function (data) {
         res.status(data.status).send(data.data);

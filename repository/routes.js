@@ -48,9 +48,6 @@ module.exports = function (app) {
     app.route('/api/admin/v1/repo/reset')
         .post(Repo.reset_display_record);
 
-    app.route('/api/admin/v1/repo/uuids')
-        .get(apikey.verify, Repo.get_pids);
-
     /* NOT USED */
     app.route('/api/admin/v1/repo/object/download')
         .get(Repo.get_object_download);

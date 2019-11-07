@@ -257,10 +257,6 @@ const searchModule = (function () {
 
             } else if (data.hits[i]._source.object_type === 'object' && data.hits[i]._source.is_compound === 1) {
 
-                console.log(data.hits[i]._source.is_published);
-                console.log(data.hits[i]._source.object_type);
-                console.log(data.hits[i]._source.is_compound);
-
                 html += '<p><small style="background: cadetblue; padding: 3px; color: white">Compound Object</small></p>';
 
                 if (data.hits[i]._source.is_published === '1') {

@@ -30,6 +30,130 @@ const config = require('../config/config'),
     knex = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects';
 
+/** http://localhost:8000/api/v1/repo/uuids?start=2019-08-20&end=2019-09-18
+ * Gets repository uuids, uris and handles by import date(s)
+ * @param req
+ * @param callback
+ */
+exports.get_uuids = function (req, callback) {
+
+    let start = req.query.start,
+        end = req.query.end,
+        sql = 'DATE(created) = CURRENT_DATE';
+
+    function get_collection_uuids(callback) {
+
+        if (start !== undefined && end !== undefined) {
+
+            sql = '(created BETWEEN ? AND ?)';
+
+            knex(REPO_OBJECTS)
+                .select('sip_uuid', 'handle', 'uri')
+                .where({
+                    object_type: 'collection'
+                })
+                .andWhereRaw(sql, [start, end])
+                .orderBy('created', 'desc')
+                .then(function (data) {
+
+                    if (data.length === 0) {
+                        data.status = false;
+                    }
+
+                    callback(null, data);
+                })
+                .catch(function (error) {
+                    logger.module().fatal('FATAL: [/repository/model module (get_pids/get_collection_pids)] repository database error ' + error);
+                    throw 'FATAL: [/repository/model module (get_pids/get_collection_pids)] repository database error ' + error;
+                });
+
+        } else if (start !== undefined && end === undefined) {
+
+            sql = 'DATE(created) = ?';
+
+            knex(REPO_OBJECTS)
+                .select('sip_uuid', 'handle', 'uri')
+                .where({
+                    object_type: 'collection'
+                })
+                .andWhereRaw(sql, [start])
+                .orderBy('created', 'desc')
+                .then(function (data) {
+
+                    if (data.length === 0) {
+                        data.status = false;
+                    }
+
+                    callback(null, data);
+                })
+                .catch(function (error) {
+                    logger.module().fatal('FATAL: [/repository/model module (get_pids/get_collection_pids)] repository database error ' + error);
+                    throw 'FATAL: [/repository/model module (get_pids/get_collection_pids)] repository database error ' + error;
+                });
+        }
+    }
+
+    function get_object_uuids(data, callback) {
+
+        if (data.status !== undefined && data.status === false) {
+            callback(null, data);
+            return false;
+        }
+
+        let records = [];
+        let timer = setInterval(function () {
+
+            let record = data.pop(),
+                params = {};
+
+            if (data.length === 0) {
+                params.object_type = 'object';
+                params.is_member_of_collection = 0;
+            } else {
+                params.object_type = 'object';
+                params.is_member_of_collection = record.sip_uuid;
+            }
+
+            knex(REPO_OBJECTS)
+                .select('sip_uuid', 'handle', 'uri')
+                .where(params)
+                .then(function (objects) {
+
+                    if (data.length > 0) {
+                        record.objects = objects;
+                        records.push(record);
+                    } else if (data.length === 0) {
+                        clearInterval(timer);
+                        callback(null, records);
+                        return false;
+                    }
+
+                })
+                .catch(function (error) {
+                    logger.module().fatal('FATAL: [/repository/model module (get_pids/get_object_pids)] repository database error ' + error);
+                    throw 'FATAL: [/repository/model module (get_pids/get_object_pids)] repository database error ' + error;
+                });
+
+        }, 100);
+    }
+
+    async.waterfall([
+        get_collection_uuids,
+        get_object_uuids
+    ], function (error, results) {
+
+        if (error) {
+            logger.module().error('ERROR: [/repository/model module (get_pids/async.waterfall)] ' + error);
+            throw 'ERROR: [/repository/model module (get_pids/async.waterfall)] ' + error;
+        }
+
+        callback({
+            status: 200,
+            data: results
+        });
+    });
+};
+
 /**
  * confirms that repository files exist on Archivematica service
  * @param req
@@ -114,6 +238,9 @@ exports.check_objects = function (req, callback) {
  * @param callback
  */
 exports.reindex = function (req, callback) {
+
+    // TODO: delete existing index
+    // TODO: create new index
 
     request.post({
         url: config.apiUrl + '/api/admin/v1/indexer/all',

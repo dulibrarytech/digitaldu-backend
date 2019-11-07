@@ -427,10 +427,10 @@ const objectsModule = (function () {
 
                 if (data.hits[i]._source.is_published === '1') {
                     html += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
-                    html += '<p><a href="#"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
+                    // html += '<p><a href="#"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
                 } else {
                     html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
-                    html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data.hits[i]._source.pid + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
+                    // html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data.hits[i]._source.pid + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
                 }
 
                 // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=tn"><i class="fa fa-code"></i>&nbsp;Technical Metadata</a></p>';
@@ -442,10 +442,10 @@ const objectsModule = (function () {
 
                 if (data.hits[i]._source.is_published === '1') {
                     html += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
-                    html += '<p><a href="#"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
+                    // html += '<p><a href="#"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
                 } else {
                     html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
-                    html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data.hits[i]._source.pid + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
+                    // html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data.hits[i]._source.pid + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
                 }
 
                 html += '<p><a href="' + api + '/dashboard/object/thumbnail?pid=' + data.hits[i]._source.pid + '"><i class="fa fa-edit"></i>&nbsp;Change Thumbnail</a></p>';

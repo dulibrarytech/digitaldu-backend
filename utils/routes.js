@@ -29,6 +29,9 @@ module.exports = function (app) {
     app.route('/api/admin/v1/utils/reindex')
         .post(Utils.reindex);
 
+    app.route('/api/admin/v1/utils/uuids')
+        .get(apikey.verify, Utils.get_uuids);
+
     /*
     app.route('api/admin/v1/utils/restart')
         .post(Utils.restart);
