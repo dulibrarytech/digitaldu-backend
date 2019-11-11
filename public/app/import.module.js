@@ -807,7 +807,7 @@ const importModule = (function () {
                                 transferData += '<td>' + response[i].microservice + '</td>';
                                 transferData += '<td>' + response[i].user + '</td>';
                                 transferData += '<td>' + response[i].message + '</td>';
-                                transferData += '<td>' + response[i].created + '</td>';
+                                // transferData += '<td>' + response[i].created + '</td>';
                                 transferData += '</tr>';
                             }
 
@@ -936,7 +936,7 @@ const importModule = (function () {
                                 importData += '<td>' + response[i].sip_uuid + '</td>';
                                 importData += '<td>' + response[i].file + '</td>';
                                 importData += '<td>' + response[i].message + '</td>';
-                                importData += '<td>' + response[i].created + '</td>';
+                                // importData += '<td>' + response[i].created + '</td>';
                                 importData += '</tr>';
                             }
 

@@ -841,6 +841,7 @@ exports.create_collection_object = function (req, callback) {
  */
 exports.publish_objects = function (req, callback) {
 
+    // publish collections and objects
     var api_url = config.apiUrl + '/api/admin/v1/indexer';
 
     function update_collection_record(callback) {
@@ -1085,6 +1086,30 @@ exports.publish_objects = function (req, callback) {
         });
     }
 
+    // publish objects only
+    function check_collection () {
+
+        let obj = {};
+        obj.sip_uuid = req.body.pid;
+        obj.api_url = api_url;
+
+        // check is member of collection
+        knex(REPO_OBJECTS)
+            .where({
+                pid: obj.is_member_of_collection
+            })
+            .update({
+                is_published: 1
+            })
+            .then(function (data) {
+                callback(null, obj);
+            })
+            .catch(function (error) {
+                logger.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection pid ' + error);
+                callback(null, 'failed');
+            });
+    }
+
     // publish collection and all of its objects
     if (req.body.pid.length !== 0 && req.body.type === 'collection') {
 
@@ -1115,10 +1140,30 @@ exports.publish_objects = function (req, callback) {
 
     } else if (req.body.pid !== 0 && req.body.type === 'object') {
 
-        // TODO:...
-        // publish single objects
-        // publish single object
-        // obj.pid = req.body.pid;
+        /* TODO:... check if collection if published.  only publish if collection is published.
+        async.waterfall([
+            check_collection,
+            update_object_record,
+            update_object_doc,
+            publish_object
+        ], function (error, results) {
+
+            if (error) {
+                logger.module().error('ERROR: [/repository/model module (publish_objects/async.waterfall)] ' + error);
+                throw 'ERROR: [/repository/model module (publish_objects/async.waterfall)] ' + error;
+            }
+
+            logger.module().info('INFO: [/repository/model module (publish_objects/async.waterfall)] collection published');
+        });
+
+        callback({
+            status: 201,
+            message: 'Collection Published',
+            data: []
+        });
+
+        return false;
+        */
 
     } else {
 
