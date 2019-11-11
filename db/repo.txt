@@ -5,9 +5,9 @@
 # http://www.sequelpro.com/
 # https://github.com/sequelpro/sequelpro
 #
-# Host: 127.0.0.1 (MySQL 5.5.42)
+# Host: 127.0.0.1 (MySQL 5.5.64-MariaDB)
 # Database: repo
-# Generation Time: 2019-09-04 17:55:28 +0000
+# Generation Time: 2019-11-11 18:16:25 +0000
 # ************************************************************
 
 
@@ -34,7 +34,7 @@ CREATE TABLE `tbl_objects` (
   `mods` text,
   `thumbnail` varchar(255) DEFAULT NULL,
   `file_name` varchar(255) DEFAULT NULL,
-  `display_record` text,
+  `display_record` longtext,
   `mods_id` varchar(20) DEFAULT NULL,
   `uri` varchar(255) DEFAULT NULL,
   `mime_type` varchar(255) DEFAULT NULL,
@@ -57,7 +57,8 @@ CREATE TABLE `tbl_objects` (
   KEY `sip_uuid_index` (`sip_uuid`),
   KEY `is_published_index` (`is_published`),
   KEY `is_active_index` (`is_active`),
-  KEY `mime_type_index` (`mime_type`)
+  KEY `mime_type_index` (`mime_type`),
+  KEY `uri_index` (`uri`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 

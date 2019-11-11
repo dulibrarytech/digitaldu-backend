@@ -41,7 +41,7 @@ const config = require('../config/config'),
         }
     });
 
-/**
+/** NOT USED
  * Gets objects by collection
  * @param req
  * @param callback
@@ -81,7 +81,7 @@ exports.get_objects = function (req, callback) {
         });
 };
 
-/**
+/** NOT USED
  * Gets object by pid
  * @param req
  * @param callback
