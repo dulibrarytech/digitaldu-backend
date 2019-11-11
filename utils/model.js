@@ -48,7 +48,7 @@ exports.get_uuids = function (req, callback) {
             sql = '(created BETWEEN ? AND ?)';
 
             knex(REPO_OBJECTS)
-                .select('sip_uuid', 'handle', 'uri')
+                .select('sip_uuid', 'handle', 'uri', 'object_type')
                 .where({
                     object_type: 'collection'
                 })
@@ -64,7 +64,12 @@ exports.get_uuids = function (req, callback) {
                 })
                 .catch(function (error) {
                     logger.module().fatal('FATAL: [/repository/model module (get_pids/get_collection_pids)] repository database error ' + error);
-                    throw 'FATAL: [/repository/model module (get_pids/get_collection_pids)] repository database error ' + error;
+
+                    callback({
+                        status: 500,
+                        error: 'FATAL: [/repository/model module (get_pids/get_collection_pids)] repository database error ' + error,
+                        data: []
+                    });
                 });
 
         } else if (start !== undefined && end === undefined) {
@@ -88,7 +93,12 @@ exports.get_uuids = function (req, callback) {
                 })
                 .catch(function (error) {
                     logger.module().fatal('FATAL: [/repository/model module (get_pids/get_collection_pids)] repository database error ' + error);
-                    throw 'FATAL: [/repository/model module (get_pids/get_collection_pids)] repository database error ' + error;
+
+                    callback({
+                        status: 500,
+                        error: 'FATAL: [/repository/model module (get_pids/get_collection_pids)] repository database error ' + error,
+                        data: []
+                    });
                 });
         }
     }
@@ -115,7 +125,7 @@ exports.get_uuids = function (req, callback) {
             }
 
             knex(REPO_OBJECTS)
-                .select('sip_uuid', 'handle', 'uri')
+                .select('sip_uuid', 'handle', 'uri', 'object_type')
                 .where(params)
                 .then(function (objects) {
 
@@ -131,7 +141,12 @@ exports.get_uuids = function (req, callback) {
                 })
                 .catch(function (error) {
                     logger.module().fatal('FATAL: [/repository/model module (get_pids/get_object_pids)] repository database error ' + error);
-                    throw 'FATAL: [/repository/model module (get_pids/get_object_pids)] repository database error ' + error;
+
+                    callback({
+                        status: 500,
+                        error: 'FATAL: [/repository/model module (get_pids/get_object_pids)] repository database error ' + error,
+                        data: []
+                    });
                 });
 
         }, 100);
@@ -143,8 +158,16 @@ exports.get_uuids = function (req, callback) {
     ], function (error, results) {
 
         if (error) {
+
             logger.module().error('ERROR: [/repository/model module (get_pids/async.waterfall)] ' + error);
-            throw 'ERROR: [/repository/model module (get_pids/async.waterfall)] ' + error;
+
+            callback({
+                status: 500,
+                error: 'ERROR: [/repository/model module (get_pids/async.waterfall)] ' + error,
+                data: []
+            });
+
+            return false;
         }
 
         callback({
@@ -241,31 +264,119 @@ exports.reindex = function (req, callback) {
 
     // TODO: delete existing index
     // TODO: create new index
+    // repo_public_index_test
+    // repo_admin_index_test
 
-    request.post({
-        url: config.apiUrl + '/api/admin/v1/indexer/all',
-        form: {
-            'reindex': true
+    function delete_index (callback) {
+
+        let obj = {};
+
+        // TODO: get from config...
+        obj.public = 'repo_public_index_test';
+        obj.admin = 'repo_admin_index_test';
+
+        request.post({
+            url: config.apiUrl + '/api/admin/v1/indexer/index/delete',
+            form: {
+                'delete_index': true
+            }
+        }, function (error, httpResponse, body) {
+
+            if (error) {
+                logger.module().error('ERROR: [/import/utils module (reindex)] indexer error ' + error);
+                return false;
+            }
+
+            if (httpResponse.statusCode === 200) {
+                console.log('index deleted');
+                obj.deleted = true;
+                callback(null, obj);
+                return false;
+            } else {
+                logger.module().error('ERROR: [/import/utils module (reindex)] http error ' + httpResponse.statusCode + '/' + body);
+                return false;
+            }
+        });
+    }
+
+    function create_index (obj, callback) {
+
+        if (obj.deleted !== undefined) {
+            callback(null, obj);
+            return false;
         }
-    }, function (error, httpResponse, body) {
+
+        request.post({
+            url: config.apiUrl + '/api/admin/v1/indexer/index/create',
+            form: {
+                'create_index': true
+            }
+        }, function (error, httpResponse, body) {
+
+            if (error) {
+                logger.module().error('ERROR: [/import/utils module (reindex)] indexer error ' + error);
+                return false;
+            }
+
+            if (httpResponse.statusCode === 200) {
+                console.log('reindexing repository.');
+                obj.created = true;
+                callback(null, obj);
+                return false;
+            } else {
+                logger.module().error('ERROR: [/import/utils module (reindex)] http error ' + httpResponse.statusCode + '/' + body);
+                return false;
+            }
+        });
+    }
+
+    function index (obj, callback) {
+
+        if (obj.created === undefined) {
+            callback(null, obj);
+            return false;
+        }
+
+        request.post({
+            url: config.apiUrl + '/api/admin/v1/indexer/all',
+            form: {
+                'reindex': true
+            }
+        }, function (error, httpResponse, body) {
+
+            if (error) {
+                logger.module().error('ERROR: [/import/utils module (reindex)] indexer error ' + error);
+                return false;
+            }
+
+            if (httpResponse.statusCode === 200) {
+                console.log('reindexing repository.');
+                return false;
+            } else {
+                logger.module().error('ERROR: [/import/utils module (reindex)] http error ' + httpResponse.statusCode + '/' + body);
+                return false;
+            }
+        });
+    }
+
+    async.waterfall([
+        delete_index,
+        create_index,
+        index
+    ], function (error, results) {
+
+        console.log(results);
 
         if (error) {
-            logger.module().error('ERROR: [/import/utils module (reindex)] indexer error ' + error);
-            return false;
+            logger.module().error('ERROR: [/utils/model module (reindex/async.waterfall)] ' + error);
         }
 
-        if (httpResponse.statusCode === 200) {
-            console.log('reindexing repository.');
-            return false;
-        } else {
-            logger.module().error('ERROR: [/import/utils module (reindex)] http error ' + httpResponse.statusCode + '/' + body);
-            return false;
-        }
+        logger.module().info('INFO: [/utils/model module (reindex/async.waterfall)]');
     });
 
     callback({
-        status: 200,
-        message: 'reindexing repository into ' + config.elasticSearchBackIndex,
+        status: 201,
+        message: 'reindexing repository',  //+ config.elasticSearchBackIndex,
         data: []
     });
 };

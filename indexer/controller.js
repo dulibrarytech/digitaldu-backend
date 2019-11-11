@@ -62,3 +62,9 @@ exports.create_repo_index = function (req, res) {
         res.status(data.status).send(data);
     });
 };
+
+exports.delete_repo_index = function (req, res) {
+    Service.delete_repo_index(req, function (data) {
+        res.status(data.status).send(data);
+    });
+};

@@ -123,6 +123,42 @@ exports.create_repo_index = function (req, callback) {
 };
 
 /**
+ * Deletes index
+ * @param req
+ * @param callback
+ */
+exports.delete_repo_index = function (req, callback) {
+
+    if (req.body.index_name === undefined) {
+
+        callback({
+            status: 400,
+            data: 'Bad request.'
+        });
+    }
+
+    client.indices.delete({
+        index: req.body.index_name
+    }).then(function (result) {
+
+        console.log('deleting index: ', result);
+
+        /*
+        if (result.acknowledged === true) {
+            logger.module().info('INFO: [/indexer/service module (create_repo_index/create_index)] new index created');
+            // obj.index_created = true;
+            // callback(null, obj);
+        } else {
+            logger.module().error('ERROR: [/indexer/service module (create_repo_index/create_index)] unable to create new index (createIndex)');
+            // obj.index_created = false;
+            // callback(null, obj);
+        }
+        */
+
+    });
+};
+
+/**
  * Indexes record
  * @param obj
  * @param callback

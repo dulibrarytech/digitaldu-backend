@@ -31,6 +31,9 @@ module.exports = function (app) {
     app.route('/api/admin/v1/indexer/index/create')
         .post(Indexer.create_repo_index);
 
+    app.route('/api/admin/v1/indexer/index/delete')
+        .post(Indexer.delete_repo_index);
+
     app.route('/api/admin/v1/indexer/update_fragment')
         .put(Indexer.update_fragment);
 
