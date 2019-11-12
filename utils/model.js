@@ -77,11 +77,40 @@ exports.get_uuids = function (req, callback) {
             sql = 'DATE(created) = ?';
 
             knex(REPO_OBJECTS)
-                .select('sip_uuid', 'handle', 'uri')
+                .select('sip_uuid', 'handle', 'uri', 'object_type')
                 .where({
                     object_type: 'collection'
                 })
                 .andWhereRaw(sql, [start])
+                .orderBy('created', 'desc')
+                .then(function (data) {
+
+                    if (data.length === 0) {
+                        data.status = false;
+                    }
+
+                    callback(null, data);
+                })
+                .catch(function (error) {
+                    logger.module().fatal('FATAL: [/repository/model module (get_pids/get_collection_pids)] repository database error ' + error);
+
+                    callback({
+                        status: 500,
+                        error: 'FATAL: [/repository/model module (get_pids/get_collection_pids)] repository database error ' + error,
+                        data: []
+                    });
+                });
+
+        } else {
+
+            sql = 'DATE(created) = CURRENT_DATE';
+
+            knex(REPO_OBJECTS)
+                .select('sip_uuid', 'handle', 'uri', 'object_type')
+                .where({
+                    object_type: 'collection'
+                })
+                .andWhereRaw(sql)  // , [start]
                 .orderBy('created', 'desc')
                 .then(function (data) {
 
@@ -170,10 +199,20 @@ exports.get_uuids = function (req, callback) {
             return false;
         }
 
-        callback({
-            status: 200,
-            data: results
-        });
+        if (results.status === false) {
+
+            callback({
+                status: 200,
+                data: []
+            });
+
+        } else {
+
+            callback({
+                status: 200,
+                data: results
+            });
+        }
     });
 };
 
