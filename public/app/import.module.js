@@ -807,7 +807,6 @@ const importModule = (function () {
                                 transferData += '<td>' + response[i].microservice + '</td>';
                                 transferData += '<td>' + response[i].user + '</td>';
                                 transferData += '<td>' + response[i].message + '</td>';
-                                // transferData += '<td>' + response[i].created + '</td>';
                                 transferData += '</tr>';
                             }
 
@@ -815,7 +814,7 @@ const importModule = (function () {
 
                         } else {
 
-                            $('#transfer-status').html('<tr><td>No ingests in progress</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>');
+                            $('#transfer-status').html('<tr><td>No ingests in progress</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>');
 
                         }
                     });
@@ -936,7 +935,6 @@ const importModule = (function () {
                                 importData += '<td>' + response[i].sip_uuid + '</td>';
                                 importData += '<td>' + response[i].file + '</td>';
                                 importData += '<td>' + response[i].message + '</td>';
-                                // importData += '<td>' + response[i].created + '</td>';
                                 importData += '</tr>';
                             }
 
@@ -944,7 +942,7 @@ const importModule = (function () {
 
                         } else {
 
-                            $('#import-status').html('<tr><td>No imports in progress</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr></tr>');
+                            $('#import-status').html('<tr><td>No imports in progress</td><td>&nbsp;</td><td>&nbsp;</td></tr></tr>');
 
                         }
                     });
@@ -1007,9 +1005,7 @@ const importModule = (function () {
 
                                 failData += '<tr>';
                                 failData += '<td>' + response[i].message + '</td>';
-                                // failData += '<td>' + response[i].is_member_of_collection + '</td>';
                                 failData += '<td>' + response[i].sip_uuid + '</td>';
-                                // failData += '<td>' + response[i].transfer_uuid + '</td>';
                                 failData += '<td>' + response[i].created + '</td>';
                                 failData += '</tr>';
                             }
@@ -1018,7 +1014,7 @@ const importModule = (function () {
 
                         } else {
                             $('#import-failures').html('');
-                            $('#import-failures').html('<tr><td>No failures reported</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>');
+                            $('#import-failures').html('<tr><td>No failures reported</td><td>&nbsp;</td><td>&nbsp;</td></tr>');
 
                         }
 
