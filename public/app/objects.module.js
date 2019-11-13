@@ -365,17 +365,31 @@ const objectsModule = (function () {
                 html += '</ul>';
             }
 
+            // TODO:... refactor to accommodate large parts arrays
             if (record.display_record.parts !== undefined && record.display_record.parts.length !== 0) {
 
                 html += '<li><strong>Parts:</strong></li>';
                 html += '<ul>';
 
-                for (let i = 0; i < record.display_record.parts.length; i++) {
-                    html += '<li>' + record.display_record.parts[i].title + ' ( ' + record.display_record.parts[i].type + ' ) order: ' + record.display_record.parts[i].order;
+                if (record.display_record.parts.length < 5) {
 
-                    // TODO: toggle default thumbnails if not an image.  i.e. pdf, audio and video
-                    let tn = helperModule.getTn(record.display_record.parts[i].thumbnail, '');
-                    html += '<br><img src="' + tn + '" width="100px" height="100px"></li>';
+                    for (let i = 0; i <= 10; i++) {
+
+                        html += '<li>' + record.display_record.parts[i].title + ' ( ' + record.display_record.parts[i].type + ' ) order: ' + record.display_record.parts[i].order;
+
+                        let tn = helperModule.getTn(record.display_record.parts[i].thumbnail, '');
+                        html += '<br><img src="' + tn + '" width="100px" height="100px"></li>';
+                    }
+
+                } else {
+
+                    for (let i = 0; i < record.display_record.parts.length; i++) {
+
+                        html += '<li>' + record.display_record.parts[i].title + ' ( ' + record.display_record.parts[i].type + ' ) order: ' + record.display_record.parts[i].order;
+
+                        let tn = helperModule.getTn(record.display_record.parts[i].thumbnail, '');
+                        html += '<br><img src="' + tn + '" width="100px" height="100px"></li>';
+                    }
                 }
 
                 html += '</ul>';

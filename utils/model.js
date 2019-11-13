@@ -39,6 +39,7 @@ exports.get_uuids = function (req, callback) {
 
     let start = req.query.start,
         end = req.query.end,
+        uri = req.query.uri,
         sql = 'DATE(created) = CURRENT_DATE';
 
     function get_collection_uuids(callback) {
@@ -179,6 +180,34 @@ exports.get_uuids = function (req, callback) {
                 });
 
         }, 100);
+    }
+
+    // return single object based on Archivespace uri
+    if (uri !== undefined && uri.length !== 0) {
+
+        knex(REPO_OBJECTS)
+            .select('sip_uuid', 'handle', 'uri', 'object_type')
+            .where({
+                uri: uri
+            })
+            .then(function (objects) {
+
+                callback({
+                    status: 200,
+                    data: objects
+                });
+            })
+            .catch(function (error) {
+                logger.module().fatal('FATAL: [/repository/model module (get_pids/get_object_pids)] repository database error ' + error);
+
+                callback({
+                    status: 500,
+                    error: 'FATAL: [/repository/model module (get_pids/get_object_pids)] repository database error ' + error,
+                    data: []
+                });
+            });
+
+        return false;
     }
 
     async.waterfall([
