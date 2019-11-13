@@ -371,25 +371,12 @@ const objectsModule = (function () {
                 html += '<li><strong>Parts:</strong></li>';
                 html += '<ul>';
 
-                if (record.display_record.parts.length < 5) {
+                for (let i = 0; i < record.display_record.parts.length; i++) {
 
-                    for (let i = 0; i <= 10; i++) {
+                    html += '<li>' + record.display_record.parts[i].title + ' ( ' + record.display_record.parts[i].type + ' ) order: ' + record.display_record.parts[i].order;
 
-                        html += '<li>' + record.display_record.parts[i].title + ' ( ' + record.display_record.parts[i].type + ' ) order: ' + record.display_record.parts[i].order;
-
-                        let tn = helperModule.getTn(record.display_record.parts[i].thumbnail, '');
-                        html += '<br><img src="' + tn + '" width="100px" height="100px"></li>';
-                    }
-
-                } else {
-
-                    for (let i = 0; i < record.display_record.parts.length; i++) {
-
-                        html += '<li>' + record.display_record.parts[i].title + ' ( ' + record.display_record.parts[i].type + ' ) order: ' + record.display_record.parts[i].order;
-
-                        let tn = helperModule.getTn(record.display_record.parts[i].thumbnail, '');
-                        html += '<br><img src="' + tn + '" width="100px" height="100px"></li>';
-                    }
+                    let tn = helperModule.getTn(record.display_record.parts[i].thumbnail, '');
+                    html += '<br><img src="' + tn + '" width="100px" height="100px"></li>';
                 }
 
                 html += '</ul>';
