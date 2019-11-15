@@ -330,101 +330,138 @@ exports.check_objects = function (req, callback) {
  */
 exports.reindex = function (req, callback) {
 
-    // TODO: delete existing index
-    // TODO: create new index
-    // repo_public_index_test
-    // repo_admin_index_test
-
     function delete_index (callback) {
 
         let obj = {};
+        obj.delete_indexes = [config.elasticSearchBackIndex, config.elasticSearchFrontIndex];
 
-        // TODO: get from config...
-        obj.public = 'repo_public_index_test';
-        obj.admin = 'repo_admin_index_test';
+        function del(index_name) {
 
-        request.post({
-            url: config.apiUrl + '/api/admin/v1/indexer/index/delete',
-            form: {
-                'delete_index': true
-            }
-        }, function (error, httpResponse, body) {
+            request.post({
+                url: config.apiUrl + '/api/admin/v1/indexer/index/delete',
+                form: {
+                    'index_name': index_name
+                }
+            }, function (error, httpResponse, body) {
 
-            if (error) {
-                logger.module().error('ERROR: [/import/utils module (reindex)] indexer error ' + error);
-                return false;
-            }
+                if (error) {
+                    logger.module().error('ERROR: [/import/utils module (reindex/delete_index)] indexer error ' + error);
+                    return false;
+                }
 
-            if (httpResponse.statusCode === 200) {
-                console.log('index deleted');
-                obj.deleted = true;
+                if (httpResponse.statusCode === 200) {
+                    logger.module().info('INFO: [/import/utils module (reindex/delete_index/del)] ' + index_name + ' deleted.');
+                    return false;
+                } else {
+                    logger.module().error('ERROR: [/import/utils module (reindex/delete_index/del)] http error ' + httpResponse.statusCode + '/' + body);
+                    return false;
+                }
+            });
+        }
+
+        let timer = setInterval(function () {
+
+            if (obj.delete_indexes.length === 0) {
+                clearInterval(timer);
                 callback(null, obj);
                 return false;
-            } else {
-                logger.module().error('ERROR: [/import/utils module (reindex)] http error ' + httpResponse.statusCode + '/' + body);
-                return false;
             }
-        });
+
+            let index = obj.delete_indexes.pop();
+            console.log(index);
+            del(index);
+
+        }, 500);
     }
 
     function create_index (obj, callback) {
 
-        if (obj.deleted !== undefined) {
+        console.log('create index: ' + obj.delete_indexes.length);
+
+        if (obj.delete_indexes.length !== 0) {
+            obj.delete = false;
             callback(null, obj);
             return false;
         }
 
-        request.post({
-            url: config.apiUrl + '/api/admin/v1/indexer/index/create',
-            form: {
-                'create_index': true
-            }
-        }, function (error, httpResponse, body) {
 
-            if (error) {
-                logger.module().error('ERROR: [/import/utils module (reindex)] indexer error ' + error);
-                return false;
-            }
+        obj.create_indexes = [config.elasticSearchBackIndex, config.elasticSearchFrontIndex];
 
-            if (httpResponse.statusCode === 200) {
-                console.log('reindexing repository.');
-                obj.created = true;
+        function create(index_name) {
+
+            request.post({
+                url: config.apiUrl + '/api/admin/v1/indexer/index/create',
+                form: {
+                    'index_name': index_name
+                }
+            }, function (error, httpResponse, body) {
+
+                if (error) {
+                    logger.module().error('ERROR: [/import/utils module (reindex/create_index/create)] indexer error ' + error);
+                    return false;
+                }
+
+                if (httpResponse.statusCode === 200) {
+                    logger.module().info('INFO: [/import/utils module (reindex/create_index/create)] ' + index_name + ' created.');
+                    return false;
+                } else {
+                    logger.module().error('ERROR: [/import/utils module (reindex/create_index/create)] http error ' + httpResponse.statusCode + '/' + body);
+                    return false;
+                }
+            });
+        }
+
+        let timer = setInterval(function () {
+
+            if (obj.create_indexes.length === 0) {
+                clearInterval(timer);
                 callback(null, obj);
                 return false;
-            } else {
-                logger.module().error('ERROR: [/import/utils module (reindex)] http error ' + httpResponse.statusCode + '/' + body);
-                return false;
             }
-        });
+
+            let index = obj.create_indexes.pop();
+            console.log(index);
+            create(index);
+
+        }, 500);
     }
 
     function index (obj, callback) {
 
-        if (obj.created === undefined) {
+        if (obj.create_indexes.length !== 0) {
+            obj.create = false;
             callback(null, obj);
             return false;
         }
 
-        request.post({
-            url: config.apiUrl + '/api/admin/v1/indexer/all',
-            form: {
-                'reindex': true
-            }
-        }, function (error, httpResponse, body) {
+        function reindex (index_name) {
 
-            if (error) {
-                logger.module().error('ERROR: [/import/utils module (reindex)] indexer error ' + error);
-                return false;
-            }
+            request.post({
+                url: config.apiUrl + '/api/admin/v1/indexer/all',
+                form: {
+                    'index_name': index_name,
+                    'reindex': true
+                }
+            }, function (error, httpResponse, body) {
 
-            if (httpResponse.statusCode === 200) {
-                console.log('reindexing repository.');
-                return false;
-            } else {
-                logger.module().error('ERROR: [/import/utils module (reindex)] http error ' + httpResponse.statusCode + '/' + body);
-                return false;
-            }
-        });
+                if (error) {
+                    logger.module().error('ERROR: [/import/utils module (reindex/index/reindex)] indexer error ' + error);
+                    return false;
+                }
+
+                if (httpResponse.statusCode === 200) {
+                    logger.module().info('INFO: [/import/utils module (reindex/index/reindex)] reindexing ' + index_name + '.');
+                    obj.reindexed = true;
+                    callback(null, obj);
+                    return false;
+                } else {
+                    logger.module().error('ERROR: [/import/utils module (reindex/index/reindex)] http error ' + httpResponse.statusCode + '/' + body);
+                    return false;
+                }
+            });
+        }
+
+        reindex(config.elasticSearchBackIndex);
     }
 
     async.waterfall([
@@ -439,12 +476,81 @@ exports.reindex = function (req, callback) {
             logger.module().error('ERROR: [/utils/model module (reindex/async.waterfall)] ' + error);
         }
 
-        logger.module().info('INFO: [/utils/model module (reindex/async.waterfall)]');
+        if (results.reindexed !== undefined) {
+            logger.module().info('INFO: [/utils/model module (reindex/async.waterfall)] indexing in progress');
+        } else {
+            logger.module().error('ERROR: [/utils/model module (reindex/async.waterfall)] reindex failed. ' + results);
+        }
+
     });
 
     callback({
         status: 201,
-        message: 'reindexing repository',  //+ config.elasticSearchBackIndex,
+        message: 'reindexing repository',
+        data: []
+    });
+};
+
+/**
+ *
+ * @param req
+ * @param callback
+ */
+exports.republish = function (req, callback) {
+
+    function publish (sip_uuid) {
+
+        request.post({
+            url: config.apiUrl + '/api/admin/v1/repo/publish',
+            form: {
+                'pid': sip_uuid
+            }
+        }, function (error, httpResponse, body) {
+
+            if (error) {
+                logger.module().error('ERROR: [/import/utils module (reindex/index/reindex)] indexer error ' + error);
+                return false;
+            }
+
+            if (httpResponse.statusCode === 200) {
+                logger.module().info('INFO: [/import/utils module (reindex/republish/publish)] published ' + sip_uuid + '.');
+                return false;
+            } else {
+                logger.module().error('ERROR: [/import/utils module (reindex/index/reindex)] http error ' + httpResponse.statusCode + '/' + body);
+                return false;
+            }
+        });
+    }
+
+    knex(REPO_OBJECTS)
+        .select('is_member_of_collection')
+        .where({
+            object_type: 'collection',
+            is_published: 1,
+            is_active: 1
+        })
+        .then(function (data) {
+
+            let timer = setInterval(function () {
+
+                if (data.length === 0) {
+                    clearInterval(timer);
+                    return false;
+                }
+
+                publish(data.pop());
+
+            }, 500);
+
+        })
+        .catch(function (error) {
+            logger.module().fatal('FATAL: [/import/utils module (reindex/republish/publish)] Unable to get object ' + error);
+            throw 'FATAL: [/import/utils module (reindex/republish/publish)] Unable to get object ' + error;
+        });
+
+    callback({
+        status: 201,
+        message: 'republishing collections',
         data: []
     });
 };
