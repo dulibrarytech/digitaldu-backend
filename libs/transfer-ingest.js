@@ -44,7 +44,7 @@ const config = require('../config/config'),
     REPO_OBJECTS = 'tbl_objects';
 
 /**
- * Checks if there is a collection is actively being ingested
+ * Checks if collection exists
  * @param pid
  * @param callback
  */
@@ -75,7 +75,7 @@ exports.check_collection = function (pid, callback) {
 };
 
 /**
- * Saves transfer object data to db
+ * Saves transfer object data to db (queue)
  * @param transfer_data
  * @param callback
  */

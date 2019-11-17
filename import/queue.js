@@ -214,7 +214,8 @@ exports.list = function (req, callback) {
 };
 
 /**
- * Starts the Archivematica transfer process
+ * Starts the Archivematica import process
+ * Saves import data to queue
  * NOTE: Ingest begins automatically after a successful transfer and approval
  * STEP 1
  * @param req (body.collection, body.objects, body.user)
@@ -237,10 +238,17 @@ exports.queue_objects = function (req, callback) {
 
     let transfer_data = req.body;
 
+    /*
+        Checks if collection exists
+        function called by async
+     */
     const check_collection = function (callback) {
 
         importlib.check_collection(transfer_data.collection, function (result) {
 
+            /*
+                if collection does not exist set status to false in order to terminate ingest of objects
+             */
             if (result === false) {
                 transfer_data.collection_status = false;
                 callback(null, transfer_data);
@@ -251,7 +259,11 @@ exports.queue_objects = function (req, callback) {
         });
     };
 
-    const start_transfer = function (obj, callback) {
+    /*
+        Saves import data to queue
+        function called by async
+     */
+    const save_transfer_records = function (obj, callback) {
 
         if (obj.collection_status !== undefined && obj.collection_status === false) {
             callback(null, obj);
@@ -260,6 +272,9 @@ exports.queue_objects = function (req, callback) {
 
         logger.module().info('INFO: [/import/queue module (queue_objects/start_transfer)] starting ingest process');
 
+        /*
+            Saves transfer data to queue
+         */
         importlib.save_transfer_records(transfer_data, function (result) {
 
             if (result.recordCount === 0) {
@@ -275,6 +290,9 @@ exports.queue_objects = function (req, callback) {
                 return false;
             }
 
+            /*
+                Send request to start transfer
+             */
             request.post({
                 url: config.apiUrl + '/api/admin/v1/import/start_transfer',
                 form: {
@@ -301,7 +319,7 @@ exports.queue_objects = function (req, callback) {
 
     async.waterfall([
         check_collection,
-        start_transfer
+        save_transfer_records
     ], function (error, obj) {
 
         if (error) {
