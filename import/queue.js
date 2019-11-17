@@ -57,107 +57,9 @@ const fs = require('fs'),
     TRANSFER_QUEUE = 'tbl_archivematica_queue',
     IMPORT_QUEUE = 'tbl_duracloud_queue',
     FAIL_QUEUE = 'tbl_fail_queue',
-    // TRANSFER_TIMER = config.transferTimer,                                  // Transfer status is broadcast every 3 sec.
-    // IMPORT_TIMER = config.importTimer,                                      // Import status is broadcast every 3 sec.
-    // INGEST_STATUS_TIMER = config.ingestStatusTimer,                         // Ingest status (object count) is broadcast every 20 sec.
     TRANSFER_APPROVAL_TIMER = config.transferApprovalTimer,                 // Transfer approval occurs 35 sec. after transfer  (Gives transfer process time to complete)
     TRANSFER_STATUS_CHECK_INTERVAL = config.transferStatusCheckInterval,    // Transfer status checks occur every 3 sec.
     INGEST_STATUS_CHECK_INTERVAL = config.ingestStatusCheckInterval;        // Ingest status checks begin 3 sec after the endpoint receives a request.
-
-/**
- * Broadcasts current import record count
-
-socketclient.on('connect', function () {
-
-    let id = setInterval(function () {
-
-        knexQ(TRANSFER_QUEUE)
-            .count('id as count')
-            .then(function (data) {
-                socketclient.emit('ingest_status', data);
-            })
-            .catch(function (error) {
-                logger.module().error('ERROR: transfer queue database error');
-                throw error;
-            });
-
-    }, INGEST_STATUS_TIMER);
-});
- */
-
-/**
- * Broadcasts archivematica transfer/ingest status
-
-socketclient.on('connect', function () {
-
-    let id = setInterval(function () {
-
-        knexQ(TRANSFER_QUEUE)
-            .select('*')
-            .whereRaw('DATE(created) = CURRENT_DATE')
-            .where({
-                transfer_status: 1
-            })
-            .orderBy('created', 'asc')
-            .then(function (data) {
-                socketclient.emit('transfer_status', data);
-            })
-            .catch(function (error) {
-                logger.module().error('ERROR: transfer queue database error');
-                throw error;
-            });
-
-    }, TRANSFER_TIMER);
-});
- */
-
-/**
- * Broadcasts duracloud import status
-
-socketclient.on('connect', function () {
-
-    let id = setInterval(function () {
-
-        knexQ(IMPORT_QUEUE)
-            .select('sip_uuid', 'uuid', 'file', 'file_id', 'type', 'type', 'dip_path', 'mime_type', 'message', 'status', 'created')
-            .whereRaw('DATE(created) = CURRENT_DATE')
-            .orderBy('created', 'desc')
-            .groupBy('sip_uuid')
-            .then(function (data) {
-                socketclient.emit('import_status', data);
-            })
-            .catch(function (error) {
-                logger.module().fatal('FATAL: [/import/queue module (import status broadcasts)] import queue database error ' + error);
-                throw 'FATAL: [/import/queue module (import status broadcasts)] import queue database error ' + error;
-            });
-
-    }, IMPORT_TIMER);
-});
- */
-
-/**
- * Broadcasts import failures
-
-socketclient.on('connect', function () {
-
-    let id = setInterval(function () {
-
-        knexQ(FAIL_QUEUE)
-            // .count('id as count')
-            .select('*')
-            // .whereRaw('DATE(created) = CURRENT_DATE')
-            .orderBy('created', 'desc')
-            .then(function (data) {
-                socketclient.emit('fail_status', data);
-            })
-            .catch(function (error) {
-                logger.module().fatal('FATAL: [/import/queue module (import failure broadcasts)] fail queue database error ' + error);
-                throw 'FATAL: [/import/queue module (import failure broadcasts)] fail queue database error ' + error;
-            });
-
-    }, INGEST_STATUS_TIMER);
-});
- */
 
 /**
  * Gets list of folders from Archivematica sftp server
@@ -214,8 +116,7 @@ exports.list = function (req, callback) {
 };
 
 /**
- * Starts the Archivematica import process
- * Saves import data to queue
+ * Saves import data to queue and initiates import process
  * NOTE: Ingest begins automatically after a successful transfer and approval
  * STEP 1
  * @param req (body.collection, body.objects, body.user)
@@ -348,6 +249,7 @@ exports.queue_objects = function (req, callback) {
 };
 
 /**
+ * Starts Archivematica transfer process
  * STEP 2
  * @param req
  * @param callback
@@ -379,7 +281,9 @@ exports.start_transfer = function (req, callback) {
 
     importlib.start_transfer(collection, function (object) {
 
-        // Initiates file transfer on Archivematica service
+        /*
+            Initiates file transfer on Archivematica service
+         */
         archivematica.start_tranfser(object, function (response) {
 
             if (response.error !== undefined && response.error === true) {
@@ -407,8 +311,14 @@ exports.start_transfer = function (req, callback) {
 
             importlib.confirm_transfer(response, object.id);
 
+            /*
+                Give transfer time to complete before approving it
+             */
             setTimeout(function () {
 
+                /*
+                    Send request to approve transfer
+                */
                 request.post({
                     url: config.apiUrl + '/api/admin/v1/import/approve_transfer',
                     form: {
@@ -440,6 +350,7 @@ exports.start_transfer = function (req, callback) {
 };
 
 /**
+ * Approves transfer
  * STEP 3
  * @param req
  * @param callback
@@ -460,6 +371,9 @@ exports.approve_transfer = function (req, callback) {
         return false;
     }
 
+    /*
+        Gets transferred record from queue
+     */
     importlib.get_transferred_record(collection, function (object) {
 
         archivematica.approve_transfer(object.transfer_folder, function (response) {
@@ -490,6 +404,9 @@ exports.approve_transfer = function (req, callback) {
 
                 logger.module().info('INFO: [/import/queue module (approve_transfer/importlib.get_transferred_record/archivematica.approve_transfer/importlib.confirm_transfer_approval)] transfer approved');
 
+                /*
+                    Send request to begin transfer status checks
+                 */
                 request.get({
                     url: config.apiUrl + '/api/admin/v1/import/transfer_status?collection=' + result.is_member_of_collection + '&transfer_uuid=' + result.transfer_uuid
                 }, function (error, httpResponse, body) {
@@ -539,10 +456,16 @@ exports.get_transfer_status = function (req, callback) {
 
     logger.module().info('INFO: [/import/queue module (get_transfer_status)] checking transfer status');
 
+    /*
+        Check transfer status every few seconds
+     */
     let timer = setInterval(function () {
 
         archivematica.get_transfer_status(transfer_uuid, function (response) {
 
+            /*
+                Updates import queue
+             */
             importlib.update_transfer_status(response, function (result) {
 
                 if (result.error !== undefined && result.error === true) {
@@ -564,7 +487,7 @@ exports.get_transfer_status = function (req, callback) {
 
                     clearInterval(timer);
 
-                    // Start ingest status checks
+                    // Send request to begin ingest status checks
                     request.get({
                         url: config.apiUrl + '/api/admin/v1/import/ingest_status?sip_uuid=' + result.sip_uuid
                     }, function (error, httpResponse, body) {
@@ -618,10 +541,16 @@ exports.get_ingest_status = function (req, callback) {
 
     logger.module().info('INFO: [/import/queue module (get_ingest_status)] checking ingest status');
 
+    /*
+        Check ingest status every few seconds
+     */
     let timer = setInterval(function () {
 
         archivematica.get_ingest_status(sip_uuid, function (response) {
 
+            /*
+                Updates import queue
+             */
             importlib.update_ingest_status(response, sip_uuid, function (result) {
 
                 if (result.error !== undefined && result.error === true) {
@@ -642,6 +571,9 @@ exports.get_ingest_status = function (req, callback) {
 
                     clearInterval(timer);
 
+                    /*
+                        Send request to import DIP data
+                     */
                     request.get({
                         url: config.apiUrl + '/api/admin/v1/import/import_dip?sip_uuid=' + result.sip_uuid
                     }, function (error, httpResponse, body) {
@@ -739,6 +671,9 @@ exports.import_dip = function (req, callback) {
 
                 if (result === 'done') {
 
+                    /*
+                        Send request to create repository record
+                     */
                     request.get({
                         url: config.apiUrl + '/api/admin/v1/import/create_repo_record?sip_uuid=' + sip_uuid
                     }, function (error, httpResponse, body) {
@@ -769,6 +704,7 @@ exports.import_dip = function (req, callback) {
 };
 
 /**
+ * Creates repository record
  * STEP 7
  */
 exports.create_repo_record = function (req, callback) {
@@ -792,10 +728,6 @@ exports.create_repo_record = function (req, callback) {
     function get_collection(callback) {
 
         importlib.get_collection(sip_uuid, function (result) {
-
-            // TODO: confirm that collection pid was returned
-            // TODO: if pid was not returned set collection to null? or try again
-            // TODO: save sip_uuid to error table?
 
             if (result === null || result === undefined) {
                 get_collection(callback);
@@ -910,6 +842,7 @@ exports.create_repo_record = function (req, callback) {
             obj.mime_type = mimetypelib.get_mime_type(obj.file);
         }
 
+        // TODO: refactor to handle any file type that is chunked
         // process larger files. checks if there is a manifest available for chunked files
         if (obj.mime_type.indexOf('audio') !== -1 || obj.mime_type.indexOf('video') !== -1) {
 
@@ -920,9 +853,14 @@ exports.create_repo_record = function (req, callback) {
                     return false;
                 }
 
-                // get dura-manifest xml document
+                /*
+                    Get dura-manifest xml document
+                 */
                 duracloud.get_object_manifest(obj, function (response) {
 
+                    /*
+                        if manifest is not present proceed with retrieving data
+                     */
                     if (response.error !== undefined && response.error === true) {
 
                         logger.module().error('ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_manifest)] unable to get manifest or manifest does not exist ' + response.error_message);
@@ -1128,7 +1066,7 @@ exports.create_repo_record = function (req, callback) {
                 callback(null, obj);
             });
 
-        }, 5000);
+        }, 1000);
     }
 
     // 9.)
@@ -1189,7 +1127,6 @@ exports.create_repo_record = function (req, callback) {
         });
     }
 
-    // 11.)
     function delete_file(obj, callback) {
 
         if (obj.dip_path === null) {
@@ -1207,7 +1144,7 @@ exports.create_repo_record = function (req, callback) {
         });
     }
 
-    // 12.)
+    // 11.)
     function create_repo_record(obj, callback) {
 
         if (obj.mods === null && obj.dip_path === null) {
@@ -1222,7 +1159,7 @@ exports.create_repo_record = function (req, callback) {
         });
     }
 
-    // 13.)
+    // 12.)
     function index(obj, callback) {
 
         if (obj.mods === null) {
@@ -1231,6 +1168,9 @@ exports.create_repo_record = function (req, callback) {
             return false;
         }
 
+        /*
+            Send request to index repository record
+         */
         request.post({
             url: config.apiUrl + '/api/admin/v1/indexer',
             form: {
@@ -1254,7 +1194,7 @@ exports.create_repo_record = function (req, callback) {
         });
     }
 
-    // 14.)
+    // 13.)
     function cleanup_queue(obj, callback) {
 
         logger.module().info('INFO: [/import/queue module (create_repo_record/cleanup_queue)] cleaning up local queue ' + obj.sip_uuid);
@@ -1333,6 +1273,9 @@ exports.create_repo_record = function (req, callback) {
                 return false;
             }
 
+            /*
+                Send request to begin next transfer
+             */
             request.post({
                 url: config.apiUrl + '/api/admin/v1/import/start_transfer',
                 form: {
@@ -1393,7 +1336,6 @@ exports.poll_transfer_status = function (req, callback) {
 
     knexQ(TRANSFER_QUEUE)
         .select('*')
-        // .whereRaw('DATE(created) = CURRENT_DATE')
         .where({
             transfer_status: 1
         })
@@ -1443,7 +1385,6 @@ exports.poll_fail_queue = function (req, callback) {
 
     knexQ(FAIL_QUEUE)
         .select('*')
-        // .whereRaw('DATE(created) = CURRENT_DATE')
         .orderBy('created', 'desc')
         .then(function (data) {
             callback({

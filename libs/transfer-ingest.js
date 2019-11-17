@@ -592,7 +592,7 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
 };
 
 /**
- * Saves object data retrieved from Archivematica METS file
+ * Saves object data retrieved from METS file
  * @param obj
  * @param callback
  */
@@ -632,7 +632,7 @@ exports.save_mets_data = function (obj, callback) {
 };
 
 /**
- * Gets uri.txt containing mods id (used to get metadata from archivespace)
+ * Gets uri.txt containing mods id (used to get metadata from Archivesspace)
  * @param sip_uuid
  * @param callback
  */
