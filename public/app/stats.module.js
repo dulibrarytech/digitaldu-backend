@@ -52,6 +52,8 @@ const statsModule = (function () {
 
     obj.getStats = function () {
 
+        userModule.setHeaderUserToken();
+
         $.ajax(api + '/api/admin/v1/stats')
             .done(function(data) {
                 renderStats(data);

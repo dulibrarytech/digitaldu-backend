@@ -57,9 +57,9 @@ const fs = require('fs'),
     TRANSFER_QUEUE = 'tbl_archivematica_queue',
     IMPORT_QUEUE = 'tbl_duracloud_queue',
     FAIL_QUEUE = 'tbl_fail_queue',
-    TRANSFER_APPROVAL_TIMER = config.transferApprovalTimer,                 // Transfer approval occurs 35 sec. after transfer  (Gives transfer process time to complete)
-    TRANSFER_STATUS_CHECK_INTERVAL = config.transferStatusCheckInterval,    // Transfer status checks occur every 3 sec.
-    INGEST_STATUS_CHECK_INTERVAL = config.ingestStatusCheckInterval;        // Ingest status checks begin 3 sec after the endpoint receives a request.
+    TRANSFER_APPROVAL_TIMER = config.transferApprovalTimer,
+    TRANSFER_STATUS_CHECK_INTERVAL = config.transferStatusCheckInterval,
+    INGEST_STATUS_CHECK_INTERVAL = config.ingestStatusCheckInterval;
 
 /**
  * Gets list of folders from Archivematica sftp server
