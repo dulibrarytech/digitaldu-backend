@@ -710,7 +710,7 @@ exports.create_collection_object = function (req, callback) {
                 callback(null, obj);
             });
 
-        }, 5000);
+        }, 2000);
     }
 
     function get_pid(obj, callback) {
@@ -841,13 +841,25 @@ exports.create_collection_object = function (req, callback) {
  */
 exports.publish_objects = function (req, callback) {
 
+    if (req.body.pid === undefined) {
+
+        callback({
+            status: 400,
+            message: 'Bad request'
+        });
+
+        return false;
+    }
+
     // publish collections and objects
-    var api_url = config.apiUrl + '/api/admin/v1/indexer';
+    var api_url = config.apiUrl + '/api/admin/v1/indexer',
+        pid = req.body.pid,
+        type = req.body.type;
 
     function update_collection_record(callback) {
 
         let obj = {};
-        obj.is_member_of_collection = req.body.pid;
+        obj.is_member_of_collection = pid;
         obj.api_url = api_url;
 
         knex(REPO_OBJECTS)
@@ -973,7 +985,6 @@ exports.publish_objects = function (req, callback) {
                 logger.module().error('ERROR: [/repository/model module (publish_objects/publish_child_objects)] unable to publish collection pid ' + error);
                 callback(null, 'failed');
             });
-
     }
 
     function update_collection_object_docs(obj, callback) {
@@ -1086,17 +1097,71 @@ exports.publish_objects = function (req, callback) {
         });
     }
 
-    // publish objects only
-    function check_collection () {
+    /*
+        gets object's collection uuid
+     */
+    function get_collection_uuid (callback) {
 
         let obj = {};
-        obj.sip_uuid = req.body.pid;
+        obj.sip_uuid = pid;
         obj.api_url = api_url;
 
-        // check is member of collection
+        knex(REPO_OBJECTS)
+            .select('is_member_of_collection')
+            .where({
+                sip_uuid: obj.sip_uuid,
+                is_active: 1
+            })
+            .then(function (data) {
+                obj.is_member_of_collection = data[0].is_member_of_collection;
+                callback(null, obj);
+            })
+            .catch(function (error) {
+                logger.module().fatal('FATAL: [/repository/model module (get_admin_object)] Unable to get object ' + error);
+                throw 'FATAL: [/repository/model module (get_admin_object)] Unable to get object ' + error;
+            });
+    }
+
+    // publish objects
+
+    /*
+        checks if collection is published
+     */
+    function check_collection (obj, callback) {
+
+        knex(REPO_OBJECTS)
+            .select('is_published')
+            .where({
+                is_member_of_collection: obj.is_member_of_collection,
+                is_active: 1
+            })
+            .then(function (data) {
+
+                if (data[0].is_published === 1) {
+                    obj.is_published = true;
+                } else {
+                    obj.is_published = false;
+                }
+
+                callback(null, obj);
+            })
+            .catch(function (error) {
+                logger.module().fatal('FATAL: [/repository/model module (get_admin_object)] Unable to get object ' + error);
+                throw 'FATAL: [/repository/model module (get_admin_object)] Unable to get object ' + error;
+            });
+    }
+
+    // publish objects only
+    function update_object_record (obj, callback) {
+
+        if (obj.is_published === false) {
+            callback(null, obj);
+            return false;
+        }
+
         knex(REPO_OBJECTS)
             .where({
-                pid: obj.is_member_of_collection
+                sip_uuid: obj.sip_uuid
             })
             .update({
                 is_published: 1
@@ -1110,8 +1175,91 @@ exports.publish_objects = function (req, callback) {
             });
     }
 
+    function update_object_doc (obj, callback) {
+
+        if (obj.is_published === false) {
+            callback(null, obj);
+            return false;
+        }
+
+        let update_doc_url = config.apiUrl + '/api/admin/v1/indexer/update_fragment';
+
+        request.put({
+            url: update_doc_url,
+            form: {
+                'sip_uuid': obj.sip_uuid,
+                'fragment': {
+                    doc: {
+                        is_published: 1
+                    }
+                }
+            },
+            timeout: 25000
+        }, function (error, httpResponse, body) {
+
+            if (error) {
+                logger.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + error);
+                obj.status = 'failed';
+                return false;
+            }
+
+            if (httpResponse.statusCode === 200) {
+                return false;
+            } else {
+                logger.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
+                obj.status = 'failed';
+            }
+
+        });
+    }
+
+    function publish_object(obj, callback) {
+
+        if (obj.is_published === false) {
+            callback(null, obj);
+            return false;
+        }
+
+        let reindex_url = config.apiUrl + '/api/admin/v1/indexer/reindex',
+            query = {
+                'bool': {
+                    'must': {
+                        'match_phrase': {
+                            'sip_uuid': obj.sip_uuid
+                        }
+                    }
+                }
+            };
+
+        request.post({
+            url: reindex_url,
+            form: {
+                'query': query
+            },
+            timeout: 25000
+        }, function (error, httpResponse, body) {
+
+            if (error) {
+                logger.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection admin record ' + error);
+                obj.status = 'failed';
+                callback(null, obj);
+                return false;
+            }
+
+            if (httpResponse.statusCode === 200) {
+                callback(null, obj);
+                return false;
+            } else {
+                logger.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
+                obj.status = 'failed';
+                callback(null, obj);
+            }
+
+        });
+    }
+
     // publish collection and all of its objects
-    if (req.body.pid.length !== 0 && req.body.type === 'collection') {
+    if (pid.length !== 0 && type === 'collection') {
 
         async.waterfall([
             update_collection_record,
@@ -1138,15 +1286,19 @@ exports.publish_objects = function (req, callback) {
 
         return false;
 
-    } else if (req.body.pid !== 0 && req.body.type === 'object') {
+    } else if (pid.length !== 0 && type === 'object') {
 
-        /* TODO:... check if collection if published.  only publish if collection is published.
+        console.log('publish single object');
+
         async.waterfall([
+            get_collection_uuid,
             check_collection,
             update_object_record,
             update_object_doc,
             publish_object
         ], function (error, results) {
+
+            console.log(results);
 
             if (error) {
                 logger.module().error('ERROR: [/repository/model module (publish_objects/async.waterfall)] ' + error);
@@ -1158,12 +1310,11 @@ exports.publish_objects = function (req, callback) {
 
         callback({
             status: 201,
-            message: 'Collection Published',
+            message: 'Object Published',
             data: []
         });
 
         return false;
-        */
 
     } else {
 

@@ -236,7 +236,9 @@ const objectsModule = (function () {
 
             let record = data.hits[i]._source,
                 tn = helperModule.getTn(data.hits[i]._source.thumbnail, data.hits[i]._source.mime_type),
-                pid = data.hits[i]._source.pid;
+                pid = data.hits[i]._source.pid,
+                is_published = parseInt(data.hits[i]._source.is_published),
+                is_compound = parseInt(data.hits[i]._source.is_compound);
 
             html += '<div class="row">';
             html += '<div class="col-md-3"><img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
@@ -398,7 +400,7 @@ const objectsModule = (function () {
                 html += '</ul>';
             }
 
-            if (record.abstract !== undefined) { // data[i].object_type === 'collection' &&
+            if (record.abstract !== undefined) {
                 html += '<li><strong>Abstract:</strong></li>';
                 html += '<ul><li style="min-height: 75px">' + record.abstract + '</li></ul>';
             }
@@ -407,50 +409,40 @@ const objectsModule = (function () {
             html += '</div>';
             html += '<div class="col-md-3" style="padding: 5px">';
 
-            // TODO: optimize this block
-            if (data.hits[i]._source.object_type === 'collection') {
+            // handle collections
+            if (data.hits[i]._source.object_type.trim() === 'collection') {
 
                 html += '<p><small style="background: skyblue; padding: 3px; color: white">Collection</small></p>';
 
-                if (data.hits[i]._source.is_published === '1') {
+                if (is_published === 1) {
                     html += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
-                    html += '<p><a href="#" onclick="objectsModule.unpublishObject(\'' + data.hits[i]._source.pid + '\', \'collection\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Unpublish</a></p>';
-                } else {
+                    html += '<p><a href="#" onclick="objectsModule.unpublishObject(\'' + data.hits[i]._source.pid + '\', \'collection\'); return false;"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
+                } else if (is_published === 0) {
                     html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
                     html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data.hits[i]._source.pid + '\', \'collection\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
                 }
-
-                html += '<p><a href="' + api + '/dashboard/object/thumbnail?pid=' + data.hits[i]._source.pid + '"><i class="fa fa-edit"></i>&nbsp;Change Thumbnail</a></p>';
-
-            } else if (data.hits[i]._source.object_type === 'object' && data.hits[i]._source.is_compound === 0) {
-
-                html += '<p><small style="background: cadetblue; padding: 3px; color: white">Object</small></p>';
-
-                if (data.hits[i]._source.is_published === '1') {
-                    html += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
-                    // html += '<p><a href="#"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
-                } else {
-                    html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
-                    // html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data.hits[i]._source.pid + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
-                }
-
-                // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=tn"><i class="fa fa-code"></i>&nbsp;Technical Metadata</a></p>';
-                // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=mods"><i class="fa fa-code"></i>&nbsp;MODS</a></p>';
-
-            } else if (data.hits[i]._source.object_type === 'object' && data.hits[i]._source.is_compound === 1) {
-
-                html += '<p><small style="background: cadetblue; padding: 3px; color: white">Compound Object</small></p>';
-
-                if (data.hits[i]._source.is_published === '1') {
-                    html += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
-                    // html += '<p><a href="#"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
-                } else {
-                    html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
-                    // html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data.hits[i]._source.pid + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
-                }
-
-                html += '<p><a href="' + api + '/dashboard/object/thumbnail?pid=' + data.hits[i]._source.pid + '"><i class="fa fa-edit"></i>&nbsp;Change Thumbnail</a></p>';
             }
+
+            // handle objects
+            if (data.hits[i]._source.object_type === 'object') {
+
+                if (is_compound === 1) {
+                    html += '<p><small style="background: cadetblue; padding: 3px; color: white">Compound Object</small></p>';
+                } else {
+                    html += '<p><small style="background: cadetblue; padding: 3px; color: white">Object</small></p>';
+                }
+
+                if (is_published === 1) {
+                    html += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
+                    html += '<p><a href="#" onclick="objectsModule.unpublishObject(\'' + data.hits[i]._source.pid + '\', \'object\'); return false;"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
+                } else if (is_published === 0) {
+                    html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
+                    html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data.hits[i]._source.pid + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
+                }
+            }
+
+            // update thumbnail
+            html += '<p><a href="' + api + '/dashboard/object/thumbnail?pid=' + data.hits[i]._source.pid + '"><i class="fa fa-edit"></i>&nbsp;Change Thumbnail</a></p>';
 
             html += '</div>';
             html += '</div>';

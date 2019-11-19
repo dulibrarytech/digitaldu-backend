@@ -466,7 +466,7 @@ exports.reindex = function (req, callback) {
             knex(REPO_OBJECTS)
                 .count('is_indexed as is_indexed_count')
                 .where({
-                    is_indexed: 0,
+                    is_indexed: 0
                 })
                 .then(function (data) {
 
@@ -478,7 +478,6 @@ exports.reindex = function (req, callback) {
                     }
 
                     return null;
-
                 })
                 .catch(function (error) {
                     logger.module().fatal('FATAL: [/stats/model module (get_stats/monitor_index_progress)] unable to monitor index progress ' + error);
