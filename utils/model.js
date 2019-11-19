@@ -368,7 +368,6 @@ exports.reindex = function (req, callback) {
             }
 
             let index = obj.delete_indexes.pop();
-            console.log(index);
             del(index);
 
         }, 500);

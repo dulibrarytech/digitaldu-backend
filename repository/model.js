@@ -841,8 +841,6 @@ exports.create_collection_object = function (req, callback) {
  */
 exports.publish_objects = function (req, callback) {
 
-    console.log(req.body);
-
     // publish collections and objects
     var api_url = config.apiUrl + '/api/admin/v1/indexer';
 

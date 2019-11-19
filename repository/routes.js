@@ -37,7 +37,7 @@ module.exports = function (app) {
         .post(token.verify, Repo.update_thumbnail);
 
     app.route('/api/admin/v1/repo/publish')
-        .post(Repo.publish_objects);  // TODO: use api key instead apikey.verify,
+        .post(Repo.publish_objects);
 
     app.route('/api/admin/v1/repo/unpublish')
         .post(Repo.unpublish_objects);  // token.verify,

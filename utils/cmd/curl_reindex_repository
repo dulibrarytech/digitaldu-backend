@@ -1,0 +1,12 @@
+#!/bin/bash
+curl -X POST \
+  'http://localhost:8000/api/admin/v1/utils/reindex?api_key=M7dHS21r47RsgyxSd7XJaEAgf7Miha01' \
+  -H 'Accept: */*' \
+  -H 'Accept-Encoding: gzip, deflate' \
+  -H 'Cache-Control: no-cache' \
+  -H 'Connection: keep-alive' \
+  -H 'Content-Length: 0' \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -H 'Host: localhost:8000' \
+  -H 'User-Agent: PostmanRuntime/7.17.1' \
+  -H 'cache-control: no-cache'
