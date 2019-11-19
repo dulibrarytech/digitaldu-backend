@@ -318,6 +318,8 @@ const importModule = (function () {
             url = api + '/api/admin/v1/import/list?collection=' + folder;
         }
 
+        userModule.setHeaderUserToken();
+
         $.ajax(url)
             .done(function (data) {
                 renderImportObjects(data);

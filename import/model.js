@@ -61,7 +61,7 @@ exports.get_import_incomplete = function (req, callback) {
 };
 
 /**
- * TODO: get completed records by date range
+ * Gets daily completed records list
  * @param req
  * @param callback
  */
@@ -69,7 +69,7 @@ exports.get_import_complete = function (req, callback) {
 
     knex(REPO_OBJECTS)
         .select('id', 'sip_uuid', 'is_member_of_collection', 'pid', 'handle', 'mods_id', 'mods', 'display_record', 'thumbnail', 'file_name', 'mime_type', 'created')
-        // .whereRaw('DATE(created) = CURRENT_DATE')
+        .whereRaw('DATE(created) = CURRENT_DATE')
         .where({
             is_complete: 1,
             object_type: 'object'
