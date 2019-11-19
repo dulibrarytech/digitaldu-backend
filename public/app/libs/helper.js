@@ -181,6 +181,11 @@ const helperModule = (function () {
 
         current_page = parseInt(current_page);
 
+        // create first link
+        if (current_page > total_on_page) {
+            html += '<li><a href="' + path + '?pid=' + pid + '&page=1&total_on_page=' + total_on_page + '">First</a></li>';
+        }
+
         // create previous link
         if (current_page > 1) {
             let prev_current_page = current_page - 1;
