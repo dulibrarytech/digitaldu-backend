@@ -27,7 +27,7 @@ module.exports = function (app) {
         .get(Import.list);
 
     app.route('/api/admin/v1/import/queue_objects')
-        .post(Import.queue_objects);
+        .post(token.verify, Import.queue_objects);
 
     app.route('/api/admin/v1/import/start_transfer')
         .post(Import.start_transfer);

@@ -376,14 +376,11 @@ exports.reindex = function (req, callback) {
 
     function create_index (obj, callback) {
 
-        console.log('create index: ' + obj.delete_indexes.length);
-
         if (obj.delete_indexes.length !== 0) {
             obj.delete = false;
             callback(null, obj);
             return false;
         }
-
 
         obj.create_indexes = [config.elasticSearchBackIndex, config.elasticSearchFrontIndex];
 
@@ -420,7 +417,6 @@ exports.reindex = function (req, callback) {
             }
 
             let index = obj.create_indexes.pop();
-            console.log(index);
             create(index);
 
         }, 500);
@@ -464,13 +460,44 @@ exports.reindex = function (req, callback) {
         reindex(config.elasticSearchBackIndex);
     }
 
+    function monitor_index_progress (obj, callback) {
+
+        function monitor () {
+
+            knex(REPO_OBJECTS)
+                .count('is_indexed as is_indexed_count')
+                .where({
+                    is_indexed: 0,
+                })
+                .then(function (data) {
+
+                    if (data[0].is_indexed_count < 50) {
+                        clearInterval(timer);
+                        obj.reindex_complete = true;
+                        callback(null, obj);
+                        return false;
+                    }
+
+                    return null;
+
+                })
+                .catch(function (error) {
+                    logger.module().fatal('FATAL: [/stats/model module (get_stats/monitor_index_progress)] unable to monitor index progress ' + error);
+                    throw 'FATAL: [/stats/model module (get_stats/monitor_index_progress)] unable to monitor index progress ' + error;
+                });
+        }
+
+        var timer = setInterval(function () {
+            monitor();
+        }, 60000);
+    }
+
     async.waterfall([
         delete_index,
         create_index,
-        index
+        index,
+        monitor_index_progress
     ], function (error, results) {
-
-        console.log(results);
 
         if (error) {
             logger.module().error('ERROR: [/utils/model module (reindex/async.waterfall)] ' + error);
@@ -480,6 +507,10 @@ exports.reindex = function (req, callback) {
             logger.module().info('INFO: [/utils/model module (reindex/async.waterfall)] indexing in progress');
         } else {
             logger.module().error('ERROR: [/utils/model module (reindex/async.waterfall)] reindex failed. ' + results);
+        }
+
+        if (results.reindex_complete !== undefined && results.reindex_complete === true) {
+            republish();
         }
 
     });
@@ -492,38 +523,37 @@ exports.reindex = function (req, callback) {
 };
 
 /**
- *
- * @param req
- * @param callback
+ * Republishes collections
  */
-exports.republish = function (req, callback) {
+const republish = function () {
 
     function publish (sip_uuid) {
 
         request.post({
             url: config.apiUrl + '/api/admin/v1/repo/publish',
             form: {
-                'pid': sip_uuid
+                'pid': sip_uuid,
+                'type': 'collection'
             }
         }, function (error, httpResponse, body) {
 
             if (error) {
-                logger.module().error('ERROR: [/import/utils module (reindex/index/reindex)] indexer error ' + error);
+                logger.module().error('ERROR: [/import/utils module (republish/publish)] indexer error ' + error);
                 return false;
             }
 
-            if (httpResponse.statusCode === 200) {
-                logger.module().info('INFO: [/import/utils module (reindex/republish/publish)] published ' + sip_uuid + '.');
+            if (httpResponse.statusCode === 201) {
+                logger.module().info('INFO: [/import/utils module (republish/publish)] published ' + sip_uuid + '.');
                 return false;
             } else {
-                logger.module().error('ERROR: [/import/utils module (reindex/index/reindex)] http error ' + httpResponse.statusCode + '/' + body);
+                logger.module().error('ERROR: [/import/utils module (republish/publish)] http error ' + httpResponse.statusCode + '/' + body);
                 return false;
             }
         });
     }
 
     knex(REPO_OBJECTS)
-        .select('is_member_of_collection')
+        .select('pid')
         .where({
             object_type: 'collection',
             is_published: 1,
@@ -538,19 +568,14 @@ exports.republish = function (req, callback) {
                     return false;
                 }
 
-                publish(data.pop());
+                let record = data.pop();
+                publish(record.pid);
 
-            }, 500);
+            }, 10000);
 
         })
         .catch(function (error) {
             logger.module().fatal('FATAL: [/import/utils module (reindex/republish/publish)] Unable to get object ' + error);
             throw 'FATAL: [/import/utils module (reindex/republish/publish)] Unable to get object ' + error;
         });
-
-    callback({
-        status: 201,
-        message: 'republishing collections',
-        data: []
-    });
 };

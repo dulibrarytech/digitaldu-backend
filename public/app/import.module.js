@@ -260,14 +260,17 @@ const importModule = (function () {
             return false;
         }
 
+        userModule.setHeaderUserToken();
+
         $.ajax({
             url: api + '/api/admin/v1/import/queue_objects',
             type: 'post',
-            data: {collection: collection, objects: objects, user: userModule.getUserFullName()}
+            data: {
+                collection: collection,
+                objects: objects,
+                user: userModule.getUserFullName()
+            }
         }).done(function (data) {
-
-            // TODO: check payload
-            console.log(data);
 
             $('.import-button').hide();
             $('#message').html('<p>Import process starting...</p>');
