@@ -117,14 +117,23 @@ const objectsModule = (function () {
 
             if (response.status === 201) {
 
-                let message = '<div class="alert alert-success">Collection published</div>';
+                let message = '<div class="alert alert-success">Published</div>';
                 $('#message').html(message);
 
                 setTimeout(function () {
                     $('#message').html('');
                     objectsModule.getObjects();
-                }, 8000);
+                }, 5000);
 
+            } else if (response.status === 418) {
+
+                let message = '<div class="alert alert-warning">Unable to publish object. (The object\'s parent collection must be published before attempting to publish one of its objects.)</div>';
+                $('#message').html(message);
+
+                setTimeout(function () {
+                    $('#message').html('');
+                    objectsModule.getObjects();
+                }, 7000);
 
             } else if (response.status === 401) {
 
@@ -154,7 +163,6 @@ const objectsModule = (function () {
      */
     obj.unpublishObject = function (pid, type) {
 
-        // TODO: flag collection pid too
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
         let obj = {
@@ -235,13 +243,24 @@ const objectsModule = (function () {
         for (let i = 0; i < data.hits.length; i++) {
 
             let record = data.hits[i]._source,
-                tn = helperModule.getTn(data.hits[i]._source.thumbnail, data.hits[i]._source.mime_type),
+                // tn = helperModule.getTn(data.hits[i]._source.thumbnail, data.hits[i]._source.mime_type),
+                tn = configModule.getTnUrl(data.hits[i]._source.pid).tn,
                 pid = data.hits[i]._source.pid,
                 is_published = parseInt(data.hits[i]._source.is_published),
                 is_compound = parseInt(data.hits[i]._source.is_compound);
 
             html += '<div class="row">';
-            html += '<div class="col-md-3"><img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
+            html += '<div class="col-md-3">';
+
+            if (data.hits[i]._source.object_type === 'object') {
+                html += '<a href="' + configModule.getViewerUrl().viewer_url + data.hits[i]._source.pid + '" target="_blank">';
+                html += '<img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + tn + '" alt="image" />';
+                html += '</a>';
+            } else {
+                html += '<img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + tn + '" alt="image" />';
+            }
+
+            html += '</div>';
             html += '<div class="col-md-6" style="padding: 5px">';
 
             if (record.display_record.title !== undefined) {
@@ -410,7 +429,7 @@ const objectsModule = (function () {
             html += '<div class="col-md-3" style="padding: 5px">';
 
             // handle collections
-            if (data.hits[i]._source.object_type.trim() === 'collection') {
+            if (data.hits[i]._source.object_type === 'collection') {
 
                 html += '<p><small style="background: skyblue; padding: 3px; color: white">Collection</small></p>';
 

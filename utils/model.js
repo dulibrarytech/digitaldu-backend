@@ -418,7 +418,7 @@ exports.reindex = function (req, callback) {
             let index = obj.create_indexes.pop();
             create(index);
 
-        }, 500);
+        }, 5000);
     }
 
     function index (obj, callback) {
@@ -571,6 +571,7 @@ const republish = function () {
 
             }, 10000);
 
+            return null;
         })
         .catch(function (error) {
             logger.module().fatal('FATAL: [/import/utils module (reindex/republish/publish)] Unable to get object ' + error);

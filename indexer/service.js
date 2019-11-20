@@ -141,19 +141,20 @@ exports.delete_repo_index = function (req, callback) {
         index: req.body.index_name
     }).then(function (result) {
 
-        console.log('deleting index: ', result);
+        let message = '';
 
-        /*
         if (result.acknowledged === true) {
-            logger.module().info('INFO: [/indexer/service module (create_repo_index/create_index)] new index created');
-            // obj.index_created = true;
-            // callback(null, obj);
+            logger.module().info('INFO: [/indexer/service module (create_repo_index/delete_repo_index)] index deleted');
+            message = 'index deleted';
         } else {
-            logger.module().error('ERROR: [/indexer/service module (create_repo_index/create_index)] unable to create new index (createIndex)');
-            // obj.index_created = false;
-            // callback(null, obj);
+            logger.module().error('ERROR: [/indexer/service module (create_repo_index/delete_repo_index)] unable to delete index (deleteIndex)');
+            message = 'index not deleted';
         }
-        */
+
+        callback({
+            status: 200,
+            message: message
+        });
 
     });
 };

@@ -841,7 +841,9 @@ exports.create_collection_object = function (req, callback) {
  */
 exports.publish_objects = function (req, callback) {
 
-    if (req.body.pid === undefined) {
+    console.log(req.body);
+
+    if (req.body.pid === undefined && req.body.pid.length === 0) {
 
         callback({
             status: 400,
@@ -851,7 +853,9 @@ exports.publish_objects = function (req, callback) {
         return false;
     }
 
-    // publish collections and objects
+    /*
+        Publish collections and associated objects
+     */
     var api_url = config.apiUrl + '/api/admin/v1/indexer',
         pid = req.body.pid,
         type = req.body.type;
@@ -1122,7 +1126,9 @@ exports.publish_objects = function (req, callback) {
             });
     }
 
-    // publish objects
+    /*
+        Publish objects
+     */
 
     /*
         checks if collection is published
@@ -1133,25 +1139,25 @@ exports.publish_objects = function (req, callback) {
             .select('is_published')
             .where({
                 is_member_of_collection: obj.is_member_of_collection,
-                is_active: 1
+                is_active: 1,
+                is_published: 1
             })
             .then(function (data) {
 
-                if (data[0].is_published === 1) {
-                    obj.is_published = true;
-                } else {
+                if (data.length === 0) {
                     obj.is_published = false;
+                } else if (data.length > 0) {
+                    obj.is_published = true;
                 }
 
                 callback(null, obj);
             })
             .catch(function (error) {
-                logger.module().fatal('FATAL: [/repository/model module (get_admin_object)] Unable to get object ' + error);
-                throw 'FATAL: [/repository/model module (get_admin_object)] Unable to get object ' + error;
+                logger.module().fatal('FATAL: [/repository/model module (check_collection)] Unable to check collection ' + error);
+                throw 'FATAL: [/repository/model module (check_collection)] Unable to check collection ' + error;
             });
     }
 
-    // publish objects only
     function update_object_record (obj, callback) {
 
         if (obj.is_published === false) {
@@ -1167,6 +1173,7 @@ exports.publish_objects = function (req, callback) {
                 is_published: 1
             })
             .then(function (data) {
+                console.log(data);
                 callback(null, obj);
             })
             .catch(function (error) {
@@ -1183,6 +1190,9 @@ exports.publish_objects = function (req, callback) {
         }
 
         let update_doc_url = config.apiUrl + '/api/admin/v1/indexer/update_fragment';
+
+        console.log('update fragment: ', obj.sip_uuid);
+        // index_uuid="angd3dL-TAOkaoBe-ygiyA"
 
         request.put({
             url: update_doc_url,
@@ -1259,7 +1269,7 @@ exports.publish_objects = function (req, callback) {
     }
 
     // publish collection and all of its objects
-    if (pid.length !== 0 && type === 'collection') {
+    if (type === 'collection') {
 
         async.waterfall([
             update_collection_record,
@@ -1285,10 +1295,9 @@ exports.publish_objects = function (req, callback) {
         });
 
         return false;
+    }
 
-    } else if (pid.length !== 0 && type === 'object') {
-
-        console.log('publish single object');
+    if (type === 'object') {
 
         async.waterfall([
             get_collection_uuid,
@@ -1298,29 +1307,30 @@ exports.publish_objects = function (req, callback) {
             publish_object
         ], function (error, results) {
 
-            console.log(results);
-
             if (error) {
                 logger.module().error('ERROR: [/repository/model module (publish_objects/async.waterfall)] ' + error);
                 throw 'ERROR: [/repository/model module (publish_objects/async.waterfall)] ' + error;
             }
 
-            logger.module().info('INFO: [/repository/model module (publish_objects/async.waterfall)] collection published');
-        });
+            if (results.is_published === false) {
 
-        callback({
-            status: 201,
-            message: 'Object Published',
-            data: []
-        });
+                callback({
+                    status: 418,
+                    message: 'Object not published',
+                    data: []
+                });
 
-        return false;
+            } else {
 
-    } else {
+                logger.module().info('INFO: [/repository/model module (publish_objects/async.waterfall)] collection published');
 
-        callback({
-            status: 400,
-            message: 'Bad request'
+                callback({
+                    status: 201,
+                    message: 'Object Published',
+                    data: []
+                });
+            }
+
         });
 
         return false;
