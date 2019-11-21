@@ -140,15 +140,15 @@ exports.queue_objects = function (req, callback) {
     let transfer_data = req.body;
 
     /*
-        Checks if collection exists
-        function called by async
+     Checks if collection exists
+     function called by async
      */
     const check_collection = function (callback) {
 
         importlib.check_collection(transfer_data.collection, function (result) {
 
             /*
-                if collection does not exist set status to false in order to terminate ingest of objects
+             if collection does not exist set status to false in order to terminate ingest of objects
              */
             if (result === false) {
                 transfer_data.collection_status = false;
@@ -161,8 +161,8 @@ exports.queue_objects = function (req, callback) {
     };
 
     /*
-        Saves import data to queue
-        function called by async
+     Saves import data to queue
+     function called by async
      */
     const save_transfer_records = function (obj, callback) {
 
@@ -174,7 +174,7 @@ exports.queue_objects = function (req, callback) {
         logger.module().info('INFO: [/import/queue module (queue_objects/start_transfer)] starting ingest process');
 
         /*
-            Saves transfer data to queue
+         Saves transfer data to queue
          */
         importlib.save_transfer_records(transfer_data, function (result) {
 
@@ -192,7 +192,7 @@ exports.queue_objects = function (req, callback) {
             }
 
             /*
-                Send request to start transfer
+             Send request to start transfer
              */
             request.post({
                 url: config.apiUrl + '/api/admin/v1/import/start_transfer',
@@ -282,7 +282,7 @@ exports.start_transfer = function (req, callback) {
     importlib.start_transfer(collection, function (object) {
 
         /*
-            Initiates file transfer on Archivematica service
+         Initiates file transfer on Archivematica service
          */
         archivematica.start_tranfser(object, function (response) {
 
@@ -312,13 +312,13 @@ exports.start_transfer = function (req, callback) {
             importlib.confirm_transfer(response, object.id);
 
             /*
-                Give transfer time to complete before approving it
+             Give transfer time to complete before approving it
              */
             setTimeout(function () {
 
                 /*
-                    Send request to approve transfer
-                */
+                 Send request to approve transfer
+                 */
                 request.post({
                     url: config.apiUrl + '/api/admin/v1/import/approve_transfer',
                     form: {
@@ -372,7 +372,7 @@ exports.approve_transfer = function (req, callback) {
     }
 
     /*
-        Gets transferred record from queue
+     Gets transferred record from queue
      */
     importlib.get_transferred_record(collection, function (object) {
 
@@ -405,7 +405,7 @@ exports.approve_transfer = function (req, callback) {
                 logger.module().info('INFO: [/import/queue module (approve_transfer/importlib.get_transferred_record/archivematica.approve_transfer/importlib.confirm_transfer_approval)] transfer approved');
 
                 /*
-                    Send request to begin transfer status checks
+                 Send request to begin transfer status checks
                  */
                 request.get({
                     url: config.apiUrl + '/api/admin/v1/import/transfer_status?collection=' + result.is_member_of_collection + '&transfer_uuid=' + result.transfer_uuid
@@ -457,14 +457,14 @@ exports.get_transfer_status = function (req, callback) {
     logger.module().info('INFO: [/import/queue module (get_transfer_status)] checking transfer status');
 
     /*
-        Check transfer status every few seconds
+     Check transfer status every few seconds
      */
     let timer = setInterval(function () {
 
         archivematica.get_transfer_status(transfer_uuid, function (response) {
 
             /*
-                Updates import queue
+             Updates import queue
              */
             importlib.update_transfer_status(response, function (result) {
 
@@ -542,14 +542,14 @@ exports.get_ingest_status = function (req, callback) {
     logger.module().info('INFO: [/import/queue module (get_ingest_status)] checking ingest status');
 
     /*
-        Check ingest status every few seconds
+     Check ingest status every few seconds
      */
     let timer = setInterval(function () {
 
         archivematica.get_ingest_status(sip_uuid, function (response) {
 
             /*
-                Updates import queue
+             Updates import queue
              */
             importlib.update_ingest_status(response, sip_uuid, function (result) {
 
@@ -572,7 +572,7 @@ exports.get_ingest_status = function (req, callback) {
                     clearInterval(timer);
 
                     /*
-                        Send request to import DIP data
+                     Send request to import DIP data
                      */
                     request.get({
                         url: config.apiUrl + '/api/admin/v1/import/import_dip?sip_uuid=' + result.sip_uuid
@@ -672,7 +672,7 @@ exports.import_dip = function (req, callback) {
                 if (result === 'done') {
 
                     /*
-                        Send request to create repository record
+                     Send request to create repository record
                      */
                     request.get({
                         url: config.apiUrl + '/api/admin/v1/import/create_repo_record?sip_uuid=' + sip_uuid
@@ -842,57 +842,55 @@ exports.create_repo_record = function (req, callback) {
             obj.mime_type = mimetypelib.get_mime_type(obj.file);
         }
 
-        // TODO: refactor to handle any file type that is chunked
         // process larger files. checks if there is a manifest available for chunked files
-        if (obj.mime_type.indexOf('audio') !== -1 || obj.mime_type.indexOf('video') !== -1) {
+        // if (obj.mime_type.indexOf('audio') !== -1 || obj.mime_type.indexOf('video') !== -1) {
+        const get_manifest = function (obj) {
 
-            const get_manifest = function (obj) {
+            if (obj.dip_path === null) {
+                callback(null, obj);
+                return false;
+            }
 
-                if (obj.dip_path === null) {
+            /*
+             Get dura-manifest xml document
+             */
+            duracloud.get_object_manifest(obj, function (response) {
+
+                /*
+                 if manifest is not present proceed with retrieving data
+                 */
+                if (response.error !== undefined && response.error === true) {
+
+                    logger.module().error('ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_manifest)] unable to get manifest or manifest does not exist ' + response.error_message);
+                    obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
+                    get_duracloud_object(obj);
+                    return false;
+
+                } else {
+
+                    let manifest = manifestlib.process_manifest(response);
+
+                    if (manifest.length > 0) {
+                        obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file + '.dura-manifest';
+                        obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
+                        obj.checksum = manifest[0].checksum;
+                        obj.file_size = manifest[0].file_size;
+                    } else {
+                        obj.checksum = null;
+                        obj.file_size = null;
+                    }
+
                     callback(null, obj);
                     return false;
                 }
+            });
+        };
 
-                /*
-                    Get dura-manifest xml document
-                 */
-                duracloud.get_object_manifest(obj, function (response) {
-
-                    /*
-                        if manifest is not present proceed with retrieving data
-                     */
-                    if (response.error !== undefined && response.error === true) {
-
-                        logger.module().error('ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_manifest)] unable to get manifest or manifest does not exist ' + response.error_message);
-                        obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
-                        get_duracloud_object(obj);
-                        return false;
-
-                    } else {
-
-                        let manifest = manifestlib.process_manifest(response);
-
-                        if (manifest.length > 0) {
-                            obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file  + '.dura-manifest';
-                            obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
-                            obj.checksum = manifest[0].checksum;
-                            obj.file_size = manifest[0].file_size;
-                        } else {
-                            obj.checksum = null;
-                            obj.file_size = null;
-                        }
-
-                        callback(null, obj);
-                        return false;
-                    }
-                });
-            };
-
-            get_manifest(obj);
-
-        } else {
-            get_duracloud_object(obj);
-        }
+        /*
+         } else {
+         get_duracloud_object(obj);
+         }
+         */
 
         function get_duracloud_object(obj) {
 
@@ -932,6 +930,8 @@ exports.create_repo_record = function (req, callback) {
                 });
 
             }, 15000);  // TODO: place in .env config
+
+            get_manifest(obj);
 
             return false;
         }
@@ -1169,7 +1169,7 @@ exports.create_repo_record = function (req, callback) {
         }
 
         /*
-            Send request to index repository record
+         Send request to index repository record
          */
         request.post({
             url: config.apiUrl + '/api/admin/v1/indexer',
@@ -1274,7 +1274,7 @@ exports.create_repo_record = function (req, callback) {
             }
 
             /*
-                Send request to begin next transfer
+             Send request to begin next transfer
              */
             request.post({
                 url: config.apiUrl + '/api/admin/v1/import/start_transfer',

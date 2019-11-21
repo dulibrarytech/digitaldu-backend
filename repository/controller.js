@@ -18,7 +18,8 @@
 
 'use strict';
 
-const Repo = require('../repository/model'),
+const config = require('../config/config'),
+    Repo = require('../repository/model'),
     Service = require('../repository/service'),
     path = require('path');
 
@@ -64,6 +65,28 @@ exports.get_thumbnail = function (req, res) {
         } else {
             res.status(data.status).end(data.data, 'binary');
         }
+    });
+};
+
+// tn service
+exports.get_tn = function (req, res) {
+    Service.get_tn(req, function (data) {
+
+        if (data.error === true) {
+            res.sendFile(path.join(__dirname, '../public', data.data));
+        } else {
+            res.status(data.status).end(data.data, 'binary');
+        }
+    });
+};
+
+exports.get_viewer = function (req, res) {
+    Service.get_viewer(req, function (data) {
+
+        res.render('dashboard-viewer', {
+            host: config.host,
+            viewer: data.data
+        });
     });
 };
 

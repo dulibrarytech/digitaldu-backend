@@ -44,6 +44,7 @@ const configModule = (function () {
     obj.getTnUrls = function () {
         return {
             duracloud: '/api/admin/v1/repo/object/thumbnail',
+            discovery: '/api/admin/v1/repo/object/tn',
             default: configModule.getApi() + '/images/media.jpg',
             default_pdf: configModule.getApi() + '/images/pdf-tn.png',
             default_audio: configModule.getApi() + '/images/audio-tn.png',
@@ -52,25 +53,27 @@ const configModule = (function () {
     };
 
     /**
-     *
+     * REMOVE
      * @param uuid
      * @returns {{tn: string}}
-     */
-    obj.getTnUrl = function (uuid) {
+
+    obj.getTnServiceUrl = function () {
         return {
-            tn: 'http://libspecc01-vlp.du.edu/discovery/datastream/' + uuid + '/tn'
+            tn_service: 'http://libspecc01-vlp.du.edu/'
         };
     };
+     */
 
     /**
-     *
+     * REMOVE
      * @returns {{viewer_url: string}}
-     */
+
     obj.getViewerUrl = function () {
         return {
             viewer_url: 'http://libspecc01-vlp.du.edu/discovery/viewer/'
         };
     };
+     */
 
     return obj;
 

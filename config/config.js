@@ -74,7 +74,8 @@ module.exports = {
     transferApprovalTimer: process.env.TRANSFER_APPROVAL_TIMER,
     transferStatusCheckInterval: process.env.TRANSFER_STATUS_CHECK_INTERVAL,
     ingestStatusCheckInterval: process.env.INGEST_STATUS_CHECK_INTERVAL,
-    thumbnailService: process.env.THUMBNAIL_SERVICE
+    tnService: process.env.TN_SERVICE,
+    tnServiceApiKey: process.env.TN_SERVICE_API_KEY
     // sslKey: process.env.SSL_KEY,
     // sslCert: process.env.SSL_CERT
 };

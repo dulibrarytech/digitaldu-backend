@@ -36,6 +36,12 @@ module.exports = function (app) {
         .get(Repo.get_thumbnail)  // token.verify,
         .post(token.verify, Repo.update_thumbnail);
 
+    app.route('/api/admin/v1/repo/object/tn')
+        .get(Repo.get_tn);  // token.verify,
+
+    app.route('/api/admin/v1/repo/object/viewer')
+        .get(Repo.get_viewer);  // token.verify,
+
     app.route('/api/admin/v1/repo/publish')
         .post(Repo.publish_objects);
 

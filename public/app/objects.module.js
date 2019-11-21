@@ -244,7 +244,7 @@ const objectsModule = (function () {
 
             let record = data.hits[i]._source,
                 // tn = helperModule.getTn(data.hits[i]._source.thumbnail, data.hits[i]._source.mime_type),
-                tn = configModule.getTnUrl(data.hits[i]._source.pid).tn,
+                tn = configModule.getApi() + '/api/admin/v1/repo/object/tn?uuid=' + data.hits[i]._source.pid + '&type=' + data.hits[i]._source.mime_type,
                 pid = data.hits[i]._source.pid,
                 is_published = parseInt(data.hits[i]._source.is_published),
                 is_compound = parseInt(data.hits[i]._source.is_compound);
@@ -253,7 +253,7 @@ const objectsModule = (function () {
             html += '<div class="col-md-3">';
 
             if (data.hits[i]._source.object_type === 'object') {
-                html += '<a href="' + configModule.getViewerUrl().viewer_url + data.hits[i]._source.pid + '" target="_blank">';
+                html += '<a href="' + configModule.getApi() + '/api/admin/v1/repo/object/viewer?uuid=' + data.hits[i]._source.pid + '" target="_blank">';
                 html += '<img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + tn + '" alt="image" />';
                 html += '</a>';
             } else {
@@ -389,6 +389,9 @@ const objectsModule = (function () {
             // TODO:... refactor to accommodate large parts arrays
             if (record.display_record.parts !== undefined && record.display_record.parts.length !== 0) {
 
+                let pid = data.hits[i]._source.pid,
+                    type = data.hits[i]._source.mime_type;
+
                 html += '<li><strong>Parts:</strong></li>';
                 html += '<ul>';
 
@@ -396,7 +399,10 @@ const objectsModule = (function () {
 
                     html += '<li>' + record.display_record.parts[i].title + ' ( ' + record.display_record.parts[i].type + ' ) order: ' + record.display_record.parts[i].order;
 
+                    // TODO: ....
                     let tn = helperModule.getTn(record.display_record.parts[i].thumbnail, '');
+                    // console.log(record.display_record.pid + '_' + record.display_record.parts[i].order + '&type=' + record.display_record.mime_type);
+
                     html += '<br><img src="' + tn + '" width="100px" height="100px"></li>';
                 }
 

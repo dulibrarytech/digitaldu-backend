@@ -21,6 +21,7 @@
 const archivematica = require('../libs/archivematica'),
     archivespace = require('../libs/archivespace'),
     duracloud = require('../libs/duracloud'),
+    objectservice = require('../libs/object-service'),
     logger = require('../libs/log4'),
     async = require('async'),
     config = require('../config/config'),
@@ -112,6 +113,59 @@ exports.get_thumbnail = function (req, callback) {
 
     duracloud.get_thumbnail(tn, function (response) {
         callback(response);
+    });
+};
+
+/**
+ * Gets thumbnail from TN service
+ * @param req
+ * @param callback
+ * @returns {boolean}
+ */
+exports.get_tn = function (req, callback) {
+
+    let uuid = req.query.uuid,
+        type = req.query.type;
+
+    if (uuid === undefined || type === undefined) {
+
+        callback({
+            status: 400,
+            message: 'Bad request'
+        });
+
+        return false;
+    }
+
+    objectservice.get_tn(uuid, type, function (response) {
+        callback(response);
+    });
+};
+
+/**
+ * Gets object viewer
+ * @param req
+ * @param callback
+ */
+exports.get_viewer = function (req, callback) {
+
+    let uuid = req.query.uuid;
+
+    if (uuid === undefined) {
+
+        callback({
+            status: 400,
+            message: 'Bad request'
+        });
+
+        return false;
+    }
+
+    let apiUrl = config.tnService + 'discovery/viewer/' + uuid + '&x-api-key=' + config.tnServiceApiKey;
+
+    callback({
+        status: 200,
+        data: apiUrl
     });
 };
 
