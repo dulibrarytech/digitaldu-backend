@@ -843,7 +843,6 @@ exports.create_repo_record = function (req, callback) {
         }
 
         // process larger files. checks if there is a manifest available for chunked files
-        // if (obj.mime_type.indexOf('audio') !== -1 || obj.mime_type.indexOf('video') !== -1) {
         const get_manifest = function (obj) {
 
             if (obj.dip_path === null) {
@@ -885,12 +884,6 @@ exports.create_repo_record = function (req, callback) {
                 }
             });
         };
-
-        /*
-         } else {
-         get_duracloud_object(obj);
-         }
-         */
 
         function get_duracloud_object(obj) {
 
