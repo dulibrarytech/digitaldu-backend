@@ -754,6 +754,7 @@ exports.create_repo_record = function (req, callback) {
                 obj.dip_path = null;
                 obj.file = null;
                 obj.uuid = null;
+                logger.module().error('ERROR: [/import/queue module (get_uri_txt/importlib.get_uri_txt)] unable to get uri txt');
                 callback(null, obj);
                 return false;
             }
@@ -774,6 +775,7 @@ exports.create_repo_record = function (req, callback) {
         // no need to assign mods id if dip_path is not available
         if (obj.dip_path === null) {
             obj.mods_id = null;
+            logger.module().error('ERROR: [/import/queue module (get_object_uri_data)] unable to get uri data - dip_path is null');
             callback(null, obj);
             return false;
         }
@@ -809,6 +811,7 @@ exports.create_repo_record = function (req, callback) {
                 obj.dip_path = null;
                 obj.file = null;
                 obj.uuid = null;
+                logger.module().error('ERROR: [/import/queue module (get_object/importlib.get_object)] unable to get object - dip_path is null');
                 callback(null, obj);
                 return false;
             }
@@ -824,7 +827,7 @@ exports.create_repo_record = function (req, callback) {
     }
 
     // 6.)
-    function get_object_file_data(obj, callback) {
+    function get_manifest(obj, callback) {
 
         if (obj.dip_path === null) {
             obj.checksum = null;
@@ -832,6 +835,7 @@ exports.create_repo_record = function (req, callback) {
             obj.file_name = null;
             obj.thumbnail = null;
             obj.mime_type = null;
+            logger.module().error('ERROR: [/import/queue module (get_object_file_data)] unable to get object file data - dip_path is null');
             callback(null, obj);
             return false;
         }
@@ -842,95 +846,200 @@ exports.create_repo_record = function (req, callback) {
             obj.mime_type = mimetypelib.get_mime_type(obj.file);
         }
 
-        // process larger files. checks if there is a manifest available for chunked files
-        const get_manifest = function (obj) {
+        /*
+         Get dura-manifest xml document
+         */
+        duracloud.get_object_manifest(obj, function (response) {
 
-            if (obj.dip_path === null) {
+            /*
+             if manifest is not present proceed with retrieving data
+             */
+            if (response.error !== undefined && response.error === true) {
+
+                logger.module().error('ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_manifest)] unable to get manifest or manifest does not exist ' + response.error_message);
+                obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
+                callback(null, obj);
+                return false;
+
+            } else {
+
+                let manifest = manifestlib.process_manifest(response);
+
+                if (manifest.length > 0) {
+                    obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file + '.dura-manifest';
+                    obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
+                    obj.checksum = manifest[0].checksum;
+                    obj.file_size = manifest[0].file_size;
+                } else {
+                    obj.checksum = null;
+                    obj.file_size = null;
+                    logger.module().error('ERROR: [/import/queue module (get_object_manifest)] unable to get data from manifest');
+                }
+
                 callback(null, obj);
                 return false;
             }
-
-            /*
-             Get dura-manifest xml document
-             */
-            duracloud.get_object_manifest(obj, function (response) {
-
-                /*
-                 if manifest is not present proceed with retrieving data
-                 */
-                if (response.error !== undefined && response.error === true) {
-
-                    logger.module().error('ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_manifest)] unable to get manifest or manifest does not exist ' + response.error_message);
-                    obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
-                    get_duracloud_object(obj);
-                    return false;
-
-                } else {
-
-                    let manifest = manifestlib.process_manifest(response);
-
-                    if (manifest.length > 0) {
-                        obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file + '.dura-manifest';
-                        obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
-                        obj.checksum = manifest[0].checksum;
-                        obj.file_size = manifest[0].file_size;
-                    } else {
-                        obj.checksum = null;
-                        obj.file_size = null;
-                    }
-
-                    callback(null, obj);
-                    return false;
-                }
-            });
-        };
-
-        function get_duracloud_object(obj) {
-
-            setTimeout(function () {
-
-                // gets headers only
-                duracloud.get_object_info(obj, function (response) {
-
-                    if (response.error === true) {
-
-                        logger.module().error('ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_info)] Unable to get duracloud object ' + response.error_message);
-
-                        let failObj = {
-                            is_member_of_collection: '',
-                            sip_uuid: sip_uuid,
-                            message: 'ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_info)] Unable to get duracloud object ' + response.error_message
-                        };
-
-                        importlib.save_to_fail_queue(failObj);
-                        importlib.clear_queue_record({
-                            sip_uuid: sip_uuid
-                        }, function (result) {
-                            if (result === true) {
-                                callback(null, obj);
-                            }
-                        });
-
-                        return false;
-                    }
-
-                    obj.checksum = response.headers['content-md5'];
-                    obj.file_size = response.headers['content-length'];
-                    obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
-                    obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
-
-                    callback(null, obj);
-                });
-
-            }, 15000);  // TODO: place in .env config
-
-            get_manifest(obj);
-
-            return false;
-        }
+        });
     }
 
     // 7.)
+    function get_duracloud_object(obj, callback) {
+
+        setTimeout(function () {
+
+            // gets headers only
+            duracloud.get_object_info(obj, function (response) {
+
+                if (response.error === true) {
+
+                    logger.module().error('ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_info)] Unable to get duracloud object ' + response.error_message);
+
+                    let failObj = {
+                        is_member_of_collection: '',
+                        sip_uuid: sip_uuid,
+                        message: 'ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_info)] Unable to get duracloud object ' + response.error_message
+                    };
+
+                    importlib.save_to_fail_queue(failObj);
+                    importlib.clear_queue_record({
+                        sip_uuid: sip_uuid
+                    }, function (result) {
+                        if (result === true) {
+                            callback(null, obj);
+                        }
+                    });
+
+                    return false;
+                }
+
+                obj.checksum = response.headers['content-md5'];
+                obj.file_size = response.headers['content-length'];
+                obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
+                obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
+
+                callback(null, obj);
+            });
+
+        }, 15000);  // TODO: place in .env config
+
+        // get_manifest(obj);
+
+        return false;
+    }
+
+    // TODO: remove...
+    /*
+     function get_object_file_data(obj, callback) {
+
+     if (obj.dip_path === null) {
+     obj.checksum = null;
+     obj.file_size = null;
+     obj.file_name = null;
+     obj.thumbnail = null;
+     obj.mime_type = null;
+     logger.module().error('ERROR: [/import/queue module (get_object_file_data)] unable to get object file data - dip_path is null');
+     callback(null, obj);
+     return false;
+     }
+
+     // if unable to get mime type from mets, check file extension
+     if (obj.mime_type === undefined) {
+     logger.module().info('INFO: [/import/queue module (create_repo_record/get_object_file_data)] failed to get mime type from METS');
+     obj.mime_type = mimetypelib.get_mime_type(obj.file);
+     }
+
+     // process larger files. checks if there is a manifest available for chunked files
+     const get_manifest = function (obj) {
+
+     if (obj.dip_path === null) {
+     logger.module().error('ERROR: [/import/queue module (get_manifest)] unable to get manifest - dip_path is null');
+     callback(null, obj);
+     return false;
+     }
+
+     /*
+     Get dura-manifest xml document
+
+     // duracloud.get_object_manifest(obj, function (response) {
+
+     /*
+     if manifest is not present proceed with retrieving data
+     *
+     if (response.error !== undefined && response.error === true) {
+
+     logger.module().error('ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_manifest)] unable to get manifest or manifest does not exist ' + response.error_message);
+     obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
+     get_duracloud_object(obj);
+     return false;
+
+     } else {
+
+     let manifest = manifestlib.process_manifest(response);
+
+     if (manifest.length > 0) {
+     obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file + '.dura-manifest';
+     obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
+     obj.checksum = manifest[0].checksum;
+     obj.file_size = manifest[0].file_size;
+     } else {
+     obj.checksum = null;
+     obj.file_size = null;
+     logger.module().error('ERROR: [/import/queue module (get_object_manifest)] unable to get data from manifest');
+     }
+
+     callback(null, obj);
+     return false;
+     }
+     });
+     };
+
+     function get_duracloud_object(obj) {
+
+     setTimeout(function () {
+
+     // gets headers only
+     duracloud.get_object_info(obj, function (response) {
+
+     if (response.error === true) {
+
+     logger.module().error('ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_info)] Unable to get duracloud object ' + response.error_message);
+
+     let failObj = {
+     is_member_of_collection: '',
+     sip_uuid: sip_uuid,
+     message: 'ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_info)] Unable to get duracloud object ' + response.error_message
+     };
+
+     importlib.save_to_fail_queue(failObj);
+     importlib.clear_queue_record({
+     sip_uuid: sip_uuid
+     }, function (result) {
+     if (result === true) {
+     callback(null, obj);
+     }
+     });
+
+     return false;
+     }
+
+     obj.checksum = response.headers['content-md5'];
+     obj.file_size = response.headers['content-length'];
+     obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
+     obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
+
+     callback(null, obj);
+     });
+
+     }, 15000);  // TODO: place in .env config
+
+     get_manifest(obj);
+
+     return false;
+     }
+     }
+     */
+
+    // 8.)
     function get_token(obj, callback) {
 
         if (fs.existsSync('./tmp/st.txt')) {
@@ -1032,7 +1141,7 @@ exports.create_repo_record = function (req, callback) {
         }
     }
 
-    // 8.)
+    // 9.)
     function get_mods(obj, callback) {
 
         // skip mods retrieval if session is not available
@@ -1062,7 +1171,7 @@ exports.create_repo_record = function (req, callback) {
         }, 1000);
     }
 
-    // 9.)
+    // 10.)
     function get_handle(obj, callback) {
 
         if (obj.pid === null) {
@@ -1085,7 +1194,7 @@ exports.create_repo_record = function (req, callback) {
         });
     }
 
-    // 10.)
+    // 11.)
     function create_display_record(obj, callback) {
 
         if (obj.mods === null) {
@@ -1137,7 +1246,7 @@ exports.create_repo_record = function (req, callback) {
         });
     }
 
-    // 11.)
+    // 12.)
     function create_repo_record(obj, callback) {
 
         if (obj.mods === null && obj.dip_path === null) {
@@ -1152,7 +1261,7 @@ exports.create_repo_record = function (req, callback) {
         });
     }
 
-    // 12.)
+    // 13.)
     function index(obj, callback) {
 
         if (obj.mods === null) {
@@ -1187,7 +1296,7 @@ exports.create_repo_record = function (req, callback) {
         });
     }
 
-    // 13.)
+    // 14.)
     function cleanup_queue(obj, callback) {
 
         logger.module().info('INFO: [/import/queue module (create_repo_record/cleanup_queue)] cleaning up local queue ' + obj.sip_uuid);
@@ -1212,7 +1321,9 @@ exports.create_repo_record = function (req, callback) {
         get_object_uri_data,
         save_mods_id,
         get_object,
-        get_object_file_data,
+        // get_object_file_data,
+        get_manifest,
+        get_duracloud_object,
         get_token,
         get_mods,
         get_handle,
