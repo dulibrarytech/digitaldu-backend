@@ -129,17 +129,21 @@ const importModule = (function () {
             html += '<td ' + alignTd + '>' + data[i].sip_uuid + '</td>';
 
             // determine what is missing from the record
+            /*
             if (data[i].is_member_of_collection === null) {
                 html += '<td ' + alignTd + '><i class="fa fa-exclamation"></i></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
+            */
 
+            /*
             if (data[i].pid === null || data[i].pid.length === 0) {
                 html += '<td ' + alignTd + '><i class="fa fa-exclamation"></i></td>';
             } else {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
+            */
 
             if (data[i].handle === null || data[i].handle.length === 0) {
                 html += '<td ' + alignTd + '><i class="fa fa-exclamation"></i></td>';
@@ -176,7 +180,7 @@ const importModule = (function () {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
-            html += '<td ' + alignTd + '>' + moment(data[i].created).format('MM-DD-YYYY, h:mm:ss a') + '</td>';
+            html += '<td ' + alignTd + '>' + moment(data[i].created).tz('America/Denver').format('MM-DD-YYYY, h:mm:ss a') + '</td>';
             html += '</tr>';
 
             obj.sip_uuid = data[i].sip_uuid;
