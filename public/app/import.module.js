@@ -180,6 +180,12 @@ const importModule = (function () {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
+            if (data[i].checksum === null || data[i].checksum.length === 0) {
+                html += '<td ' + alignTd + '><i class="fa fa-exclamation"></i></td>';
+            } else {
+                html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
+            }
+
             html += '<td ' + alignTd + '>' + moment(data[i].created).tz('America/Denver').format('MM-DD-YYYY, h:mm:ss a') + '</td>';
             html += '</tr>';
 
@@ -192,6 +198,7 @@ const importModule = (function () {
             obj.thumbnail = data[i].thumbnail;
             obj.mime_type = data[i].mime_type;
             obj.file_name = data[i].file_name;
+            obj.checksum = data[i].checksum;
 
             incomplete.push(obj);
             obj = {};

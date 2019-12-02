@@ -39,7 +39,7 @@ const config = require('../config/config'),
 exports.get_import_incomplete = function (req, callback) {
 
     knex(REPO_OBJECTS)
-        .select('id', 'sip_uuid', 'is_member_of_collection', 'pid', 'handle', 'mods_id', 'mods', 'display_record', 'thumbnail', 'file_name', 'mime_type', 'created')
+        .select('id', 'sip_uuid', 'handle', 'mods_id', 'mods', 'display_record', 'thumbnail', 'file_name', 'mime_type', 'checksum', 'created')
         .orWhere('thumbnail', null)
         .orWhere('file_name', null)
         .orWhere('file_size', null)
@@ -48,8 +48,6 @@ exports.get_import_incomplete = function (req, callback) {
         .orWhere('display_record', null)
         .orderBy('created', 'desc')
         .then(function (data) {
-
-            console.log(data.length);
 
             callback({
                 status: 200,
