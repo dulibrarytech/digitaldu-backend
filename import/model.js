@@ -31,7 +31,7 @@ const config = require('../config/config'),
     knex =require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects';
 
-/**
+/** TODO: refactor to check null fields
  * Gets incomplete records in repo
  * @param req
  * @param callback
@@ -40,11 +40,16 @@ exports.get_import_incomplete = function (req, callback) {
 
     knex(REPO_OBJECTS)
         .select('id', 'sip_uuid', 'is_member_of_collection', 'pid', 'handle', 'mods_id', 'mods', 'display_record', 'thumbnail', 'file_name', 'mime_type', 'created')
-        .where({
-            is_complete: 0,
-            object_type: 'object'
-        })
+        .orWhere('thumbnail', null)
+        .orWhere('file_name', null)
+        .orWhere('file_size', null)
+        .orWhere('checksum', null)
+        .orWhere('mods', null)
+        .orWhere('display_record', null)
+        .orderBy('created', 'desc')
         .then(function (data) {
+
+            console.log(data.length);
 
             callback({
                 status: 200,

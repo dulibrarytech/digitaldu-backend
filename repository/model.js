@@ -553,7 +553,6 @@ exports.update_thumbnail = function (req, callback) {
                     throw 'FATAL: [/repository/model module (update_thumbnail)] unable to get mods update records ' + error;
                 });
 
-
             callback({
                 status: 201,
                 message: 'Thumbnail updated.'
@@ -1337,7 +1336,7 @@ exports.publish_objects = function (req, callback) {
     }
 };
 
-/**
+/** TODO:...
  * Unpublishes records
  * @param req
  * @param callback

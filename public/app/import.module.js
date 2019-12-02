@@ -105,8 +105,8 @@ const importModule = (function () {
         $('#message').html('');
     };
 
-    /** TODO: ...
-     * Renders the directory listing from the Archivematica sftp server
+    /**
+     * Renders incomplete imported records
      * @param data
      */
     const renderIncompleteRecords = function (data) {
@@ -176,8 +176,7 @@ const importModule = (function () {
                 html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
             }
 
-            // TODO: format date
-            html += '<td ' + alignTd + '>' + data[i].created + '</td>';
+            html += '<td ' + alignTd + '>' + moment(data[i].created).format('MM-DD-YYYY, h:mm:ss a') + '</td>';
             html += '</tr>';
 
             obj.sip_uuid = data[i].sip_uuid;
