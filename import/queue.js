@@ -857,7 +857,7 @@ exports.create_repo_record = function (req, callback) {
             if (response.error !== undefined && response.error === true) {
 
                 logger.module().error('ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_manifest)] unable to get manifest or manifest does not exist ' + response.error_message);
-                obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
+                obj.manifest = false;
                 callback(null, obj);
                 return false;
 
@@ -865,14 +865,17 @@ exports.create_repo_record = function (req, callback) {
 
                 let manifest = manifestlib.process_manifest(response);
 
+                obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file + '.dura-manifest';
+                obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
+
                 if (manifest.length > 0) {
-                    obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file + '.dura-manifest';
-                    obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
                     obj.checksum = manifest[0].checksum;
                     obj.file_size = manifest[0].file_size;
+                    obj.manifest = true;
                 } else {
                     obj.checksum = null;
                     obj.file_size = null;
+                    obj.manifest = true;
                     logger.module().error('ERROR: [/import/queue module (get_object_manifest)] unable to get data from manifest');
                 }
 
@@ -884,6 +887,12 @@ exports.create_repo_record = function (req, callback) {
 
     // 7.)
     function get_duracloud_object(obj, callback) {
+
+        if (obj.manifest === true) {
+            delete obj.manifest;
+            callback(null, obj);
+            return false;
+        }
 
         setTimeout(function () {
 
@@ -916,13 +925,11 @@ exports.create_repo_record = function (req, callback) {
                 obj.file_size = response.headers['content-length'];
                 obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
                 obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
-
+                delete obj.manifest;
                 callback(null, obj);
             });
 
-        }, 15000);  // TODO: place in .env config
-
-        // get_manifest(obj);
+        }, 10000);  // TODO: place in .env config
 
         return false;
     }

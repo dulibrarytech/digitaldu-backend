@@ -39,13 +39,14 @@ const config = require('../config/config'),
 exports.get_import_incomplete = function (req, callback) {
 
     knex(REPO_OBJECTS)
-        .select('id', 'sip_uuid', 'handle', 'mods_id', 'mods', 'display_record', 'thumbnail', 'file_name', 'mime_type', 'checksum', 'created')
+        .select('id', 'sip_uuid', 'handle', 'mods_id', 'mods', 'display_record', 'thumbnail', 'file_name', 'mime_type', 'checksum', 'object_type', 'created')
         .orWhere('thumbnail', null)
         .orWhere('file_name', null)
         .orWhere('file_size', null)
         .orWhere('checksum', null)
         .orWhere('mods', null)
         .orWhere('display_record', null)
+        // .andWhere('object_type', 'object')
         .orderBy('created', 'desc')
         .then(function (data) {
 
@@ -340,11 +341,77 @@ exports.import_mods = function (req, callback) {
 };
 
 /**
- * Imports missing thumbnail
+ * Imports missing thumbnail path
  * @param req
  * @param callback
  */
 exports.import_thumbnail = function (req, callback) {
+
+    let sip_uuid = req.body.sip_uuid;
+
+    console.log(sip_uuid);
+
+    archivematica.get_dip_path(sip_uuid, function (dip_path) {
+
+        console.log(dip_path);
+
+        if (dip_path.error !== undefined && dip_path.error === true) {
+            logger.module().fatal('FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path)] dip path error ' + dip_path.error.message);
+            throw 'FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path)] dip path error ' + dip_path.error.message;
+        }
+
+        let data = {
+            sip_uuid: sip_uuid,
+            dip_path: dip_path
+        };
+
+        console.log(data);
+
+        duracloud.get_mets(data, function (response) {
+
+            if (response.error !== undefined && response.error === true) {
+                logger.module().fatal('FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to get mets');
+                throw 'FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to get mets';
+            }
+
+            let metsResults = metslib.process_mets(sip_uuid, dip_path, response.mets),
+                thumbnail = metsResults[0].dip_path + '/thumbnails/' + metsResults[0].uuid + '.jpg';
+
+            console.log(thumbnail);
+
+            let record = {};
+            record.thumbnail = thumbnail;
+
+            knex(REPO_OBJECTS)
+                .where({
+                    sip_uuid: sip_uuid
+                })
+                .update(record)
+                .then(function (data) {
+
+                    // TODO: update index
+
+                    callback({
+                        status: 201,
+                        message: 'Thumbnail path imported.'
+                    });
+
+                    return null;
+                })
+                .catch(function (error) {
+                    logger.module().fatal('FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to save record ' + error);
+                    throw 'FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to save record ' + error;
+                });
+        });
+    });
+};
+
+/**
+ * Imports missing master path
+ * @param req
+ * @param callback
+ */
+exports.import_master = function (req, callback) {
 
     let sip_uuid = req.body.sip_uuid;
 
@@ -368,85 +435,31 @@ exports.import_thumbnail = function (req, callback) {
             }
 
             let metsResults = metslib.process_mets(sip_uuid, dip_path, response.mets),
-                thumbnail = metsResults[0].dip_path + '/thumbnails/' + metsResults[0].uuid + '.jpg';
+                master = metsResults[0].dip_path + '/objects/' + metsResults[0].uuid; // TODO:... figure this out
 
+
+            console.log('METS: ', metsResults[0]);
+            // console.log('Master: ', master);
+
+            let record = {};
+            record.file_name = master;
+
+            return false;
             knex(REPO_OBJECTS)
-                .select('sip_uuid', 'is_member_of_collection', 'pid', 'handle', 'mods_id', 'mods', 'display_record', 'thumbnail', 'file_name', 'mime_type')
                 .where({
                     sip_uuid: sip_uuid
                 })
+                .update(record)
                 .then(function (data) {
 
-                    let missing = [];
+                    // TODO: update index
 
-                    if (data[0].is_member_of_collection.length === 0) {
-                        missing.push({
-                            message: 'Missing collection PID'
-                        });
-                    }
+                    callback({
+                        status: 201,
+                        message: 'Master path imported.'
+                    });
 
-                    if (data[0].pid.length === 0) {
-                        missing.push({
-                            message: 'Missing object PID'
-                        });
-                    }
-
-                    if (data[0].handle.length === 0) {
-                        missing.push({
-                            message: 'Missing handle'
-                        });
-                    }
-
-                    if (data[0].file_name.length === 0) {
-                        missing.push({
-                            message: 'Missing master object'
-                        });
-                    }
-
-                    if (data[0].mime_type.length === 0) {
-                        missing.push({
-                            message: 'Missing mime type'
-                        });
-                    }
-
-                    if (data[0].mods_id.length === 0) {
-                        missing.push({
-                            message: 'Missing mods id'
-                        });
-                    }
-
-                    if (data[0].mods.length === 0) {
-                        missing.push({
-                            message: 'Missing mods record'
-                        });
-                    }
-
-                    let record = {};
-                    record.thumbnail = thumbnail;
-
-                    if (missing.length === 0) {
-                        record.is_complete = 1;
-                    }
-
-                    knex(REPO_OBJECTS)
-                        .where({
-                            sip_uuid: sip_uuid
-                        })
-                        .update(record)
-                        .then(function (data) {
-
-                            callback({
-                                status: 201,
-                                message: 'Thumbnail imported.'
-                            });
-
-                            return null;
-                        })
-                        .catch(function (error) {
-                            logger.module().fatal('FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to save record ' + error);
-                            throw 'FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to save record ' + error;
-                        });
-
+                    return null;
                 })
                 .catch(function (error) {
                     logger.module().fatal('FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to save record ' + error);

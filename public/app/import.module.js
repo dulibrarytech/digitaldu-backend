@@ -125,26 +125,14 @@ const importModule = (function () {
 
         for (let i = 0; i < data.length; i++) {
 
+            if (data[i].object_type !== 'object') {
+                continue;
+            }
+
             html += '<tr>';
             html += '<td ' + alignTd + '>' + data[i].sip_uuid + '</td>';
 
             // determine what is missing from the record
-            /*
-            if (data[i].is_member_of_collection === null) {
-                html += '<td ' + alignTd + '><i class="fa fa-exclamation"></i></td>';
-            } else {
-                html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
-            }
-            */
-
-            /*
-            if (data[i].pid === null || data[i].pid.length === 0) {
-                html += '<td ' + alignTd + '><i class="fa fa-exclamation"></i></td>';
-            } else {
-                html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
-            }
-            */
-
             if (data[i].handle === null || data[i].handle.length === 0) {
                 html += '<td ' + alignTd + '><i class="fa fa-exclamation"></i></td>';
             } else {
@@ -448,14 +436,7 @@ const importModule = (function () {
                 let message = '<p><strong>Importing (' + record.sip_uuid + ')...</strong></p>';
                 $('#message').html(message);
 
-                if (record.pid === null || record.pid.length === 0) {
-                    importModule.importPid(record.sip_uuid);
-                }
-
-                if (record.is_member_of_collection === null && record.pid !== null) {
-                    importModule.importCollection(record.sip_uuid, record.pid);
-                }
-
+                /*
                 if (record.handle === null && record.pid !== null) {
                     importModule.importHandle(record.sip_uuid, record.pid);
                 }
@@ -463,32 +444,30 @@ const importModule = (function () {
                 if (record.mods === null || record.mods.length === 0) {
                     importModule.importMods(record.sip_uuid, record.mods_id);
                 }
+                */
 
                 if (record.thumbnail === null || record.thumbnail.length === 0) {
                     importModule.importThumbnail(record.sip_uuid);
                 }
 
+                if (record.file_name === null) {
+                    importModule.importMaster(record.sip_uuid);
+                }
+
+                /*
                 if (record.mime_type === null || record.mime_type.length === 0) {
                     importModule.importMimeType(record.sip_uuid);
                 }
 
-                if (record.file_name === null) {
-                    importModule.importMaster(record.sip_uuid);
+                if (record.checksum === null || record.checksum.length === 0) {
+                    importModule.importChecksum(record.sip_uuid);
                 }
+                */
             }
 
-        }, 1000);
+        }, 5000);
 
         return false;
-    };
-
-    obj.importPid = function (sip_uuid) {
-        // console.log('import pid: ', sip_uuid);
-    };
-
-    obj.importHandle = function (sip_uuid, pid) {
-        // console.log('import handle: ', sip_uuid);
-        // console.log('import handle: ', pid);
     };
 
     /**
@@ -623,6 +602,16 @@ const importModule = (function () {
     };
 
     /**
+     * Imports missing handle
+     * @param sip_uuid
+     */
+    obj.importHandle = function (sip_uuid) {
+        // TODO
+        // console.log('import handle: ', sip_uuid);
+        // console.log('import handle: ', pid);
+    };
+
+    /**
      * Imports missing thumbnail
      * @param sip_uuid
      */
@@ -648,9 +637,8 @@ const importModule = (function () {
             if (response.status === 201) {
 
                 let responses = document.getElementById('responses');
-                responses.innerHTML = '<p><strong>Thumbnail added to repository record</strong></p>';
+                responses.innerHTML = '<p><strong>Thumbnail path added to repository record</strong></p>';
                 importModule.getIncompleteImportRecords();
-
 
                 setTimeout(function () {
                     $('#responses').html('');
@@ -665,18 +653,50 @@ const importModule = (function () {
         http.req(request, callback);
     };
 
-    // TODO: ...
-    obj.importCollection = function (sip_uuid, pid) {
-        // console.log('import collection: ', sip_uuid);
-        // console.log('import collection: ', pid);
-    };
-
     obj.importMaster = function (sip_uuid) {
-        // console.log('import master: ', sip_uuid);
+
+        if (sip_uuid === undefined) {
+            // TODO: render message
+            return false;
+        }
+
+        let url = api + '/api/admin/v1/import/master',
+            request = new Request(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({sip_uuid: sip_uuid}),
+                mode: 'cors'
+            });
+
+        const callback = function (response) {
+
+            if (response.status === 201) {
+
+                let responses = document.getElementById('responses');
+                responses.innerHTML = '<p><strong>Master path added to repository record</strong></p>';
+                importModule.getIncompleteImportRecords();
+
+                setTimeout(function () {
+                    $('#responses').html('');
+                }, 5000);
+
+            } else {
+                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '. Unable to import MODS.</div>';
+                renderError(message);
+            }
+        };
+
+        http.req(request, callback);
     };
 
     obj.importMimeType = function (sip_uuid) {
-        // console.log('import mime type: ', sip_uuid);
+        // TODO: console.log('import mime type: ', sip_uuid);
+    };
+
+    obj.importChecksum = function (sip_uuid) {
+        // TODO:
     };
 
     /**
