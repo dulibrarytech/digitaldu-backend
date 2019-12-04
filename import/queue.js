@@ -929,7 +929,7 @@ exports.create_repo_record = function (req, callback) {
                 callback(null, obj);
             });
 
-        }, 10000);  // TODO: place in .env config
+        }, 20000);  // TODO: place in .env config
 
         return false;
     }

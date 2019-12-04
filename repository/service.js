@@ -161,7 +161,7 @@ exports.get_viewer = function (req, callback) {
         return false;
     }
 
-    let apiUrl = config.tnService + 'discovery/viewer/' + uuid + '&key=' + config.tnServiceApiKey;
+    let apiUrl = config.tnService + 'discovery/viewer/' + uuid + '?key=' + config.tnServiceApiKey;
 
     callback({
         status: 200,
