@@ -349,11 +349,7 @@ exports.import_thumbnail = function (req, callback) {
 
     let sip_uuid = req.body.sip_uuid;
 
-    console.log(sip_uuid);
-
     archivematica.get_dip_path(sip_uuid, function (dip_path) {
-
-        console.log(dip_path);
 
         if (dip_path.error !== undefined && dip_path.error === true) {
             logger.module().fatal('FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path)] dip path error ' + dip_path.error.message);
@@ -365,8 +361,6 @@ exports.import_thumbnail = function (req, callback) {
             dip_path: dip_path
         };
 
-        console.log(data);
-
         duracloud.get_mets(data, function (response) {
 
             if (response.error !== undefined && response.error === true) {
@@ -376,8 +370,6 @@ exports.import_thumbnail = function (req, callback) {
 
             let metsResults = metslib.process_mets(sip_uuid, dip_path, response.mets),
                 thumbnail = metsResults[0].dip_path + '/thumbnails/' + metsResults[0].uuid + '.jpg';
-
-            console.log(thumbnail);
 
             let record = {};
             record.thumbnail = thumbnail;
@@ -389,11 +381,42 @@ exports.import_thumbnail = function (req, callback) {
                 .update(record)
                 .then(function (data) {
 
-                    // TODO: update index
+                    let update_doc_url = config.apiUrl + '/api/admin/v1/indexer/update_fragment';
 
-                    callback({
-                        status: 201,
-                        message: 'Thumbnail path imported.'
+                    console.log(update_doc_url);
+                    console.log(sip_uuid);
+                    console.log(record.thumbnail);
+
+                    request.put({
+                        url: update_doc_url,
+                        form: {
+                            'sip_uuid': sip_uuid,
+                            'fragment': {
+                                doc: {
+                                    thumbnail: record.thumbnail
+                                }
+                            }
+                        },
+                        timeout: 25000
+                    }, function (error, httpResponse, body) {
+
+                        if (error) {
+                            logger.module().error('ERROR: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to update doc ' + error);
+                            return false;
+                        }
+
+                        if (httpResponse.statusCode === 200) {
+
+                            callback({
+                                status: 201,
+                                message: 'Thumbnail path imported.'
+                            });
+
+                            return false;
+                        } else {
+                            logger.module().error('ERROR: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to update doc ' + httpResponse.statusCode + '/' + body);
+                        }
+
                     });
 
                     return null;
@@ -418,8 +441,8 @@ exports.import_master = function (req, callback) {
     archivematica.get_dip_path(sip_uuid, function (dip_path) {
 
         if (dip_path.error !== undefined && dip_path.error === true) {
-            logger.module().fatal('FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path)] dip path error ' + dip_path.error.message);
-            throw 'FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path)] dip path error ' + dip_path.error.message;
+            logger.module().fatal('FATAL: [/import/model module (import_master/archivematica.get_dip_path)] dip path error ' + dip_path.error.message);
+            throw 'FATAL: [/import/model module (import_master/archivematica.get_dip_path)] dip path error ' + dip_path.error.message;
         }
 
         let data = {
@@ -430,21 +453,25 @@ exports.import_master = function (req, callback) {
         duracloud.get_mets(data, function (response) {
 
             if (response.error !== undefined && response.error === true) {
-                logger.module().fatal('FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to get mets');
-                throw 'FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to get mets';
+                logger.module().fatal('FATAL: [/import/model module (import_master/archivematica.get_dip_path/duracloud.get_mets)] unable to get mets');
+                throw 'FATAL: [/import/model module (import_master/archivematica.get_dip_path/duracloud.get_mets)] unable to get mets';
             }
 
             let metsResults = metslib.process_mets(sip_uuid, dip_path, response.mets),
-                master = metsResults[0].dip_path + '/objects/' + metsResults[0].uuid; // TODO:... figure this out
+                master = metsResults[0].dip_path + '/objects/' + metsResults[0].uuid + '-' + metsResults[0].file;
 
 
-            console.log('METS: ', metsResults[0]);
-            // console.log('Master: ', master);
+            if (master.indexOf('tif') !== -1) {
+                master = master.replace('tif', 'jp2');
+            }
+
+            if (master.indexOf('wav') !== -1) {
+                master = master.replace('wav', 'mp3');
+            }
 
             let record = {};
             record.file_name = master;
 
-            return false;
             knex(REPO_OBJECTS)
                 .where({
                     sip_uuid: sip_uuid
@@ -452,18 +479,46 @@ exports.import_master = function (req, callback) {
                 .update(record)
                 .then(function (data) {
 
-                    // TODO: update index
+                    let update_doc_url = config.apiUrl + '/api/admin/v1/indexer/update_fragment';
 
-                    callback({
-                        status: 201,
-                        message: 'Master path imported.'
+                    request.put({
+                        url: update_doc_url,
+                        form: {
+                            'sip_uuid': sip_uuid,
+                            'fragment': {
+                                doc: {
+                                    thumbnail: record.thumbnail
+                                }
+                            }
+                        },
+                        timeout: 25000
+                    }, function (error, httpResponse, body) {
+
+                        if (error) {
+                            logger.module().error('ERROR: [/import/model module (import_master/archivematica.get_dip_path/duracloud.get_mets)] unable to update doc ' + error);
+                            return false;
+                        }
+
+                        if (httpResponse.statusCode === 200) {
+
+                            callback({
+                                status: 201,
+                                message: 'Master path imported.'
+                            });
+
+                            return false;
+
+                        } else {
+                            logger.module().error('ERROR: [/import/model module (import_master/archivematica.get_dip_path/duracloud.get_mets)] unable to update doc ' + httpResponse.statusCode + '/' + body);
+                        }
+
                     });
 
                     return null;
                 })
                 .catch(function (error) {
-                    logger.module().fatal('FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to save record ' + error);
-                    throw 'FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to save record ' + error;
+                    logger.module().fatal('FATAL: [/import/model module (import_master/archivematica.get_dip_path/duracloud.get_mets)] unable to save record ' + error);
+                    throw 'FATAL: [/import/model module (import_master/archivematica.get_dip_path/duracloud.get_mets)] unable to save record ' + error;
                 });
         });
     });
