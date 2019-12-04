@@ -82,11 +82,7 @@ exports.get_tn = function (req, res) {
 
 exports.get_viewer = function (req, res) {
     Service.get_viewer(req, function (data) {
-
-        res.render('dashboard-viewer', {
-            host: config.host,
-            viewer: data.data
-        });
+        res.redirect(data.data);
     });
 };
 
