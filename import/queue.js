@@ -867,15 +867,14 @@ exports.create_repo_record = function (req, callback) {
 
                 obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file + '.dura-manifest';
                 obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
+                obj.manifest = true;
 
                 if (manifest.length > 0) {
                     obj.checksum = manifest[0].checksum;
                     obj.file_size = manifest[0].file_size;
-                    obj.manifest = true;
                 } else {
                     obj.checksum = null;
                     obj.file_size = null;
-                    obj.manifest = true;
                     logger.module().error('ERROR: [/import/queue module (get_object_manifest)] unable to get data from manifest');
                 }
 
@@ -893,6 +892,8 @@ exports.create_repo_record = function (req, callback) {
             callback(null, obj);
             return false;
         }
+
+        delete obj.manifest;
 
         setTimeout(function () {
 
@@ -925,7 +926,6 @@ exports.create_repo_record = function (req, callback) {
                 obj.file_size = response.headers['content-length'];
                 obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
                 obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
-                delete obj.manifest;
                 callback(null, obj);
             });
 
