@@ -28,7 +28,7 @@ const config = require('../config/config'),
     uuid = require('uuid'),
     async = require('async'),
     request = require('request'),
-    knex =require('../config/db')(),
+    knex = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects';
 
 /** TODO: refactor to check null fields
@@ -279,14 +279,14 @@ exports.import_mods = function (req, callback) {
                 modslibdisplay.create_display_record(record, function (display_record) {
 
                     let modsUpdateObj = {};
-                        modsUpdateObj.mods = mods;
-                        modsUpdateObj.display_record = display_record;
+                    modsUpdateObj.mods = mods;
+                    modsUpdateObj.display_record = display_record;
 
-                        if (record.mods_id === null || record.missing !== undefined) {
-                            modsUpdateObj.is_complete = 0;
-                        } else {
-                            modsUpdateObj.is_complete = 1;
-                        }
+                    if (record.mods_id === null || record.missing !== undefined) {
+                        modsUpdateObj.is_complete = 0;
+                    } else {
+                        modsUpdateObj.is_complete = 1;
+                    }
 
                     knex(REPO_OBJECTS)
                         .where({
@@ -349,6 +349,36 @@ exports.import_thumbnail = function (req, callback) {
 
     let sip_uuid = req.body.sip_uuid;
 
+    update_missing_component(sip_uuid, 'thumbnail', function (result) {
+        callback(result);
+    });
+
+    return false;
+};
+
+/**
+ * Imports missing master path
+ * @param req
+ * @param callback
+ */
+exports.import_master = function (req, callback) {
+
+    let sip_uuid = req.body.sip_uuid;
+
+    update_missing_component(sip_uuid, 'master', function (result) {
+        callback(result);
+    });
+
+    return false;
+};
+
+/**
+ * Adds missing component data to repository record
+ * @param sip_uuid
+ * @param type
+ */
+const update_missing_component = function (sip_uuid, type, callback) {
+
     archivematica.get_dip_path(sip_uuid, function (dip_path) {
 
         if (dip_path.error !== undefined && dip_path.error === true) {
@@ -368,12 +398,29 @@ exports.import_thumbnail = function (req, callback) {
                 throw 'FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to get mets';
             }
 
-            let metsResults = metslib.process_mets(sip_uuid, dip_path, response.mets),
-                thumbnail = metsResults[0].dip_path + '/thumbnails/' + metsResults[0].uuid + '.jpg';
-
             let record = {};
-            record.thumbnail = thumbnail;
 
+            if (type === 'thumbnail') {
+                let metsResults = metslib.process_mets(sip_uuid, dip_path, response.mets);
+                record.thumbnail = metsResults[0].dip_path + '/thumbnails/' + metsResults[0].uuid + '.jpg';
+            } else if (type === 'master') {
+
+                let metsResults = metslib.process_mets(sip_uuid, dip_path, response.mets),
+                    master = metsResults[0].dip_path + '/objects/' + metsResults[0].uuid + '-' + metsResults[0].file;
+
+
+                if (master.indexOf('tif') !== -1) {
+                    master = master.replace('tif', 'jp2');
+                }
+
+                if (master.indexOf('wav') !== -1) {
+                    master = master.replace('wav', 'mp3');
+                }
+
+                record.file_name = master;
+            }
+
+            // update db record
             knex(REPO_OBJECTS)
                 .where({
                     sip_uuid: sip_uuid
@@ -381,42 +428,67 @@ exports.import_thumbnail = function (req, callback) {
                 .update(record)
                 .then(function (data) {
 
-                    let update_doc_url = config.apiUrl + '/api/admin/v1/indexer/update_fragment';
-
-                    console.log(update_doc_url);
-                    console.log(sip_uuid);
-                    console.log(record.thumbnail);
-
-                    request.put({
-                        url: update_doc_url,
+                    /*
+                     rebuild display record
+                     */
+                    request.post({
+                        url: config.apiUrl + '/api/admin/v1/repo/reset',
                         form: {
-                            'sip_uuid': sip_uuid,
-                            'fragment': {
-                                doc: {
-                                    thumbnail: record.thumbnail
-                                }
-                            }
-                        },
-                        timeout: 25000
+                            'pid': sip_uuid
+                        }
                     }, function (error, httpResponse, body) {
 
                         if (error) {
-                            logger.module().error('ERROR: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to update doc ' + error);
+                            logger.module().error('ERROR: /import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] indexer error ' + error);
                             return false;
                         }
 
-                        if (httpResponse.statusCode === 200) {
+                        if (httpResponse.statusCode === 201) {
 
-                            callback({
-                                status: 201,
-                                message: 'Thumbnail path imported.'
-                            });
+                            logger.module().info('INFO: /import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets) display record rebuilt ');
+
+                            setTimeout(function () {
+
+                                /*
+                                 reindex record
+                                 */
+                                request.post({
+                                    url: config.apiUrl + '/api/admin/v1/indexer',
+                                    form: {
+                                        'sip_uuid': sip_uuid
+                                    }
+                                }, function (error, httpResponse, body) {
+
+                                    if (error) {
+                                        logger.module().error('ERROR: /import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] indexer error ' + error);
+                                        return false;
+                                    }
+
+                                    if (httpResponse.statusCode === 200) {
+
+                                        logger.module().info('INFO: /import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets) record reindexed');
+
+                                        callback({
+                                            status: 201,
+                                            message: 'Missing thumbnail imported.'
+                                        });
+
+                                        return false;
+
+                                    } else {
+                                        logger.module().error('ERROR: /import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] http error ' + httpResponse.statusCode + '/' + body);
+                                        return false;
+                                    }
+                                });
+
+                            }, 6000);
 
                             return false;
+
                         } else {
-                            logger.module().error('ERROR: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to update doc ' + httpResponse.statusCode + '/' + body);
+                            logger.module().error('ERROR: /import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] http error ' + httpResponse.statusCode + '/' + body);
+                            return false;
                         }
-
                     });
 
                     return null;
@@ -424,101 +496,6 @@ exports.import_thumbnail = function (req, callback) {
                 .catch(function (error) {
                     logger.module().fatal('FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to save record ' + error);
                     throw 'FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to save record ' + error;
-                });
-        });
-    });
-};
-
-/**
- * Imports missing master path
- * @param req
- * @param callback
- */
-exports.import_master = function (req, callback) {
-
-    let sip_uuid = req.body.sip_uuid;
-
-    archivematica.get_dip_path(sip_uuid, function (dip_path) {
-
-        if (dip_path.error !== undefined && dip_path.error === true) {
-            logger.module().fatal('FATAL: [/import/model module (import_master/archivematica.get_dip_path)] dip path error ' + dip_path.error.message);
-            throw 'FATAL: [/import/model module (import_master/archivematica.get_dip_path)] dip path error ' + dip_path.error.message;
-        }
-
-        let data = {
-            sip_uuid: sip_uuid,
-            dip_path: dip_path
-        };
-
-        duracloud.get_mets(data, function (response) {
-
-            if (response.error !== undefined && response.error === true) {
-                logger.module().fatal('FATAL: [/import/model module (import_master/archivematica.get_dip_path/duracloud.get_mets)] unable to get mets');
-                throw 'FATAL: [/import/model module (import_master/archivematica.get_dip_path/duracloud.get_mets)] unable to get mets';
-            }
-
-            let metsResults = metslib.process_mets(sip_uuid, dip_path, response.mets),
-                master = metsResults[0].dip_path + '/objects/' + metsResults[0].uuid + '-' + metsResults[0].file;
-
-
-            if (master.indexOf('tif') !== -1) {
-                master = master.replace('tif', 'jp2');
-            }
-
-            if (master.indexOf('wav') !== -1) {
-                master = master.replace('wav', 'mp3');
-            }
-
-            let record = {};
-            record.file_name = master;
-
-            knex(REPO_OBJECTS)
-                .where({
-                    sip_uuid: sip_uuid
-                })
-                .update(record)
-                .then(function (data) {
-
-                    let update_doc_url = config.apiUrl + '/api/admin/v1/indexer/update_fragment';
-
-                    request.put({
-                        url: update_doc_url,
-                        form: {
-                            'sip_uuid': sip_uuid,
-                            'fragment': {
-                                doc: {
-                                    thumbnail: record.thumbnail
-                                }
-                            }
-                        },
-                        timeout: 25000
-                    }, function (error, httpResponse, body) {
-
-                        if (error) {
-                            logger.module().error('ERROR: [/import/model module (import_master/archivematica.get_dip_path/duracloud.get_mets)] unable to update doc ' + error);
-                            return false;
-                        }
-
-                        if (httpResponse.statusCode === 200) {
-
-                            callback({
-                                status: 201,
-                                message: 'Master path imported.'
-                            });
-
-                            return false;
-
-                        } else {
-                            logger.module().error('ERROR: [/import/model module (import_master/archivematica.get_dip_path/duracloud.get_mets)] unable to update doc ' + httpResponse.statusCode + '/' + body);
-                        }
-
-                    });
-
-                    return null;
-                })
-                .catch(function (error) {
-                    logger.module().fatal('FATAL: [/import/model module (import_master/archivematica.get_dip_path/duracloud.get_mets)] unable to save record ' + error);
-                    throw 'FATAL: [/import/model module (import_master/archivematica.get_dip_path/duracloud.get_mets)] unable to save record ' + error;
                 });
         });
     });

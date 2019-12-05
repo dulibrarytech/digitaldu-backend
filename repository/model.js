@@ -1617,6 +1617,7 @@ exports.reset_display_record = function (req, callback) {
 
         let obj = {};
 
+        // all records
         if (params.none !== undefined) {
 
             knex(REPO_OBJECTS)
@@ -1635,6 +1636,7 @@ exports.reset_display_record = function (req, callback) {
 
         } else {
 
+            // single record
             knex(REPO_OBJECTS)
                 .select('is_member_of_collection', 'pid', 'uri', 'handle', 'object_type', 'mods', 'thumbnail', 'file_name', 'mime_type', 'is_published')
                 .where(params)
@@ -1658,6 +1660,7 @@ exports.reset_display_record = function (req, callback) {
 
             if (obj.data.length === 0) {
                 clearInterval(timer);
+                callback(null, obj);
                 return false;
             }
 
@@ -1675,21 +1678,20 @@ exports.reset_display_record = function (req, callback) {
                     .update({
                         display_record: display_record
                     })
-                    .then(function (data) {
-                    })
+                    .then(function (data) {})
                     .catch(function (error) {
                         logger.module().fatal('FATAL: [/repository/model module (reset_display_record/create_display_record/modslibdisplay.create_display_record)] unable to save collection record ' + error);
                         throw 'FATAL: [/repository/model module (reset_display_record/create_display_record/modslibdisplay.create_display_record)] unable to save collection record ' + error;
                     });
             });
 
-        }, 3000);
+        }, 2000);
     }
 
     async.waterfall([
         get_data,
         create_display_record
-    ], function (error, obj) {
+    ], function (error, results) {
 
         if (error) {
             logger.module().error('ERROR: [/repository/model module (reset_display_record/async.waterfall)] ' + error);

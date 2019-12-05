@@ -578,3 +578,5 @@ const republish = function () {
             throw 'FATAL: [/import/utils module (reindex/republish/publish)] Unable to get object ' + error;
         });
 };
+
+// TODO: rebuild display records after archivesspace plugin changes
