@@ -46,7 +46,7 @@ exports.process_mets = function (sip_uuid, dip_path, xml) {
             }
 
             // get mime type for pdf files
-            if (premisObjectCharacteristicsExtension !== undefined) {
+            if (premisObjectCharacteristicsExtension !== undefined && premisObjectCharacteristicsExtension.childNamed('fits') !== undefined) {
 
                 let fits = premisObjectCharacteristicsExtension.childNamed('fits');
                 let toolOutput = fits.childNamed('toolOutput'),
