@@ -111,6 +111,12 @@ exports.import_master = function (req, res) {
     });
 };
 
+exports.import_checksum = function (req, res) {
+    Model.import_checksum(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
 exports.poll_transfer_status = function (req, res) {
     Import.poll_transfer_status(req, function (data) {
         res.status(data.status).send(data.data);

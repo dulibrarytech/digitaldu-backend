@@ -356,6 +356,103 @@ exports.import_thumbnail = function (req, callback) {
     return false;
 };
 
+exports.import_checksum = function (req, callback) {
+
+    let sip_uuid = req.body.sip_uuid;
+
+    // TODO: checksum in duracloud / HEAD request (master)
+    duracloud.get_object_manifest(obj, function (response) {
+
+        /*
+         if manifest is not present proceed with retrieving data
+         */
+        if (response.error !== undefined && response.error === true) {
+
+            logger.module().error('ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_manifest)] unable to get manifest or manifest does not exist ' + response.error_message);
+            obj.manifest = false;
+            callback(null, obj);
+            return false;
+
+        } else {
+
+            let manifest = manifestlib.process_manifest(response);
+
+            obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file + '.dura-manifest';
+            obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
+            obj.manifest = true;
+
+            if (manifest.length > 0) {
+                obj.checksum = manifest[0].checksum;
+                obj.file_size = manifest[0].file_size;
+            } else {
+                obj.checksum = null;
+                obj.file_size = null;
+                logger.module().error('ERROR: [/import/queue module (get_object_manifest)] unable to get data from manifest');
+            }
+
+            callback(null, obj);
+            return false;
+        }
+    });
+
+
+    // gets headers only
+    duracloud.get_object_info(obj, function (response) {
+
+        if (response.error === true) {
+
+            logger.module().error('ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_info)] Unable to get duracloud object ' + response.error_message);
+
+            let failObj = {
+                is_member_of_collection: '',
+                sip_uuid: sip_uuid,
+                message: 'ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_info)] Unable to get duracloud object ' + response.error_message
+            };
+
+            importlib.save_to_fail_queue(failObj);
+            importlib.clear_queue_record({
+                sip_uuid: sip_uuid
+            }, function (result) {
+                if (result === true) {
+                    callback(null, obj);
+                }
+            });
+
+            return false;
+        }
+
+        obj.checksum = response.headers['content-md5'];
+        obj.file_size = response.headers['content-length'];
+
+    });
+
+
+    knex(REPO_OBJECTS)
+        .where({
+            sip_uuid: sip_uuid
+        })
+        .update({
+            checksum: ''
+        })
+        .then(function (data) {
+
+            /*
+            callback({
+                status: 201,
+                message: 'MODS ID imported.'
+            });
+            */
+
+            return null;
+        })
+        .catch(function (error) {
+            logger.module().fatal('FATAL: [/import/model module (import_mods_id)] unable to save mods id ' + error);
+            throw 'FATAL: [/import/model module (import_mods_id)] unable to save mods id ' + error;
+        });
+
+    return false;
+};
+
 /**
  * Imports missing master path
  * @param req

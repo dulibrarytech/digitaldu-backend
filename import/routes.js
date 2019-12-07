@@ -68,6 +68,9 @@ module.exports = function (app) {
     app.route('/api/admin/v1/import/master')
         .post(Import.import_master);
 
+    app.route('/api/admin/v1/import/checksum')
+        .post(Import.import_checksum);
+
     app.route('/api/admin/v1/import/poll/transfer_status')
         .get(token.verify, Import.poll_transfer_status);
 

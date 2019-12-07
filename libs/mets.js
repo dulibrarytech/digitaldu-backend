@@ -40,15 +40,15 @@ exports.process_mets = function (sip_uuid, dip_path, xml) {
                 premisObjectCharacteristics = premisObject.childNamed('premis:objectCharacteristics'),
                 premisObjectCharacteristicsExtension = premisObjectCharacteristics.childNamed('premis:objectCharacteristicsExtension');
 
-            if (premisObjectCharacteristicsExtension.childNamed('rdf:RDF') !== undefined) {
+            if (premisObjectCharacteristicsExtension !== undefined && premisObjectCharacteristicsExtension.childNamed('rdf:RDF') !== undefined) {
                 let rdfDescription = premisObjectCharacteristicsExtension.childNamed('rdf:RDF').childNamed('rdf:Description');
                 mime_type = rdfDescription.childNamed('File:MIMEType').val;
             }
 
-            let fits = premisObjectCharacteristicsExtension.childNamed('fits');
-
             // get mime type for pdf files
-            if (fits !== undefined) {
+            if (premisObjectCharacteristicsExtension !== undefined) {
+
+                let fits = premisObjectCharacteristicsExtension.childNamed('fits');
                 let toolOutput = fits.childNamed('toolOutput'),
                     tool = toolOutput.childNamed('tool'),
                     fileUtilityOutput = tool.childNamed('fileUtilityOutput'),

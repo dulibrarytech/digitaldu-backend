@@ -428,6 +428,8 @@ const importModule = (function () {
 
             if (incompleteRecords.length === 0) {
                 clearInterval(timer);
+                // reaload
+                importModule.getIncompleteImportRecords();
                 return false;
             } else {
 
@@ -465,7 +467,7 @@ const importModule = (function () {
                 */
             }
 
-        }, 5000);
+        }, 10000);
 
         return false;
     };
@@ -638,7 +640,7 @@ const importModule = (function () {
 
                 let responses = document.getElementById('responses');
                 responses.innerHTML = '<p><strong>Thumbnail path added to repository record</strong></p>';
-                importModule.getIncompleteImportRecords();
+                // importModule.getIncompleteImportRecords();
 
                 setTimeout(function () {
                     $('#responses').html('');
@@ -676,7 +678,7 @@ const importModule = (function () {
 
                 let responses = document.getElementById('responses');
                 responses.innerHTML = '<p><strong>Master path added to repository record</strong></p>';
-                importModule.getIncompleteImportRecords();
+                // importModule.getIncompleteImportRecords();
 
                 setTimeout(function () {
                     $('#responses').html('');
@@ -696,7 +698,40 @@ const importModule = (function () {
     };
 
     obj.importChecksum = function (sip_uuid) {
-        // TODO:
+
+        if (sip_uuid === undefined) {
+            // TODO: render message
+            return false;
+        }
+
+        let url = api + '/api/admin/v1/import/checksum',
+            request = new Request(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({sip_uuid: sip_uuid}),
+                mode: 'cors'
+            });
+
+        const callback = function (response) {
+
+            if (response.status === 201) {
+
+                let responses = document.getElementById('responses');
+                responses.innerHTML = '<p><strong>Checksum added to repository record</strong></p>';
+
+                setTimeout(function () {
+                    $('#responses').html('');
+                }, 5000);
+
+            } else {
+                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '. Unable to import MODS.</div>';
+                renderError(message);
+            }
+        };
+
+        http.req(request, callback);
     };
 
     /**
