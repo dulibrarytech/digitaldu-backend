@@ -352,7 +352,8 @@ exports.update_metadata_cron = function (req, callback) {
                                 knex(REPO_OBJECTS)
                                     .select('*')
                                     .where({
-                                        mods_id: record.mods_id
+                                        mods_id: record.mods_id,
+                                        is_active: 1
                                     })
                                     .then(function (data) {
 
@@ -487,7 +488,8 @@ exports.update_thumbnail = function (req, callback) {
     // TODO: update index
     knex(REPO_OBJECTS)
         .where({
-            pid: obj.pid
+            pid: obj.pid,
+            is_active: 1
         })
         .update({
             thumbnail: obj.thumbnail
@@ -498,7 +500,8 @@ exports.update_thumbnail = function (req, callback) {
             knex(REPO_OBJECTS)
                 .select('*')
                 .where({
-                    pid: obj.pid
+                    pid: obj.pid,
+                    is_active: 1
                 })
                 .then(function (data) {
 
@@ -577,7 +580,8 @@ const update_mods = function (record, updated_record, obj, callback) {
 
     knex(REPO_OBJECTS)
         .where({
-            mods_id: record.mods_id
+            mods_id: record.mods_id,
+            is_active: 1
         })
         .update({
             mods: updated_record.mods,
@@ -865,7 +869,8 @@ exports.publish_objects = function (req, callback) {
 
         knex(REPO_OBJECTS)
             .where({
-                pid: obj.is_member_of_collection
+                pid: obj.is_member_of_collection,
+                is_active: 1
             })
             .update({
                 is_published: 1
@@ -974,7 +979,8 @@ exports.publish_objects = function (req, callback) {
 
         knex(REPO_OBJECTS)
             .where({
-                is_member_of_collection: obj.is_member_of_collection
+                is_member_of_collection: obj.is_member_of_collection,
+                is_active: 1
             })
             .update({
                 is_published: 1
@@ -994,7 +1000,8 @@ exports.publish_objects = function (req, callback) {
             .select('sip_uuid')
             .where({
                 is_member_of_collection: obj.is_member_of_collection,
-                is_published: 1
+                is_published: 1,
+                is_active: 1
             })
             .then(function (data) {
 
@@ -1164,7 +1171,8 @@ exports.publish_objects = function (req, callback) {
 
         knex(REPO_OBJECTS)
             .where({
-                sip_uuid: obj.sip_uuid
+                sip_uuid: obj.sip_uuid,
+                is_active: 1
             })
             .update({
                 is_published: 1
@@ -1351,7 +1359,8 @@ exports.unpublish_objects = function (req, callback) {
 
         knex(REPO_OBJECTS)
             .where({
-                sip_uuid: obj.is_member_of_collection
+                sip_uuid: obj.is_member_of_collection,
+                is_active: 1
             })
             .update({
                 is_published: 0
@@ -1442,7 +1451,8 @@ exports.unpublish_objects = function (req, callback) {
 
         knex(REPO_OBJECTS)
             .where({
-                is_member_of_collection: obj.is_member_of_collection
+                is_member_of_collection: obj.is_member_of_collection,
+                is_active: 1
             })
             .update({
                 is_published: 0
@@ -1467,7 +1477,8 @@ exports.unpublish_objects = function (req, callback) {
             .select('sip_uuid')
             .where({
                 is_member_of_collection: obj.is_member_of_collection,
-                is_published: 0
+                is_published: 0,
+                is_active: 1
             })
             .then(function (data) {
 
@@ -1623,7 +1634,8 @@ exports.reset_display_record = function (req, callback) {
             knex(REPO_OBJECTS)
                 .select('is_member_of_collection', 'pid', 'uri', 'handle', 'object_type', 'mods', 'thumbnail', 'file_name', 'mime_type', 'is_published')
                 .whereNot({
-                    mods: null
+                    mods: null,
+                    is_active: 1
                 })
                 .then(function (data) {
                     obj.data = data;
@@ -1641,7 +1653,8 @@ exports.reset_display_record = function (req, callback) {
                 .select('is_member_of_collection', 'pid', 'uri', 'handle', 'object_type', 'mods', 'thumbnail', 'file_name', 'mime_type', 'is_published')
                 .where(params)
                 .whereNot({
-                    mods: null
+                    mods: null,
+                    is_active: 1
                 })
                 .then(function (data) {
                     obj.data = data;
@@ -1673,7 +1686,8 @@ exports.reset_display_record = function (req, callback) {
                 knex(REPO_OBJECTS)
                     .where({
                         is_member_of_collection: recordObj.is_member_of_collection,
-                        pid: recordObj.pid
+                        pid: recordObj.pid,
+                        is_active: 1
                     })
                     .update({
                         display_record: display_record

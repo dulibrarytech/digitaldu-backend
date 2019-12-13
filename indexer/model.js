@@ -54,7 +54,8 @@ exports.get_index_record = function (req, callback) {
     knex(REPO_OBJECTS)
         .select('pid', 'is_member_of_collection', 'uri', 'handle', 'object_type', 'display_record', 'is_published')
         .where({
-            sip_uuid: sip_uuid
+            sip_uuid: sip_uuid,
+            is_active: 1
         })
         .then(function (data) {
 
@@ -148,7 +149,8 @@ exports.index_records = function (req, callback) {
         knex(REPO_OBJECTS)
             .select('pid', 'is_member_of_collection', 'uri', 'handle', 'object_type', 'display_record', 'is_published')
             .where({
-                is_indexed: 0
+                is_indexed: 0,
+                is_active: 1
             })
             .whereNot({
                 display_record: null
@@ -263,10 +265,12 @@ exports.index_records = function (req, callback) {
     // reset is_indexed fields
     knex(REPO_OBJECTS)
         .where({
-            is_indexed: 1
+            is_indexed: 1,
+            is_active: 1
         })
         .update({
-            is_indexed: 0
+            is_indexed: 0,
+            is_active: 1
         })
         .then(function (data) {
             index(index_name);

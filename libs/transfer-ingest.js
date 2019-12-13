@@ -370,6 +370,8 @@ exports.confirm_transfer_approval = function (response, object, callback) {
             error: true,
             message: 'Transfer not approved'
         });
+
+        return false;
     }
 };
 
