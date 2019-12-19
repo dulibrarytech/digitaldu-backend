@@ -1253,6 +1253,7 @@ exports.create_repo_record = function (req, callback) {
 
         // look for null values in object as it indicates that the record is incomplete
         // TODO: not working
+        /*
         for (let i in results) {
             if (results[i] === null) {
                 importlib.flag_incomplete_record(results);
@@ -1260,6 +1261,7 @@ exports.create_repo_record = function (req, callback) {
                 break;
             }
         }
+        */
 
         let collection = results.is_member_of_collection.replace(':', '_');
 
