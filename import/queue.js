@@ -1362,7 +1362,7 @@ exports.poll_import_status = function (req, callback) {
         .select('sip_uuid', 'uuid', 'file', 'file_id', 'type', 'type', 'dip_path', 'mime_type', 'message', 'status', 'created')
         .whereRaw('DATE(created) = CURRENT_DATE')
         .orderBy('created', 'desc')
-        .groupBy('sip_uuid')
+        // .groupBy('sip_uuid')
         .then(function (data) {
             callback({
                 status: 200,

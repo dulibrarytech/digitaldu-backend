@@ -970,7 +970,8 @@ const importModule = (function () {
                                 failData += '<tr>';
                                 failData += '<td>' + response[i].message + '</td>';
                                 failData += '<td>' + response[i].sip_uuid + '</td>';
-                                failData += '<td>' + response[i].created + '</td>';
+                                // failData += '<td>' + response[i].created + '</td>';
+                                failData += '<td>' + moment(response[i].created).tz('America/Denver').format('MM-DD-YYYY, h:mm:ss a') + '</td>';
                                 failData += '</tr>';
                             }
 

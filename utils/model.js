@@ -309,10 +309,11 @@ exports.check_objects = function (req, callback) {
                             object: record.file_name,
                             type: 'master',
                             mime_type: record.mime_type,
-                            status_code: 0,
-                            message: error
+                            status_code: 0
+                            // message: error
                         };
 
+                        // save data for incomplete record
                         knexQ('tbl_incomplete_queue')
                             .insert(obj)
                             .then(function (data) {
@@ -343,13 +344,29 @@ exports.check_objects = function (req, callback) {
                             object: record.file_name,
                             type: 'master',
                             mime_type: record.mime_type,
-                            status_code: httpResponse.statusCode,
-                            message: body
+                            status_code: httpResponse.statusCode
+                            // message: JSON.stringify(body)
                         };
 
                         knexQ('tbl_incomplete_queue')
                             .insert(obj)
                             .then(function (data) {
+                                // update incomplete record in main repo DB
+                                knex(REPO_OBJECTS)
+                                    .where({
+                                        sip_uuid: record.sip_uuid
+                                    })
+                                    .update({
+                                        is_active: 0,
+                                        is_complete: 0
+                                    })
+                                    .then(function (data) {
+                                        console.log(data);
+                                    })
+                                    .catch(function (error) {
+                                        logger.module().fatal('FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to update incomplete record data ' + error);
+                                        throw 'FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to update incomplete record data ' + error;
+                                    });
                                 return null;
                             })
                             .catch(function (error) {
@@ -391,8 +408,8 @@ exports.check_objects = function (req, callback) {
                             object: record.thumbnail,
                             type: 'thumbnail',
                             mime_type: record.mime_type,
-                            status_code: httpResponse.statusCode,
-                            message: body
+                            status_code: httpResponse.statusCode
+                            // message: JSON.stringify(body)
                         };
 
                         knexQ('tbl_incomplete_queue')
@@ -409,7 +426,7 @@ exports.check_objects = function (req, callback) {
                     }
                 });
 
-            }, 100);
+            }, 550);
 
             callback({
                 status: 200,
