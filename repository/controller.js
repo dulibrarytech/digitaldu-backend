@@ -44,6 +44,13 @@ exports.get_admin_objects = function (req, res) {
     });
 };
 
+/* gets unpublished objects by collection */
+exports.get_unpublished_admin_objects = function (req, res) {
+    Service.get_unpublished_admin_objects(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
 /* gets single administrator object */
 exports.get_admin_object = function (req, res) {
     Repo.get_admin_object(req, function (data) {

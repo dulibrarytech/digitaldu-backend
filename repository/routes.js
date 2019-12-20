@@ -32,6 +32,9 @@ module.exports = function (app) {
         .post(token.verify, Repo.create_collection_object)
         .put(apikey.verify, Repo.update_metadata_cron);
 
+    app.route('/api/admin/v1/repo/object/unpublished')
+        .get(Repo.get_unpublished_admin_objects);  // token.verify, 
+
     app.route('/api/admin/v1/repo/object/thumbnail')
         .get(Repo.get_thumbnail)  // token.verify,
         .post(token.verify, Repo.update_thumbnail);

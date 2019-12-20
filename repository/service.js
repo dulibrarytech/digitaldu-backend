@@ -170,7 +170,7 @@ exports.get_viewer = function (req, callback) {
 };
 
 /**
- *
+ * Gets objects by collection
  * @param req
  * @param callback
  */
@@ -206,6 +206,80 @@ exports.get_admin_objects = function (req, callback) {
             }
         }
     };
+
+    client.search({
+        from: page,
+        size: total_on_page,
+        index: config.elasticSearchBackIndex,
+        type: 'data',
+        sort: sort,
+        body: query
+    }).then(function (body) {
+
+        callback({
+            status: 200,
+            data: body.hits
+        });
+    }, function (error) {
+        callback(error);
+    });
+};
+
+/**
+ * Gets unpublished objects by collection
+ * @param req
+ * @param callback
+ */
+exports.get_unpublished_admin_objects = function (req, callback) {
+
+    let is_member_of_collection = req.query.pid,
+        page = req.query.page,
+        total_on_page = 10,
+        sort = 'title.keyword:asc';
+
+    if (req.query.total_on_page !== undefined) {
+        total_on_page = req.query.total_on_page;
+    }
+
+    if (req.query.sort !== undefined) {
+        sort = req.query.sort;
+    }
+
+    if (page === undefined) {
+        page = 0;
+    } else {
+        page = (page - 1) * total_on_page;
+    }
+
+    let query_dist = {
+        'query': {
+            'bool': {
+                'must': {
+                    'match': {
+                        'is_member_of_collection.keyword': is_member_of_collection
+                    }
+                }
+            }
+        }
+    };
+
+    let query = {
+        'query': {
+            'bool': {
+                'must': [{
+                    'match': {
+                        'is_member_of_collection.keyword': is_member_of_collection
+                    }
+                },
+                    {
+                        'match': {
+                            'is_published': 0
+                        }
+                    }]
+            }
+        }
+    };
+
 
     client.search({
         from: page,
