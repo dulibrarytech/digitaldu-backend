@@ -37,6 +37,9 @@ module.exports = function (app) {
     app.route('/dashboard/objects')
         .get(Dashboard.get_dashboard_objects);
 
+    app.route('/dashboard/objects/unpublished')
+        .get(Dashboard.get_dashboard_unpublished_objects);
+
     app.route('/dashboard/object')
         .get(Dashboard.get_dashboard_object_detail);
 

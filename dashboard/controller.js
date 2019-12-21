@@ -46,6 +46,12 @@ exports.get_dashboard_objects = function (req, res) {
     });
 };
 
+exports.get_dashboard_unpublished_objects = function (req, res) {
+    res.render('dashboard-unpublished-objects', {
+        host: config.host
+    });
+};
+
 exports.get_dashboard_download = function (req, res) {
     res.render('dashboard-download', {
         host: config.host

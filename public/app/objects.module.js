@@ -220,6 +220,51 @@ const objectsModule = (function () {
     };
 
     /**
+     * Gets unpublished records
+     */
+    obj.getUnPublishedObjects = function () {
+
+        let pid = helperModule.getParameterByName('pid'),
+            token = userModule.getUserToken();
+
+        let url = api + '/api/admin/v1/repo/object/unpublished?pid=' + pid,
+            request = new Request(url, {
+                method: 'GET',
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+        const callback = function (response) {
+
+            if (response.status === 200) {
+
+                response.json().then(function (data) {
+
+                    $('#message').html('');
+
+                    if (data.length === 0) {
+                        let message = '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No records found.</div>';
+                        $('#message').html(message);
+                    } else {
+                        objectsModule.renderDisplayRecords(data);
+                    }
+                });
+
+            } else {
+
+                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '. Unable to get incomplete records.</div>';
+                renderError(message);
+            }
+
+        };
+
+        http.req(request, callback);
+    };
+
+    /**
      * Renders object metadata
      * @param data
      * @returns {boolean}
@@ -233,7 +278,7 @@ const objectsModule = (function () {
         $('#current-collection').prop('href', '/dashboard/collections/add?is_member_of_collection=' + is_member_of_collection);
 
         if (data.total === 0) {
-            html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; No objects or collections found.</strong></div>';
+            html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; No unpublished objects found for this collection.</strong></div>';
             $('#objects').html(html);
             return false;
         }
