@@ -431,8 +431,7 @@ const objectsModule = (function () {
                 html += '</ul>';
             }
 
-            // TODO:... refactor to accommodate large parts arrays
-            if (record.display_record.parts !== undefined && record.display_record.parts.length !== 0) {
+            if (record.display_record.parts !== undefined && record.display_record.parts.length !== 1) {
 
                 let pid = data.hits[i]._source.pid,
                     type = data.hits[i]._source.mime_type;
@@ -442,13 +441,19 @@ const objectsModule = (function () {
 
                 for (let i = 0; i < record.display_record.parts.length; i++) {
 
-                    html += '<li>' + record.display_record.parts[i].title + ' ( ' + record.display_record.parts[i].type + ' ) order: ' + record.display_record.parts[i].order;
+                    if (i === 10) {
+                        html += '<li><strong>Only showing ' + i + ' out of ' + record.display_record.parts.length + ' parts.</strong></li>';
+                        break;
+                    } else {
 
-                    // TODO: ....
-                    let tn = helperModule.getTn(record.display_record.parts[i].thumbnail, '');
-                    // console.log(record.display_record.pid + '_' + record.display_record.parts[i].order + '&type=' + record.display_record.mime_type);
+                        html += '<li>' + record.display_record.parts[i].title + ' ( ' + record.display_record.parts[i].type + ' ) order: ' + record.display_record.parts[i].order;
 
-                    html += '<br><img src="' + tn + '" width="100px" height="100px"></li>';
+                        // TODO: ....
+                        let tn = helperModule.getTn(record.display_record.parts[i].thumbnail, '');
+                        // console.log(record.display_record.pid + '_' + record.display_record.parts[i].order + '&type=' + record.display_record.mime_type);
+
+                        html += '<br><img src="' + tn + '" width="100px" height="100px"></li>';
+                    }
                 }
 
                 html += '</ul>';
