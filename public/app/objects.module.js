@@ -491,6 +491,8 @@ const objectsModule = (function () {
                     html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
                     html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data.hits[i]._source.pid + '\', \'collection\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
                 }
+
+                html += '<p><a href="' + api + '/dashboard/objects/unpublished?pid=' + data.hits[i]._source.pid + '"><i class="fa fa-info-circle"></i>&nbsp;Unpublished objects</a></p>';
             }
 
             // handle objects
