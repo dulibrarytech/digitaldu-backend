@@ -52,7 +52,7 @@ exports.get_index_record = function (req, callback) {
     }
 
     knex(REPO_OBJECTS)
-        .select('pid', 'is_member_of_collection', 'uri', 'handle', 'object_type', 'display_record', 'is_published')
+        .select('pid', 'is_member_of_collection', 'uri', 'handle', 'thumbnail', 'object_type', 'display_record', 'is_published')
         .where({
             sip_uuid: sip_uuid,
             is_active: 1
@@ -68,6 +68,7 @@ exports.get_index_record = function (req, callback) {
                 collection_record.uri = data[0].uri;
                 collection_record.is_member_of_collection = data[0].is_member_of_collection;
                 collection_record.handle = data[0].handle;
+                collection_record.thumbnail = data[0].thumbnail;
                 collection_record.object_type = data[0].object_type;
                 collection_record.title = record.display_record.title;
                 collection_record.is_published = data[0].is_published;

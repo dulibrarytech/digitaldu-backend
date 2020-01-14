@@ -521,6 +521,7 @@ exports.update_thumbnail = function (req, callback) {
                     recordObj.object = data[0].file_name;
                     recordObj.mime_type = data[0].mime_type;
                     recordObj.mods = data[0].mods;
+                    recordObj.is_published = data[0].is_published;
 
                     modslibdisplay.create_display_record(recordObj, function (result) {
 
@@ -547,6 +548,82 @@ exports.update_thumbnail = function (req, callback) {
                             obj.display_record = result;
 
                         }
+
+                        knex(REPO_OBJECTS)
+                            .where({
+                                is_member_of_collection: recordObj.is_member_of_collection,
+                                pid: recordObj.pid,
+                                is_active: 1
+                            })
+                            .update({
+                                display_record: obj.display_record
+                            })
+                            .then(function (data) {
+
+                                // re-index admin record
+                                request.post({
+                                    url: config.apiUrl + '/api/admin/v1/indexer',
+                                    form: {
+                                        'sip_uuid': recordObj.sip_uuid
+                                    }
+                                }, function (error, httpResponse, body) {
+
+                                    if (error) {
+                                        logger.module().error('ERROR: [/repository/model module (update_thumbnail)] ' + error);
+                                        return false;
+                                    }
+
+                                    if (httpResponse.statusCode === 200) {
+
+                                        // re-index record to public index if already published
+                                        if (recordObj.is_published === 1) {
+
+                                            let reindex_url = config.apiUrl + '/api/admin/v1/indexer/reindex',
+                                                query = {
+                                                    'bool': {
+                                                        'must': {
+                                                            'match_phrase': {
+                                                                'pid': recordObj.sip_uuid
+                                                            }
+                                                        }
+                                                    }
+                                                };
+
+                                            request.post({
+                                                url: reindex_url,
+                                                form: {
+                                                    'query': query
+                                                },
+                                                timeout: 25000
+                                            }, function (error, httpResponse, body) {
+
+                                                if (error) {
+                                                    logger.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail ' + error);
+                                                    return false;
+                                                }
+
+                                                if (httpResponse.statusCode === 200) {
+                                                    return false;
+                                                } else {
+                                                    logger.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail ' + httpResponse.statusCode + '/' + body);
+                                                    return false;
+                                                }
+
+                                            });
+                                        }
+
+                                        return false;
+                                    } else {
+                                        logger.module().error('ERROR: [/repository/model module (update_thumbnail)] http error ' + httpResponse.statusCode + '/' + body);
+                                        return false;
+                                    }
+                                });
+
+                            })
+                            .catch(function (error) {
+                                logger.module().fatal('FATAL: [/repository/model module (update_thumbnail/create_display_record/modslibdisplay.create_display_record)] unable to update display record ' + error);
+                                throw 'FATAL: [/repository/model module (update_thumbnail/create_display_record/modslibdisplay.create_display_record)] unable to update display record ' + error;
+                            });
                     });
 
                     return null;

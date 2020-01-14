@@ -258,6 +258,9 @@ exports.get_uuids = function (req, callback) {
     });
 };
 
+// TODO: look for missing display records
+// TODO: add aip locations to repository records
+
 /**
  * confirms that repository files exist on Archivematica service
  * @param req
@@ -310,7 +313,6 @@ exports.check_objects = function (req, callback) {
                             type: 'master',
                             mime_type: record.mime_type,
                             status_code: 0
-                            // message: error
                         };
 
                         // save data for incomplete record
@@ -345,7 +347,6 @@ exports.check_objects = function (req, callback) {
                             type: 'master',
                             mime_type: record.mime_type,
                             status_code: httpResponse.statusCode
-                            // message: JSON.stringify(body)
                         };
 
                         knexQ('tbl_incomplete_queue')
