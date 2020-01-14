@@ -111,6 +111,7 @@ const collectionsModule = (function () {
 
                 let message = '<div class="alert alert-success"><i class="fa fa-check-circle"></i> Thumbnail updated</div>';
                 $('#message').html(message);
+                $('#thumbnail-url').val('');
 
                 setTimeout(function () {
                     $('#message').html('');
