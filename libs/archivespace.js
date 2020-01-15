@@ -33,7 +33,7 @@ exports.ping = function (callback) {
 
     request.get({
         url: apiUrl,
-        timeout: 5000
+        timeout: 45000
     }, function(error, httpResponse, body) {
 
         if (error) {
