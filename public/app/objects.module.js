@@ -288,11 +288,16 @@ const objectsModule = (function () {
         for (let i = 0; i < data.hits.length; i++) {
 
             let record = data.hits[i]._source,
-                // tn = helperModule.getTn(data.hits[i]._source.thumbnail, data.hits[i]._source.mime_type),
-                tn = configModule.getApi() + '/api/admin/v1/repo/object/tn?uuid=' + data.hits[i]._source.pid + '&type=' + data.hits[i]._source.mime_type,
                 pid = data.hits[i]._source.pid,
                 is_published = parseInt(data.hits[i]._source.is_published),
-                is_compound = parseInt(data.hits[i]._source.is_compound);
+                is_compound = parseInt(data.hits[i]._source.is_compound),
+                tn;
+
+            if (data.hits[i]._source.thumbnail !== undefined && data.hits[i]._source.thumbnail.search('http') === 0) {
+                tn = data.hits[i]._source.thumbnail;
+            } else {
+                tn = configModule.getApi() + '/api/admin/v1/repo/object/tn?uuid=' + data.hits[i]._source.pid + '&type=' + data.hits[i]._source.mime_type;
+            }
 
             html += '<div class="row">';
             html += '<div class="col-md-3">';
