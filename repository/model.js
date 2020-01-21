@@ -578,38 +578,43 @@ exports.update_thumbnail = function (req, callback) {
                                         // re-index record to public index if already published
                                         if (recordObj.is_published === 1) {
 
-                                            let reindex_url = config.apiUrl + '/api/admin/v1/indexer/reindex',
-                                                query = {
-                                                    'bool': {
-                                                        'must': {
-                                                            'match_phrase': {
-                                                                'pid': recordObj.sip_uuid
+                                            // wait to make sure updated admin record is ready
+                                            setTimeout(function () {
+
+                                                let reindex_url = config.apiUrl + '/api/admin/v1/indexer/reindex',
+                                                    query = {
+                                                        'bool': {
+                                                            'must': {
+                                                                'match_phrase': {
+                                                                    'pid': recordObj.sip_uuid
+                                                                }
                                                             }
                                                         }
+                                                    };
+
+                                                request.post({
+                                                    url: reindex_url,
+                                                    form: {
+                                                        'query': query
+                                                    },
+                                                    timeout: 25000
+                                                }, function (error, httpResponse, body) {
+
+                                                    if (error) {
+                                                        logger.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail ' + error);
+                                                        return false;
                                                     }
-                                                };
 
-                                            request.post({
-                                                url: reindex_url,
-                                                form: {
-                                                    'query': query
-                                                },
-                                                timeout: 25000
-                                            }, function (error, httpResponse, body) {
+                                                    if (httpResponse.statusCode === 200) {
+                                                        return false;
+                                                    } else {
+                                                        logger.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail ' + httpResponse.statusCode + '/' + body);
+                                                        return false;
+                                                    }
 
-                                                if (error) {
-                                                    logger.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail ' + error);
-                                                    return false;
-                                                }
+                                                });
 
-                                                if (httpResponse.statusCode === 200) {
-                                                    return false;
-                                                } else {
-                                                    logger.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail ' + httpResponse.statusCode + '/' + body);
-                                                    return false;
-                                                }
-
-                                            });
+                                            }, 7000);
                                         }
 
                                         return false;
