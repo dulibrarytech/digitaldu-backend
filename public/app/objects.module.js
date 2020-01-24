@@ -188,7 +188,7 @@ const objectsModule = (function () {
 
             if (response.status === 201) {
 
-                let message = '<div class="alert alert-success">Collection unpublished</div>';
+                let message = '<div class="alert alert-success">Unpublished</div>';
                 $('#message').html(message);
 
                 setTimeout(function () {
