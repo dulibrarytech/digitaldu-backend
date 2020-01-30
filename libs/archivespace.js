@@ -239,3 +239,53 @@ exports.get_session_token = function (callback) {
         }
     });
 };
+
+/**
+ * Terminates current session
+ * @param callback
+ */
+exports.destroy_session_token = function (session, callback) {
+
+    'use strict';
+
+    let apiUrl = config.archivespaceHost + '/logout';
+
+    request.post({
+        url: apiUrl,
+        headers: {
+            'Content-Type': 'application/json',
+            'X-ArchivesSpace-Session': session
+        },
+        timeout: 45000
+    }, function(error, httpResponse, body) {
+
+        if (error) {
+
+            logger.module().error('ERROR: [/libs/archivesspace lib (get_session_token)] unable get archivesspace session token ' + error);
+
+            callback({
+                error: true,
+                error_message: error
+            });
+
+            return false;
+        }
+
+        if (httpResponse.statusCode === 200) {
+
+            callback({
+                error: false,
+                data: body
+            });
+
+        } else {
+
+            logger.module().error('ERROR: [/libs/archivesspace lib (get_session_token)] unable get archivesspace session token ' + httpResponse.statusCode + '/' + error);
+
+            callback({
+                error: true,
+                error_message: body
+            });
+        }
+    });
+};

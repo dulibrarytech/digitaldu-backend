@@ -374,8 +374,8 @@ exports.update_metadata_cron = function (req, callback) {
                                         recordObj.thumbnail = data[0].thumbnail;
                                         recordObj.object = data[0].file_name;
                                         recordObj.mime_type = data[0].mime_type;
+                                        recordObj.is_published = data[0].is_published;
                                         recordObj.mods = updated_record.mods;
-                                        // TODO: is published
 
                                         modslibdisplay.create_display_record(recordObj, function (result) {
 

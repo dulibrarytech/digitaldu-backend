@@ -37,3 +37,15 @@ exports.reindex = function (req, res) {
         res.status(data.status).send(data.data);
     });
 };
+
+exports.get_archivesspace_ids = function (req, res) {
+    Utils.get_archivesspace_ids(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.fix_compound_objects = function (req, res) {
+    Utils.fix_compound_objects(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};

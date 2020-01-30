@@ -32,6 +32,12 @@ module.exports = function (app) {
     app.route('/api/admin/v1/utils/uuids')
         .get(apikey.verify, Utils.get_uuids);
 
+    app.route('/api/admin/v1/utils/objects/ids')
+        .get(Utils.get_archivesspace_ids);
+
+    app.route('/api/admin/v1/utils/objects/fix-compounds')
+        .get(Utils.fix_compound_objects);
+
     /*
     app.route('api/admin/v1/utils/restart')
         .post(Utils.restart);

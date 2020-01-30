@@ -1271,6 +1271,7 @@ exports.create_repo_record = function (req, callback) {
 
             if (result.status === 0) {
                 // ingest complete
+                // TODO: clear current archivesspace session
                 return false;
             }
 
