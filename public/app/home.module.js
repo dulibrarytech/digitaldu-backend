@@ -22,9 +22,6 @@ const homeModule = (function () {
 
     let obj = {};
 
-    /**
-     *
-     */
     obj.init = function () {
 
         if (!userModule.checkUserData()) {

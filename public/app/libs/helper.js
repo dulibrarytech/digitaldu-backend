@@ -137,8 +137,9 @@ const helperModule = (function () {
                     }
                 }
 
-                // $('#ping').html(html);
-                document.querySelector('#ping').innerHTML = DOMPurify.sanitize(html);
+                if (document.querySelector('#ping')) {
+                    document.querySelector('#ping').innerHTML = DOMPurify.sanitize(html);
+                }
             })
             .fail(function (jqXHR, textStatus) {
 

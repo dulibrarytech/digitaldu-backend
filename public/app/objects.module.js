@@ -21,11 +21,6 @@ const objectsModule = (function () {
     'use strict';
 
     let obj = {};
-
-    let renderError = function (message) {
-        $('#objects').html(message);
-    };
-
     let api = configModule.getApi();
 
     /**
@@ -60,8 +55,8 @@ const objectsModule = (function () {
 
                 if (error.status === 401) {
 
-                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + error.status + '). Your session has expired.  You will be redirected to the login page momentarily.</div>';
-                    renderError(message);
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + DOMPurify.sanitize(error.status) + '). Your session has expired.  You will be redirected to the login page momentarily.</div>';
+                    helperModule.renderError(message);
 
                     setTimeout(function () {
                         window.location.replace('/login');
@@ -69,8 +64,8 @@ const objectsModule = (function () {
 
                 } else {
 
-                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + error.status + '). An error has occurred. Unable to get objects.</div>';
-                    renderError(message);
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + DOMPurify.sanitize(error.status) + '). An error has occurred. Unable to get objects.</div>';
+                    helperModule.renderError(message);
                 }
 
             });
@@ -78,10 +73,11 @@ const objectsModule = (function () {
 
     /**
      * // TODO:...
+     * Initiates object download
      * @returns {boolean}
      */
     obj.downloadObject = function () {
-        let pid = helperModule.getParameterByName('pid'); // TODO: sanitize
+        let pid = helperModule.getParameterByName('pid');
         window.location.replace(api + '/api/v1/object/download?pid=' + pid);
         return false;
     };
@@ -100,7 +96,7 @@ const objectsModule = (function () {
         };
 
         let message = '<div class="alert alert-info"><i class="fa fa-check-circle"></i> Publishing...</div>';
-        $('#message').html(message);
+        document.querySelector('#message').innerHTML = message;
 
         let url = api + '/api/admin/v1/repo/publish',
             request = new Request(url, {
@@ -118,7 +114,8 @@ const objectsModule = (function () {
             if (response.status === 201) {
 
                 let message = '<div class="alert alert-success">Published</div>';
-                $('#message').html(message);
+                document.querySelector('#message').innerHTML = message;
+                // $('#message').html(message);
 
                 setTimeout(function () {
                     $('#message').html('');
@@ -128,7 +125,8 @@ const objectsModule = (function () {
             } else if (response.status === 418) {
 
                 let message = '<div class="alert alert-warning">Unable to publish object. (The object\'s parent collection must be published before attempting to publish one of its objects.)</div>';
-                $('#message').html(message);
+                document.querySelector('#message').innerHTML = message;
+                // $('#message').html(message);
 
                 setTimeout(function () {
                     $('#message').html('');
@@ -139,8 +137,8 @@ const objectsModule = (function () {
 
                 response.json().then(function (response) {
 
-                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.</div>';
-                    renderError(message);
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.</div>';
+                    helperModule.renderError(message);
 
                     setTimeout(function () {
                         window.location.replace('/login');
@@ -149,8 +147,8 @@ const objectsModule = (function () {
 
             } else {
 
-                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + ').  Unable to publish object(s).</div>';
-                renderError(message);
+                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + DOMPurify.sanitize(response.status) + ').  Unable to publish object(s).</div>';
+                helperModule.renderError(message);
             }
         };
 
@@ -171,7 +169,7 @@ const objectsModule = (function () {
         };
 
         let message = '<div class="alert alert-info"><i class="fa fa-check-circle"></i> Unpublishing...</div>';
-        $('#message').html(message);
+        document.querySelector('#message').innerHTML = message;
 
         let url = api + '/api/admin/v1/repo/unpublish',
             request = new Request(url, {
@@ -189,7 +187,7 @@ const objectsModule = (function () {
             if (response.status === 201) {
 
                 let message = '<div class="alert alert-success">Unpublished</div>';
-                $('#message').html(message);
+                document.querySelector('#message').innerHTML = message;
 
                 setTimeout(function () {
                     $('#message').html('');
@@ -201,8 +199,8 @@ const objectsModule = (function () {
 
                 response.json().then(function (response) {
 
-                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.</div>';
-                    renderError(message);
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.</div>';
+                    helperModule.renderError(message);
 
                     setTimeout(function () {
                         window.location.replace('/login');
@@ -211,8 +209,8 @@ const objectsModule = (function () {
 
             } else {
 
-                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + ').  Unable to unpublish object(s).</div>';
-                renderError(message);
+                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + DOMPurify.sanitize(response.status) + ').  Unable to unpublish object(s).</div>';
+                helperModule.renderError(message);
             }
         };
 
@@ -247,7 +245,7 @@ const objectsModule = (function () {
 
                     if (data.length === 0) {
                         let message = '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No records found.</div>';
-                        $('#message').html(message);
+                        document.querySelector('#message').innerHTML = message;
                     } else {
                         objectsModule.renderDisplayRecords(data);
                     }
@@ -255,8 +253,8 @@ const objectsModule = (function () {
 
             } else {
 
-                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '. Unable to get incomplete records.</div>';
-                renderError(message);
+                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to get incomplete records.</div>';
+                helperModule.renderError(message);
             }
 
         };
@@ -272,38 +270,40 @@ const objectsModule = (function () {
     obj.renderDisplayRecords = function (data) {
 
         let is_member_of_collection = helperModule.getParameterByName('pid'),
-            total_records = data.total,
+            total_records = DOMPurify.sanitize(data.total),
             html = '';
 
         $('#current-collection').prop('href', '/dashboard/collections/add?is_member_of_collection=' + is_member_of_collection);
 
         if (data.total === 0) {
             html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; No unpublished objects found for this collection.</strong></div>';
-            $('#objects').html(html);
+            document.querySelector('#objects').innerHTML = html;
             return false;
         }
 
-        $('#total-records').html('<p>Total Records: ' + total_records + '</p>');
+        if (document.querySelector('#total-records')) {
+            document.querySelector('#total-records').innerHTML = '<p>Total Records: ' + total_records + '</p>';
+        }
 
         for (let i = 0; i < data.hits.length; i++) {
 
             let record = data.hits[i]._source,
-                pid = data.hits[i]._source.pid,
-                is_published = parseInt(data.hits[i]._source.is_published),
-                is_compound = parseInt(data.hits[i]._source.is_compound),
+                pid = DOMPurify.sanitize(data.hits[i]._source.pid),
+                is_published = parseInt(DOMPurify.sanitize(data.hits[i]._source.is_published)),
+                is_compound = parseInt(DOMPurify.sanitize(data.hits[i]._source.is_compound)),
                 tn;
 
             if (data.hits[i]._source.thumbnail !== undefined && data.hits[i]._source.thumbnail.search('http') === 0) {
-                tn = data.hits[i]._source.thumbnail;
+                tn = DOMPurify.sanitize(data.hits[i]._source.thumbnail);
             } else {
-                tn = configModule.getApi() + '/api/admin/v1/repo/object/tn?uuid=' + data.hits[i]._source.pid + '&type=' + data.hits[i]._source.mime_type;
+                tn = configModule.getApi() + '/api/admin/v1/repo/object/tn?uuid=' + DOMPurify.sanitize(data.hits[i]._source.pid) + '&type=' + DOMPurify.sanitize(data.hits[i]._source.mime_type);
             }
 
             html += '<div class="row">';
             html += '<div class="col-md-3">';
 
             if (data.hits[i]._source.object_type === 'object') {
-                html += '<a href="' + configModule.getApi() + '/api/admin/v1/repo/object/viewer?uuid=' + data.hits[i]._source.pid + '" target="_blank">';
+                html += '<a href="' + configModule.getApi() + '/api/admin/v1/repo/object/viewer?uuid=' + DOMPurify.sanitize(data.hits[i]._source.pid) + '" target="_blank">';
                 html += '<img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + tn + '" alt="image" />';
                 html += '</a>';
             } else {
@@ -316,9 +316,9 @@ const objectsModule = (function () {
             if (record.display_record.title !== undefined) {
 
                 if (data.hits[i]._source.object_type === 'collection') {
-                    html += '<h4><a href="' + api + '/dashboard/objects/?pid=' + data.hits[i]._source.pid + '">' + record.display_record.title + '</a></h4>';
+                    html += '<h4><a href="' + api + '/dashboard/objects/?pid=' + DOMPurify.sanitize(data.hits[i]._source.pid) + '">' + DOMPurify.sanitize(record.display_record.title) + '</a></h4>';
                 } else if (data.hits[i]._source.object_type === 'object') {
-                    html += '<h4>' + record.display_record.title + '</h4>';
+                    html += '<h4>' + DOMPurify.sanitize(record.display_record.title) + '</h4>';
                 }
 
             } else {
@@ -326,10 +326,10 @@ const objectsModule = (function () {
             }
 
             html += '<ul>';
-            html += '<li><strong>Pid:</strong>&nbsp;<a target="_blank" href="' + record.handle + '">' + record.pid + '</a>&nbsp;&nbsp;<i class="fa fa-external-link"></i></li>';
+            html += '<li><strong>Pid:</strong>&nbsp;<a target="_blank" href="' + DOMPurify.sanitize(record.handle) + '">' + DOMPurify.sanitize(record.pid) + '</a>&nbsp;&nbsp;<i class="fa fa-external-link"></i></li>';
 
             if (record.display_record.uri !== undefined) {
-                html += '<li><strong>Uri:</strong>&nbsp;' + record.display_record.uri + '</li>';
+                html += '<li><strong>Uri:</strong>&nbsp;' + DOMPurify.sanitize(record.display_record.uri) + '</li>';
             }
 
             if (record.display_record.dates !== undefined && record.display_record.dates.length !== 0) {
@@ -340,9 +340,9 @@ const objectsModule = (function () {
                 for (let j = 0; j < record.display_record.dates.length; j++) {
 
                     if (data.hits[i]._source.object_type === 'collection') {
-                        html += '<li>' + record.display_record.dates[j].expression + ' ( ' + record.display_record.dates[j].date_type + '</a> )</li>';
+                        html += '<li>' + DOMPurify.sanitize(record.display_record.dates[j].expression) + ' ( ' + DOMPurify.sanitize(record.display_record.dates[j].date_type) + '</a> )</li>';
                     } else {
-                        html += '<li>' + record.display_record.dates[j].expression + ' ( ' + record.display_record.dates[j].type + '</a> )</li>';
+                        html += '<li>' + DOMPurify.sanitize(record.display_record.dates[j].expression) + ' ( ' + DOMPurify.sanitize(record.display_record.dates[j].type) + '</a> )</li>';
                     }
                 }
 
@@ -362,22 +362,22 @@ const objectsModule = (function () {
                         for (let prop in record.display_record.extents[i]) {
 
                             if (prop === 'number') {
-                                html += '<li>number: ' + record.display_record.extents[i][prop] + '</li>';
+                                html += '<li>number: ' + DOMPurify.sanitize(record.display_record.extents[i][prop]) + '</li>';
                             } else if (prop === 'container_summary') {
-                                html += '<li>container summary: ' + record.display_record.extents[i][prop] + '</li>';
+                                html += '<li>container summary: ' + DOMPurify.sanitize(record.display_record.extents[i][prop]) + '</li>';
                             } else if (prop === 'created_by') {
-                                html += '<li>created by: ' + record.display_record.extents[i][prop] + '</li>';
+                                html += '<li>created by: ' + DOMPurify.sanitize(record.display_record.extents[i][prop]) + '</li>';
                             } else if (prop === 'last_modified_by') {
-                                html += '<li>last modified by: ' + record.display_record.extents[i][prop] + '</li>';
+                                html += '<li>last modified by: ' + DOMPurify.sanitize(record.display_record.extents[i][prop]) + '</li>';
                             } else if (prop === 'portion') {
-                                html += '<li>portion: ' + record.display_record.extents[i][prop] + '</li>';
+                                html += '<li>portion: ' + DOMPurify.sanitize(record.display_record.extents[i][prop]) + '</li>';
                             } else if (prop ==='extent_type') {
-                                html += '<li>extent type: ' + record.display_record.extents[i][prop] + '</li>';
+                                html += '<li>extent type: ' + DOMPurify.sanitize(record.display_record.extents[i][prop]) + '</li>';
                             }
                         }
 
                     } else {
-                        html += '<li>' + record.display_record.extents[i] + '</li>';
+                        html += '<li>' + DOMPurify.sanitize(record.display_record.extents[i]) + '</li>';
                     }
                 }
 
@@ -390,7 +390,7 @@ const objectsModule = (function () {
                 html += '<ul>';
 
                 for (let i = 0; i < record.display_record.identifiers.length; i++) {
-                    html += '<li>' + record.display_record.identifiers[i].identifier + ' ( ' + record.display_record.identifiers[i].type + ' )</li>';
+                    html += '<li>' + DOMPurify.sanitize(record.display_record.identifiers[i].identifier) + ' ( ' + DOMPurify.sanitize(record.display_record.identifiers[i].type) + ' )</li>';
                 }
 
                 html += '</ul>';
@@ -416,7 +416,7 @@ const objectsModule = (function () {
                 html += '<ul>';
 
                 for (let i = 0; i < record.display_record.names.length; i++) {
-                    html += '<li>' + record.display_record.names[i].title + ' ( ' + record.display_record.names[i].source + ' )</li>';
+                    html += '<li>' + DOMPurify.sanitize(record.display_record.names[i].title) + ' ( ' + DOMPurify.sanitize(record.display_record.names[i].source) + ' )</li>';
                 }
 
                 html += '</ul>';
@@ -429,7 +429,7 @@ const objectsModule = (function () {
 
                 for (let i = 0; i < record.display_record.notes.length; i++) {
                     if (record.display_record.notes[i].content !== undefined) {
-                        html += '<li>' + record.display_record.notes[i].content.toString() + ' ( ' + record.display_record.notes[i].type + ' )</li>';
+                        html += '<li>' + DOMPurify.sanitize(record.display_record.notes[i].content.toString()) + ' ( ' + DOMPurify.sanitize(record.display_record.notes[i].type) + ' )</li>';
                     }
                 }
 
@@ -438,8 +438,8 @@ const objectsModule = (function () {
 
             if (record.display_record.parts !== undefined && record.display_record.parts.length !== 1) {
 
-                let pid = data.hits[i]._source.pid,
-                    type = data.hits[i]._source.mime_type;
+                let pid = DOMPurify.sanitize(data.hits[i]._source.pid),
+                    type = DOMPurify.sanitize(data.hits[i]._source.mime_type);
 
                 html += '<li><strong>Parts:</strong></li>';
                 html += '<ul>';
@@ -447,16 +447,13 @@ const objectsModule = (function () {
                 for (let i = 0; i < record.display_record.parts.length; i++) {
 
                     if (i === 10) {
-                        html += '<li><strong>Only showing ' + i + ' out of ' + record.display_record.parts.length + ' parts.</strong></li>';
+                        html += '<li><strong>Only showing ' + i + ' out of ' + DOMPurify.sanitize(record.display_record.parts.length) + ' parts.</strong></li>';
                         break;
                     } else {
 
-                        html += '<li>' + record.display_record.parts[i].title + ' ( ' + record.display_record.parts[i].type + ' ) order: ' + record.display_record.parts[i].order;
+                        html += '<li>' + DOMPurify.sanitize(record.display_record.parts[i].title) + ' ( ' + DOMPurify.sanitize(record.display_record.parts[i].type) + ' ) order: ' + DOMPurify.sanitize(record.display_record.parts[i].order);
 
-                        // TODO: ....
-                        let tn = helperModule.getTn(record.display_record.parts[i].thumbnail, '');
-                        // console.log(record.display_record.pid + '_' + record.display_record.parts[i].order + '&type=' + record.display_record.mime_type);
-
+                        let tn = helperModule.getTn(DOMPurify.sanitize(record.display_record.parts[i].thumbnail), '');
                         html += '<br><img src="' + tn + '" width="100px" height="100px"></li>';
                     }
                 }
@@ -471,9 +468,9 @@ const objectsModule = (function () {
 
                 for (let i = 0; i < record.display_record.subjects.length; i++) {
                     if (record.display_record.subjects[i].authority_id !== undefined) {
-                        html += '<li>' + record.display_record.subjects[i].title + ' ( <a target="_blank" href="' + record.display_record.subjects[i].authority_id + '">' + record.display_record.subjects[i].authority + '</a> )</li>';
+                        html += '<li>' + DOMPurify.sanitize(record.display_record.subjects[i].title) + ' ( <a target="_blank" href="' + DOMPurify.sanitize(record.display_record.subjects[i].authority_id) + '">' + DOMPurify.sanitize(record.display_record.subjects[i].authority) + '</a> )</li>';
                     } else {
-                        html += '<li>' + record.display_record.subjects[i].title + ' ( ' + record.display_record.subjects[i].authority + ' )</li>';
+                        html += '<li>' + DOMPurify.sanitize(record.display_record.subjects[i].title) + ' ( ' + DOMPurify.sanitize(record.display_record.subjects[i].authority) + ' )</li>';
                     }
                 }
 
@@ -482,7 +479,7 @@ const objectsModule = (function () {
 
             if (record.abstract !== undefined) {
                 html += '<li><strong>Abstract:</strong></li>';
-                html += '<ul><li style="min-height: 75px">' + record.abstract + '</li></ul>';
+                html += '<ul><li style="min-height: 75px">' + DOMPurify.sanitize(record.abstract) + '</li></ul>';
             }
 
             html += '</ul>';
@@ -496,13 +493,13 @@ const objectsModule = (function () {
 
                 if (is_published === 1) {
                     html += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
-                    html += '<p><a href="#" onclick="objectsModule.unpublishObject(\'' + data.hits[i]._source.pid + '\', \'collection\'); return false;"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
+                    html += '<p><a href="#" onclick="objectsModule.unpublishObject(\'' + DOMPurify.sanitize(data.hits[i]._source.pid) + '\', \'collection\'); return false;"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
                 } else if (is_published === 0) {
                     html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
-                    html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data.hits[i]._source.pid + '\', \'collection\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
+                    html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(data.hits[i]._source.pid) + '\', \'collection\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
                 }
 
-                html += '<p><a href="' + api + '/dashboard/objects/unpublished?pid=' + data.hits[i]._source.pid + '"><i class="fa fa-info-circle"></i>&nbsp;Unpublished objects</a></p>';
+                html += '<p><a href="' + api + '/dashboard/objects/unpublished?pid=' + DOMPurify.sanitize(data.hits[i]._source.pid) + '"><i class="fa fa-info-circle"></i>&nbsp;Unpublished objects</a></p>';
             }
 
             // handle objects
@@ -516,15 +513,15 @@ const objectsModule = (function () {
 
                 if (is_published === 1) {
                     html += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
-                    html += '<p><a href="#" onclick="objectsModule.unpublishObject(\'' + data.hits[i]._source.pid + '\', \'object\'); return false;"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
+                    html += '<p><a href="#" onclick="objectsModule.unpublishObject(\'' + DOMPurify.sanitize(data.hits[i]._source.pid) + '\', \'object\'); return false;"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
                 } else if (is_published === 0) {
                     html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
-                    html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data.hits[i]._source.pid + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
+                    html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(data.hits[i]._source.pid) + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
                 }
             }
 
             // update thumbnail
-            html += '<p><a href="' + api + '/dashboard/object/thumbnail?pid=' + data.hits[i]._source.pid + '"><i class="fa fa-edit"></i>&nbsp;Change Thumbnail</a></p>';
+            html += '<p><a href="' + api + '/dashboard/object/thumbnail?pid=' + DOMPurify.sanitize(data.hits[i]._source.pid) + '"><i class="fa fa-edit"></i>&nbsp;Change Thumbnail</a></p>';
 
             html += '</div>';
             html += '</div>';
@@ -533,8 +530,14 @@ const objectsModule = (function () {
 
         html += helperModule.pagination(is_member_of_collection, total_records);
 
-        $('#pagination').html(helperModule.pagination(is_member_of_collection, total_records));
-        $('#objects').html(html);
+        if (document.querySelector('#pagination')) {
+            document.querySelector('#pagination').innerHTML = helperModule.pagination(is_member_of_collection, total_records);
+        }
+
+        if (document.querySelector('#objects')) {
+            document.querySelector('#objects').innerHTML = html;
+        }
+
         $('a').tooltip();
     };
 

@@ -21,11 +21,6 @@ const collectionsModule = (function () {
     'use strict';
 
     let obj = {};
-
-    const renderError = function (message) {
-        $('#message').html(message);
-    };
-
     let api = configModule.getApi();
 
     /**
@@ -45,6 +40,10 @@ const collectionsModule = (function () {
         $.ajax(api + '/api/admin/v1/repo/object/?pid=' + pid)
             .done(function (data) {
 
+                if (data.length === 0) {
+                    return document.querySelector('#message').innerHTML = '<div class="alert alert-info"><i class="fa fa-info-circle"></i> Collection not found.</div>';
+                }
+
                 let record = JSON.parse(data[0].display_record);
                 let title = 'No title.';
 
@@ -52,17 +51,15 @@ const collectionsModule = (function () {
                     title = record.title;
                 }
 
-                if (data.length === 0) {
-                    return $('#message').html('Collection not found.');
+                if (document.querySelector('#collection-name')) {
+                    document.querySelector('#collection-name').innerHTML = DOMPurify.sanitize(title);
                 }
-
-                $('#collection-name').html(title);
             })
             .fail(function (jqXHR, textStatus) {
 
                 if (jqXHR.status !== 200) {
-                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to retrieve collection name.</div>';
-                    renderError(message);
+                    let message = 'Error: (HTTP status ' + DOMPurify.sanitize(jqXHR.status) + '. Unable to retrieve collection name.';
+                    helperModule.renderError(message);
                 }
             });
     };
@@ -72,7 +69,11 @@ const collectionsModule = (function () {
      */
     obj.getIsMemberOfCollection = function () {
         let is_member_of_collection = helperModule.getParameterByName('is_member_of_collection');
-        $('#is-member-of-collection').val(is_member_of_collection);
+        // $('#is-member-of-collection').val(is_member_of_collection);
+        if (document.querySelector('#is-member-of-collection')) {
+            document.querySelector('#is-member-of-collection').value = is_member_of_collection;
+        }
+
     };
 
     /**
@@ -90,7 +91,7 @@ const collectionsModule = (function () {
 
         let obj = {};
         obj.pid = helperModule.getParameterByName('pid');
-        obj.thumbnail_url = $('#thumbnail-url').val();
+        obj.thumbnail_url = document.querySelector('#thumbnail-url').value; //$('#thumbnail-url').val();
 
         userModule.setHeaderUserToken();
 
@@ -110,20 +111,21 @@ const collectionsModule = (function () {
             if (response.status === 201) {
 
                 let message = '<div class="alert alert-success"><i class="fa fa-check-circle"></i> Thumbnail updated</div>';
-                $('#message').html(message);
-                $('#thumbnail-url').val('');
+                document.querySelector('#message').innerHTML = message;
+                document.querySelector('#thumbnail-url').value = '';
+                // $('#message').html(message);
+                // $('#thumbnail-url').val('');
 
                 setTimeout(function () {
-                    $('#message').html('');
-                    // objectsModule.getObjects();
+                    document.querySelector('#message').innerHTML = '';
                 }, 4000);
 
             } else if (response.status === 401) {
 
                 response.json().then(function (response) {
 
-                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.</div>';
-                    renderError(message);
+                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.</div>';
+                    helperModule.renderError(message);
 
                     setTimeout(function () {
                         window.location.replace('/login');
@@ -132,7 +134,7 @@ const collectionsModule = (function () {
 
             } else {
                 let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '). An error has occurred. Unable to update thumbnail.</div>';
-                renderError(message);
+                helperModule.renderError(message);
             }
         };
 
@@ -146,7 +148,7 @@ const collectionsModule = (function () {
 
         let message = '<div class="alert alert-info">Saving Collection...</div>';
         $('#collection-form').hide();
-        $('#message').html(message);
+        document.querySelector('#message').innerHTML = message;
 
         userModule.setHeaderUserToken();
 
@@ -156,8 +158,8 @@ const collectionsModule = (function () {
             data: getCollectionFormData()
         }).done(function (data) {
 
-            let message = '<div class="alert alert-success">Collection created ( <a href="' + configModule.getApi() + '/dashboard/objects/?pid=' + data[0].pid + '">' + data[0].pid + '</a> )';
-            $('#message').html(message);
+            let message = '<div class="alert alert-success">Collection created ( <a href="' + configModule.getApi() + '/dashboard/objects/?pid=' + DOMPurify.sanitize(data[0].pid) + '">' + DOMPurify.sanitize(data[0].pid) + '</a> )';
+            document.querySelector('#message').innerHTML = message;
             $('#collection-form').hide();
 
             return false;
@@ -165,8 +167,8 @@ const collectionsModule = (function () {
         }).fail(function (jqXHR, textStatus) {
 
             if (jqXHR.status !== 201) {
-                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to add collection.</div>';
-                renderError(message);
+                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + DOMPurify.sanitize(jqXHR.status) + '. Unable to add collection.</div>';
+                helperModule.renderError(message);
             }
         });
     };
