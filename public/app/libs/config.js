@@ -52,29 +52,6 @@ const configModule = (function () {
         };
     };
 
-    /**
-     * REMOVE
-     * @param uuid
-     * @returns {{tn: string}}
-
-    obj.getTnServiceUrl = function () {
-        return {
-            tn_service: 'http://libspecc01-vlp.du.edu/'
-        };
-    };
-     */
-
-    /**
-     * REMOVE
-     * @returns {{viewer_url: string}}
-
-    obj.getViewerUrl = function () {
-        return {
-            viewer_url: 'http://libspecc01-vlp.du.edu/discovery/viewer/'
-        };
-    };
-     */
-
     return obj;
 
 }());

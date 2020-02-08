@@ -439,14 +439,14 @@ const importModule = (function () {
                 $('#message').html(message);
 
                 /*
-                if (record.handle === null && record.pid !== null) {
-                    importModule.importHandle(record.sip_uuid, record.pid);
-                }
+                 if (record.handle === null && record.pid !== null) {
+                 importModule.importHandle(record.sip_uuid, record.pid);
+                 }
 
-                if (record.mods === null || record.mods.length === 0) {
-                    importModule.importMods(record.sip_uuid, record.mods_id);
-                }
-                */
+                 if (record.mods === null || record.mods.length === 0) {
+                 importModule.importMods(record.sip_uuid, record.mods_id);
+                 }
+                 */
 
                 if (record.thumbnail === null || record.thumbnail.length === 0) {
                     importModule.importThumbnail(record.sip_uuid);
@@ -457,14 +457,14 @@ const importModule = (function () {
                 }
 
                 /*
-                if (record.mime_type === null || record.mime_type.length === 0) {
-                    importModule.importMimeType(record.sip_uuid);
-                }
+                 if (record.mime_type === null || record.mime_type.length === 0) {
+                 importModule.importMimeType(record.sip_uuid);
+                 }
 
-                if (record.checksum === null || record.checksum.length === 0) {
-                    importModule.importChecksum(record.sip_uuid);
-                }
-                */
+                 if (record.checksum === null || record.checksum.length === 0) {
+                 importModule.importChecksum(record.sip_uuid);
+                 }
+                 */
             }
 
         }, 10000);
@@ -739,7 +739,7 @@ const importModule = (function () {
      */
     const get_transfer_status = function () {
 
-        function transfer_status_http () {
+        function transfer_status_http() {
 
             let url = api + '/api/admin/v1/import/poll/transfer_status',
                 request = new Request(url, {
@@ -814,7 +814,7 @@ const importModule = (function () {
     // gets count of remaining import objects
     const get_ingest_status = function () {
 
-        function ingest_status_http () {
+        function ingest_status_http() {
 
             let url = api + '/api/admin/v1/import/poll/ingest_status',
                 request = new Request(url, {
@@ -869,7 +869,7 @@ const importModule = (function () {
 
     const get_import_status = function () {
 
-        function import_status_http () {
+        function import_status_http() {
 
             let url = api + '/api/admin/v1/import/poll/import_status',
                 request = new Request(url, {
@@ -941,7 +941,7 @@ const importModule = (function () {
 
     const get_fail_status = function () {
 
-        function fail_status_http () {
+        function fail_status_http() {
 
             let url = api + '/api/admin/v1/import/poll/fail_queue',
                 request = new Request(url, {

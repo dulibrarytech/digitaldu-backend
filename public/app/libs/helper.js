@@ -21,10 +21,22 @@ const helperModule = (function () {
     'use strict';
 
     let obj = {},
-        api = configModule.getApi();;
+        api = configModule.getApi();
 
+    // TODO: remove
+    /*
     const renderError = function (message) {
         $('#message').html(message);
+    };
+    */
+
+    /**
+     * Renders error message
+     * @param message
+     */
+    obj.renderError = function (message) {
+        document.querySelector('#message').innerHTML = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + DOMPurify.sanitize(message) + '</div>';
+        return false;
     };
 
     /**
@@ -68,12 +80,13 @@ const helperModule = (function () {
             return '';
         }
 
-        return decodeURIComponent(results[2].replace(/\+/g, " "));
+        let paramValue = DOMPurify.sanitize(results[2].replace(/\+/g, " "));
+        return decodeURIComponent(paramValue);
     };
 
     obj.getCurrentYear = function () {
         let cdate = new Date().getFullYear();
-        document.querySelector('#cdate').innerHTML = cdate;
+        document.querySelector('#cdate').innerHTML = DOMPurify.sanitize(cdate);
     };
 
     /**
@@ -124,14 +137,15 @@ const helperModule = (function () {
                     }
                 }
 
-                $('#ping').html(html);
+                // $('#ping').html(html);
+                document.querySelector('#ping').innerHTML = DOMPurify.sanitize(html);
             })
             .fail(function (jqXHR, textStatus) {
 
                 if (jqXHR.status !== 200) {
 
                     let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to check third-party services.</div>';
-                    renderError(message);
+                    helperModule.renderError(message);
 
                     if (jqXHR.status === 401) {
 
@@ -254,7 +268,7 @@ const helperModule = (function () {
 
         html += '</ul>';
 
-        return html;
+        return DOMPurify.sanitize(html);
     };
 
     obj.init = function () {

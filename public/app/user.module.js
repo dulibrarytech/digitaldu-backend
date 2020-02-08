@@ -22,22 +22,34 @@ const userModule = (function () {
 
     let obj = {};
     let api = configModule.getApi();
-    const renderError = function (message) {
-        $('#message').html(message);
-    };
 
+    /**
+     * Renders user profile data
+     * @param data
+     */
     const renderUsers = function (data) {
 
+        if (data.length === 0) {
+            document.querySelector('.loading').innerHTML = '';
+            document.querySelector('.table').innerHTML = '';
+            let message = '<div class="alert alert-danger">Unable to get users.</div>';
+            helperModule.renderError(message);
+            return false;
+        }
+
         let html = '';
+        let user;
 
         for (let i = 0; i < data.length; i++) {
 
-            html += '<tr>';
-            html += '<td>' + data[i].first_name + '</td>';
-            html += '<td>' + data[i].last_name + '</td>';
-            html += '<td>' + data[i].email + '</td>';
+            user = data[i];
 
-            if (data[i].status === 1) {
+            html += '<tr>';
+            html += '<td>' + DOMPurify.sanitize(user.first_name) + '</td>';
+            html += '<td>' + DOMPurify.sanitize(user.last_name) + '</td>';
+            html += '<td>' + DOMPurify.sanitize(user.email) + '</td>';
+
+            if (user.status === 1) {
                 html += '<td>Active</td>';
             } else {
                 html += '<td>Inactive</td>';
@@ -45,36 +57,61 @@ const userModule = (function () {
 
             html += '<td>';
             html += '&nbsp;';
-            html += '<a class="btn btn-xs btn-default" href="/dashboard/users/edit?id=' + data[i].id + '" title="Edit User"><i class="fa fa-edit"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;';
-            html += '<a class="btn btn-xs btn-danger" href="/dashboard/users/delete?id=' + data[i].id + '" title="Delete User"><i class="fa fa-times"></i></a>';
+            html += '<a class="btn btn-xs btn-default" href="/dashboard/users/edit?id=' + DOMPurify.sanitize(user.id) + '" title="Edit User"><i class="fa fa-edit"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;';
+            html += '<a class="btn btn-xs btn-danger" href="/dashboard/users/delete?id=' + DOMPurify.sanitize(user.id) + '" title="Delete User"><i class="fa fa-times"></i></a>';
             html += '</td>';
             html += '</tr>';
         }
 
-        $('#users').html(html);
-        $('.loading').html('');
+        document.querySelector('#users').innerHTML = html;
+        document.querySelector('.loading').innerHTML = '';
+
+        return false;
     };
 
+    /**
+     * Renders user profile data for edit form
+     * @param data
+     */
     const renderUserDetails = function (data) {
+
+        if (data.length === 0) {
+            document.querySelector('#user-update-form').innerHTML = '';
+            let message = 'Unable to get profile data.';
+            helperModule.renderError(message);
+            setTimeout(function () {
+                window.location.replace('/dashboard/users');
+            }, 3000);
+            return false;
+        }
+
+        let user;
 
         for (let i = 0; i < data.length; i++) {
 
-            $('#id').val(data[i].id);
-            $('#du_id').val(data[i].du_id);
-            $('#email').val(data[i].email);
-            $('#first_name').val(data[i].first_name);
-            $('#last_name').val(data[i].last_name);
+            user = data[i];
 
-            if (data[i].status === 1) {
+            $('#id').val(DOMPurify.sanitize(user.id));
+            $('#du_id').val(DOMPurify.sanitize(user.du_id));
+            $('#email').val(DOMPurify.sanitize(user.email));
+            $('#first_name').val(DOMPurify.sanitize(user.first_name));
+            $('#last_name').val(DOMPurify.sanitize(user.last_name));
+
+            if (user.status === 1) {
                 $('#is_active').prop('checked', true);
             } else {
                 $('#is_active').prop('checked', false);
             }
         }
 
-        $('.loading').html('');
+        document.querySelector('.loading').innerHTML = '';
+
+        return false;
     };
 
+    /**
+     * Gets all repository users
+     */
     obj.getUsers = function () {
 
         userModule.setHeaderUserToken();
@@ -84,13 +121,17 @@ const userModule = (function () {
                 renderUsers(data);
             })
             .fail(function () {
-                renderError();
+                helperModule.renderError('Request Failed.');
             });
+
+        return false;
     };
 
+    /**
+     * Retrieves user profile data for edit form
+     */
     obj.getUserDetails = function () {
 
-        // TODO: sanitize
         let id = helperModule.getParameterByName('id');
 
         userModule.setHeaderUserToken();
@@ -100,30 +141,63 @@ const userModule = (function () {
                 renderUserDetails(data);
             })
             .fail(function () {
-                renderError();
+                helperModule.renderError('Request Failed.');
             });
+
+        return false;
     };
 
+    /**
+     * Checks if user data is in session storage
+     * @returns {boolean}
+     */
     obj.checkUserData = function () {
         let data = window.sessionStorage.getItem('repo_user');
 
         if (data !== null) {
             return true;
         }
+
+        return false;
     };
 
+    /**
+     * Renders authenticated username in top menu bar
+     */
     obj.renderUserName = function () {
 
-        let data = JSON.parse(window.sessionStorage.getItem('repo_user'));
+        let usernameClass = document.querySelectorAll('.username');
 
-        if (data !== null) {
-            $('.username').html('<strong>' + data.name + '</strong>');
-        } else {
-            $('.username').html('<strong>User</strong>');
+        for (let i=0;i<usernameClass.length;i++) {
+            usernameClass[i].innerHTML = '<strong>Loading...</strong>';
         }
 
+        setTimeout(function () {
+
+            let data = JSON.parse(window.sessionStorage.getItem('repo_user'));
+
+            if (data !== null && usernameClass.length !== 0) {
+
+                for (let i=0;i<usernameClass.length;i++) {
+                    usernameClass[i].innerHTML = '<strong>' + DOMPurify.sanitize(data.name) + '</strong>';
+                }
+
+            } else if (data === null && usernameClass.length !== 0) {
+
+                 helperModule.renderError('Unable to get user profile data.');
+
+                 setTimeout(function () {
+                 window.location.replace('/login');
+                 }, 5000);
+            }
+
+        }, 500);
     };
 
+    /**
+     * Retrieves user form data
+     * @returns {*|jQuery}
+     */
     const getUserFormData = function () {
         return $('#user-form').serialize();
     };
@@ -131,9 +205,9 @@ const userModule = (function () {
     const getUserFormUpateData = function () {
 
         let User = {};
-            User.id = $('#id').val();
-            User.first_name = $('#first_name').val();
-            User.last_name = $('#last_name').val();
+        User.id = DOMPurify.sanitize(document.querySelector('#id').value);
+        User.first_name = DOMPurify.sanitize(document.querySelector('#first_name').value);
+        User.last_name = DOMPurify.sanitize(document.querySelector('#last_name').value);
 
         if ($('#is_active').prop('checked')) {
             User.is_active = 1;
@@ -144,17 +218,23 @@ const userModule = (function () {
         return User;
     };
 
+    /**
+     * Gets user's full name
+     * @returns {*|Color}
+     */
     obj.getUserFullName = function () {
         let data = JSON.parse(window.sessionStorage.getItem('repo_user'));
-        return data.name;
+        return DOMPurify.sanitize(data.name);
     };
 
+    /**
+     * Adds new user to repository
+     */
     const addUser = function () {
 
         let message = '<div class="alert alert-info">Saving User...</div>';
         $('#user-form').hide();
-        $('#message').html(message);
-
+        document.querySelector('#message').innerHTML = message;
         userModule.setHeaderUserToken();
 
         $.ajax({
@@ -164,26 +244,27 @@ const userModule = (function () {
         }).done(function (data) {
 
             let message = '<div class="alert alert-success">User created</div>';
-            $('#message').html(message);
+            document.querySelector('#message').innerHTML = message;
             $('#user-form').show();
             $('#user-form')[0].reset();
 
             setTimeout(function () {
-                $('#message').html('');
-
+                document.querySelector('#message').innerHTML = '';
             }, 3000);
 
         }).fail(function () {
-            renderError();
+            helperModule.renderError('Request Failed.');
         });
     };
 
+    /**
+     * Updates user data
+     */
     const updateUser = function () {
 
         let message = '<div class="alert alert-info">Updating User...</div>';
         $('#user-form').hide();
-        $('#message').html(message);
-
+        document.querySelector('#message').innerHTML = message;
         userModule.setHeaderUserToken();
 
         $.ajax({
@@ -193,19 +274,22 @@ const userModule = (function () {
         }).done(function (data) {
 
             let message = '<div class="alert alert-success">User updated</div>';
-            $('#message').html(message);
+            document.querySelector('#message').innerHTML = message;
             $('#user-update-form').hide();
 
             setTimeout(function () {
-                $('#message').html('');
+                document.querySelector('#message').innerHTML = '';
                 window.location.replace('/dashboard/users');
             }, 3000);
 
         }).fail(function () {
-            renderError();
+            helperModule.renderError('Request Failed.');
         });
     };
 
+    /**
+     * Applies user form validation when adding new user
+     */
     obj.userFormValidation = function () {
 
         $(document).ready(function () {
@@ -217,6 +301,9 @@ const userModule = (function () {
         });
     };
 
+    /**
+     * Applies user form validation when updating a user
+     */
     obj.userUpdateFormValidation = function () {
 
         $(document).ready(function () {
@@ -228,39 +315,51 @@ const userModule = (function () {
         });
     };
 
+    /**
+     * Gets token from session storage
+     * @returns {*|Color}
+     */
     obj.getUserToken = function () {
 
         let data = JSON.parse(window.sessionStorage.getItem('repo_token'));
 
-        if (data.token === null) {
-            // TODO: redirect to login
-            window.alert('token not found');
+        if (data !== null && data.token === null) {
+
+            setTimeout(function () {
+                window.location.replace('/login');
+            }, 0);
+
         } else {
-            return data.token;
+            return DOMPurify.sanitize(data.token);
         }
     };
 
+    /**
+     * Sets session token in request header
+     */
     obj.setHeaderUserToken = function () {
 
         let data = JSON.parse(window.sessionStorage.getItem('repo_token'));
 
-        if (data.token === null) {
-            // TODO: redirect to login
-            window.alert('oops');
+        if (data === null) {
+            setTimeout(function () {
+                window.location.replace('/login');
+            }, 0);
         }
 
         $.ajaxSetup({
             beforeSend: function (xhr) {
-                xhr.setRequestHeader('x-access-token', data.token);
+                xhr.setRequestHeader('x-access-token', DOMPurify.sanitize(data.token));
             }
         });
     };
 
-    // TODO:...
+    /**
+     * Gets user profile data
+     */
     obj.getAuthUserData = function () {
 
         userModule.saveToken();
-        // TODO: sanitize
         let uid = helperModule.getParameterByName('uid');
 
         if (uid !== null) {
@@ -273,8 +372,9 @@ const userModule = (function () {
                     userModule.renderUserName();
                 })
                 .fail(function () {
-                    // TODO: redirect
-                    renderError();
+                    setTimeout(function () {
+                        window.location.replace('/login');
+                    }, 0);
                 });
 
         } else {
@@ -282,6 +382,9 @@ const userModule = (function () {
         }
     };
 
+    /**
+     * Destroys session data and redirects user to login
+     */
     obj.sessionExpired = function () {
         window.sessionStorage.removeItem('repo_user');
         setTimeout(function () {
@@ -289,16 +392,23 @@ const userModule = (function () {
         }, 2000);
     };
 
+    /**
+     * Saves user profile data to session storage
+     * @param data
+     */
     obj.saveUserAuthData = function (data) {
 
         let userObj = {
-            uid: data[0].id,
-            name: data[0].first_name + ' ' + data[0].last_name
+            uid: DOMPurify.sanitize(data[0].id),
+            name: DOMPurify.sanitize(data[0].first_name) + ' ' + DOMPurify.sanitize(data[0].last_name)
         };
 
         window.sessionStorage.setItem('repo_user', JSON.stringify(userObj));
     };
 
+    /**
+     * Gets session token from URL params
+     */
     obj.saveToken = function () {
 
         let token = helperModule.getParameterByName('t');
@@ -306,25 +416,30 @@ const userModule = (function () {
         if (token !== null) {
 
             let data = {
-                token: token
+                token: DOMPurify.sanitize(token)
             };
 
             window.sessionStorage.setItem('repo_token', JSON.stringify(data));
         }
     };
 
-    /* used when user logs out */
+    /**
+     * Clears out session storage - used when user logs out
+     */
     obj.reset = function () {
         window.sessionStorage.clear();
     };
 
+    /**
+     * Creates request used to authenticates users
+     */
     const authenticate = function () {
 
-        document.getElementById('login-button').disabled = true;
+        document.querySelector('#login-button').disabled = true;
 
         let user = {
-            username: $('#username').val(),
-            password: $('#password').val()
+            username: DOMPurify.sanitize(document.querySelector('#username').value).trim(),
+            password: DOMPurify.sanitize(document.querySelector('#password').value).trim()
         };
 
         let url = api + '/api/authenticate',
@@ -343,8 +458,8 @@ const userModule = (function () {
 
                 response.json().then(function (response) {
 
-                    let message = '<div class="alert alert-success"><i class="fa fa-check-circle"></i> ' + response.message + '</div>';
-                    $('#message').html(message);
+                    let message = '<div class="alert alert-success"><i class="fa fa-check-circle"></i> ' + DOMPurify.sanitize(response.message) + '</div>';
+                    document.querySelector('#message').innerHTML = message;
 
                     setTimeout(function () {
                         window.location.replace(response.redirect);
@@ -355,15 +470,15 @@ const userModule = (function () {
             } else if (response.status === 401) {
 
                 response.json().then(function (response) {
-                    document.getElementById('login-button').disabled = false;
-                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + response.message + '</div>';
-                    renderError(message);
+                    document.querySelector('#login-button').disabled = false;
+                    let message = DOMPurify.sanitize(response.message);
+                    helperModule.renderError(message);
                 });
 
             } else {
-                document.getElementById('login-button').disabled = false;
-                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '. Unable to import MODS.</div>';
-                renderError(message);
+                document.querySelector('#login-button').disabled = false;
+                let message = 'Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to authenticate user.';
+                helperModule.renderError(message);
             }
         };
 
