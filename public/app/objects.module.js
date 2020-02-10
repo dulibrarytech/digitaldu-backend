@@ -199,7 +199,7 @@ const objectsModule = (function () {
 
                 response.json().then(function (response) {
 
-                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.</div>';
+                    let message = 'Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.';
                     helperModule.renderError(message);
 
                     setTimeout(function () {
@@ -209,7 +209,7 @@ const objectsModule = (function () {
 
             } else {
 
-                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + DOMPurify.sanitize(response.status) + ').  Unable to unpublish object(s).</div>';
+                let message = 'Error: (HTTP status ' + DOMPurify.sanitize(response.status) + ').  Unable to unpublish object(s).';
                 helperModule.renderError(message);
             }
         };

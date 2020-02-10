@@ -81,12 +81,19 @@ const statsModule = (function () {
                     }
                 });
 
-            } else {
+            } else if (response.status === 401) {
 
-                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to retrieve repository statistics.</div>';
+                let message = 'Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.';
+                helperModule.renderError(message);
+
+                setTimeout(function () {
+                    window.location.replace('/login');
+                }, 4000);
+
+            } else {
+                let message = 'Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to retrieve repository statistics.';
                 helperModule.renderError(message);
             }
-
         };
 
         http.req(request, callback);

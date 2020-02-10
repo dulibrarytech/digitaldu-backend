@@ -21,11 +21,6 @@ const searchModule = (function () {
     'use strict';
 
     let obj = {};
-
-    let renderError = function () {
-        $('#objects').html('Error: Unable to retrieve objects');
-    };
-
     let api = configModule.getApi();
 
     /**
@@ -36,26 +31,35 @@ const searchModule = (function () {
     const renderSearchResults = function (data) {
 
         let is_member_of_collection = helperModule.getParameterByName('pid'),
-            total_records = data.total,
+            total_records = DOMPurify.sanitize(data.total),
             html = '';
 
         $('#current-collection').prop('href', '/dashboard/collections/add?is_member_of_collection=' + is_member_of_collection);
 
         if (data.total === 0) {
+
             html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; No objects or collections found.</strong></div>';
-            $('#objects').html(html);
+
+            if (document.querySelector('#objects')) {
+                document.querySelector('#objects').innerHTML = html;
+            }
+
             return false;
         }
 
+        if (document.querySelector('#searched-for')) {
+            document.querySelector('#searched-for').innerHTML = '<p>You searched for: ' + helperModule.getParameterByName('q') + '</p>';
+        }
 
-        $('#searched-for').html('<p>You searched for: ' + helperModule.getParameterByName('q') + '</p>');
-        $('#total-records').html('<p>Total Records: ' + total_records + '</p>');
+        if (document.querySelector('#total-records')) {
+            document.querySelector('#total-records').innerHTML = '<p>Total Records: ' + total_records + '</p>';
+        }
 
         for (let i = 0; i < data.hits.length; i++) {
 
             let record = data.hits[i]._source,
-                tn = helperModule.getTn(data.hits[i]._source.thumbnail, data.hits[i]._source.mime_type),
-                pid = data.hits[i]._source.pid;
+                tn = helperModule.getTn(DOMPurify.sanitize(data.hits[i]._source.thumbnail), DOMPurify.sanitize(data.hits[i]._source.mime_type)),
+                pid = DOMPurify.sanitize(data.hits[i]._source.pid);
 
             html += '<div class="row">';
             html += '<div class="col-md-3"><img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + tn + '" alt="image" /></div>';
@@ -64,9 +68,9 @@ const searchModule = (function () {
             if (record.display_record.title !== undefined) {
 
                 if (data.hits[i]._source.object_type === 'collection') {
-                    html += '<h4><a href="' + api + '/dashboard/objects/?pid=' + data.hits[i]._source.pid + '">' + record.display_record.title + '</a></h4>';
+                    html += '<h4><a href="' + api + '/dashboard/objects/?pid=' + DOMPurify.sanitize(data.hits[i]._source.pid) + '">' + DOMPurify.sanitize(record.display_record.title) + '</a></h4>';
                 } else if (data.hits[i]._source.object_type === 'object') {
-                    html += '<h4>' + record.display_record.title + '</h4>';
+                    html += '<h4>' + DOMPurify.sanitize(record.display_record.title) + '</h4>';
                 }
 
             } else {
@@ -74,10 +78,10 @@ const searchModule = (function () {
             }
 
             html += '<ul>';
-            html += '<li><strong>Pid:</strong>&nbsp;<a target="_blank" href="' + record.handle + '">' + record.pid + '</a>&nbsp;&nbsp;<i class="fa fa-external-link"></i></li>';
+            html += '<li><strong>Pid:</strong>&nbsp;<a target="_blank" href="' + DOMPurify.sanitize(record.handle) + '">' + DOMPurify.sanitize(record.pid) + '</a>&nbsp;&nbsp;<i class="fa fa-external-link"></i></li>';
 
             if (record.display_record.uri !== undefined) {
-                html += '<li><strong>Uri:</strong>&nbsp;' + record.display_record.uri + '</li>';
+                html += '<li><strong>Uri:</strong>&nbsp;' + DOMPurify.sanitize(record.display_record.uri) + '</li>';
             }
 
             if (record.display_record.dates !== undefined && record.display_record.dates.length !== 0) {
@@ -88,9 +92,9 @@ const searchModule = (function () {
                 for (let j = 0; j < record.display_record.dates.length; j++) {
 
                     if (data.hits[i]._source.object_type === 'collection') {
-                        html += '<li>' + record.display_record.dates[j].expression + ' ( ' + record.display_record.dates[j].date_type + '</a> )</li>';
+                        html += '<li>' + DOMPurify.sanitize(record.display_record.dates[j].expression) + ' ( ' + DOMPurify.sanitize(record.display_record.dates[j].date_type) + '</a> )</li>';
                     } else {
-                        html += '<li>' + record.display_record.dates[j].expression + ' ( ' + record.display_record.dates[j].type + '</a> )</li>';
+                        html += '<li>' + DOMPurify.sanitize(record.display_record.dates[j].expression) + ' ( ' + DOMPurify.sanitize(record.display_record.dates[j].type) + '</a> )</li>';
                     }
                 }
 
@@ -110,22 +114,22 @@ const searchModule = (function () {
                         for (let prop in record.display_record.extents[i]) {
 
                             if (prop === 'number') {
-                                html += '<li>number: ' + record.display_record.extents[i][prop] + '</li>';
+                                html += '<li>number: ' + DOMPurify.sanitize(record.display_record.extents[i][prop]) + '</li>';
                             } else if (prop === 'container_summary') {
-                                html += '<li>container summary: ' + record.display_record.extents[i][prop] + '</li>';
+                                html += '<li>container summary: ' + DOMPurify.sanitize(record.display_record.extents[i][prop]) + '</li>';
                             } else if (prop === 'created_by') {
-                                html += '<li>created by: ' + record.display_record.extents[i][prop] + '</li>';
+                                html += '<li>created by: ' + DOMPurify.sanitize(record.display_record.extents[i][prop]) + '</li>';
                             } else if (prop === 'last_modified_by') {
-                                html += '<li>last modified by: ' + record.display_record.extents[i][prop] + '</li>';
+                                html += '<li>last modified by: ' + DOMPurify.sanitize(record.display_record.extents[i][prop]) + '</li>';
                             } else if (prop === 'portion') {
-                                html += '<li>portion: ' + record.display_record.extents[i][prop] + '</li>';
+                                html += '<li>portion: ' + DOMPurify.sanitize(record.display_record.extents[i][prop]) + '</li>';
                             } else if (prop ==='extent_type') {
-                                html += '<li>extent type: ' + record.display_record.extents[i][prop] + '</li>';
+                                html += '<li>extent type: ' + DOMPurify.sanitize(record.display_record.extents[i][prop]) + '</li>';
                             }
                         }
 
                     } else {
-                        html += '<li>' + record.display_record.extents[i] + '</li>';
+                        html += '<li>' + DOMPurify.sanitize(record.display_record.extents[i]) + '</li>';
                     }
                 }
 
@@ -138,7 +142,7 @@ const searchModule = (function () {
                 html += '<ul>';
 
                 for (let i = 0; i < record.display_record.identifiers.length; i++) {
-                    html += '<li>' + record.display_record.identifiers[i].identifier + ' ( ' + record.display_record.identifiers[i].type + ' )</li>';
+                    html += '<li>' + DOMPurify.sanitize(record.display_record.identifiers[i].identifier) + ' ( ' + DOMPurify.sanitize(record.display_record.identifiers[i].type) + ' )</li>';
                 }
 
                 html += '</ul>';
@@ -149,11 +153,11 @@ const searchModule = (function () {
                 if (typeof record.display_record.language === 'object') {
 
                     for (let i = 0; i < record.display_record.language.length; i++) {
-                        html += '<li><strong>Language:</strong> ' + record.display_record.language[i].text + ' ( ' + record.display_record.language[i].authority + ' )</li>';
+                        html += '<li><strong>Language:</strong> ' + DOMPurify.sanitize(record.display_record.language[i].text) + ' ( ' + DOMPurify.sanitize(record.display_record.language[i].authority) + ' )</li>';
                     }
 
                 } else {
-                    html += '<li><strong>Language:</strong> ' + record.display_record.language + '</li>';
+                    html += '<li><strong>Language:</strong> ' + DOMPurify.sanitize(record.display_record.language) + '</li>';
                 }
 
             }
@@ -164,7 +168,7 @@ const searchModule = (function () {
                 html += '<ul>';
 
                 for (let i = 0; i < record.display_record.names.length; i++) {
-                    html += '<li>' + record.display_record.names[i].title + ' ( ' + record.display_record.names[i].source + ' )</li>';
+                    html += '<li>' + DOMPurify.sanitize(record.display_record.names[i].title) + ' ( ' + DOMPurify.sanitize(record.display_record.names[i].source) + ' )</li>';
                 }
 
                 html += '</ul>';
@@ -177,7 +181,7 @@ const searchModule = (function () {
 
                 for (let i = 0; i < record.display_record.notes.length; i++) {
                     if (record.display_record.notes[i].content !== undefined) {
-                        html += '<li>' + record.display_record.notes[i].content.toString() + ' ( ' + record.display_record.notes[i].type + ' )</li>';
+                        html += '<li>' + DOMPurify.sanitize(record.display_record.notes[i].content.toString()) + ' ( ' + DOMPurify.sanitize(record.display_record.notes[i].type) + ' )</li>';
                     }
                 }
 
@@ -190,10 +194,10 @@ const searchModule = (function () {
                 html += '<ul>';
 
                 for (let i = 0; i < record.display_record.parts.length; i++) {
-                    html += '<li>' + record.display_record.parts[i].title + ' ( ' + record.display_record.parts[i].type + ' ) order: ' + record.display_record.parts[i].order;
+                    html += '<li>' + DOMPurify.sanitize(record.display_record.parts[i].title) + ' ( ' + DOMPurify.sanitize(record.display_record.parts[i].type) + ' ) order: ' + DOMPurify.sanitize(record.display_record.parts[i].order);
 
                     // TODO: toggle default thumbnails if not an image.  i.e. pdf, audio and video
-                    let tn = helperModule.getTn(record.display_record.parts[i].thumbnail, '');
+                    let tn = helperModule.getTn(DOMPurify.sanitize(record.display_record.parts[i].thumbnail), '');
                     html += '<br><img src="' + tn + '" width="100px" height="100px"></li>';
                 }
 
@@ -207,38 +211,37 @@ const searchModule = (function () {
 
                 for (let i = 0; i < record.display_record.subjects.length; i++) {
                     if (record.display_record.subjects[i].authority_id !== undefined) {
-                        html += '<li>' + record.display_record.subjects[i].title + ' ( <a target="_blank" href="' + record.display_record.subjects[i].authority_id + '">' + record.display_record.subjects[i].authority + '</a> )</li>';
+                        html += '<li>' + DOMPurify.sanitize(record.display_record.subjects[i].title) + ' ( <a target="_blank" href="' + DOMPurify.sanitize(record.display_record.subjects[i].authority_id) + '">' + DOMPurify.sanitize(record.display_record.subjects[i].authority) + '</a> )</li>';
                     } else {
-                        html += '<li>' + record.display_record.subjects[i].title + ' ( ' + record.display_record.subjects[i].authority + ' )</li>';
+                        html += '<li>' + DOMPurify.sanitize(record.display_record.subjects[i].title) + ' ( ' + DOMPurify.sanitize(record.display_record.subjects[i].authority) + ' )</li>';
                     }
                 }
 
                 html += '</ul>';
             }
 
-            if (record.abstract !== undefined) { // data[i].object_type === 'collection' &&
+            if (record.abstract !== undefined) {
                 html += '<li><strong>Abstract:</strong></li>';
-                html += '<ul><li style="min-height: 75px">' + record.abstract + '</li></ul>';
+                html += '<ul><li style="min-height: 75px">' + DOMPurify.sanitize(record.abstract) + '</li></ul>';
             }
 
             html += '</ul>';
             html += '</div>';
             html += '<div class="col-md-3" style="padding: 5px">';
 
-            // TODO: optimize this block
             if (data.hits[i]._source.object_type === 'collection') {
 
                 html += '<p><small style="background: skyblue; padding: 3px; color: white">Collection</small></p>';
 
                 if (data.hits[i]._source.is_published === '1') {
                     html += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
-                    html += '<p><a href="#" onclick="objectsModule.unpublishObject(\'' + data.hits[i]._source.pid + '\', \'collection\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Unpublish</a></p>';
+                    html += '<p><a href="#" onclick="objectsModule.unpublishObject(\'' + DOMPurify.sanitize(data.hits[i]._source.pid) + '\', \'collection\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Unpublish</a></p>';
                 } else {
                     html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
-                    html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data.hits[i]._source.pid + '\', \'collection\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
+                    html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(data.hits[i]._source.pid) + '\', \'collection\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
                 }
 
-                html += '<p><a href="' + api + '/dashboard/object/thumbnail?pid=' + data.hits[i]._source.pid + '"><i class="fa fa-edit"></i>&nbsp;Change Thumbnail</a></p>';
+                html += '<p><a href="' + api + '/dashboard/object/thumbnail?pid=' + DOMPurify.sanitize(data.hits[i]._source.pid) + '"><i class="fa fa-edit"></i>&nbsp;Change Thumbnail</a></p>';
 
             } else if (data.hits[i]._source.object_type === 'object' && data.hits[i]._source.is_compound === 0) {
 
@@ -249,11 +252,8 @@ const searchModule = (function () {
                     html += '<p><a href="#"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
                 } else {
                     html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
-                    html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data.hits[i]._source.pid + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
+                    html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(data.hits[i]._source.pid) + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
                 }
-
-                // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=tn"><i class="fa fa-code"></i>&nbsp;Technical Metadata</a></p>';
-                // html += '<p><a href="' + api + '/dashboard/object/download?pid=' + data[i].pid + '&type=mods"><i class="fa fa-code"></i>&nbsp;MODS</a></p>';
 
             } else if (data.hits[i]._source.object_type === 'object' && data.hits[i]._source.is_compound === 1) {
 
@@ -264,10 +264,10 @@ const searchModule = (function () {
                     html += '<p><a href="#"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
                 } else {
                     html += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
-                    html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + data.hits[i]._source.pid + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
+                    html += '<p><a href="#" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(data.hits[i]._source.pid) + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
                 }
 
-                html += '<p><a href="' + api + '/dashboard/object/thumbnail?pid=' + data.hits[i]._source.pid + '"><i class="fa fa-edit"></i>&nbsp;Change Thumbnail</a></p>';
+                html += '<p><a href="' + api + '/dashboard/object/thumbnail?pid=' + DOMPurify.sanitize(data.hits[i]._source.pid) + '"><i class="fa fa-edit"></i>&nbsp;Change Thumbnail</a></p>';
             }
 
             html += '</div>';
@@ -277,14 +277,18 @@ const searchModule = (function () {
 
         html += helperModule.pagination(is_member_of_collection, total_records);
 
-        $('#pagination').html(helperModule.pagination(is_member_of_collection, total_records));
-        $('#objects').html(html);
-        $('a').tooltip();
+        if (document.querySelector('#pagination')) {
+            document.querySelector('#pagination').innerHTML = helperModule.pagination(is_member_of_collection, total_records);
+        }
+
+        if (document.querySelector('#objects')) {
+            document.querySelector('#objects').innerHTML = html;
+        }
     };
 
     obj.search = function () {
 
-        let q = helperModule.getParameterByName('q'); // TODO: sanitize
+        let q = helperModule.getParameterByName('q');
         let token = userModule.getUserToken();
 
         let url = api + '/api/admin/v1/search?q=' + q,

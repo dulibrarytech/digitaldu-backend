@@ -23,13 +23,6 @@ const helperModule = (function () {
     let obj = {},
         api = configModule.getApi();
 
-    // TODO: remove
-    /*
-    const renderError = function (message) {
-        $('#message').html(message);
-    };
-    */
-
     /**
      * Renders error message
      * @param message
