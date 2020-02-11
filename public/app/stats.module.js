@@ -29,24 +29,24 @@ const statsModule = (function () {
      */
     const renderStats = function (data) {
 
-        document.querySelector('#published-collection-count').innerHTML = DOMPurify.sanitize(data.published_collection_count.toLocaleString('en'));
-        document.querySelector('#total-collection-count').innerHTML = DOMPurify.sanitize(data.total_collection_count.toLocaleString('en'));
-        document.querySelector('#published-object-count').innerHTML = DOMPurify.sanitize(data.published_object_count.toLocaleString('en'));
-        document.querySelector('#total-object-count').innerHTML = DOMPurify.sanitize(data.total_object_count.toLocaleString('en'));
-        document.querySelector('#total-image-count').innerHTML = DOMPurify.sanitize(data.total_image_count.toLocaleString('en'));
-        document.querySelector('#total-pdf-count').innerHTML = DOMPurify.sanitize(data.total_pdf_count.toLocaleString('en'));
-        document.querySelector('#total-audio-count').innerHTML = DOMPurify.sanitize(data.total_audio_count.toLocaleString('en'));
-        document.querySelector('#total-video-count').innerHTML = DOMPurify.sanitize(data.total_video_count.toLocaleString('en'));
+        dom.html('#published-collection-count', DOMPurify.sanitize(data.published_collection_count.toLocaleString('en')));
+        dom.html('#total-collection-count', DOMPurify.sanitize(data.total_collection_count.toLocaleString('en')));
+        dom.html('#published-object-count', DOMPurify.sanitize(data.published_object_count.toLocaleString('en')));
+        dom.html('#total-object-count', DOMPurify.sanitize(data.total_object_count.toLocaleString('en')));
+        dom.html('#total-image-count', DOMPurify.sanitize(data.total_image_count.toLocaleString('en')));
+        dom.html('#total-pdf-count', DOMPurify.sanitize(data.total_pdf_count.toLocaleString('en')));
+        dom.html('#total-audio-count', DOMPurify.sanitize(data.total_audio_count.toLocaleString('en')));
+        dom.html('#total-video-count', DOMPurify.sanitize(data.total_video_count.toLocaleString('en')));
 
         // clear loading... messages
-        document.querySelector('#loading-published-collection-count').innerHTML = '';
-        document.querySelector('#loading-total-collection-count').innerHTML = '';
-        document.querySelector('#loading-published-object-count').innerHTML = '';
-        document.querySelector('#loading-total-object-count').innerHTML = '';
-        document.querySelector('#loading-image-count').innerHTML = '';
-        document.querySelector('#loading-pdf-count').innerHTML = '';
-        document.querySelector('#loading-audio-count').innerHTML = '';
-        document.querySelector('#loading-video-count').innerHTML = '';
+        dom.html('#loading-published-collection-count', null);
+        dom.html('#loading-total-collection-count', null);
+        dom.html('#loading-published-object-count', null);
+        dom.html('#loading-total-object-count', null);
+        dom.html('#loading-image-count', null);
+        dom.html('#loading-pdf-count', null);
+        dom.html('#loading-audio-count', null);
+        dom.html('#loading-video-count', null);
     };
 
     /**

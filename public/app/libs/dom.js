@@ -22,6 +22,12 @@ const dom = (function () {
 
     let obj = {};
 
+    /**
+     * Injects data into DOM via id or class
+     * @param selector
+     * @param data
+     * @returns {boolean}
+     */
     obj.html = function(selector, data) {
 
         let result = true;
@@ -58,6 +64,12 @@ const dom = (function () {
         return result;
     };
 
+    /**
+     * Gets or sets form field data
+     * @param selector
+     * @param data
+     * @returns {*}
+     */
     obj.val = function(selector, data) {
 
         let result = true;
@@ -80,6 +92,11 @@ const dom = (function () {
         return result;
     };
 
+    /**
+     * Gets form field data
+     * @param selector
+     * @returns {string}
+     */
     obj.serialize = function(selector) {
 
         let vals = [];
@@ -95,6 +112,10 @@ const dom = (function () {
         return vals.join('&');
     };
 
+    /**
+     * Hides element
+     * @param selector
+     */
     obj.hide = function(selector) {
 
         let result = true;
@@ -123,8 +144,14 @@ const dom = (function () {
                 result = false;
             }
         }
+
+        return false;
     };
 
+    /**
+     * Shows element
+     * @param selector
+     */
     obj.show = function(selector) {
 
         let result = true;
@@ -153,6 +180,8 @@ const dom = (function () {
                 result = false;
             }
         }
+
+        return result;
     };
 
     return obj;
