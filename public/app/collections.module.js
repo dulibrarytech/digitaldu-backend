@@ -35,33 +35,51 @@ const collectionsModule = (function () {
             let pid = helperModule.getParameterByName('pid');
         }
 
-        userModule.setHeaderUserToken();
-
-        $.ajax(api + '/api/admin/v1/repo/object/?pid=' + pid)
-            .done(function (data) {
-
-                if (data.length === 0) {
-                    return document.querySelector('#message').innerHTML = '<div class="alert alert-info"><i class="fa fa-info-circle"></i> Collection not found.</div>';
-                }
-
-                let record = JSON.parse(data[0].display_record);
-                let title = 'No title.';
-
-                if (record.title !== undefined) {
-                    title = record.title;
-                }
-
-                if (document.querySelector('#collection-name')) {
-                    document.querySelector('#collection-name').innerHTML = DOMPurify.sanitize(title);
-                }
-            })
-            .fail(function (jqXHR, textStatus) {
-
-                if (jqXHR.status !== 200) {
-                    let message = 'Error: (HTTP status ' + DOMPurify.sanitize(jqXHR.status) + '. Unable to retrieve collection name.';
-                    helperModule.renderError(message);
+        let token = userModule.getUserToken();
+        let url = api + '/api/admin/v1/repo/object/?pid=' + pid,
+            request = new Request(url, {
+                method: 'GET',
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
                 }
             });
+
+        const callback = function (response) {
+
+            if (response.status === 200) {
+
+                response.json().then(function (data) {
+
+                    if (data.length === 0) {
+                        return dom.html('#message', '<div class="alert alert-info"><i class="fa fa-info-circle"></i> Collection not found.</div>');
+                    }
+
+                    let record = JSON.parse(data[0].display_record);
+                    let title = 'No title.';
+
+                    if (record.title !== undefined) {
+                        title = record.title;
+                    }
+
+                    dom.html('#collection-name', DOMPurify.sanitize(title));
+                });
+
+            } else if (response.status === 401) {
+
+                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.');
+
+                setTimeout(function () {
+                    window.location.replace('/login');
+                }, 4000);
+
+            } else {
+                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(jqXHR.status) + '. Unable to retrieve collection name.');
+            }
+        };
+
+        http.req(request, callback);
     };
 
     /**
@@ -69,19 +87,7 @@ const collectionsModule = (function () {
      */
     obj.getIsMemberOfCollection = function () {
         let is_member_of_collection = helperModule.getParameterByName('is_member_of_collection');
-        // $('#is-member-of-collection').val(is_member_of_collection);
-        if (document.querySelector('#is-member-of-collection')) {
-            document.querySelector('#is-member-of-collection').value = is_member_of_collection;
-        }
-
-    };
-
-    /**
-     * Gets collection form data
-     * @returns {*|jQuery}
-     */
-    const getCollectionFormData = function () {
-        return $('#collection-form').serialize();
+        dom.val('#is-member-of-collection', is_member_of_collection);
     };
 
     /**
@@ -91,16 +97,16 @@ const collectionsModule = (function () {
 
         let obj = {};
         obj.pid = helperModule.getParameterByName('pid');
-        obj.thumbnail_url = document.querySelector('#thumbnail-url').value; //$('#thumbnail-url').val();
+        // obj.thumbnail_url = document.querySelector('#thumbnail-url').value;
+        obj.thumbnail_url = dom.val('#thumbnail-url', null);
 
-        userModule.setHeaderUserToken();
-
+        let token = userModule.getUserToken();
         let url = api + '/api/admin/v1/repo/object/thumbnail',
             request = new Request(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-access-token': userModule.getUserToken()
+                    'x-access-token': token
                 },
                 body: JSON.stringify(obj),
                 mode: 'cors'
@@ -110,22 +116,18 @@ const collectionsModule = (function () {
 
             if (response.status === 201) {
 
-                let message = '<div class="alert alert-success"><i class="fa fa-check-circle"></i> Thumbnail updated</div>';
-                document.querySelector('#message').innerHTML = message;
-                document.querySelector('#thumbnail-url').value = '';
-                // $('#message').html(message);
-                // $('#thumbnail-url').val('');
+                dom.html('#message', '<div class="alert alert-success"><i class="fa fa-check-circle"></i> Thumbnail updated</div>');
+                dom.val('#thumbnail-url', '');
 
                 setTimeout(function () {
-                    document.querySelector('#message').innerHTML = '';
+                    dom.html('#message', null);
                 }, 4000);
 
             } else if (response.status === 401) {
 
                 response.json().then(function (response) {
 
-                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.</div>';
-                    helperModule.renderError(message);
+                    helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
                         window.location.replace('/login');
@@ -133,8 +135,7 @@ const collectionsModule = (function () {
                 });
 
             } else {
-                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + response.status + '). An error has occurred. Unable to update thumbnail.</div>';
-                helperModule.renderError(message);
+                helperModule.renderError('Error: (HTTP status ' + response.status + '). An error has occurred. Unable to update thumbnail.');
             }
         };
 
@@ -142,35 +143,70 @@ const collectionsModule = (function () {
     };
 
     /**
+     * Gets collection form data
+     * @returns {string}
+     */
+    const getCollectionFormData = function () {
+        return dom.serialize('#collection-form');
+    };
+
+    /**
      * Adds collection
      */
     const addCollection = function () {
 
-        let message = '<div class="alert alert-info">Saving Collection...</div>';
-        $('#collection-form').hide();
-        document.querySelector('#message').innerHTML = message;
+        dom.hide('#collection-form');
+        dom.html('#message', '<div class="alert alert-info">Saving Collection...</div>');
 
-        userModule.setHeaderUserToken();
+        let collection = getCollectionFormData();
+        let arr = collection.split('&');
+        let obj = {};
 
-        $.ajax({
-            url: api + '/api/admin/v1/repo/object',
-            type: 'post',
-            data: getCollectionFormData()
-        }).done(function (data) {
+        for (let i=0;i<arr.length;i++) {
+            let propsVal = decodeURIComponent(arr[i]).split('=');
+            obj[propsVal[0]] = propsVal[1];
+        }
 
-            let message = '<div class="alert alert-success">Collection created ( <a href="' + configModule.getApi() + '/dashboard/objects/?pid=' + DOMPurify.sanitize(data[0].pid) + '">' + DOMPurify.sanitize(data[0].pid) + '</a> )';
-            document.querySelector('#message').innerHTML = message;
-            $('#collection-form').hide();
+        let token = userModule.getUserToken();
+        let url = api + '/api/admin/v1/repo/object',
+            request = new Request(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                body: JSON.stringify(obj),
+                mode: 'cors'
+            });
 
-            return false;
+        const callback = function (response) {
 
-        }).fail(function (jqXHR, textStatus) {
+            if (response.status === 201) {
 
-            if (jqXHR.status !== 201) {
-                let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + DOMPurify.sanitize(jqXHR.status) + '. Unable to add collection.</div>';
-                helperModule.renderError(message);
+                response.json().then(function (data) {
+                    dom.html('#message', '<div class="alert alert-success">Collection created ( <a href="' + configModule.getApi() + '/dashboard/objects/?pid=' + DOMPurify.sanitize(data[0].pid) + '">' + DOMPurify.sanitize(data[0].pid) + '</a> )');
+                    dom.hide('#collection-form');
+                });
+
+                return false;
+
+            } else if (response.status === 401) {
+
+                response.json().then(function (response) {
+
+                    helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.');
+
+                    setTimeout(function () {
+                        window.location.replace('/login');
+                    }, 4000);
+                });
+
+            } else {
+                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + ').  Unable to add collection.');
             }
-        });
+        };
+
+        http.req(request, callback);
     };
 
     /**

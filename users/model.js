@@ -207,6 +207,17 @@ exports.update_user = function (req, callback) {
 exports.save_user = function (req, callback) {
 
     let userObj = req.body;
+    let user = Object.values(userObj);
+
+    if (user.indexOf !== -1) {
+        callback({
+            status: 200,
+            message: 'Please fill in all required fields.',
+            data: userObj
+        });
+
+        return false;
+    }
 
     knex('tbl_users')
         .insert(userObj)
