@@ -28,7 +28,7 @@ const helperModule = (function () {
      * @param message
      */
     obj.renderError = function (message) {
-        document.querySelector('#message').innerHTML = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + DOMPurify.sanitize(message) + '</div>';
+        dom.html('#message', '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + DOMPurify.sanitize(message) + '</div>');
         return false;
     };
 
@@ -79,7 +79,7 @@ const helperModule = (function () {
 
     obj.getCurrentYear = function () {
         let cdate = new Date().getFullYear();
-        document.querySelector('#cdate').innerHTML = DOMPurify.sanitize(cdate);
+        dom.html('#cdate', DOMPurify.sanitize(cdate));
     };
 
     /**
@@ -130,15 +130,13 @@ const helperModule = (function () {
                     }
                 }
 
-                if (document.querySelector('#ping')) {
-                    document.querySelector('#ping').innerHTML = DOMPurify.sanitize(html);
-                }
+                dom.html('#ping', html);
             })
             .fail(function (jqXHR, textStatus) {
 
                 if (jqXHR.status !== 200) {
 
-                    let message = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + jqXHR.status + '. Unable to check third-party services.</div>';
+                    let message = 'Error: (HTTP status ' + DOMPurify.sanitize(jqXHR.status) + '. Unable to check third-party services.';
                     helperModule.renderError(message);
 
                     if (jqXHR.status === 401) {

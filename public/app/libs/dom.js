@@ -22,28 +22,137 @@ const dom = (function () {
 
     let obj = {};
 
-    obj.appendById = function (id, data) {
+    obj.html = function(selector, data) {
 
-        if (id === undefined || data === undefined) {
-            return false;
+        let result = true;
+
+        if (selector.indexOf('#') !== -1) {
+
+            let id = document.querySelector(selector);
+
+            if (id) {
+                id.innerHTML = data;
+            }
+
+        } else if (selector.indexOf('.') !== -1) {
+
+            let classArr = document.querySelectorAll(selector);
+
+            if (classArr.length > 1) {
+                for (let i=0;i<classArr.length;i++) {
+                    classArr[i].innerHTML = data;
+                }
+
+            } else if (classArr.length === 1) {
+                document.querySelector(selector).innerHTML = data;
+            } else {
+                // Class not found
+                result = false;
+            }
+
+        } else {
+            // A proper selector (id or class) has not been defined
+            result = false;
         }
 
-        let el = document.querySelector('#' + id);
-        el.innerHTML = data;
-
-        return false;
+        return result;
     };
 
-    obj.emptyById = function (id) {
+    obj.val = function(selector, data) {
 
-        if (id === undefined) {
-            return false;
+        let result = true;
+
+        if (selector.indexOf('#') !== -1 || selector.indexOf('.') !== -1) {
+
+            let id = document.querySelector(selector);
+
+            if (id && data !== null) {
+                id.value = DOMPurify.sanitize(data);
+            }
+
+            return id.value.trim();
+
+        } else {
+            // A proper selector (id or class) has not been defined
+            result = false;
         }
 
-        let el = document.querySelector('#' + id);
-        el.innerHTML = '';
+        return result;
+    };
 
-        return false;
+    obj.serialize = function(selector) {
+
+        let vals = [];
+        let form = document.querySelector(selector);
+
+        for (let i = 0; i < form.elements.length; i++) {
+            let elems = form.elements[i];
+            if (elems.name.length !== 0 && elems.value.length !== 0) {
+                vals.push(encodeURIComponent(elems.name) + "=" + encodeURIComponent(DOMPurify.sanitize(elems.value).trim()));
+            }
+        }
+
+        return vals.join('&');
+    };
+
+    obj.hide = function(selector) {
+
+        let result = true;
+
+        if (selector.indexOf('#') !== -1) {
+
+            let id = document.querySelector(selector);
+
+            if (id) {
+                id.style.display = 'none';
+            }
+
+        } else if (selector.indexOf('.') !== -1) {
+
+            let classArr = document.querySelectorAll(selector);
+
+            if (classArr.length > 1) {
+                for (let i = 0; i < classArr.length; i++) {
+                    classArr[i].style.display = 'none';
+                }
+
+            } else if (classArr.length === 1) {
+                document.querySelector(selector).style.display = 'none';
+            } else {
+                // Class not found
+                result = false;
+            }
+        }
+    };
+
+    obj.show = function(selector) {
+
+        let result = true;
+
+        if (selector.indexOf('#') !== -1) {
+
+            let id = document.querySelector(selector);
+
+            if (id) {
+                id.style.display = 'block';
+            }
+
+        } else if (selector.indexOf('.') !== -1) {
+
+            let classArr = document.querySelectorAll(selector);
+
+            if (classArr.length > 1) {
+                for (let i = 0; i < classArr.length; i++) {
+                    classArr[i].style.display = 'block';
+                }
+
+            } else if (classArr.length === 1) {
+                document.querySelector(selector).style.display = 'block';
+            } else {
+                // Class not found
+                result = false;
+            }
+        }
     };
 
     return obj;

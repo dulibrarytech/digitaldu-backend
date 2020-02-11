@@ -30,10 +30,9 @@ const userModule = (function () {
     const renderUsers = function (data) {
 
         if (data.length === 0) {
-            document.querySelector('.loading').innerHTML = '';
-            document.querySelector('.table').innerHTML = '';
-            let message = '<div class="alert alert-danger">Unable to get users.</div>';
-            helperModule.renderError(message);
+            dom.html('.loading', null);
+            dom.html('.table', null);
+            helperModule.renderError('Unable to get users.');
             return false;
         }
 
@@ -63,8 +62,8 @@ const userModule = (function () {
             html += '</tr>';
         }
 
-        document.querySelector('#users').innerHTML = html;
-        document.querySelector('.loading').innerHTML = '';
+        dom.html('#users', html);
+        dom.html('.loading', null);
 
         return false;
     };
@@ -76,9 +75,8 @@ const userModule = (function () {
     const renderUserDetails = function (data) {
 
         if (data.length === 0) {
-            document.querySelector('#user-update-form').innerHTML = '';
-            let message = 'Unable to get profile data.';
-            helperModule.renderError(message);
+            dom.html('#user-update-form', null);
+            helperModule.renderError('Unable to get profile data.');
             setTimeout(function () {
                 window.location.replace('/dashboard/users');
             }, 3000);
@@ -91,11 +89,11 @@ const userModule = (function () {
 
             user = data[i];
 
-            $('#id').val(DOMPurify.sanitize(user.id));
-            $('#du_id').val(DOMPurify.sanitize(user.du_id));
-            $('#email').val(DOMPurify.sanitize(user.email));
-            $('#first_name').val(DOMPurify.sanitize(user.first_name));
-            $('#last_name').val(DOMPurify.sanitize(user.last_name));
+            dom.val('#id', user.id);
+            dom.val('#du_id', user.du_id);
+            dom.val('#email', user.email);
+            dom.val('#first_name', user.first_name);
+            dom.val('#last_name', user.last_name);
 
             if (user.status === 1) {
                 $('#is_active').prop('checked', true);
@@ -104,7 +102,7 @@ const userModule = (function () {
             }
         }
 
-        document.querySelector('.loading').innerHTML = '';
+        dom.html('.loading', null);
 
         return false;
     };
@@ -166,28 +164,22 @@ const userModule = (function () {
      */
     obj.renderUserName = function () {
 
-        let usernameClass = document.querySelectorAll('.username');
-
-        for (let i=0;i<usernameClass.length;i++) {
-            usernameClass[i].innerHTML = '<strong>Loading...</strong>';
-        }
+        dom.html('.username', '<strong>Loading...</strong>');
 
         setTimeout(function () {
 
             let data = JSON.parse(window.sessionStorage.getItem('repo_user'));
 
-            if (data !== null && usernameClass.length !== 0) {
+            if (data !== null) {
 
-                for (let i=0;i<usernameClass.length;i++) {
-                    usernameClass[i].innerHTML = '<strong>' + DOMPurify.sanitize(data.name) + '</strong>';
-                }
+                dom.html('.username', '<strong>' + DOMPurify.sanitize(data.name) + '</strong>');
 
-            } else if (data === null && usernameClass.length !== 0) {
+            } else if (data === null && dom.html('.username')) {
 
                  helperModule.renderError('Unable to get user profile data.');
 
                  setTimeout(function () {
-                 window.location.replace('/login');
+                    window.location.replace('/login');
                  }, 5000);
             }
 
@@ -199,15 +191,19 @@ const userModule = (function () {
      * @returns {*|jQuery}
      */
     const getUserFormData = function () {
-        return $('#user-form').serialize();
+        return dom.serialize('#user-form');
     };
 
+    /**
+     * Gets update data
+     * @returns {{}}
+     */
     const getUserFormUpateData = function () {
 
         let User = {};
-        User.id = DOMPurify.sanitize(document.querySelector('#id').value);
-        User.first_name = DOMPurify.sanitize(document.querySelector('#first_name').value);
-        User.last_name = DOMPurify.sanitize(document.querySelector('#last_name').value);
+        User.id = dom.val('#id', null);
+        User.first_name = dom.val('#first_name', null);
+        User.last_name = dom.val('#last_name', null);
 
         if ($('#is_active').prop('checked')) {
             User.is_active = 1;
@@ -232,9 +228,8 @@ const userModule = (function () {
      */
     const addUser = function () {
 
-        let message = '<div class="alert alert-info">Saving User...</div>';
-        $('#user-form').hide();
-        document.querySelector('#message').innerHTML = message;
+        dom.hide('#user-form');
+        dom.html('#message', '<div class="alert alert-info">Saving User...</div>');
         userModule.setHeaderUserToken();
 
         $.ajax({
@@ -243,13 +238,13 @@ const userModule = (function () {
             data: getUserFormData()
         }).done(function (data) {
 
-            let message = '<div class="alert alert-success">User created</div>';
-            document.querySelector('#message').innerHTML = message;
-            $('#user-form').show();
-            $('#user-form')[0].reset();
+            dom.html('#message', '<div class="alert alert-success">User created</div>');
+            // $('#user-form').show();
+            dom.show('#user-form');
+            $('#user-form')[0].reset(); // TODO:...
 
             setTimeout(function () {
-                document.querySelector('#message').innerHTML = '';
+                dom.html('#message', null);
             }, 3000);
 
         }).fail(function () {
@@ -262,9 +257,8 @@ const userModule = (function () {
      */
     const updateUser = function () {
 
-        let message = '<div class="alert alert-info">Updating User...</div>';
-        $('#user-form').hide();
-        document.querySelector('#message').innerHTML = message;
+        dom.hide('#user-form');
+        dom.html('#message', '<div class="alert alert-info">Updating User...</div>');
         userModule.setHeaderUserToken();
 
         $.ajax({
@@ -273,12 +267,11 @@ const userModule = (function () {
             data: getUserFormUpateData()
         }).done(function (data) {
 
-            let message = '<div class="alert alert-success">User updated</div>';
-            document.querySelector('#message').innerHTML = message;
-            $('#user-update-form').hide();
-
+            dom.html('#message', '<div class="alert alert-success">User updated</div>');
+            // $('#user-update-form').hide(); // TODO:...
+            dom.hide('#user-update-form');
             setTimeout(function () {
-                document.querySelector('#message').innerHTML = '';
+                dom.html('#message', null);
                 window.location.replace('/dashboard/users');
             }, 3000);
 
@@ -438,8 +431,8 @@ const userModule = (function () {
         document.querySelector('#login-button').disabled = true;
 
         let user = {
-            username: DOMPurify.sanitize(document.querySelector('#username').value).trim(),
-            password: DOMPurify.sanitize(document.querySelector('#password').value).trim()
+            username: dom.val('#username', null),
+            password: dom.val('#password', null)
         };
 
         let url = api + '/api/authenticate',
@@ -458,8 +451,7 @@ const userModule = (function () {
 
                 response.json().then(function (response) {
 
-                    let message = '<div class="alert alert-success"><i class="fa fa-check-circle"></i> ' + DOMPurify.sanitize(response.message) + '</div>';
-                    document.querySelector('#message').innerHTML = message;
+                    dom.html('#message', '<div class="alert alert-success"><i class="fa fa-check-circle"></i> ' + DOMPurify.sanitize(response.message) + '</div>');
 
                     setTimeout(function () {
                         window.location.replace(response.redirect);
@@ -471,14 +463,12 @@ const userModule = (function () {
 
                 response.json().then(function (response) {
                     document.querySelector('#login-button').disabled = false;
-                    let message = DOMPurify.sanitize(response.message);
-                    helperModule.renderError(message);
+                    helperModule.renderError(DOMPurify.sanitize(response.message));
                 });
 
             } else {
                 document.querySelector('#login-button').disabled = false;
-                let message = 'Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to authenticate user.';
-                helperModule.renderError(message);
+                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to authenticate user.');
             }
         };
 
