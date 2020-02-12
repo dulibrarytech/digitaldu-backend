@@ -148,7 +148,7 @@ exports.index_records = function (req, callback) {
     function index (index_name) {
 
         knex(REPO_OBJECTS)
-            .select('pid', 'is_member_of_collection', 'uri', 'handle', 'object_type', 'display_record', 'is_published')
+            .select('pid', 'is_member_of_collection', 'uri', 'handle', 'object_type', 'display_record', 'thumbnail', 'is_published')
             .where({
                 is_indexed: 0,
                 is_active: 1
@@ -168,11 +168,12 @@ exports.index_records = function (req, callback) {
 
                         let collection_record = {};
                         collection_record.pid = data[0].pid;
-                        collection_record.uir = data[0].uri;
+                        collection_record.uri = data[0].uri;
                         collection_record.is_member_of_collection = data[0].is_member_of_collection;
                         collection_record.handle = data[0].handle;
                         collection_record.object_type = data[0].object_type;
                         collection_record.title = record.display_record.title;
+                        collection_record.thumbnail = data[0].thumbnail;
                         collection_record.is_published = data[0].is_published;
 
                         // get collection abstract

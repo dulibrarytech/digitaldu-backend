@@ -235,10 +235,10 @@ const userModule = (function () {
 
     /**
      * Retrieves user form data
-     * @returns {*|jQuery}
+     * @param id
+     * @returns {string}
      */
     const getUserFormData = function (id) {
-        // return dom.serialize('#user-form');
         return dom.serialize(id);
     };
 

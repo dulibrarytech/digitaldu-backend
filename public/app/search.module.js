@@ -40,9 +40,14 @@ const searchModule = (function () {
 
             html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; No objects or collections found.</strong></div>';
 
+            /*
             if (document.querySelector('#objects')) {
                 document.querySelector('#objects').innerHTML = html;
             }
+            */
+
+
+            dom.html('#objects', html);
 
             return false;
         }

@@ -167,6 +167,9 @@ const collectionsModule = (function () {
             obj[propsVal[0]] = propsVal[1];
         }
 
+        // TODO: ... make sure thumbnail is null not undefined
+        console.log(obj);
+
         let token = userModule.getUserToken();
         let url = api + '/api/admin/v1/repo/object',
             request = new Request(url, {

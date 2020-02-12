@@ -207,7 +207,6 @@ exports.update_user = function (req, callback) {
 exports.save_user = function (req, callback) {
 
     let userObj = req.body;
-    // TODO...
     let user = Object.values(userObj);
 
     if (user.indexOf(null) !== -1 || user.indexOf('') !== -1) {

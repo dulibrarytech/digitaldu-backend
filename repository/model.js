@@ -493,7 +493,6 @@ exports.update_thumbnail = function (req, callback) {
     obj.pid = req.body.pid;
     obj.thumbnail = req.body.thumbnail_url;
 
-    // TODO: update index
     knex(REPO_OBJECTS)
         .where({
             pid: obj.pid,
@@ -890,6 +889,11 @@ exports.create_collection_object = function (req, callback) {
                 logger.module().error('ERROR: [/repository/model module (create_collection_object/index_collection)] unable to index collection record ' + body);
             }
         });
+    }
+
+    // TODO: check if uri is already in the repository
+    function check_uri() {
+
     }
 
     async.waterfall([
