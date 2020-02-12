@@ -112,15 +112,39 @@ const userModule = (function () {
      */
     obj.getUsers = function () {
 
-        userModule.setHeaderUserToken();
-
-        $.ajax(api + '/api/admin/v1/users')
-            .done(function (data) {
-                renderUsers(data);
-            })
-            .fail(function () {
-                helperModule.renderError('Request Failed.');
+        let token = userModule.getUserToken();
+        let url = api + '/api/admin/v1/users',
+            request = new Request(url, {
+                method: 'GET',
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
             });
+
+        const callback = function (response) {
+
+            if (response.status === 200) {
+
+                response.json().then(function (data) {
+                    renderUsers(data);
+                });
+
+            } else if (response.status === 401) {
+
+                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.');
+
+                setTimeout(function () {
+                    window.location.replace('/login');
+                }, 4000);
+
+            } else {
+                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to retrieve users.');
+            }
+        };
+
+        http.req(request, callback);
 
         return false;
     };
@@ -131,16 +155,39 @@ const userModule = (function () {
     obj.getUserDetails = function () {
 
         let id = helperModule.getParameterByName('id');
-
-        userModule.setHeaderUserToken();
-
-        $.ajax(api + '/api/admin/v1/users?id=' + id)
-            .done(function (data) {
-                renderUserDetails(data);
-            })
-            .fail(function () {
-                helperModule.renderError('Request Failed.');
+        let token = userModule.getUserToken();
+        let url = api + '/api/admin/v1/users?id=' + id,
+            request = new Request(url, {
+                method: 'GET',
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
             });
+
+        const callback = function (response) {
+
+            if (response.status === 200) {
+
+                response.json().then(function (data) {
+                    renderUserDetails(data);
+                });
+
+            } else if (response.status === 401) {
+
+                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.');
+
+                setTimeout(function () {
+                    window.location.replace('/login');
+                }, 4000);
+
+            } else {
+                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to retrieve users.');
+            }
+        };
+
+        http.req(request, callback);
 
         return false;
     };
@@ -190,8 +237,9 @@ const userModule = (function () {
      * Retrieves user form data
      * @returns {*|jQuery}
      */
-    const getUserFormData = function () {
-        return dom.serialize('#user-form');
+    const getUserFormData = function (id) {
+        // return dom.serialize('#user-form');
+        return dom.serialize(id);
     };
 
     /**
@@ -228,28 +276,62 @@ const userModule = (function () {
      */
     const addUser = function () {
 
+        let user = getUserFormData('#user-form');
+        let arr = user.split('&');
+        let obj = {};
+
         dom.hide('#user-form');
         dom.html('#message', '<div class="alert alert-info">Saving User...</div>');
-        userModule.setHeaderUserToken();
 
-        $.ajax({
-            url: api + '/api/admin/v1/users',
-            type: 'post',
-            data: getUserFormData()
-        }).done(function (data) {
+        for (let i=0;i<arr.length;i++) {
+            let propsVal = decodeURIComponent(arr[i]).split('=');
+            obj[propsVal[0]] = propsVal[1];
+        }
 
-            dom.html('#message', '<div class="alert alert-success">User created</div>');
-            // $('#user-form').show();
-            dom.show('#user-form');
-            $('#user-form')[0].reset(); // TODO:...
+        let token = userModule.getUserToken();
+        let url = api + '/api/admin/v1/users',
+            request = new Request(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                body: JSON.stringify(obj),
+                mode: 'cors'
+            });
 
-            setTimeout(function () {
-                dom.html('#message', null);
-            }, 3000);
+        const callback = function (response) {
 
-        }).fail(function () {
-            helperModule.renderError('Request Failed.');
-        });
+            if (response.status === 201) {
+
+                dom.html('#message', '<div class="alert alert-success">User created</div>');
+                dom.hide('#user-form');
+                document.querySelector('#user-form').reset();
+
+                setTimeout(function () {
+                    dom.html('#message', null);
+                    dom.show('#user-form');
+                }, 3000);
+
+                return false;
+
+            } else if (response.status === 401) {
+
+                response.json().then(function (response) {
+
+                    helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.');
+
+                    setTimeout(function () {
+                        window.location.replace('/login');
+                    }, 4000);
+                });
+
+            } else {
+                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + ').  Unable to add user.');
+            }
+        };
+
+        http.req(request, callback);
     };
 
     /**
@@ -257,27 +339,52 @@ const userModule = (function () {
      */
     const updateUser = function () {
 
-        dom.hide('#user-form');
+        let obj = getUserFormUpateData();
+        dom.hide('#user-update-form');
         dom.html('#message', '<div class="alert alert-info">Updating User...</div>');
-        userModule.setHeaderUserToken();
 
-        $.ajax({
-            url: api + '/api/admin/v1/users',
-            type: 'put',
-            data: getUserFormUpateData()
-        }).done(function (data) {
+        let token = userModule.getUserToken();
+        let url = api + '/api/admin/v1/users',
+            request = new Request(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                body: JSON.stringify(obj),
+                mode: 'cors'
+            });
 
-            dom.html('#message', '<div class="alert alert-success">User updated</div>');
-            // $('#user-update-form').hide(); // TODO:...
-            dom.hide('#user-update-form');
-            setTimeout(function () {
-                dom.html('#message', null);
-                window.location.replace('/dashboard/users');
-            }, 3000);
+        const callback = function (response) {
 
-        }).fail(function () {
-            helperModule.renderError('Request Failed.');
-        });
+            if (response.status === 201) {
+
+                dom.html('#message', '<div class="alert alert-success">User updated</div>');
+                dom.hide('#user-update-form');
+                setTimeout(function () {
+                    dom.html('#message', null);
+                    window.location.replace('/dashboard/users');
+                }, 3000);
+
+                return false;
+
+            } else if (response.status === 401) {
+
+                response.json().then(function (response) {
+
+                    helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.');
+
+                    setTimeout(function () {
+                        window.location.replace('/login');
+                    }, 4000);
+                });
+
+            } else {
+                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + ').  Unable to update user.');
+            }
+        };
+
+        http.req(request, callback);
     };
 
     /**
@@ -327,7 +434,7 @@ const userModule = (function () {
         }
     };
 
-    /**
+    /** DEPRECATE
      * Sets session token in request header
      */
     obj.setHeaderUserToken = function () {
@@ -348,27 +455,49 @@ const userModule = (function () {
     };
 
     /**
-     * Gets user profile data
+     * Gets user profile data after authentication
      */
     obj.getAuthUserData = function () {
 
-        userModule.saveToken();
         let uid = helperModule.getParameterByName('uid');
+        userModule.saveToken();
 
         if (uid !== null) {
 
-            userModule.setHeaderUserToken();
+            let token = userModule.getUserToken();
+            let url = api + '/api/admin/v1/users?id=' + uid,
+                request = new Request(url, {
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-access-token': token
+                    }
+                });
 
-            $.ajax(api + '/api/admin/v1/users?id=' + uid)
-                .done(function (data) {
-                    userModule.saveUserAuthData(data);
-                    userModule.renderUserName();
-                })
-                .fail(function () {
+            const callback = function (response) {
+
+                if (response.status === 200) {
+
+                    response.json().then(function (data) {
+                        userModule.saveUserAuthData(data);
+                        userModule.renderUserName();
+                    });
+
+                } else if (response.status === 401) {
+
+                    helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.');
+
                     setTimeout(function () {
                         window.location.replace('/login');
-                    }, 0);
-                });
+                    }, 4000);
+
+                } else {
+                    helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to retrieve user profile.');
+                }
+            };
+
+            http.req(request, callback);
 
         } else {
             userModule.renderUserName();
