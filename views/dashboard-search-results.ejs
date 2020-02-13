@@ -8,37 +8,21 @@
                 <div class="navbar nav_title" style="border: 0;">
                     <a href="/dashboard/home" class="site_title"><i class="fa fa-archive"></i> <span>DU Repository</span></a>
                 </div>
-
                 <div class="clearfix"></div>
-
-                <!-- menu profile quick info -->
                 <% include partials/menu-profile.ejs %>
-                <!-- /menu profile quick info -->
-
                 <br>
-
-                <!-- sidebar -->
                 <% include partials/nav.ejs %>
-
-                <!-- /menu footer buttons -->
                 <div class="sidebar-footer hidden-small">
                     <a data-toggle="tooltip" data-placement="top" title="Logout" href="login.html">
                         <span class="glyphicon glyphicon-off" aria-hidden="true"></span>
                     </a>
 
                 </div>
-                <!-- /menu footer buttons -->
             </div>
         </div>
-
-        <!-- top navigation -->
         <% include partials/top-nav.ejs %>
-        <!-- /top navigation -->
-
-        <!-- page content -->
         <div class="right_col" role="main">
             <div class="">
-
                 <div class="page-title">
                     <div class="title_left">
                         <h3> Search Results </h3>
@@ -48,15 +32,12 @@
                         <% include partials/search.ejs %>
                     </div>
                 </div>
-
                 <div class="clearfix"></div>
-
                 <div class="row">
                     <div class="col-md-12">
                         <div class="x_panel">
                             <div id="search-results-total"></div>
                             <div class="x_title">
-                                <!--<h2>Search Results</h2>-->
                                 <div class="clearfix"></div>
                             </div>
                             <div class="x_content">
@@ -72,16 +53,12 @@
                             </div>
                         </div>
                     </div>
-                </div> <!-- end row -->
+                </div>
             </div>
         </div>
-        <!-- /page content -->
-        <!-- footer content -->
         <% include partials/footer.ejs %>
-        <!-- /footer content -->
     </div>
 </div>
-
 <script src="../../vendors/jquery/dist/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.17.0/dist/jquery.validate.js"></script>
 <script src="../../vendors/bootstrap/dist/js/bootstrap.min.js"></script>
@@ -101,6 +78,5 @@
 <script>
     searchModule.search();
 </script>
-
 </body>
 </html>

@@ -52,6 +52,14 @@ const configModule = (function () {
         };
     };
 
+    /**
+     * Returns root pid
+     * @returns {string}
+     */
+    obj.getRootPid = function() {
+        return 'codu:root';
+    };
+
     return obj;
 
 }());

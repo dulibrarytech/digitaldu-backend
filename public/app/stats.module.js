@@ -20,8 +20,8 @@ const statsModule = (function () {
 
     'use strict';
 
+    const api = configModule.getApi();
     let obj = {};
-    let api = configModule.getApi();
 
     /**
      * Renders repository stats on home page

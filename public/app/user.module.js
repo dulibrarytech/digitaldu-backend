@@ -20,8 +20,8 @@ const userModule = (function () {
 
     'use strict';
 
+    const api = configModule.getApi();
     let obj = {};
-    let api = configModule.getApi();
 
     /**
      * Renders user profile data

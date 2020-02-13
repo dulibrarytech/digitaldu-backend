@@ -33,14 +33,11 @@ const objectsModule = (function () {
             total_on_page = helperModule.getParameterByName('total_on_page'),
             sort = helperModule.getParameterByName('sort');
 
-        if (pid === null || pid === 'codu:root') {
-            pid = 'codu:root';
+        if (pid === null || pid === configModule.getRootPid()) {
+            pid = configModule.getRootPid();
         } else {
             collectionsModule.getCollectionName(pid);
         }
-
-        // TODO:...
-        userModule.setHeaderUserToken();
 
         let url = api + '/api/admin/v1/repo/objects?pid=' + pid;
 
@@ -48,27 +45,49 @@ const objectsModule = (function () {
             url = api + '/api/admin/v1/repo/objects?pid=' + pid + '&page=' + page + '&total_on_page=' + total_on_page;
         }
 
-        $.ajax(url)
-            .done(function (data) {
-                objectsModule.renderDisplayRecords(data);
-            })
-            .fail(function (error) {
+        let token = userModule.getUserToken(),
+            request = new Request(url, {
+                method: 'GET',
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
 
-                if (error.status === 401) {
+        const callback = function (response) {
 
-                    let message = 'Error: (HTTP status ' + DOMPurify.sanitize(error.status) + '). Your session has expired.  You will be redirected to the login page momentarily.';
+            if (response.status === 200) {
+
+                response.json().then(function (data) {
+
+                    dom.html('#message', null);
+
+                    if (data.length === 0) {
+                        dom.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No records found.</div>');
+                    } else {
+                        objectsModule.renderDisplayRecords(data);
+                    }
+                });
+
+            } else if (response.status === 401) {
+
+                response.json().then(function (response) {
+
+                    let message = 'Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.';
                     helperModule.renderError(message);
 
                     setTimeout(function () {
                         window.location.replace('/login');
                     }, 4000);
+                });
 
-                } else {
+            } else {
+                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to get objects.');
+            }
+        };
 
-                    let message = 'Error: (HTTP status ' + DOMPurify.sanitize(error.status) + '). An error has occurred. Unable to get objects.';
-                    helperModule.renderError(message);
-                }
-            });
+        http.req(request, callback);
     };
 
     /**
@@ -113,7 +132,6 @@ const objectsModule = (function () {
                 dom.html('#message', '<div class="alert alert-warning">Unable to publish object. (The object\'s parent collection must be published before attempting to publish one of its objects.)</div>');
 
                 setTimeout(function () {
-                    // $('#message').html('');
                     dom.html('#message', null);
                     objectsModule.getObjects();
                 }, 7000);
@@ -231,7 +249,7 @@ const objectsModule = (function () {
                 });
 
             } else {
-                helperModule.renderError('<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to get incomplete records.</div>');
+                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to get incomplete records.');
             }
         };
 
@@ -287,21 +305,8 @@ const objectsModule = (function () {
         dom.html('#objects', html);
     };
 
-    /**
-     * // TODO:...
-     * Initiates object download
-     * @returns {boolean}
-
-     obj.downloadObject = function () {
-        let pid = helperModule.getParameterByName('pid');
-        window.location.replace(api + '/api/v1/object/download?pid=' + pid);
-        return false;
-    };
-     */
-
     obj.init = function () {
         objectsModule.getObjects();
-        helperModule.ping();
     };
 
     return obj;
