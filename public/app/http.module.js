@@ -16,7 +16,7 @@
 
  */
 
-const http = (function () {
+const httpModule = (function () {
 
     'use strict';
 

@@ -20,15 +20,15 @@ const helperModule = (function () {
 
     'use strict';
 
-    let obj = {},
-        api = configModule.getApi();
+    const api = configModule.getApi();
+    let obj = {};
 
     /**
      * Renders error message
      * @param message
      */
     obj.renderError = function (message) {
-        dom.html('#message', '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + DOMPurify.sanitize(message) + '</div>');
+        domModule.html('#message', '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + DOMPurify.sanitize(message) + '</div>');
         return false;
     };
 
@@ -73,13 +73,15 @@ const helperModule = (function () {
             return '';
         }
 
-        let paramValue = DOMPurify.sanitize(results[2].replace(/\+/g, " "));
-        return decodeURIComponent(paramValue);
+        return decodeURIComponent(DOMPurify.sanitize(results[2].replace(/\+/g, " ")));
     };
 
+    /**
+     * Gets current year
+     */
     obj.getCurrentYear = function () {
         let cdate = new Date().getFullYear();
-        dom.html('#cdate', DOMPurify.sanitize(cdate));
+        domModule.html('#cdate', DOMPurify.sanitize(cdate));
     };
 
     /**
@@ -114,41 +116,50 @@ const helperModule = (function () {
      */
     obj.ping = function () {
 
-        $.ajax({
-            url: configModule.getApi() + '/api/admin/v1/repo/ping/services',
-            type: 'GET'
-        })
-            .done(function (data) {
-
-                let html = '';
-
-                for (let prop in data) {
-
-                    if (data[prop] === 'down') {
-                        $('.import-link').hide();
-                        html += '<div class="alert alert-danger"><strong>' + prop + ' is currently not available.  Ingests are not possible at this time.</strong></div>';
-                    }
-                }
-
-                dom.html('#ping', html);
-            })
-            .fail(function (jqXHR, textStatus) {
-
-                if (jqXHR.status !== 200) {
-
-                    let message = 'Error: (HTTP status ' + DOMPurify.sanitize(jqXHR.status) + '. Unable to check third-party services.';
-                    helperModule.renderError(message);
-
-                    if (jqXHR.status === 401) {
-
-                        setTimeout(function () {
-                            window.location.replace('/dashboard/error');
-                        }, 2000);
-
-                        return false;
-                    }
+        let token = userModule.getUserToken();
+        let url = api + '/api/admin/v1/repo/ping/services',
+            request = new Request(url, {
+                method: 'GET',
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
                 }
             });
+
+        const callback = function (response) {
+
+            if (response.status === 200) {
+
+                response.json().then(function (data) {
+
+                    let html = '';
+
+                    for (let prop in data) {
+
+                        if (data[prop] === 'down') {
+                            domModule.hide('.import-link');
+                            html += '<div class="alert alert-danger"><strong>' + prop + ' is currently not available.  Ingests are not possible at this time.</strong></div>';
+                        }
+                    }
+
+                    domModule.html('#ping', html);
+                });
+
+            } else if (response.status === 401) {
+
+                helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
+
+                setTimeout(function () {
+                    window.location.replace('/login');
+                }, 4000);
+
+            } else {
+                helperModule.renderError('Error: (HTTP status ' + response.status + '. Unable to ping services.');
+            }
+        };
+
+        httpModule.req(request, callback);
     };
 
     /**

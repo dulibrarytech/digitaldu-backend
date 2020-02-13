@@ -29,24 +29,24 @@ const statsModule = (function () {
      */
     const renderStats = function (data) {
 
-        dom.html('#published-collection-count', DOMPurify.sanitize(data.published_collection_count.toLocaleString('en')));
-        dom.html('#total-collection-count', DOMPurify.sanitize(data.total_collection_count.toLocaleString('en')));
-        dom.html('#published-object-count', DOMPurify.sanitize(data.published_object_count.toLocaleString('en')));
-        dom.html('#total-object-count', DOMPurify.sanitize(data.total_object_count.toLocaleString('en')));
-        dom.html('#total-image-count', DOMPurify.sanitize(data.total_image_count.toLocaleString('en')));
-        dom.html('#total-pdf-count', DOMPurify.sanitize(data.total_pdf_count.toLocaleString('en')));
-        dom.html('#total-audio-count', DOMPurify.sanitize(data.total_audio_count.toLocaleString('en')));
-        dom.html('#total-video-count', DOMPurify.sanitize(data.total_video_count.toLocaleString('en')));
+        domModule.html('#published-collection-count', DOMPurify.sanitize(data.published_collection_count.toLocaleString('en')));
+        domModule.html('#total-collection-count', DOMPurify.sanitize(data.total_collection_count.toLocaleString('en')));
+        domModule.html('#published-object-count', DOMPurify.sanitize(data.published_object_count.toLocaleString('en')));
+        domModule.html('#total-object-count', DOMPurify.sanitize(data.total_object_count.toLocaleString('en')));
+        domModule.html('#total-image-count', DOMPurify.sanitize(data.total_image_count.toLocaleString('en')));
+        domModule.html('#total-pdf-count', DOMPurify.sanitize(data.total_pdf_count.toLocaleString('en')));
+        domModule.html('#total-audio-count', DOMPurify.sanitize(data.total_audio_count.toLocaleString('en')));
+        domModule.html('#total-video-count', DOMPurify.sanitize(data.total_video_count.toLocaleString('en')));
 
         // clear loading... messages
-        dom.html('#loading-published-collection-count', null);
-        dom.html('#loading-total-collection-count', null);
-        dom.html('#loading-published-object-count', null);
-        dom.html('#loading-total-object-count', null);
-        dom.html('#loading-image-count', null);
-        dom.html('#loading-pdf-count', null);
-        dom.html('#loading-audio-count', null);
-        dom.html('#loading-video-count', null);
+        domModule.html('#loading-published-collection-count', null);
+        domModule.html('#loading-total-collection-count', null);
+        domModule.html('#loading-published-object-count', null);
+        domModule.html('#loading-total-object-count', null);
+        domModule.html('#loading-image-count', null);
+        domModule.html('#loading-pdf-count', null);
+        domModule.html('#loading-audio-count', null);
+        domModule.html('#loading-video-count', null);
     };
 
     /**
@@ -72,7 +72,7 @@ const statsModule = (function () {
                 response.json().then(function (data) {
 
                     if (data.length === 0) {
-                        dom.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No records found.</div>');
+                        domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No records found.</div>');
                     } else {
                         renderStats(data);
                     }
@@ -80,18 +80,18 @@ const statsModule = (function () {
 
             } else if (response.status === 401) {
 
-                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.');
+                helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                 setTimeout(function () {
                     window.location.replace('/login');
                 }, 4000);
 
             } else {
-                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to retrieve repository statistics.');
+                helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to retrieve repository statistics.');
             }
         };
 
-        http.req(request, callback);
+        httpModule.req(request, callback);
     };
 
     obj.init = function () {

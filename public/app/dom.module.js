@@ -16,7 +16,7 @@
 
  */
 
-const dom = (function () {
+const domModule = (function () {
 
     'use strict';
 
@@ -105,7 +105,7 @@ const dom = (function () {
         for (let i = 0; i < form.elements.length; i++) {
             let elems = form.elements[i];
             if (elems.name.length !== 0 && elems.value.length !== 0) {
-                vals.push(encodeURIComponent(elems.name) + "=" + encodeURIComponent(DOMPurify.sanitize(elems.value).trim()));
+                vals.push(encodeURIComponent(DOMPurify.sanitize(elems.name)) + "=" + encodeURIComponent(DOMPurify.sanitize(elems.value).trim()));
             }
         }
 
@@ -145,7 +145,7 @@ const dom = (function () {
             }
         }
 
-        return false;
+        return result;
     };
 
     /**
@@ -182,6 +182,22 @@ const dom = (function () {
         }
 
         return result;
+    };
+
+    /**
+     * Empties contents of element
+     * @param selector
+     * @returns {boolean}
+     */
+    obj.empty = function(selector) {
+
+        let elem = document.querySelector(selector);
+
+        while (elem.firstChild) {
+            elem.removeChild(elem.firstChild);
+        }
+
+        return true;
     };
 
     return obj;

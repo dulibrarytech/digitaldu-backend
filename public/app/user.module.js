@@ -30,8 +30,8 @@ const userModule = (function () {
     const renderUsers = function (data) {
 
         if (data.length === 0) {
-            dom.html('.loading', null);
-            dom.html('.table', null);
+            domModule.html('.loading', null);
+            domModule.html('.table', null);
             helperModule.renderError('Unable to get users.');
             return false;
         }
@@ -62,8 +62,8 @@ const userModule = (function () {
             html += '</tr>';
         }
 
-        dom.html('#users', html);
-        dom.html('.loading', null);
+        domModule.html('#users', html);
+        domModule.html('.loading', null);
 
         return false;
     };
@@ -75,7 +75,7 @@ const userModule = (function () {
     const renderUserDetails = function (data) {
 
         if (data.length === 0) {
-            dom.html('#user-update-form', null);
+            domModule.html('#user-update-form', null);
             helperModule.renderError('Unable to get profile data.');
             setTimeout(function () {
                 window.location.replace('/dashboard/users');
@@ -89,11 +89,11 @@ const userModule = (function () {
 
             user = data[i];
 
-            dom.val('#id', user.id);
-            dom.val('#du_id', user.du_id);
-            dom.val('#email', user.email);
-            dom.val('#first_name', user.first_name);
-            dom.val('#last_name', user.last_name);
+            domModule.val('#id', user.id);
+            domModule.val('#du_id', user.du_id);
+            domModule.val('#email', user.email);
+            domModule.val('#first_name', user.first_name);
+            domModule.val('#last_name', user.last_name);
 
             if (user.status === 1) {
                 $('#is_active').prop('checked', true);
@@ -102,7 +102,7 @@ const userModule = (function () {
             }
         }
 
-        dom.html('.loading', null);
+        domModule.html('.loading', null);
 
         return false;
     };
@@ -133,18 +133,18 @@ const userModule = (function () {
 
             } else if (response.status === 401) {
 
-                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.');
+                helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                 setTimeout(function () {
                     window.location.replace('/login');
                 }, 4000);
 
             } else {
-                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to retrieve users.');
+                helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to retrieve users.');
             }
         };
 
-        http.req(request, callback);
+        httpModule.req(request, callback);
 
         return false;
     };
@@ -176,18 +176,18 @@ const userModule = (function () {
 
             } else if (response.status === 401) {
 
-                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.');
+                helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                 setTimeout(function () {
                     window.location.replace('/login');
                 }, 4000);
 
             } else {
-                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to retrieve users.');
+                helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to retrieve users.');
             }
         };
 
-        http.req(request, callback);
+        httpModule.req(request, callback);
 
         return false;
     };
@@ -211,7 +211,7 @@ const userModule = (function () {
      */
     obj.renderUserName = function () {
 
-        dom.html('.username', '<strong>Loading...</strong>');
+        domModule.html('.username', '<strong>Loading...</strong>');
 
         setTimeout(function () {
 
@@ -219,9 +219,9 @@ const userModule = (function () {
 
             if (data !== null) {
 
-                dom.html('.username', '<strong>' + DOMPurify.sanitize(data.name) + '</strong>');
+                domModule.html('.username', '<strong>' + DOMPurify.sanitize(data.name) + '</strong>');
 
-            } else if (data === null && dom.html('.username')) {
+            } else if (data === null && domModule.html('.username')) {
 
                  helperModule.renderError('Unable to get user profile data.');
 
@@ -239,7 +239,7 @@ const userModule = (function () {
      * @returns {string}
      */
     const getUserFormData = function (id) {
-        return dom.serialize(id);
+        return domModule.serialize(id);
     };
 
     /**
@@ -249,9 +249,9 @@ const userModule = (function () {
     const getUserFormUpateData = function () {
 
         let User = {};
-        User.id = dom.val('#id', null);
-        User.first_name = dom.val('#first_name', null);
-        User.last_name = dom.val('#last_name', null);
+        User.id = domModule.val('#id', null);
+        User.first_name = domModule.val('#first_name', null);
+        User.last_name = domModule.val('#last_name', null);
 
         if ($('#is_active').prop('checked')) {
             User.is_active = 1;
@@ -280,8 +280,8 @@ const userModule = (function () {
         let arr = user.split('&');
         let obj = {};
 
-        dom.hide('#user-form');
-        dom.html('#message', '<div class="alert alert-info">Saving User...</div>');
+        domModule.hide('#user-form');
+        domModule.html('#message', '<div class="alert alert-info">Saving User...</div>');
 
         for (let i=0;i<arr.length;i++) {
             let propsVal = decodeURIComponent(arr[i]).split('=');
@@ -304,13 +304,13 @@ const userModule = (function () {
 
             if (response.status === 201) {
 
-                dom.html('#message', '<div class="alert alert-success">User created</div>');
-                dom.hide('#user-form');
+                domModule.html('#message', '<div class="alert alert-success">User created</div>');
+                domModule.hide('#user-form');
                 document.querySelector('#user-form').reset();
 
                 setTimeout(function () {
-                    dom.html('#message', null);
-                    dom.show('#user-form');
+                    domModule.html('#message', null);
+                    domModule.show('#user-form');
                 }, 3000);
 
                 return false;
@@ -319,7 +319,7 @@ const userModule = (function () {
 
                 response.json().then(function (response) {
 
-                    helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.');
+                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
                         window.location.replace('/login');
@@ -327,11 +327,11 @@ const userModule = (function () {
                 });
 
             } else {
-                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + ').  Unable to add user.');
+                helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to add user.');
             }
         };
 
-        http.req(request, callback);
+        httpModule.req(request, callback);
     };
 
     /**
@@ -340,8 +340,8 @@ const userModule = (function () {
     const updateUser = function () {
 
         let obj = getUserFormUpateData();
-        dom.hide('#user-update-form');
-        dom.html('#message', '<div class="alert alert-info">Updating User...</div>');
+        domModule.hide('#user-update-form');
+        domModule.html('#message', '<div class="alert alert-info">Updating User...</div>');
 
         let token = userModule.getUserToken();
         let url = api + '/api/admin/v1/users',
@@ -359,10 +359,10 @@ const userModule = (function () {
 
             if (response.status === 201) {
 
-                dom.html('#message', '<div class="alert alert-success">User updated</div>');
-                dom.hide('#user-update-form');
+                domModule.html('#message', '<div class="alert alert-success">User updated</div>');
+                domModule.hide('#user-update-form');
                 setTimeout(function () {
-                    dom.html('#message', null);
+                    domModule.html('#message', null);
                     window.location.replace('/dashboard/users');
                 }, 3000);
 
@@ -372,7 +372,7 @@ const userModule = (function () {
 
                 response.json().then(function (response) {
 
-                    helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.');
+                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
                         window.location.replace('/login');
@@ -380,11 +380,11 @@ const userModule = (function () {
                 });
 
             } else {
-                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + ').  Unable to update user.');
+                helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to update user.');
             }
         };
 
-        http.req(request, callback);
+        httpModule.req(request, callback);
     };
 
     /**
@@ -392,7 +392,7 @@ const userModule = (function () {
      */
     obj.userFormValidation = function () {
 
-        $(document).ready(function () {
+        document.addEventListener('DOMContentLoaded', function() {
             $('#user-form').validate({
                 submitHandler: function () {
                     addUser();
@@ -406,7 +406,7 @@ const userModule = (function () {
      */
     obj.userUpdateFormValidation = function () {
 
-        $(document).ready(function () {
+        document.addEventListener('DOMContentLoaded', function() {
             $('#user-update-form').validate({
                 submitHandler: function () {
                     updateUser();
@@ -486,18 +486,18 @@ const userModule = (function () {
 
                 } else if (response.status === 401) {
 
-                    helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.');
+                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
                         window.location.replace('/login');
                     }, 4000);
 
                 } else {
-                    helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to retrieve user profile.');
+                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to retrieve user profile.');
                 }
             };
 
-            http.req(request, callback);
+            httpModule.req(request, callback);
 
         } else {
             userModule.renderUserName();
@@ -560,8 +560,8 @@ const userModule = (function () {
         document.querySelector('#login-button').disabled = true;
 
         let user = {
-            username: dom.val('#username', null),
-            password: dom.val('#password', null)
+            username: domModule.val('#username', null),
+            password: domModule.val('#password', null)
         };
 
         let url = api + '/api/authenticate',
@@ -580,7 +580,7 @@ const userModule = (function () {
 
                 response.json().then(function (response) {
 
-                    dom.html('#message', '<div class="alert alert-success"><i class="fa fa-check-circle"></i> ' + DOMPurify.sanitize(response.message) + '</div>');
+                    domModule.html('#message', '<div class="alert alert-success"><i class="fa fa-check-circle"></i> ' + DOMPurify.sanitize(response.message) + '</div>');
 
                     setTimeout(function () {
                         window.location.replace(response.redirect);
@@ -597,21 +597,24 @@ const userModule = (function () {
 
             } else {
                 document.querySelector('#login-button').disabled = false;
-                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to authenticate user.');
+                helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to authenticate user.');
             }
         };
 
-        http.req(request, callback);
+        httpModule.req(request, callback);
     };
 
     /**
      * Enable validation on login form
      */
     obj.loginFormValidation = function () {
-        $('#login-form').validate({
-            submitHandler: function () {
-                authenticate();
-            }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            $('#login-form').validate({
+                submitHandler: function () {
+                    authenticate();
+                }
+            });
         });
     };
 

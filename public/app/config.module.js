@@ -28,7 +28,7 @@ const configModule = (function () {
      */
     obj.getApi = function () {
 
-        var api = 'http://localhost:8000';
+        let api = 'http://localhost:8000';
 
         if (document.domain !== 'localhost') {
             api = location.protocol + '//' + document.domain + ':' + location.port;
@@ -58,6 +58,14 @@ const configModule = (function () {
      */
     obj.getRootPid = function() {
         return 'codu:root';
+    };
+
+    /**
+     * Returns archivesspace uri path
+     * @returns {string}
+     */
+    obj.getUriPath = function() {
+        return '/repositories/2/archival_objects/';
     };
 
     return obj;

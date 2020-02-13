@@ -38,12 +38,12 @@ const searchModule = (function () {
 
         if (data.total === 0) {
             html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; No objects or collections found.</strong></div>';
-            dom.html('#objects', html);
+            domModule.html('#objects', html);
             return false;
         }
 
-        dom.html('#searched-for', '<p>You searched for: ' + helperModule.getParameterByName('q') + '</p>');
-        dom.html('#total-records', '<p>Total Records: ' + total_records + '</p>');
+        domModule.html('#searched-for', '<p>You searched for: ' + helperModule.getParameterByName('q') + '</p>');
+        domModule.html('#total-records', '<p>Total Records: ' + total_records + '</p>');
 
         for (let i = 0; i < data.hits.length; i++) {
 
@@ -70,8 +70,8 @@ const searchModule = (function () {
 
         html += helperModule.pagination(is_member_of_collection, total_records);
 
-        dom.html('#pagination', helperModule.pagination(is_member_of_collection, total_records));
-        dom.html('#objects', html);
+        domModule.html('#pagination', helperModule.pagination(is_member_of_collection, total_records));
+        domModule.html('#objects', html);
     };
 
     /**
@@ -98,10 +98,10 @@ const searchModule = (function () {
 
                 response.json().then(function (data) {
 
-                    dom.html('#message', null);
+                    domModule.html('#message', null);
 
                     if (data.length === 0) {
-                        dom.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No records found.</div>');
+                        domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No records found.</div>');
                     } else {
                         renderSearchResults(data);
                     }
@@ -110,10 +110,9 @@ const searchModule = (function () {
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '. Unable to get incomplete records.');
             }
-
         };
 
-        http.req(request, callback);
+        httpModule.req(request, callback);
     };
 
     obj.init = function () {

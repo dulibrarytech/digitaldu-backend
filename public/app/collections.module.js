@@ -53,7 +53,7 @@ const collectionsModule = (function () {
                 response.json().then(function (data) {
 
                     if (data.length === 0) {
-                        return dom.html('#message', '<div class="alert alert-info"><i class="fa fa-info-circle"></i> Collection not found.</div>');
+                        return domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-info-circle"></i> Collection not found.</div>');
                     }
 
                     let record = JSON.parse(data[0].display_record);
@@ -63,23 +63,23 @@ const collectionsModule = (function () {
                         title = record.title;
                     }
 
-                    dom.html('#collection-name', DOMPurify.sanitize(title));
+                    domModule.html('#collection-name', DOMPurify.sanitize(title));
                 });
 
             } else if (response.status === 401) {
 
-                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.');
+                helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                 setTimeout(function () {
                     window.location.replace('/login');
                 }, 4000);
 
             } else {
-                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(jqXHR.status) + '. Unable to retrieve collection name.');
+                helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to retrieve collection name.');
             }
         };
 
-        http.req(request, callback);
+        httpModule.req(request, callback);
     };
 
     /**
@@ -87,7 +87,7 @@ const collectionsModule = (function () {
      */
     obj.getIsMemberOfCollection = function () {
         let is_member_of_collection = helperModule.getParameterByName('is_member_of_collection');
-        dom.val('#is-member-of-collection', is_member_of_collection);
+        domModule.val('#is-member-of-collection', is_member_of_collection);
     };
 
     /**
@@ -97,7 +97,7 @@ const collectionsModule = (function () {
 
         let obj = {};
         obj.pid = helperModule.getParameterByName('pid');
-        obj.thumbnail_url = dom.val('#thumbnail-url', null);
+        obj.thumbnail_url = domModule.val('#thumbnail-url', null);
 
         let token = userModule.getUserToken();
         let url = api + '/api/admin/v1/repo/object/thumbnail',
@@ -115,18 +115,18 @@ const collectionsModule = (function () {
 
             if (response.status === 201) {
 
-                dom.html('#message', '<div class="alert alert-success"><i class="fa fa-check-circle"></i> Thumbnail updated</div>');
-                dom.val('#thumbnail-url', '');
+                domModule.html('#message', '<div class="alert alert-success"><i class="fa fa-check-circle"></i> Thumbnail updated</div>');
+                domModule.val('#thumbnail-url', '');
 
                 setTimeout(function () {
-                    dom.html('#message', null);
+                    domModule.html('#message', null);
                 }, 4000);
 
             } else if (response.status === 401) {
 
                 response.json().then(function (response) {
 
-                    helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.');
+                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
                         window.location.replace('/login');
@@ -138,7 +138,7 @@ const collectionsModule = (function () {
             }
         };
 
-        http.req(request, callback);
+        httpModule.req(request, callback);
     };
 
     /**
@@ -146,7 +146,7 @@ const collectionsModule = (function () {
      * @returns {string}
      */
     const getCollectionFormData = function () {
-        return dom.serialize('#collection-form');
+        return domModule.serialize('#collection-form');
     };
 
     /**
@@ -154,8 +154,8 @@ const collectionsModule = (function () {
      */
     const addCollection = function () {
 
-        dom.hide('#collection-form');
-        dom.html('#message', '<div class="alert alert-info">Saving Collection...</div>');
+        domModule.hide('#collection-form');
+        domModule.html('#message', '<div class="alert alert-info">Saving Collection...</div>');
 
         let collection = getCollectionFormData();
         let arr = collection.split('&');
@@ -183,8 +183,8 @@ const collectionsModule = (function () {
             if (response.status === 201) {
 
                 response.json().then(function (data) {
-                    dom.html('#message', '<div class="alert alert-success">Collection created ( <a href="' + configModule.getApi() + '/dashboard/objects/?pid=' + DOMPurify.sanitize(data[0].pid) + '">' + DOMPurify.sanitize(data[0].pid) + '</a> )');
-                    dom.hide('#collection-form');
+                    domModule.html('#message', '<div class="alert alert-success">Collection created ( <a href="' + configModule.getApi() + '/dashboard/objects/?pid=' + DOMPurify.sanitize(data[0].pid) + '">' + DOMPurify.sanitize(data[0].pid) + '</a> )');
+                    domModule.hide('#collection-form');
                 });
 
                 return false;
@@ -193,7 +193,7 @@ const collectionsModule = (function () {
 
                 response.json().then(function (response) {
 
-                    helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.');
+                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
                         window.location.replace('/login');
@@ -201,11 +201,11 @@ const collectionsModule = (function () {
                 });
 
             } else {
-                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + ').  Unable to add collection.');
+                helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to add collection.');
             }
         };
 
-        http.req(request, callback);
+        httpModule.req(request, callback);
     };
 
     /**
@@ -213,7 +213,7 @@ const collectionsModule = (function () {
      */
     obj.collectionFormValidation = function () {
 
-        $(document).ready(function () {
+        document.addEventListener('DOMContentLoaded', function() {
             $('#collection-form').validate({
                 submitHandler: function () {
                     addCollection();

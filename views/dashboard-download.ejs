@@ -8,33 +8,16 @@
                 <div class="navbar nav_title" style="border: 0;">
                     <a href="index.html" class="site_title"><i class="fa fa-archive"></i> <span>DU Repository</span></a>
                 </div>
-
                 <div class="clearfix"></div>
-
-                <!-- menu profile quick info -->
                 <% include partials/menu-profile.ejs %>
-                <!-- /menu profile quick info -->
-
                 <br>
-
-                <!-- sidebar menu -->
                 <% include partials/nav.ejs %>
-                <!-- /sidebar menu -->
-
-                <!-- /menu footer buttons -->
                 <% include partials/sidebar-footer.ejs %>
-                <!-- /menu footer buttons -->
             </div>
         </div>
-
-        <!-- top navigation -->
         <% include partials/top-nav.ejs %>
-        <!-- /top navigation -->
-
-        <!-- page content -->
         <div class="right_col" role="main">
             <div class="">
-
                 <div class="page-title">
                     <div class="title_left">
                         <h3>AIP Download</h3>
@@ -44,9 +27,7 @@
                         <% include partials/search.ejs %>
                     </div>
                 </div>
-
                 <div class="clearfix"></div>
-
                 <div class="row">
                     <div class="col-md-12">
                         <div class="x_panel">
@@ -63,18 +44,14 @@
                 </div> <!-- end row -->
             </div>
         </div>
-        <!-- /page content -->
-        <!-- footer content -->
         <% include partials/footer.ejs %>
-        <!-- /footer content -->
     </div>
-
     <script src="../../vendors/jquery/dist/jquery.min.js"></script>
     <script src="../../vendors/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="../../assets/js/custom.js"></script>
-    <script src="../../app/libs/dom.js"></script>
-    <script src="../../app/libs/config.js"></script>
-    <script src="../../app/libs/helper.js"></script>
+    <script src="../../app/dom.module.js"></script>
+    <script src="../../app/config.module.js"></script>
+    <script src="../../app/helper.module.js"></script>
     <script src="../../app/user.module.js"></script>
     <script src="../../app/objects.module.js"></script>
     <script>objectsModule.downloadObject();</script>
