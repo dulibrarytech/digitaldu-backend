@@ -39,16 +39,10 @@ const importModule = (function () {
             html += '<div class="alert alert-info"><i class="fa fa-exclamation-triangle"></i> <strong>The collection folder "' + collection + '" is empty.</strong></div>';
             html += '</td>';
             html += '</tr>';
-            $('.import-instruction').hide();
-
-            if (document.querySelector('#import-objects')) {
-                document.querySelector('#import-objects').innerHTML = html;
-            }
-
-            if (document.querySelector('#message')) {
-                document.querySelector('#message').innerHTML = '';
-            }
-
+            // $('.import-instruction').hide();
+            dom.hide('.import-instruction');
+            dom.html('#import-objects', html);
+            dom.html('#message', null);
             return false;
         }
 
@@ -58,16 +52,10 @@ const importModule = (function () {
             html += '<div class="alert alert-info"><i class="fa fa-exclamation-triangle"></i> <strong>Import in progress.  Please try again after current import has completed.</strong></div>';
             html += '</td>';
             html += '</tr>';
-            $('.import-instruction').hide();
-
-            if (document.querySelector('#import-objects')) {
-                document.querySelector('#import-objects').innerHTML = html;
-            }
-
-            if (document.querySelector('#message')) {
-                document.querySelector('#message').innerHTML = '';
-            }
-
+            // $('.import-instruction').hide();
+            dom.hide('.import-instruction');
+            dom.html('#import-objects', html);
+            dom.html('#message', null);
             return false;
         }
 
@@ -94,12 +82,7 @@ const importModule = (function () {
                         html += '&nbsp;&nbsp;&nbsp;<i class="fa fa-folder"></i>&nbsp;&nbsp;' + DOMPurify.sanitize(data.list[i].name);
                         html += '</td>';
                     } else if (collection !== null && data.list[i].name.length < 30) {
-
-                        if (document.querySelector('#import-objects')) {
-                            document.querySelector('#import-objects').innerHTML = '';
-                            document.querySelector('#import-objects').innerHTML = '<div class="alert alert-info"><strong>There are no collections available to import.</strong></div>';
-                        }
-
+                        dom.html('#import-objects', '<div class="alert alert-info"><strong>There are no collections available to import.</strong></div>');
                         return false;
                     }
                 }
@@ -110,19 +93,11 @@ const importModule = (function () {
 
         if (collection !== null && collectionObjects.length > 0) {
             let button = '<a class="btn btn-success btn-xs import-btn" onclick="importModule.queueTransferObjects(\'' + collectionObjects + '\')" href="#"><i class="fa fa-upload"></i>&nbsp;&nbsp;Import</a>';
-
-            if (document.querySelector('.import-button')) {
-                document.querySelector('.import-button').innerHTML = button;
-            }
+            dom.html('.import-button', button);
         }
 
-        if (document.querySelector('#import-objects')) {
-            document.querySelector('#import-objects').innerHTML = html;
-        }
-
-        if (document.querySelector('#message')) {
-            document.querySelector('#message').innerHTML = '';
-        }
+        dom.html('#import-objects', html);
+        dom.html('#message', null);
     };
 
     /**
@@ -140,10 +115,7 @@ const importModule = (function () {
             startImport;
 
         startImport = '<p><a class="btn btn-primary" href="#" onclick="importModule.import(); return false;" title="Import missing record components"><i class="fa fa-download"></i> Import Missing Record Components</a></p>';
-
-        if (document.querySelector('#start-import')) {
-            document.querySelector('#start-import').innerHTML = startImport;
-        }
+        dom.html('#start-import', startImport);
 
         for (let i = 0; i < data.length; i++) {
 
@@ -215,13 +187,8 @@ const importModule = (function () {
             window.sessionStorage.setItem('incomplete_records', JSON.stringify(incomplete));
         }
 
-        if (document.querySelector('#incomplete-records')) {
-            document.querySelector('#incomplete-records').innerHTML = html;
-        }
-
-        if (document.querySelector('#message')) {
-            document.querySelector('#message').innerHTML = '';
-        }
+        dom.html('#incomplete-records', html);
+        dom.html('#message', null);
     };
 
     /**
@@ -231,7 +198,6 @@ const importModule = (function () {
     const renderCompleteRecords = function (data) {
 
         let html = '',
-            // TODO: add styles to css
             alignTd = 'style="text-align: center; vertical-align: middle"',
             complete = [];
 
@@ -266,13 +232,8 @@ const importModule = (function () {
             html += '</tr>';
         }
 
-        if (document.querySelector('#complete-records')) {
-            document.querySelector('#complete-records').innerHTML = html;
-        }
-
-        if (document.querySelector('#message')) {
-            document.querySelector('#message').innerHTML = '';
-        }
+        dom.html('#complete-records', html);
+        dom.html('#message', null);
     };
 
     /**
@@ -285,10 +246,7 @@ const importModule = (function () {
         let collection = helperModule.getParameterByName('collection');
 
         if (collection === null) {
-
-            if (document.querySelector('#message')) {
-                document.querySelector('#message').innerHTML = '<div class="alert alert-danger">Unable to start transfer. Collection PID not found.</div>';
-            }
+            dom.html('#message', '<div class="alert alert-danger">Unable to start transfer. Collection PID not found.</div>');
             return false;
         }
 
@@ -304,17 +262,11 @@ const importModule = (function () {
             }
         }).done(function (data) {
 
-            $('.import-button').hide();
-
-            if (document.querySelector('#message')) {
-                document.querySelector('#message').innerHTML = '<p>Import process starting...</p>';
-            }
+            dom.hide('.import-button');
+            dom.html('#message', '<p>Import process starting...</p>');
 
             setTimeout(function () {
-
-                if (document.querySelector('#message')) {
-                    document.querySelector('#message').innerHTML = '';
-                }
+                dom.html('#message', null);
                 window.location.replace('/dashboard/import/status?import=true');
             }, 4000);
 
@@ -345,19 +297,14 @@ const importModule = (function () {
      */
     obj.getImportObjects = function () {
 
-        if (document.querySelector('#message')) {
-            document.querySelector('#message').innerHTML = '<p><strong>Loading...</strong></p>';
-        }
+        dom.html('#message', '<p><strong>Loading...</strong></p>');
 
         let folder = helperModule.getParameterByName('collection'),
             url = api + '/api/admin/v1/import/list?collection=' + null;
 
         // gets child folders when parent folder (collection) is present
         if (folder !== null) {
-            if (document.querySelector('#back')) {
-                document.querySelector('#back').innerHTML = '<p><a href="/dashboard/import" class="btn btn-default" id="back"><i class="fa fa-arrow-left"></i> Back</a></p>';
-            }
-
+            dom.html('#back', '<p><a href="/dashboard/import" class="btn btn-default" id="back"><i class="fa fa-arrow-left"></i> Back</a></p>');
             url = api + '/api/admin/v1/import/list?collection=' + folder;
         }
 
@@ -394,9 +341,7 @@ const importModule = (function () {
      */
     obj.getIncompleteImportRecords = function () {
 
-        if (document.querySelector('#message')) {
-            document.querySelector('#message').innerHTML = '<p><strong>Loading...</strong></p>';
-        }
+        dom.html('#message', '<p><strong>Loading...</strong></p>');
 
         let url = api + '/api/admin/v1/import/incomplete',
             request = new Request(url, {
@@ -413,30 +358,25 @@ const importModule = (function () {
                     if (data.length === 0) {
                         $('table').empty();
 
-                        if (document.querySelector('#responses')) {
-                            document.querySelector('#responses').innerHTML = '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No incomplete records found.</div>';
-                        }
+                        dom.html('#responses', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No incomplete records found.</div>');
+
                     } else {
                         renderIncompleteRecords(data);
                     }
                 });
 
             } else {
-
-                let message = 'Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to get incomplete records.';
-                helperModule.renderError(message);
+                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to get incomplete records.');
             }
-
         };
 
         http.req(request, callback);
     };
 
+
     obj.getCompleteImportRecords = function () {
 
-        if (document.querySelector('#message')) {
-            document.querySelector('#message').innerHTML = '<p><strong>Loading...</strong></p>';
-        }
+        dom.html('#message', '<p><strong>Loading...</strong></p>');
 
         let url = api + '/api/admin/v1/import/complete',
             request = new Request(url, {
@@ -451,11 +391,10 @@ const importModule = (function () {
                 response.json().then(function (data) {
 
                     if (data.length === 0) {
-                        $('table').empty();
 
-                        if (document.querySelector('#responses')) {
-                            document.querySelector('#responses').innerHTML = '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No records found.</div>';
-                        }
+                        // TODO:...
+                        $('table').empty();
+                        dom.html('#responses', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No records found.</div>');
 
                     } else {
                         renderCompleteRecords(data);
@@ -463,17 +402,17 @@ const importModule = (function () {
                 });
 
             } else {
-
-                let message = 'Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to get complete records.';
-                helperModule.renderError(message);
+                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to get complete records.');
             }
-
         };
 
         http.req(request, callback);
     };
 
-
+    /**
+     * Initiates import of incomplete records
+     * @returns {boolean}
+     */
     obj.import = function () {
 
         let incompleteRecords = JSON.parse(window.sessionStorage.getItem('incomplete_records'));
@@ -488,22 +427,11 @@ const importModule = (function () {
             } else {
 
                 let record = incompleteRecords.pop();
+                dom.html('#message', '<p><strong>Importing (' + DOMPurify.sanitize(record.sip_uuid) + ')...</strong></p>');
 
-                let message = '<p><strong>Importing (' + DOMPurify.sanitize(record.sip_uuid) + ')...</strong></p>';
-
-                if (document.querySelector('#message')) {
-                    document.querySelector('#message').innerHTML = message;
+                if (record.mods === null || record.mods.length === 0) {
+                    importModule.importMods(record.sip_uuid, record.mods_id);
                 }
-
-                /*
-                 if (record.handle === null && record.pid !== null) {
-                 importModule.importHandle(record.sip_uuid, record.pid);
-                 }
-
-                 if (record.mods === null || record.mods.length === 0) {
-                 importModule.importMods(record.sip_uuid, record.mods_id);
-                 }
-                 */
 
                 if (record.thumbnail === null || record.thumbnail.length === 0) {
                     importModule.importThumbnail(DOMPurify.sanitize(record.sip_uuid));
@@ -512,16 +440,6 @@ const importModule = (function () {
                 if (record.file_name === null) {
                     importModule.importMaster(DOMPurify.sanitize(record.sip_uuid));
                 }
-
-                /*
-                 if (record.mime_type === null || record.mime_type.length === 0) {
-                 importModule.importMimeType(record.sip_uuid);
-                 }
-
-                 if (record.checksum === null || record.checksum.length === 0) {
-                 importModule.importChecksum(record.sip_uuid);
-                 }
-                 */
             }
 
         }, 10000);
@@ -538,8 +456,8 @@ const importModule = (function () {
             $('#id-form').validate({
                 submitHandler: function () {
 
-                    let sip_uuid = DOMPurify.sanitize(document.querySelector('#sip-uuid').value.trim()),
-                        mods_id = DOMPurify.sanitize(document.querySelector('#mods-id').value.trim());
+                    let sip_uuid = dom.val('#sip-uuid', null);
+                    let mods_id = dom.val('#mods-id', null);
 
                     importModule.importModsId(sip_uuid, mods_id);
 
@@ -547,9 +465,7 @@ const importModule = (function () {
                         importModule.importMods(sip_uuid, mods_id);
                     }, 4000);
 
-                    if (document.querySelector('#mods-id-form')) {
-                        document.querySelector('#mods-id-form').innerHTML = '';
-                    }
+                    dom.html('#mods-id-form', null);
                 }
             });
         });
@@ -576,16 +492,14 @@ const importModule = (function () {
 
             if (response.status === 201) {
 
-                let responses = document.querySelector('#responses');
-                responses.innerHTML = '<p><strong>Archivesapce ID added to repository record</strong></p>';
+                dom.html('#responses', '<p><strong>Archivesapce ID added to repository record</strong></p>');
 
                 setTimeout(function () {
-                    responses.innerHTML = '';
+                    dom.html('#responses', null);
                 }, 5000);
 
             } else {
-                let message = 'Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to import MODS.';
-                helperModule.renderError(message);
+                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to import MODS.');
             }
         };
 
@@ -610,10 +524,7 @@ const importModule = (function () {
         html += '</div>';
         html += '</form>';
 
-        if (document.querySelector('#mods-id-form')) {
-            document.querySelector('#mods-id-form').innerHTML = html;
-        }
-
+        dom.html('#mods-id-form', html);
         importModule.modsIdFormValidation();
 
         return false;
@@ -646,22 +557,15 @@ const importModule = (function () {
 
             if (response.status === 201) {
 
-                let responses = document.querySelector('#responses');
-                responses.innerHTML = '<p><strong>(' + DOMPurify.sanitize(sip_uuid) + ') MODS added to repository record</strong></p>';
+                dom.html('#responses', '<p><strong>(' + DOMPurify.sanitize(sip_uuid) + ') MODS added to repository record</strong></p>');
                 importModule.getIncompleteImportRecords();
 
                 setTimeout(function () {
-
-                    if (document.querySelector('#responses')) {
-                        document.querySelector('#responses').innerHTML = '';
-                    }
-
+                    dom.html('#responses', null);
                 }, 5000);
 
             } else {
-
-                let message = 'Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to import MODS for record (' + DOMPurify.sanitize(sip_uuid) + ').';
-                helperModule.renderError(message);
+                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to import MODS for record (' + DOMPurify.sanitize(sip_uuid) + ').');
             }
         };
 
@@ -669,17 +573,7 @@ const importModule = (function () {
     };
 
     /**
-     * Imports missing handle
-     * @param sip_uuid
-     */
-    obj.importHandle = function (sip_uuid) {
-        // TODO
-        // console.log('import handle: ', sip_uuid);
-        // console.log('import handle: ', pid);
-    };
-
-    /**
-     * Imports missing thumbnail
+     * Imports missing thumbnail data
      * @param sip_uuid
      */
     obj.importThumbnail = function (sip_uuid) {
@@ -703,26 +597,25 @@ const importModule = (function () {
 
             if (response.status === 201) {
 
-                let responses = document.querySelector('#responses');
-                responses.innerHTML = '<p><strong>Thumbnail path added to repository record</strong></p>';
+                dom.html('#responses', '<p><strong>Thumbnail path added to repository record</strong></p>');
 
                 setTimeout(function () {
-
-                    if (document.querySelector('#responses')) {
-                        document.querySelector('#responses').innerHTML = '';
-                    }
-
+                    dom.html('#responses', null);
                 }, 5000);
 
             } else {
-                let message = 'Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to import MODS.';
-                helperModule.renderError(message);
+                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to import MODS.');
             }
         };
 
         http.req(request, callback);
     };
 
+    /**
+     * Imports missing master object data
+     * @param sip_uuid
+     * @returns {boolean}
+     */
     obj.importMaster = function (sip_uuid) {
 
         if (sip_uuid === undefined) {
@@ -744,30 +637,39 @@ const importModule = (function () {
 
             if (response.status === 201) {
 
-                let responses = document.querySelector('#responses');
-                responses.innerHTML = '<p><strong>Master path added to repository record</strong></p>';
+                dom.html('#responses', '<p><strong>Master path added to repository record</strong></p>');
 
                 setTimeout(function () {
-
-                    if (document.querySelector('#responses')) {
-                        document.querySelector('#responses').innerHTML = '';
-                    }
-
+                    dom.html('#responses', null);
                 }, 5000);
 
             } else {
-                let message = 'Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to import MODS.';
-                helperModule.renderError(message);
+                helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to import MODS.');
             }
         };
 
         http.req(request, callback);
     };
 
+    /**
+     * Imports missing handle
+     * @param sip_uuid
+     */
+    /* TODO: DEPRECATE
+     obj.importHandle = function (sip_uuid) {
+     // TODO
+     // console.log('import handle: ', sip_uuid);
+     // console.log('import handle: ', pid);
+     };
+     */
+
+    /* TODO: DEPRECATE
     obj.importMimeType = function (sip_uuid) {
         // TODO: console.log('import mime type: ', sip_uuid);
     };
+    */
 
+    /* TODO: DEPRECATE
     obj.importChecksum = function (sip_uuid) {
 
         if (sip_uuid === undefined) {
@@ -808,6 +710,7 @@ const importModule = (function () {
 
         http.req(request, callback);
     };
+    */
 
     /**
      * Gets transfer status
@@ -834,9 +737,7 @@ const importModule = (function () {
 
                         let transferData = '';
 
-                        if (document.querySelector('#message')) {
-                            document.querySelector('#message').innerHTML = '';
-                        }
+                        dom.html('#message', null);
 
                         if (response.length > 0) {
 
@@ -851,15 +752,10 @@ const importModule = (function () {
                                 transferData += '</tr>';
                             }
 
-                            if (document.querySelector('#transfer-status')) {
-                                document.querySelector('#transfer-status').innerHTML = transferData;
-                            }
+                            dom.html('#transfer-status', transferData);
 
                         } else {
-
-                            if (document.querySelector('#transfer-status')) {
-                                document.querySelector('#transfer-status').innerHTML = '<tr><td>No ingests in progress</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>';
-                            }
+                            dom.html('#transfer-status', '<tr><td>No ingests in progress</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>');
                         }
                     });
 
@@ -867,8 +763,7 @@ const importModule = (function () {
 
                     response.json().then(function (response) {
 
-                        let message = 'Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.';
-                        helperModule.renderError(message);
+                        helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                         setTimeout(function () {
                             window.location.replace('/login');
@@ -876,8 +771,7 @@ const importModule = (function () {
                     });
 
                 } else {
-                    let message = 'Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). An error has occurred. Unable to get transfer status.';
-                    helperModule.renderError(message);
+                    helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). An error has occurred. Unable to get transfer status.');
                 }
             };
 
@@ -891,7 +785,9 @@ const importModule = (function () {
         transfer_status_http();
     };
 
-    // gets count of remaining import objects
+    /**
+     * Gets count of remaining import objects
+     */
     const get_ingest_status = function () {
 
         function ingest_status_http() {
@@ -913,16 +809,9 @@ const importModule = (function () {
                     response.json().then(function (response) {
 
                         if (response.length > 0) {
-
-                            if (document.querySelector('#import-record-count')) {
-                                document.querySelector('#import-record-count').innerHTML = 'Objects remaining in current batch: ' + DOMPurify.sanitize(response[0].count);
-                            }
-
+                            dom.html('#import-record-count', 'Objects remaining in current batch: ' + DOMPurify.sanitize(response[0].count));
                         } else {
-
-                            if (document.querySelector('#import-record-count')) {
-                                document.querySelector('#import-record-count').innerHTML = '';
-                            }
+                            dom.html('#import-record-count', null);
                         }
                     });
 
@@ -930,8 +819,7 @@ const importModule = (function () {
 
                     response.json().then(function (response) {
 
-                        let message = 'Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.';
-                        helperModule.renderError(message);
+                        helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                         setTimeout(function () {
                             window.location.replace('/login');
@@ -939,8 +827,7 @@ const importModule = (function () {
                     });
 
                 } else {
-                    let message = 'Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). An error has occurred. Unable to update get ingest status.';
-                    helperModule.renderError(message);
+                    helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). An error has occurred. Unable to update get ingest status.');
                 }
             };
 
@@ -954,6 +841,9 @@ const importModule = (function () {
         ingest_status_http();
     };
 
+    /**
+     * Gets import status
+     */
     const get_import_status = function () {
 
         function import_status_http() {
@@ -975,10 +865,7 @@ const importModule = (function () {
                     response.json().then(function (response) {
 
                         let importData = '';
-
-                        if (document.querySelector('#message')) {
-                            document.querySelector('#message').innerHTML = '';
-                        }
+                        dom.html('#message', null);
 
                         if (response.length > 0) {
 
@@ -991,15 +878,10 @@ const importModule = (function () {
                                 importData += '</tr>';
                             }
 
-                            if (document.querySelector('#import-status')) {
-                                document.querySelector('#import-status').innerHTML = importData;
-                            }
+                            dom.html('#import-status', importData);
 
                         } else {
-
-                            if (document.querySelector('#import-status')) {
-                                document.querySelector('#import-status').innerHTML = '<tr><td>No imports in progress</td><td>&nbsp;</td><td>&nbsp;</td></tr></tr>';
-                            }
+                            dom.html('#import-status', '<tr><td>No imports in progress</td><td>&nbsp;</td><td>&nbsp;</td></tr></tr>');
                         }
                     });
 
@@ -1007,8 +889,7 @@ const importModule = (function () {
 
                     response.json().then(function (response) {
 
-                        let message = 'Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.';
-                        helperModule.renderError(message);
+                        helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                         setTimeout(function () {
                             window.location.replace('/login');
@@ -1016,8 +897,7 @@ const importModule = (function () {
                     });
 
                 } else {
-                    let message = 'Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). An error has occurred. Unable to get transfer status.';
-                    helperModule.renderError(message);
+                    helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). An error has occurred. Unable to get transfer status.');
                 }
             };
 
@@ -1031,6 +911,9 @@ const importModule = (function () {
         import_status_http();
     };
 
+    /**
+     * Gets import failures
+     */
     const get_fail_status = function () {
 
         function fail_status_http() {
@@ -1052,10 +935,7 @@ const importModule = (function () {
                     response.json().then(function (response) {
 
                         let failData = '';
-
-                        if (document.querySelector('#message')) {
-                            document.querySelector('#message').innerHTML = '';
-                        }
+                        dom.html('#message', null);
 
                         if (response.length > 0) {
 
@@ -1068,16 +948,10 @@ const importModule = (function () {
                                 failData += '</tr>';
                             }
 
-                            if (document.querySelector('#import-failures')) {
-                                document.querySelector('#import-failures').innerHTML = failData;
-                            }
+                            dom.html('#import-failures', failData);
 
                         } else {
-
-                            if (document.querySelector('#import-failures')) {
-                                document.querySelector('#import-failures').innerHTML = '';
-                                document.querySelector('#import-failures').innerHTML = '<tr><td>No failures reported</td><td>&nbsp;</td><td>&nbsp;</td></tr>';
-                            }
+                            dom.html('#import-failures', '<tr><td>No failures reported</td><td>&nbsp;</td><td>&nbsp;</td></tr>');
                         }
                     });
 
@@ -1085,8 +959,7 @@ const importModule = (function () {
 
                     response.json().then(function (response) {
 
-                        let message = 'Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.';
-                        helperModule.renderError(message);
+                        helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                         setTimeout(function () {
                             window.location.replace('/login');
@@ -1094,8 +967,7 @@ const importModule = (function () {
                     });
 
                 } else {
-                    let message = 'Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). An error has occurred. Unable to get transfer status.';
-                    helperModule.renderError(message);
+                    helperModule.renderError('Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '). An error has occurred. Unable to get transfer status.');
                 }
             };
 

@@ -20,8 +20,8 @@ const collectionsModule = (function () {
 
     'use strict';
 
+    const api = configModule.getApi();
     let obj = {};
-    let api = configModule.getApi();
 
     /**
      * Gets collection name
@@ -97,7 +97,6 @@ const collectionsModule = (function () {
 
         let obj = {};
         obj.pid = helperModule.getParameterByName('pid');
-        // obj.thumbnail_url = document.querySelector('#thumbnail-url').value;
         obj.thumbnail_url = dom.val('#thumbnail-url', null);
 
         let token = userModule.getUserToken();
@@ -166,9 +165,6 @@ const collectionsModule = (function () {
             let propsVal = decodeURIComponent(arr[i]).split('=');
             obj[propsVal[0]] = propsVal[1];
         }
-
-        // TODO: ... make sure thumbnail is null not undefined
-        console.log(obj);
 
         let token = userModule.getUserToken();
         let url = api + '/api/admin/v1/repo/object',
