@@ -74,9 +74,10 @@ const metadataModule = (function () {
     obj.createThumbnailDisplay = function(record, tn) {
 
         let tnDisplay = '';
+        let token = userModule.getUserToken();
 
         if (record.object_type === 'object') {
-            tnDisplay += '<a href="' + api + '/api/admin/v1/repo/object/viewer?uuid=' + DOMPurify.sanitize(record.pid) + '" target="_blank">';
+            tnDisplay += '<a href="' + api + '/api/admin/v1/repo/object/viewer?uuid=' + DOMPurify.sanitize(record.pid) + '&t=' + token + '" target="_blank">';
             tnDisplay += '<img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + tn + '" alt="image" />';
             tnDisplay += '</a>';
         } else {
