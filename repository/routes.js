@@ -40,13 +40,13 @@ module.exports = function (app) {
         .post(token.verify, Repo.update_thumbnail);
 
     app.route('/api/admin/v1/repo/object/tn')
-        .get(Repo.get_tn);  // token.verify,
+        .get(token.verify, Repo.get_tn);
 
     app.route('/api/admin/v1/repo/object/viewer')
         .get(Repo.get_viewer);  // token.verify,
 
     app.route('/api/admin/v1/repo/publish')
-        .post(Repo.publish_objects);
+        .post(Repo.publish_objects);  // token.verify,
 
     app.route('/api/admin/v1/repo/unpublish')
         .post(Repo.unpublish_objects);  // token.verify,
@@ -56,9 +56,4 @@ module.exports = function (app) {
 
     app.route('/api/admin/v1/repo/reset')
         .post(Repo.reset_display_record);
-
-    /* NOT USED */
-    app.route('/api/admin/v1/repo/object/download')
-        .get(Repo.get_object_download);
-
 };

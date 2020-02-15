@@ -53,13 +53,14 @@ const metadataModule = (function () {
     obj.createThumbnailLink = function (record) {
 
         let tn = '';
+        let token = userModule.getUserToken();
 
         if (record.thumbnail === undefined || record.thumbnail === null) {
-            tn = api + '/api/admin/v1/repo/object/tn?uuid=' + DOMPurify.sanitize(record.pid) + '&type=' + DOMPurify.sanitize(record.mime_type);
+            tn = api + '/api/admin/v1/repo/object/tn?uuid=' + DOMPurify.sanitize(record.pid) + '&type=' + DOMPurify.sanitize(record.mime_type) + '&t=' + token;
         } else if (record.thumbnail.search('http') === 0) {
             tn = DOMPurify.sanitize(record.thumbnail);
         } else {
-            tn = api + '/api/admin/v1/repo/object/tn?uuid=' + DOMPurify.sanitize(record.pid) + '&type=' + DOMPurify.sanitize(record.mime_type);
+            tn = api + '/api/admin/v1/repo/object/tn?uuid=' + DOMPurify.sanitize(record.pid) + '&type=' + DOMPurify.sanitize(record.mime_type) + '&t=' + token;
         }
 
         return tn;
