@@ -25,7 +25,7 @@ const Repo = require('../repository/controller'),
 module.exports = function (app) {
 
     app.route('/api/admin/v1/repo/objects')
-        .get(Repo.get_admin_objects);  // token.verify,
+        .get(token.verify, Repo.get_admin_objects);
 
     app.route('/api/admin/v1/repo/object')
         .get(token.verify, Repo.get_admin_object)
@@ -36,7 +36,7 @@ module.exports = function (app) {
         .get(token.verify, Repo.get_unpublished_admin_objects);
 
     app.route('/api/admin/v1/repo/object/thumbnail')
-        .get(Repo.get_thumbnail)  // token.verify,
+        .get(token.verify, Repo.get_thumbnail)
         .post(token.verify, Repo.update_thumbnail);
 
     app.route('/api/admin/v1/repo/object/tn')
@@ -52,7 +52,7 @@ module.exports = function (app) {
         .post(Repo.unpublish_objects);  // token.verify,
 
     app.route('/api/admin/v1/repo/ping/services')
-        .get(Repo.ping);
+        .get(token.verify, Repo.ping);
 
     app.route('/api/admin/v1/repo/reset')
         .post(Repo.reset_display_record);
