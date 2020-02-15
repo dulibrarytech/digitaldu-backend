@@ -1169,7 +1169,7 @@ exports.create_repo_record = function (req, callback) {
          Send request to index repository record
          */
         request.post({
-            url: config.apiUrl + '/api/admin/v1/indexer',
+            url: config.apiUrl + '/api/admin/v1/indexer?api_key=' + config.apiKey,
             form: {
                 'sip_uuid': obj.sip_uuid
             }

@@ -18,12 +18,13 @@
 
 'use strict';
 
-var Indexer = require('../indexer/controller');
+let Indexer = require('../indexer/controller'),
+    apikey = require('../libs/api-key');
 
 module.exports = function (app) {
 
     app.route('/api/admin/v1/indexer')
-        .post(Indexer.index_record);
+        .post(apikey.verify, Indexer.index_record);
 
     app.route('/api/admin/v1/indexer/all')
         .post(Indexer.index_records);

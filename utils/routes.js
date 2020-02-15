@@ -24,7 +24,7 @@ const Utils = require('../utils/controller'),
 module.exports = function (app) {
 
     app.route('/api/admin/v1/utils/objects')
-        .get(Utils.check_objects);
+        .get(apikey.verify, Utils.check_objects);
 
     app.route('/api/admin/v1/utils/reindex')
         .post(apikey.verify, Utils.reindex);
@@ -33,10 +33,10 @@ module.exports = function (app) {
         .get(apikey.verify, Utils.get_uuids);
 
     app.route('/api/admin/v1/utils/objects/ids')
-        .get(Utils.get_archivesspace_ids);
+        .get(apikey.verify, Utils.get_archivesspace_ids);
 
     app.route('/api/admin/v1/utils/objects/fix-compounds')
-        .get(Utils.fix_compound_objects);
+        .get(apikey.verify, Utils.fix_compound_objects);
 
     /*
     app.route('api/admin/v1/utils/restart')
