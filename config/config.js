@@ -76,6 +76,4 @@ module.exports = {
     ingestStatusCheckInterval: process.env.INGEST_STATUS_CHECK_INTERVAL,
     tnService: process.env.TN_SERVICE,
     tnServiceApiKey: process.env.TN_SERVICE_API_KEY
-    // sslKey: process.env.SSL_KEY,
-    // sslCert: process.env.SSL_CERT
 };

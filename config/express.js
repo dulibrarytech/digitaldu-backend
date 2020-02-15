@@ -19,7 +19,6 @@
 'use strict';
 
 const http = require('http'),
-    // https = require('https'),
     express = require('express'),
     compress = require('compression'),
     bodyParser = require('body-parser'),
@@ -32,66 +31,7 @@ module.exports = function () {
 
     const app = express();
     let server = http.createServer(app);
-
-    /*
-    if (process.env.NODE_ENV === 'production') {
-
-        const key = fs.readFileSync(config.sslKey, 'utf8'),
-            cert = fs.readFileSync(config.sslCert, 'utf8');
-
-        let credentials = {
-            key: key,
-            cert: cert
-        };
-
-        server = https.createServer(credentials, app);
-    }
-    */
     server.listen(process.env.APP_PORT);
-
-    // let io = require('socket.io')(server);
-
-    // io.path('/api/admin/v1/import/status');
-
-    // socket.io route
-    // app.get('/socket', function (req, res) {});
-
-    // accepts client connections
-    /*
-    io.on('connection', function(socket){
-        // sends ingest status to client
-        socket.on('ingest_status', function(status) {
-            io.emit('ingest_status', status);
-        });
-    });
-    */
-
-    /*
-    io.on('connection', function(socket){
-        // sends transfer status to client
-        socket.on('transfer_status', function(status) {
-            io.emit('transfer_status', status);
-        });
-    });
-    */
-
-    /*
-    io.on('connection', function(socket){
-        // sends import status to client
-        socket.on('import_status', function(status) {
-            io.emit('import_status', status);
-        });
-    });
-    */
-
-    /*
-    io.on('connection', function(socket){
-        // sends import fail status to client
-        socket.on('fail_status', function(status) {
-            io.emit('fail_status', status);
-        });
-    });
-    */
 
     if (process.env.NODE_ENV === 'development') {
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;

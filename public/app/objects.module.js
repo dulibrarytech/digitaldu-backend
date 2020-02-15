@@ -74,8 +74,7 @@ const objectsModule = (function () {
 
                 response.json().then(function (response) {
 
-                    let message = 'Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.';
-                    helperModule.renderError(message);
+                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
                         window.location.replace('/login');
