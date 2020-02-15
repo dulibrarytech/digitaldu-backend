@@ -105,11 +105,12 @@ const objectsModule = (function () {
         domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-check-circle"></i> Publishing...</div>');
 
         let url = api + '/api/admin/v1/repo/publish',
+            token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-access-token': userModule.getUserToken()
+                    'x-access-token': token
                 },
                 body: JSON.stringify(obj),
                 mode: 'cors'
@@ -170,11 +171,12 @@ const objectsModule = (function () {
         domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-check-circle"></i> Unpublishing...</div>');
 
         let url = api + '/api/admin/v1/repo/unpublish',
+            token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-access-token': userModule.getUserToken()
+                    'x-access-token': token
                 },
                 body: JSON.stringify(obj),
                 mode: 'cors'

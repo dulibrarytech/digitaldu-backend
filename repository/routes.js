@@ -46,10 +46,10 @@ module.exports = function (app) {
         .get(token.verify, Repo.get_viewer);
 
     app.route('/api/admin/v1/repo/publish')
-        .post(Repo.publish_objects);  // token.verify,
+        .post(token.verify, Repo.publish_objects);
 
     app.route('/api/admin/v1/repo/unpublish')
-        .post(Repo.unpublish_objects);  // token.verify,
+        .post(token.verify, Repo.unpublish_objects);
 
     app.route('/api/admin/v1/repo/ping/services')
         .get(token.verify, Repo.ping);
