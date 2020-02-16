@@ -23,19 +23,21 @@ const config = require('../config/config'),
     Service = require('../repository/service'),
     path = require('path');
 
-/* gets objects by is_member_of_collection pid for discovery layer */
+/* gets objects by is_member_of_collection pid for discovery layer
 exports.get_objects = function (req, res) {
     Repo.get_objects(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
+ */
 
-/* gets single object for discovery layer */
+/* gets single object for discovery layer
 exports.get_object = function (req, res) {
     Repo.get_object(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
+ */
 
 /* gets objects for administrators */
 exports.get_admin_objects = function (req, res) {
@@ -51,12 +53,13 @@ exports.get_unpublished_admin_objects = function (req, res) {
     });
 };
 
-/* gets single administrator object */
+/* gets single administrator object
 exports.get_admin_object = function (req, res) {
     Repo.get_admin_object(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
+ */
 
 exports.create_collection_object = function (req, res) {
     Repo.create_collection_object(req, function (data) {
@@ -130,6 +133,7 @@ exports.reset_display_record = function (req, res) {
     });
 };
 
+/*
 exports.get_object_download = function (req, res) {
     Repo.get_object_download(req, function (data) {
 
@@ -142,6 +146,7 @@ exports.get_object_download = function (req, res) {
         res.download(data.file);
     });
 };
+*/
 
 exports.ping = function (req, res) {
     Service.ping_services(req, function (data) {

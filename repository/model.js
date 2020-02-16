@@ -23,6 +23,8 @@ const config = require('../config/config'),
     request = require('request'),
     async = require('async'),
     uuid = require('node-uuid'),
+    validator = require('validator'),
+    dom = require('../libs/dom'),
     handles = require('../libs/handles'),
     modslibdisplay = require('../libs/display-record'),
     archivematica = require('../libs/archivematica'),
@@ -45,7 +47,7 @@ const config = require('../config/config'),
  * Gets objects by collection
  * @param req
  * @param callback
- */
+
 exports.get_objects = function (req, callback) {
 
     let pid = req.query.pid;
@@ -80,12 +82,13 @@ exports.get_objects = function (req, callback) {
             throw 'FATAL: [/repository/model module (get_objects)] Unable to get objects ' + error;
         });
 };
+ */
 
 /** NOT USED
  * Gets object by pid
  * @param req
  * @param callback
- */
+
 exports.get_object = function (req, callback) {
 
     let pid = req.query.pid;
@@ -120,12 +123,13 @@ exports.get_object = function (req, callback) {
             throw 'FATAL: [/repository/model module (get_object)] Unable to get object ' + error;
         });
 };
+ */
 
 /** DEPRECATED.  App is using elasticsearch to render data
  * Get object by collection (admin dashboard)
  * @param req
  * @param callback
- */
+
 exports.get_admin_objects = function (req, callback) {
 
     let pid = req.query.pid,
@@ -174,12 +178,13 @@ exports.get_admin_objects = function (req, callback) {
             throw 'FATAL: [/repository/model module (get_admin_objects)] Unable to get objects ' + error;
         });
 };
+ */
 
 /** DEPRECATED.  App is using elasticsearch to render data
  * Gets object (admin dashboard)
  * @param req
  * @param callback
- */
+
 exports.get_admin_object = function (req, callback) {
 
     let pid = req.query.pid;
@@ -213,6 +218,7 @@ exports.get_admin_object = function (req, callback) {
             throw 'FATAL: [/repository/model module (get_admin_object)] Unable to get object ' + error;
         });
 };
+ */
 
 /**
  * Gets metadata updates from archivesspace update feed
@@ -272,8 +278,6 @@ exports.update_metadata_cron = function (req, callback) {
                 let data = JSON.parse(records.updates),
                     uriArr = [];
 
-                console.log('payload: ', data);
-
                 for (let i = 0; i < data.length; i++) {
 
                     if (data[i].record.uri === undefined) {
@@ -313,6 +317,13 @@ exports.update_metadata_cron = function (req, callback) {
 
     function save_record_updates(obj, callback) {
 
+        if (validator.isJSON(obj.records) === false) {
+            logger.module().fatal('FATAL: [/repository/model module (update_metadata_cron/save_record_updates)] unable to save record updates');
+            obj.error = 'ERROR: unable to save record updates';
+            callback(null, obj);
+            return false;
+        }
+
         knexQ(ARCHIVESSPACE_QUEUE)
             .insert(obj.records)
             .then(function (data) {
@@ -350,6 +361,11 @@ exports.update_metadata_cron = function (req, callback) {
 
                             archivespace.get_mods(record.mods_id, obj.session, function (updated_record) {
 
+                                if (validator.isInt(record.mods_id) === false || validator.isEmpty(record.mods_id)) {
+                                    logger.module().fatal('ERROR: [/repository/model module (update_metadata_cron/update_records)] Unable to get record.');
+                                    return false;
+                                }
+
                                 // Get existing record from repository
                                 knex(REPO_OBJECTS)
                                     .select('*')
@@ -365,15 +381,15 @@ exports.update_metadata_cron = function (req, callback) {
                                         }
 
                                         let recordObj = {};
-                                        recordObj.pid = data[0].pid;
-                                        recordObj.is_member_of_collection = data[0].is_member_of_collection;
-                                        recordObj.object_type = data[0].object_type;
-                                        recordObj.sip_uuid = data[0].sip_uuid;
-                                        recordObj.handle = data[0].handle;
-                                        recordObj.entry_id = data[0].entry_id;
-                                        recordObj.thumbnail = data[0].thumbnail;
-                                        recordObj.object = data[0].file_name;
-                                        recordObj.mime_type = data[0].mime_type;
+                                        recordObj.pid = validator.escape(data[0].pid);
+                                        recordObj.is_member_of_collection = validator.escape(data[0].is_member_of_collection);
+                                        recordObj.object_type = validator.escape(data[0].object_type);
+                                        recordObj.sip_uuid = validator.escape(data[0].sip_uuid);
+                                        recordObj.handle = validator.escape(data[0].handle);
+                                        recordObj.entry_id = validator.escape(data[0].entry_id);
+                                        recordObj.thumbnail = validator(data[0].thumbnail);
+                                        recordObj.object = validator.escape(data[0].file_name);
+                                        recordObj.mime_type = validator.escape(data[0].mime_type);
                                         recordObj.is_published = data[0].is_published;
                                         recordObj.mods = updated_record.mods;
 
@@ -489,8 +505,18 @@ exports.update_metadata_cron = function (req, callback) {
  */
 exports.update_thumbnail = function (req, callback) {
 
+    if (validator.isEmpty(req.body.pid) === true || validator.isUUID(req.body.pid) === false || validator.isURL(req.body.thumbnail_url)) {
+
+        callback({
+            status: 400,
+            message: 'Bad request'
+        });
+
+        return false;
+    }
+
     let obj = {};
-    obj.pid = req.body.pid;
+    obj.pid = dom.sanitize(req.body.pid);
     obj.thumbnail = req.body.thumbnail_url;
 
     knex(REPO_OBJECTS)
@@ -518,16 +544,16 @@ exports.update_thumbnail = function (req, callback) {
                     }
 
                     let recordObj = {};
-                    recordObj.pid = data[0].pid;
-                    recordObj.is_member_of_collection = data[0].is_member_of_collection;
-                    recordObj.object_type = data[0].object_type;
-                    recordObj.sip_uuid = data[0].sip_uuid;
-                    recordObj.handle = data[0].handle;
-                    recordObj.entry_id = data[0].entry_id;
-                    recordObj.thumbnail = data[0].thumbnail;
-                    recordObj.object = data[0].file_name;
-                    recordObj.mime_type = data[0].mime_type;
-                    recordObj.mods = data[0].mods;
+                    recordObj.pid = validator.escape(data[0].pid);
+                    recordObj.is_member_of_collection = validator.escape(data[0].is_member_of_collection);
+                    recordObj.object_type = validator.escape(data[0].object_type);
+                    recordObj.sip_uuid = validator.escape(data[0].sip_uuid);
+                    recordObj.handle = validator.escape(data[0].handle);
+                    recordObj.entry_id = validator.escape(data[0].entry_id);
+                    recordObj.thumbnail = validator.escape(data[0].thumbnail);
+                    recordObj.object = validator.escape(data[0].file_name);
+                    recordObj.mime_type = validator.escape(data[0].mime_type);
+                    recordObj.mods = validator.escape(data[0].mods);
                     recordObj.is_published = data[0].is_published;
 
                     modslibdisplay.create_display_record(recordObj, function (result) {
@@ -543,7 +569,6 @@ exports.update_thumbnail = function (req, callback) {
                             delete tmp.compound;
 
                             if (currentCompoundParts !== undefined) {
-                                // TODO: update individual thumbnail parts
                                 tmp.display_record.parts = currentCompoundParts;
                                 tmp.compound = currentCompoundParts;
                             }
@@ -666,6 +691,11 @@ exports.update_thumbnail = function (req, callback) {
  * @param callback
  */
 const update_mods = function (record, updated_record, obj, callback) {
+
+    if (validator.isInt(record.mods_id) === false || validator.isEmpty(record.mods_id) === true) {
+        logger.module().fatal('FATAL: [/repository/model module (update_mods)] unable to update mods.');
+        return false;
+    }
 
     knex(REPO_OBJECTS)
         .where({
@@ -852,6 +882,12 @@ exports.create_collection_object = function (req, callback) {
 
     function save_record(obj, callback) {
 
+        if (validator.isJSON(obj) === false) {
+            obj.error = 'FATAL: unable to save collection record';
+            callback(null, obj);
+            return false;
+        }
+
         knex(REPO_OBJECTS)
             .insert(obj)
             .then(function (data) {
@@ -865,6 +901,12 @@ exports.create_collection_object = function (req, callback) {
     }
 
     function index_collection(obj, callback) {
+
+        if (validator.isUUID(obj.sip_uuid) === false || validator.isEmpty(obj.sip_uuid) === true) {
+            logger.module().error('ERROR: [/repository/model module (create_collection_object/index_collection)] unable to index collection record ' + error);
+            obj.indexed = false;
+            return false;
+        }
 
         request.post({
             url: config.apiUrl + '/api/admin/v1/indexer?api_key=' + config.apiKey,
@@ -938,8 +980,7 @@ exports.create_collection_object = function (req, callback) {
  */
 exports.publish_objects = function (req, callback) {
 
-    if (req.body.pid === undefined && req.body.pid.length === 0) {
-
+    if (req.body.pid === undefined || validator.isUUID(req.body.pid) === false || validator.isEmpty(req.body.pid) === true) {
         callback({
             status: 400,
             message: 'Bad request'

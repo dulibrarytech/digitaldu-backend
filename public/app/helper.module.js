@@ -92,21 +92,22 @@ const helperModule = (function () {
     obj.getTn = function (tn, mime_type) {
 
         let tnObj = configModule.getTnUrls();
+        let token = userModule.getUserToken();
 
         if (tn !== null && tn !== undefined && tn.indexOf('http') !== -1) {
             return tn;
         } else if (tn === null || tn === undefined) {
-            return tnObj.default;
+            return tnObj.default + '?t=' + token;
         } else {
 
             if (mime_type.indexOf('video') !== -1) {
-                return tnObj.default_video;
+                return tnObj.default_video + '?t=' + token;
             } else if (mime_type.indexOf('audio') !== -1) {
-                return tnObj.default_audio;
+                return tnObj.default_audio + '?t=' + token;
             } else if (mime_type.indexOf('pdf') !== -1) {
-                return tnObj.default_pdf;
+                return tnObj.default_pdf + '?t=' + token;
             } else {
-                return tnObj.duracloud + '?tn=' + tn;
+                return tnObj.duracloud + '?tn=' + tn + '&t=' + token;
             }
         }
     };

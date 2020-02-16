@@ -20,14 +20,28 @@
 
 const config = require('../config/config'),
     request = require('request'),
+    validator = require('validator'),
+    dom = require('../libs/dom'),
     logger = require('../libs/log4');
 
 exports.authenticate = function (username, password, callback) {
 
+    if (validator.isInt(username) === false || validator.isEmpty(password) === true) {
+
+        let errorObj = {
+            status: 400,
+            success: false,
+            message: 'An error has occurred.'
+        };
+
+        callback(errorObj);
+        return false;
+    }
+
     request.post({
             url: config.ldap, form: {
-                username: username,
-                password: password
+                username: dom.sanitize(username),
+                password: dom.sanitize(password)
             }
         },
         function (error, headers, response) {

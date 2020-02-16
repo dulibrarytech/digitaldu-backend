@@ -19,6 +19,8 @@
 'use strict';
 
 const config = require('../config/config'),
+    validator = require('validator'),
+    dom = require('../libs/dom'),
     es = require('elasticsearch'),
     client = new es.Client({
         host: config.elasticSearch
@@ -31,8 +33,19 @@ const config = require('../config/config'),
  */
 exports.get_search_results = function (req, callback) {
 
-    let q = req.query.q,
-        page = req.query.page,
+    if (validator.isInt(req.query.page) === false) {
+
+        callback({
+            status: 400,
+            message: 'Bad request.',
+            data: []
+        });
+
+        return false;
+    }
+
+    let q = dom.sanitize(req.query.q),
+        page = dom.sanitize(req.query.page),
         total_on_page = 10;
 
     if (q.length === 0) {
@@ -61,6 +74,7 @@ exports.get_search_results = function (req, callback) {
             status: 200,
             data: body.hits
         });
+
     }, function (error) {
         callback(error);
     });
