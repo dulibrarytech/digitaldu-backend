@@ -71,6 +71,13 @@ exports.verify = function (req, res, next) {
 
     } else {
 
+        let key = req.query.api_key;
+
+        if (key !== undefined && key === config.apiKey) {
+            next();
+            return false;
+        }
+
         logger.module().error('ERROR: [/libs/tokens lib (verify)] Unauthorized request');
 
         res.status(401).send({

@@ -517,7 +517,7 @@ exports.reindex = function (req, callback) {
         function del(index_name) {
 
             request.post({
-                url: config.apiUrl + '/api/admin/v1/indexer/index/delete',
+                url: config.apiUrl + '/api/admin/v1/indexer/index/delete?api_key=' + config.apiKey,
                 form: {
                     'index_name': index_name
                 }
@@ -565,7 +565,7 @@ exports.reindex = function (req, callback) {
         function create(index_name) {
 
             request.post({
-                url: config.apiUrl + '/api/admin/v1/indexer/index/create',
+                url: config.apiUrl + '/api/admin/v1/indexer/index/create?api_key=' + config.apiKey,
                 form: {
                     'index_name': index_name
                 }
@@ -611,7 +611,7 @@ exports.reindex = function (req, callback) {
         function reindex (index_name) {
 
             request.post({
-                url: config.apiUrl + '/api/admin/v1/indexer/all',
+                url: config.apiUrl + '/api/admin/v1/indexer/all?api_key=' + config.apiKey,
                 form: {
                     'index_name': index_name,
                     'reindex': true
@@ -708,7 +708,7 @@ const republish = function () {
     function publish (sip_uuid) {
 
         request.post({
-            url: config.apiUrl + '/api/admin/v1/repo/publish',
+            url: config.apiUrl + '/api/admin/v1/repo/publish?api_key=' + config.apiKey,
             form: {
                 'pid': sip_uuid,
                 'type': 'collection'
@@ -942,7 +942,7 @@ exports.fix_compound_objects = function (req, callback) {
                                             .then(function (data) {
 
                                                 request.post({
-                                                    url: config.apiUrl + '/api/admin/v1/indexer',
+                                                    url: config.apiUrl + '/api/admin/v1/indexer?api_key=' + config.apiKey,
                                                     form: {
                                                         'sip_uuid': obj.sip_uuid
                                                     }
@@ -1063,15 +1063,3 @@ exports.fix_compound_objects = function (req, callback) {
         message: 'fixing compound object mime types'
     });
 };
-
-/*
- importlib.get_compound_object_parts(recordObj.sip_uuid, parts, function (compound) {
-
- tmp.compound = compound;
- obj.is_compound = 1;
- obj.display_record = JSON.stringify(tmp);
-
- // console.log('Updating record ', record.mods_id);
-
-
- */
