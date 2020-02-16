@@ -27,20 +27,20 @@ module.exports = function (app) {
         .post(apikey.verify, Indexer.index_record);
 
     app.route('/api/admin/v1/indexer/all')
-        .post(Indexer.index_records);
+        .post(apikey.verify, Indexer.index_records);
 
     app.route('/api/admin/v1/indexer/index/create')
-        .post(Indexer.create_repo_index);
+        .post(apikey.verify, Indexer.create_repo_index);
 
     app.route('/api/admin/v1/indexer/index/delete')
-        .post(Indexer.delete_repo_index);
+        .post(apikey.verify, Indexer.delete_repo_index);
 
     app.route('/api/admin/v1/indexer/update_fragment')
-        .put(Indexer.update_fragment);
+        .put(apikey.verify, Indexer.update_fragment);
 
     app.route('/api/admin/v1/indexer/reindex')
-        .post(Indexer.reindex);
+        .post(apikey.verify, Indexer.reindex);
 
     app.route('/api/admin/v1/indexer/')
-        .delete(Indexer.unindex_record);
+        .delete(apikey.verify, Indexer.unindex_record);
 };
