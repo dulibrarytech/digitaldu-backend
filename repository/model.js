@@ -410,7 +410,7 @@ exports.update_metadata_cron = function (req, callback) {
 
                                                     // update admin index
                                                     request.post({
-                                                        url: config.apiUrl + '/api/admin/v1/indexer',
+                                                        url: config.apiUrl + '/api/admin/v1/indexer?api_key=' + config.apiKey,
                                                         form: {
                                                             'sip_uuid': data[0].sip_uuid
                                                         }
@@ -569,7 +569,7 @@ exports.update_thumbnail = function (req, callback) {
 
                                 // re-index admin record
                                 request.post({
-                                    url: config.apiUrl + '/api/admin/v1/indexer',
+                                    url: config.apiUrl + '/api/admin/v1/indexer?api_key=' + config.apiKey,
                                     form: {
                                         'sip_uuid': recordObj.sip_uuid
                                     }
@@ -588,7 +588,7 @@ exports.update_thumbnail = function (req, callback) {
                                             // wait to make sure updated admin record is ready
                                             setTimeout(function () {
 
-                                                let reindex_url = config.apiUrl + '/api/admin/v1/indexer/reindex',
+                                                let reindex_url = config.apiUrl + '/api/admin/v1/indexer/reindex?api_key=' + config.apiKey,
                                                     query = {
                                                         'bool': {
                                                             'must': {
@@ -867,7 +867,7 @@ exports.create_collection_object = function (req, callback) {
     function index_collection(obj, callback) {
 
         request.post({
-            url: config.apiUrl + '/api/admin/v1/indexer',
+            url: config.apiUrl + '/api/admin/v1/indexer?api_key=' + config.apiKey,
             form: {
                 'sip_uuid': obj.sip_uuid
             },
@@ -951,7 +951,7 @@ exports.publish_objects = function (req, callback) {
     /*
         Publish collections and associated objects
      */
-    var api_url = config.apiUrl + '/api/admin/v1/indexer',
+    var api_url = config.apiUrl + '/api/admin/v1/indexer?api_key=' + config.apiKey,
         pid = req.body.pid,
         type = req.body.type;
 
@@ -985,7 +985,7 @@ exports.publish_objects = function (req, callback) {
             return false;
         }
 
-        let update_doc_url = config.apiUrl + '/api/admin/v1/indexer/update_fragment';
+        let update_doc_url = config.apiUrl + '/api/admin/v1/indexer/update_fragment?api_key=' + config.apiKey;
 
         request.put({
             url: update_doc_url,
@@ -1026,7 +1026,7 @@ exports.publish_objects = function (req, callback) {
             return false;
         }
 
-        let reindex_url = config.apiUrl + '/api/admin/v1/indexer/reindex',
+        let reindex_url = config.apiUrl + '/api/admin/v1/indexer/reindex?api_key=' + config.apiKey,
             query = {
                 'bool': {
                     'must': {
@@ -1115,7 +1115,7 @@ exports.publish_objects = function (req, callback) {
                             return false;
                         }
 
-                        let update_doc_url = config.apiUrl + '/api/admin/v1/indexer/update_fragment';
+                        let update_doc_url = config.apiUrl + '/api/admin/v1/indexer/update_fragment?api_key=' + config.apiKey;
 
                         request.put({
                             url: update_doc_url,
@@ -1161,7 +1161,7 @@ exports.publish_objects = function (req, callback) {
             return false;
         }
 
-        let reindex_url = config.apiUrl + '/api/admin/v1/indexer/reindex',
+        let reindex_url = config.apiUrl + '/api/admin/v1/indexer/reindex?api_key=' + config.apiKey,
             query = {
                 'bool': {
                     'must': {
@@ -1289,7 +1289,7 @@ exports.publish_objects = function (req, callback) {
 
         setTimeout(function () {
 
-            let update_doc_url = config.apiUrl + '/api/admin/v1/indexer/update_fragment';
+            let update_doc_url = config.apiUrl + '/api/admin/v1/indexer/update_fragment?api_key=' + config.apiKey;
 
             request.put({
                 url: update_doc_url,
@@ -1331,7 +1331,7 @@ exports.publish_objects = function (req, callback) {
             return false;
         }
 
-        let reindex_url = config.apiUrl + '/api/admin/v1/indexer/reindex',
+        let reindex_url = config.apiUrl + '/api/admin/v1/indexer/reindex?api_key=' + config.apiKey,
             query = {
                 'bool': {
                     'must': {
@@ -1451,7 +1451,7 @@ exports.publish_objects = function (req, callback) {
  */
 exports.unpublish_objects = function (req, callback) {
 
-    var api_url = config.apiUrl + '/api/admin/v1/indexer',
+    var api_url = config.apiUrl + '/api/admin/v1/indexer?api_key=' + config.apiKey,
     type = req.body.type,
     pid = req.body.pid;
 
@@ -1531,7 +1531,7 @@ exports.unpublish_objects = function (req, callback) {
                         });
 
                         // update admin objects to unpublished status
-                        let update_doc_url = config.apiUrl + '/api/admin/v1/indexer/update_fragment';
+                        let update_doc_url = config.apiUrl + '/api/admin/v1/indexer/update_fragment?api_key=' + config.apiKey;
 
                         request.put({
                             url: update_doc_url,
@@ -1584,7 +1584,7 @@ exports.unpublish_objects = function (req, callback) {
             return false;
         }
 
-        let update_doc_url = config.apiUrl + '/api/admin/v1/indexer/update_fragment';
+        let update_doc_url = config.apiUrl + '/api/admin/v1/indexer/update_fragment?api_key=' + config.apiKey;
 
         request.put({
             url: update_doc_url,
@@ -1705,7 +1705,7 @@ exports.unpublish_objects = function (req, callback) {
             return false;
         }
 
-        let update_doc_url = config.apiUrl + '/api/admin/v1/indexer/update_fragment';
+        let update_doc_url = config.apiUrl + '/api/admin/v1/indexer/update_fragment?api_key=' + config.apiKey;
 
         request.put({
             url: update_doc_url,
