@@ -180,20 +180,19 @@ exports.get_admin_objects = function (req, callback) {
 };
  */
 
-/** DEPRECATED.  App is using elasticsearch to render data
- * Gets object (admin dashboard)
+/**
+ * Gets object display record
  * @param req
  * @param callback
-
-exports.get_admin_object = function (req, callback) {
+ */
+exports.get_display_record = function (req, callback) {
 
     let pid = req.query.pid;
 
-    if (pid === undefined || pid.length === 0) {
-
+    if (pid === undefined || validator.isUUID(pid) === false || validator.isEmpty(pid)) {
         callback({
             status: 400,
-            message: 'Missing PID.',
+            message: 'Bad request.',
             data: []
         });
 
@@ -201,7 +200,7 @@ exports.get_admin_object = function (req, callback) {
     }
 
     knex(REPO_OBJECTS)
-        .select('is_member_of_collection', 'pid', 'handle', 'object_type', 'display_record', 'is_published', 'created')
+        .select('display_record')
         .where({
             pid: pid,
             is_active: 1
@@ -214,11 +213,11 @@ exports.get_admin_object = function (req, callback) {
             });
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/repository/model module (get_admin_object)] Unable to get object ' + error);
-            throw 'FATAL: [/repository/model module (get_admin_object)] Unable to get object ' + error;
+            logger.module().fatal('FATAL: [/repository/model module (get_display_record)] Unable to get display record ' + error);
+            throw 'FATAL: [/repository/model module (get_display_record)] Unable to get display record ' + error;
         });
 };
- */
+
 
 /**
  * Gets metadata updates from archivesspace update feed

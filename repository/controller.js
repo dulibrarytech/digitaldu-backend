@@ -53,13 +53,12 @@ exports.get_unpublished_admin_objects = function (req, res) {
     });
 };
 
-/* gets single administrator object
-exports.get_admin_object = function (req, res) {
-    Repo.get_admin_object(req, function (data) {
+/* gets single administrator object */
+exports.get_display_record = function (req, res) {
+    Repo.get_display_record(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
- */
 
 exports.create_collection_object = function (req, res) {
     Repo.create_collection_object(req, function (data) {
