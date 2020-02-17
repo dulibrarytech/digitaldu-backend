@@ -501,6 +501,15 @@ exports.update_metadata_cron = function (req, callback) {
             throw 'ERROR: [/repository/model module (update_metadata_cron/async.waterfall)] ' + error;
         }
 
+        archivespace.destroy_session_token(results.session, function (result) {
+
+            if (result.error === false) {
+                logger.module().info('INFO: [/repository/model module (update_metadata_cron/async.waterfall)] Archivesspace session destroyed.');
+            } else {
+                logger.module().info('INFO: [/repository/model module (update_metadata_cron/async.waterfall)] Unable to destroy Archivesspace session.');
+            }
+        });
+
         logger.module().info('INFO: [/repository/model module (update_metadata_cron/async.waterfall)] records updated');
 
     });
