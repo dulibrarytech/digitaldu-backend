@@ -775,7 +775,36 @@ exports.create_collection_object = function (req, callback) {
         return false;
     }
 
-    function get_session_token(callback) {
+    function check_uri(callback) {
+
+        let obj = {};
+
+        knex(REPO_OBJECTS)
+            .count('uri as uri')
+            .where('uri', data.uri)
+            .then(function (result) {
+
+                if (result[0].uri === 1) {
+                    obj.dupe = true;
+                    callback(null, obj);
+                    return false;
+                }
+
+                obj.dupe = false;
+                callback(null, obj);
+            })
+            .catch(function (error) {
+                logger.module().fatal('FATAL: [/repository/model module (create_collection_object)] unable to check uri ' + error);
+            });
+    }
+
+    function get_session_token(obj, callback) {
+
+        if (obj.dupe === true) {
+            obj.session = null;
+            callback(null, obj);
+            return false;
+        }
 
         archivespace.get_session_token(function (response) {
 
@@ -826,8 +855,7 @@ exports.create_collection_object = function (req, callback) {
 
     function get_mods(obj, callback) {
 
-        // skip mods retrieval if session is not available
-        if (obj.session === null) {
+        if (obj.session === null || obj.dupe === true) {
             callback(null, obj);
             return false;
         }
@@ -859,6 +887,11 @@ exports.create_collection_object = function (req, callback) {
 
     function get_pid(obj, callback) {
 
+        if (obj.dupe === true) {
+            callback(null, obj);
+            return false;
+        }
+
         try {
             obj.pid = uuid(config.uuidDomain, uuid.DNS);
             obj.sip_uuid = obj.pid;
@@ -872,7 +905,7 @@ exports.create_collection_object = function (req, callback) {
 
     function get_handle(obj, callback) {
 
-        if (obj.pid === null) {
+        if (obj.pid === null || obj.dupe === true) {
             obj.handle = null;
             callback(null, obj);
             return false;
@@ -896,6 +929,11 @@ exports.create_collection_object = function (req, callback) {
 
     function create_display_record(obj, callback) {
 
+        if (obj.dupe === true) {
+            callback(null, obj);
+            return false;
+        }
+
         modslibdisplay.create_display_record(obj, function (result) {
             obj.display_record = result;
             callback(null, obj);
@@ -904,8 +942,7 @@ exports.create_collection_object = function (req, callback) {
 
     function save_record(obj, callback) {
 
-        if (validator.isJSON(obj) === false) {
-            obj.error = 'FATAL: unable to save collection record';
+        if (obj.dupe === true) {
             callback(null, obj);
             return false;
         }
@@ -923,6 +960,11 @@ exports.create_collection_object = function (req, callback) {
     }
 
     function index_collection(obj, callback) {
+
+        if (obj.dupe === true) {
+            callback(null, obj);
+            return false;
+        }
 
         if (validator.isUUID(obj.sip_uuid) === false || validator.isEmpty(obj.sip_uuid) === true) {
             logger.module().error('ERROR: [/repository/model module (create_collection_object/index_collection)] unable to index collection record ' + error);
@@ -955,12 +997,8 @@ exports.create_collection_object = function (req, callback) {
         });
     }
 
-    // TODO: check if uri is already in the repository
-    function check_uri() {
-
-    }
-
     async.waterfall([
+        check_uri,
         get_session_token,
         get_mods,
         get_pid,
@@ -974,14 +1012,21 @@ exports.create_collection_object = function (req, callback) {
             logger.module().error('ERROR: [/repository/model module (create_collection_object/async.waterfall)] ' + error);
         }
 
-        logger.module().info('INFO: [/repository/model module (create_collection_object/async.waterfall)] collection record saved');
+        if (results.dupe === false) {
 
-        if (results.error === undefined) {
+            logger.module().info('INFO: [/repository/model module (create_collection_object/async.waterfall)] collection record saved');
 
             callback({
                 status: 201,
                 message: 'Object created.',
                 data: [{'pid': results.pid}]
+            });
+
+        } else if (results.dupe === true) {
+
+            callback({
+                status: 200,
+                message: 'Cannot create duplicate collection object.'
             });
 
         } else {
