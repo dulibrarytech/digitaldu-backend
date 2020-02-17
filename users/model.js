@@ -20,6 +20,7 @@
 
 const config = require('../config/config'),
     fs = require('fs'),
+    validator = require('validator'),
     logger = require('../libs/log4'),
     knex =require('../config/db')();
 

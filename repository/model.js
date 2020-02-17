@@ -316,13 +316,6 @@ exports.update_metadata_cron = function (req, callback) {
 
     function save_record_updates(obj, callback) {
 
-        if (validator.isJSON(obj.records) === false) {
-            logger.module().fatal('FATAL: [/repository/model module (update_metadata_cron/save_record_updates)] unable to save record updates');
-            obj.error = 'ERROR: unable to save record updates';
-            callback(null, obj);
-            return false;
-        }
-
         knexQ(ARCHIVESSPACE_QUEUE)
             .insert(obj.records)
             .then(function (data) {
@@ -360,7 +353,7 @@ exports.update_metadata_cron = function (req, callback) {
 
                             archivespace.get_mods(record.mods_id, obj.session, function (updated_record) {
 
-                                if (validator.isInt(record.mods_id) === false || validator.isEmpty(record.mods_id)) {
+                                if (validator.isEmpty(record.mods_id)) {
                                     logger.module().fatal('ERROR: [/repository/model module (update_metadata_cron/update_records)] Unable to get record.');
                                     return false;
                                 }
@@ -443,11 +436,32 @@ exports.update_metadata_cron = function (req, callback) {
                                                             return false;
                                                         }
                                                     });
+
+                                                    if (recordObj.is_published === 1) {
+
+                                                        // update public index
+                                                        request.post({
+                                                            url: config.apiUrl + '/api/admin/v1/indexer?api_key=' + config.apiKey,
+                                                            form: {
+                                                                'sip_uuid': data[0].sip_uuid,
+                                                                'publish': true
+                                                            }
+                                                        }, function (error, httpResponse, body) {
+
+                                                            if (error) {
+                                                                logger.module().fatal('FATAL: [/repository/model module (update_metadata_cron/update_records/update_mods)] indexer error ' + error);
+                                                                return false;
+                                                            }
+
+                                                            if (httpResponse.statusCode === 200) {
+                                                                return false;
+                                                            } else {
+                                                                logger.module().fatal('FATAL: [/repository/model module (update_metadata_cron/update_records/update_mods)] http error ' + httpResponse.statusCode + '/' + body);
+                                                                return false;
+                                                            }
+                                                        });
+                                                    }
                                                 }
-
-                                                // TODO: if published index public
-
-
                                             });
                                         });
 
@@ -691,7 +705,7 @@ exports.update_thumbnail = function (req, callback) {
  */
 const update_mods = function (record, updated_record, obj, callback) {
 
-    if (validator.isInt(record.mods_id) === false || validator.isEmpty(record.mods_id) === true) {
+    if (validator.isEmpty(record.mods_id) === true) {
         logger.module().fatal('FATAL: [/repository/model module (update_mods)] unable to update mods.');
         return false;
     }
@@ -1130,6 +1144,12 @@ exports.publish_objects = function (req, callback) {
 
     function update_collection_object_docs(obj, callback) {
 
+        if (validator.isUUID(obj.is_member_of_collection) === false || validator.isEmpty(obj.is_member_of_collection) === true) {
+            logger.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record');
+            obj.status = 'failed';
+            return false;
+        }
+
         knex(REPO_OBJECTS)
             .select('sip_uuid')
             .where({
@@ -1252,6 +1272,10 @@ exports.publish_objects = function (req, callback) {
         obj.sip_uuid = pid;
         obj.api_url = api_url;
 
+        if (validator.isUUID(obj.sip_uuid) === false || validator.isEmpty(obj.sip_uuid) === true) {
+            return false;
+        }
+
         knex(REPO_OBJECTS)
             .select('is_member_of_collection')
             .where({
@@ -1259,7 +1283,7 @@ exports.publish_objects = function (req, callback) {
                 is_active: 1
             })
             .then(function (data) {
-                obj.is_member_of_collection = data[0].is_member_of_collection;
+                obj.is_member_of_collection = validator.escape(data[0].is_member_of_collection);
                 callback(null, obj);
             })
             .catch(function (error) {
@@ -1495,6 +1519,10 @@ exports.unpublish_objects = function (req, callback) {
     type = req.body.type,
     pid = req.body.pid;
 
+    if (validator.isUUID(pid) === false || validator.isEmpty(pid) === true) {
+        return false;
+    }
+
     // remove record from public index
     function unpublish_collection (callback) {
 
@@ -1714,6 +1742,10 @@ exports.unpublish_objects = function (req, callback) {
         obj.api_url = api_url;
         obj.pid = pid;
 
+        if (validator.isUUID(obj.pid) === false || validator.isEmpty(obj.pid) === true) {
+            return false;
+        }
+
         request.delete({
             url: obj.api_url + '?pid=' + obj.pid,
             timeout: 25000
@@ -1883,9 +1915,9 @@ exports.reset_display_record = function (req, callback) {
             message: 'Bad request'
         });
 
-    } else if (req.body.pid !== undefined) {
+    } else if (req.body.pid !== undefined || validator.isUUID(req.body.pid) === true) {
         params.pid = req.body.pid;
-    } else if (req.body.is_member_of_collection !== undefined) {
+    } else if (req.body.is_member_of_collection !== undefined || validator.isUUID(req.body.pid) === true) {
         params.is_member_of_collection = req.body.is_member_of_collection;
     } else if (req.body.pid === undefined && req.body.is_member_of_collection === undefined) {
         params.none = true;
@@ -1991,16 +2023,15 @@ exports.reset_display_record = function (req, callback) {
  * Downloads AIP from archivematica
  * @param req
  * @param callback
- */
+
 exports.get_object_download = function (req, callback) {
 
     let pid = req.query.pid;
 
-    if (pid === undefined || pid.length === 0) {
-
+    if (pid === undefined || validator.isUUID(pid) === false || validator.isEmpty(pid) === true) {
         callback({
             status: 400,
-            message: 'Missing PID.',
+            message: 'Bad request.',
             data: []
         });
 
@@ -2051,3 +2082,4 @@ exports.get_object_download = function (req, callback) {
             callback(null, obj);
         });
 };
+ */

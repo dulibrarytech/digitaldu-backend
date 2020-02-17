@@ -36,7 +36,7 @@ exports.get_index_record = function (req, callback) {
     if (req.body.sip_uuid === undefined) {
         callback({
             status: 400,
-            message: 'Bad request. missing sip uuid.'
+            message: 'Bad request.'
         });
 
         return false;
