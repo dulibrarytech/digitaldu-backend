@@ -201,7 +201,14 @@ const collectionsModule = (function () {
                 });
 
             } else if (response.status === 200) {
-                helperModule.renderError('This collection object is already in the repository.');
+
+                domModule.html('#message', '<div class="alert alert-warning">This collection object is already in the repository.</div>');
+                domModule.show('#collection-form');
+
+                setTimeout(function () {
+                    domModule.html('#message', null);
+                }, 5000);
+
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to add collection.');
             }
