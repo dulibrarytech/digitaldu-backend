@@ -22,7 +22,8 @@ const config = require('../config/config'),
     fs = require('fs'),
     validator = require('validator'),
     logger = require('../libs/log4'),
-    knex =require('../config/db')();
+    knex =require('../config/db')(),
+    USERS = 'tbl_users';
 
 /**
  * Gets all users
@@ -41,14 +42,14 @@ exports.get_users = function (req, callback) {
         return false;
     }
 
-    knex('tbl_users')
+    knex(USERS)
         .select(
         'tbl_users.id',
         'tbl_users.du_id',
         'tbl_users.email',
         'tbl_users.first_name',
         'tbl_users.last_name',
-        'tbl_users.status',
+        'tbl_users.is_active',
         'tbl_users.created'
     )
         .then(function (data) {
@@ -81,8 +82,8 @@ const get_user = function (req, callback) {
         });
     }
 
-    knex('tbl_users')
-        .select('id', 'du_id', 'email', 'first_name', 'last_name', 'status', 'created')
+    knex(USERS)
+        .select('id', 'du_id', 'email', 'first_name', 'last_name', 'is_active', 'created')
         .where({
             id: id
         })
@@ -106,11 +107,11 @@ const get_user = function (req, callback) {
  */
 exports.check_auth_user = function (username, callback) {
 
-    knex('tbl_users')
+    knex(USERS)
         .select('id')
         .where({
             du_id: username,
-            status: 1
+            is_active: 1
         })
         .then(function (data) {
 
@@ -139,11 +140,11 @@ exports.check_auth_user = function (username, callback) {
  */
 exports.get_auth_user_data = function (username, callback) {
 
-    knex('tbl_users')
+    knex(USERS)
         .select('id', 'du_id', 'email', 'first_name', 'last_name')
         .where({
             du_id: username,
-            status: 1
+            is_active: 1
         })
         .then(function (data) {
 
@@ -175,7 +176,7 @@ exports.update_user = function (req, callback) {
 
     delete User.id;
 
-    knex('tbl_users')
+    knex(USERS)
         .where({
             id: id
         })
@@ -183,7 +184,7 @@ exports.update_user = function (req, callback) {
             email: User.email,
             first_name: User.first_name,
             last_name: User.last_name,
-            status: User.is_active
+            is_active: User.is_active
         })
         .then(function (data) {
 
@@ -220,7 +221,7 @@ exports.save_user = function (req, callback) {
         return false;
     }
 
-    knex('tbl_users')
+    knex(USERS)
         .insert(userObj)
         .then(function (data) {
             callback({
@@ -229,7 +230,6 @@ exports.save_user = function (req, callback) {
             });
         })
         .catch(function (error) {
-
             logger.module().error('FATAL: [/users/model module (save_user)] unable to get user data ' + error);
             throw 'FATAL: [/users/model module (save_user)] unable to get user data ' + error;
         });

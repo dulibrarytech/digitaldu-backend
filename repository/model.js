@@ -205,7 +205,7 @@ exports.get_display_record = function (req, callback) {
             pid: pid,
             is_active: 1
         })
-        .then(function (data) {
+        .then(function(data) {
             callback({
                 status: 200,
                 message: 'Object retrieved.',
@@ -217,7 +217,6 @@ exports.get_display_record = function (req, callback) {
             throw 'FATAL: [/repository/model module (get_display_record)] Unable to get display record ' + error;
         });
 };
-
 
 /**
  * Gets metadata updates from archivesspace update feed
@@ -1569,11 +1568,11 @@ exports.publish_objects = function (req, callback) {
  */
 exports.unpublish_objects = function (req, callback) {
 
-    var api_url = config.apiUrl + '/api/admin/v1/indexer?api_key=' + config.apiKey,
+    const api_url = config.apiUrl + '/api/admin/v1/indexer?api_key=' + config.apiKey,
     type = req.body.type,
     pid = req.body.pid;
 
-    if (validator.isUUID(pid) === false || validator.isEmpty(pid) === true) {
+    if (validator.isUUID(pid) === false || validator.isEmpty(pid) === true || type === undefined) {
         return false;
     }
 

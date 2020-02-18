@@ -18,13 +18,14 @@
 
 'use strict';
 
-const archivematica = require('../libs/archivematica'),
+const config = require('../config/config'),
+    archivematica = require('../libs/archivematica'),
     archivespace = require('../libs/archivespace'),
     duracloud = require('../libs/duracloud'),
     objectservice = require('../libs/object-service'),
     logger = require('../libs/log4'),
     async = require('async'),
-    config = require('../config/config'),
+    validator = require('validator'),
     es = require('elasticsearch'),
     client = new es.Client({
         host: config.elasticSearch

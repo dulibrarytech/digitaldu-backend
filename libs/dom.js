@@ -19,20 +19,72 @@
 'use strict';
 
 const createdompurify = require('dompurify'),
-    { JSDOM } = require('jsdom'),
+    {JSDOM} = require('jsdom'),
     window = new JSDOM('').window,
-    DOMPurify = createdompurify(window);
+    DOMPurify = createdompurify(window),
+    validator = require('validator');
 
 /**
  * Sanitizes data to help prevent XSS attacks
  * @param data
  * @returns {boolean}
  */
-exports.sanitize = function (data) {
+exports.sanitize = function(data) {
 
     if (data.length === 0) {
         return false;
     }
 
     return DOMPurify.sanitize(data);
+};
+
+/**
+ * Middleware function used to sanitize body (form) inputs
+ * @param req
+ * @param res
+ * @param next
+ */
+exports.sanitize_req_body = function(req, res, next) {
+
+    if (req.body === undefined) {
+        next();
+    }
+
+    let keys = Object.keys(req.body);
+
+    keys.map(function (prop) {
+
+        if (req.body.hasOwnProperty(prop)) {
+
+            if (prop !== 'is_active') {
+                req.body[prop] = validator.escape(DOMPurify.sanitize(req.body[prop]));
+            }
+        }
+    });
+
+    next();
+};
+
+/**
+ * Middleware function used to sanitize query string inputs
+ * @param req
+ * @param res
+ * @param next
+ */
+exports.sanitize_req_query = function(req, res, next) {
+
+    if (req.query === undefined) {
+        next();
+    }
+
+    let keys = Object.keys(req.query);
+
+    keys.map(function (prop) {
+
+        if (req.query.hasOwnProperty(prop)) {
+            req.query[prop] = validator.escape(DOMPurify.sanitize(req.query[prop]));
+        }
+    });
+
+    next();
 };

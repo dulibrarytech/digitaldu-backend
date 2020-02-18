@@ -21,7 +21,7 @@
 const config = require('../config/config'),
     service = require('../indexer/service'),
     async = require('async'),
-    knex =require('../config/db')(),
+    knex = require('../config/db')(),
     logger = require('../libs/log4'),
     REPO_OBJECTS = 'tbl_objects';
 

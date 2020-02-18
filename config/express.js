@@ -24,8 +24,8 @@ const http = require('http'),
     bodyParser = require('body-parser'),
     methodOverride = require('method-override'),
     helmet = require('helmet'),
-    fs = require('fs'),
-    config = require('../config/config');
+    xss = require('../libs/dom'),
+    fs = require('fs');
 
 module.exports = function () {
 
@@ -47,6 +47,8 @@ module.exports = function () {
     app.use(helmet());
 
     app.use(express.static('./public'));
+    app.use(xss.sanitize_req_query);
+    app.use(xss.sanitize_req_body);
     app.set('views', './views');
     app.set('view engine', 'ejs');
 
