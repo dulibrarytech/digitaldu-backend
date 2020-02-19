@@ -18,22 +18,22 @@
 
 'use strict';
 
-const config = require('../config/config'),
-    fs = require('fs'),
-    request = require('request'),
-    async = require('async'),
-    uuid = require('node-uuid'),
-    validator = require('validator'),
-    dom = require('../libs/dom'),
-    handles = require('../libs/handles'),
-    modslibdisplay = require('../libs/display-record'),
-    archivematica = require('../libs/archivematica'),
-    archivespace = require('../libs/archivespace'),
-    logger = require('../libs/log4'),
+const CONFIG = require('../config/config'),
+    REQUEST = require('request'),
+    ASYNC = require('async'),
+    UUID = require('node-uuid'),
+    VALIDATOR = require('validator'),
+    HANDLES = require('../libs/handles'),
+    MODS = require('../libs/display-record'),
+    ARCHIVESSPACE = require('../libs/archivespace'),
+    LOGGER = require('../libs/log4'),
+    DB = require('../config/db')(),
+    DBQ = require('../config/dbqueue'),
     REPO_OBJECTS = 'tbl_objects',
-    ARCHIVESSPACE_QUEUE = 'tbl_archivesspace_queue',
-    knex = require('../config/db')(),
-    knexQ = require('knex')({
+    ARCHIVESSPACE_QUEUE = 'tbl_archivesspace_queue';
+
+    /*
+    const DBQ = require('knex')({
         client: 'mysql2',
         connection: {
             host: config.dbQueueHost,
@@ -42,61 +42,7 @@ const config = require('../config/config'),
             database: config.dbQueueName
         }
     });
-
-/** DEPRECATED.  App is using elasticsearch to render data
- * Get object by collection (admin dashboard)
- * @param req
- * @param callback
-
-exports.get_admin_objects = function (req, callback) {
-
-    let pid = req.query.pid,
-        page = req.query.page;
-
-    if (pid === undefined || pid.length === 0) {
-
-        callback({
-            status: 400,
-            message: 'Missing PID.',
-            data: []
-        });
-
-        return false;
-    }
-
-    let total_on_page = 10;
-
-    if (req.query.total_on_page !== undefined) {
-        total_on_page = req.query.total_on_page;
-    }
-
-    if (page === undefined) {
-        page = 0;
-    } else {
-        page = (page - 1) * total_on_page;
-    }
-
-    knex(REPO_OBJECTS)
-        .select('id', 'is_member_of_collection', 'pid', 'object_type', 'display_record', 'thumbnail', 'mime_type', 'is_compound', 'is_published', 'created')
-        .where({
-            is_member_of_collection: pid,
-            is_active: 1
-        })
-        .limit(total_on_page)
-        .offset(page)
-        .then(function (data) {
-            callback({
-                status: 200,
-                message: 'Collections for administrators',
-                data: data
-            });
-        })
-        .catch(function (error) {
-            logger.module().fatal('FATAL: [/repository/model module (get_admin_objects)] Unable to get objects ' + error);
-            throw 'FATAL: [/repository/model module (get_admin_objects)] Unable to get objects ' + error;
-        });
-};
- */
+    */
 
 /**
  * Gets object display record
@@ -117,7 +63,7 @@ exports.get_display_record = function (req, callback) {
         return false;
     }
 
-    knex(REPO_OBJECTS)
+    DB(REPO_OBJECTS)
         .select('display_record')
         .where({
             pid: pid,
@@ -131,7 +77,7 @@ exports.get_display_record = function (req, callback) {
             });
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/repository/model module (get_display_record)] Unable to get display record ' + error);
+            LOGGER.module().fatal('FATAL: [/repository/model module (get_display_record)] Unable to get display record ' + error);
             throw 'FATAL: [/repository/model module (get_display_record)] Unable to get display record ' + error;
         });
 };
@@ -145,7 +91,7 @@ exports.update_metadata_cron = function (req, callback) {
 
     function get_session_token(callback) {
 
-        archivespace.get_session_token(function (response) {
+        ARCHIVESSPACE.get_session_token(function (response) {
 
             let result = response.data,
                 obj = {},
@@ -156,14 +102,14 @@ exports.update_metadata_cron = function (req, callback) {
                 token = JSON.parse(result);
 
                 if (token.session === undefined) {
-                    logger.module().error('ERROR: [/repository/model module (update_metadata_cron/get_session_token/archivespace.get_session_token)] session token is undefined');
+                    LOGGER.module().error('ERROR: [/repository/model module (update_metadata_cron/get_session_token/ARCHIVESSPACE.get_session_token)] session token is undefined');
                     obj.session = null;
                     callback(null, obj);
                     return false;
                 }
 
                 if (token.error === true) {
-                    logger.module().error('ERROR: [/repository/model module (update_metadata_cron/get_session_token/archivespace.get_session_token)] session token error' + token.error_message);
+                    LOGGER.module().error('ERROR: [/repository/model module (update_metadata_cron/get_session_token/ARCHIVESSPACE.get_session_token)] session token error' + token.error_message);
                     obj.session = null;
                     callback(null, obj);
                     return false;
@@ -174,8 +120,8 @@ exports.update_metadata_cron = function (req, callback) {
                 return false;
 
             } catch (error) {
-                logger.module().fatal('FATAL: [/repository/model module (update_metadata_cron/get_session_token/archivespace.get_session_token)] session token error ' + error);
-                throw 'FATAL: [/repository/model module (update_metadata_cron/get_session_token/archivespace.get_session_token)] session token error ' + error;
+                LOGGER.module().fatal('FATAL: [/repository/model module (update_metadata_cron/get_session_token/ARCHIVESSPACE.get_session_token)] session token error ' + error);
+                throw 'FATAL: [/repository/model module (update_metadata_cron/get_session_token/ARCHIVESSPACE.get_session_token)] session token error ' + error;
             }
         });
     }
@@ -189,7 +135,7 @@ exports.update_metadata_cron = function (req, callback) {
 
         setTimeout(function () {
 
-            archivespace.get_record_updates(obj.session, function (records) {
+            ARCHIVESSPACE.get_record_updates(obj.session, function (records) {
 
                 let data = JSON.parse(records.updates),
                     uriArr = [];
@@ -233,14 +179,14 @@ exports.update_metadata_cron = function (req, callback) {
 
     function save_record_updates(obj, callback) {
 
-        knexQ(ARCHIVESSPACE_QUEUE)
+        DBQ(ARCHIVESSPACE_QUEUE)
             .insert(obj.records)
             .then(function (data) {
                 obj.data_saved = true;
                 callback(null, obj);
             })
             .catch(function (error) {
-                logger.module().fatal('FATAL: [/repository/model module (update_metadata_cron/save_record_updates)] unable to save record updates' + error);
+                LOGGER.module().fatal('FATAL: [/repository/model module (update_metadata_cron/save_record_updates)] unable to save record updates' + error);
                 obj.error = 'ERROR: unable to save record updates' + error;
                 callback(null, obj);
             });
@@ -251,7 +197,7 @@ exports.update_metadata_cron = function (req, callback) {
         if (obj.data_saved !== undefined && obj.data_saved === true) {
 
             // Get updated record id's from queue
-            knexQ(ARCHIVESSPACE_QUEUE)
+            DBQ(ARCHIVESSPACE_QUEUE)
                 .select('*')
                 .where({
                     is_updated: 0
@@ -268,17 +214,10 @@ exports.update_metadata_cron = function (req, callback) {
 
                             let record = data.pop();
 
-                            archivespace.get_mods(record.mods_id, obj.session, function (updated_record) {
-
-                                /*
-                                if (validator.isEmpty(record.mods_id)) {
-                                    logger.module().fatal('ERROR: [/repository/model module (update_metadata_cron/update_records)] Unable to get record.');
-                                    return false;
-                                }
-                                */
+                            ARCHIVESSPACE.get_mods(record.mods_id, obj.session, function (updated_record) {
 
                                 // Get existing record from repository
-                                knex(REPO_OBJECTS)
+                                DB(REPO_OBJECTS)
                                     .select('*')
                                     .where({
                                         mods_id: record.mods_id,
@@ -287,24 +226,24 @@ exports.update_metadata_cron = function (req, callback) {
                                     .then(function (data) {
 
                                         if (data.length === 0) {
-                                            logger.module().info('INFO: [/repository/model module (update_metadata_cron/update_records)] There were no repository records to update');
+                                            LOGGER.module().info('INFO: [/repository/model module (update_metadata_cron/update_records)] There were no repository records to update');
                                             return false;
                                         }
 
                                         let recordObj = {};
-                                        recordObj.pid = validator.escape(data[0].pid);
-                                        recordObj.is_member_of_collection = validator.escape(data[0].is_member_of_collection);
-                                        recordObj.object_type = validator.escape(data[0].object_type);
-                                        recordObj.sip_uuid = validator.escape(data[0].sip_uuid);
-                                        recordObj.handle = validator.escape(data[0].handle);
-                                        recordObj.entry_id = validator.escape(data[0].entry_id);
-                                        recordObj.thumbnail = validator(data[0].thumbnail);
-                                        recordObj.object = validator.escape(data[0].file_name);
-                                        recordObj.mime_type = validator.escape(data[0].mime_type);
+                                        recordObj.pid = VALIDATOR.escape(data[0].pid);
+                                        recordObj.is_member_of_collection = VALIDATOR.escape(data[0].is_member_of_collection);
+                                        recordObj.object_type = VALIDATOR.escape(data[0].object_type);
+                                        recordObj.sip_uuid = VALIDATOR.escape(data[0].sip_uuid);
+                                        recordObj.handle = VALIDATOR.escape(data[0].handle);
+                                        recordObj.entry_id = VALIDATOR.escape(data[0].entry_id);
+                                        recordObj.thumbnail = VALIDATOR(data[0].thumbnail);
+                                        recordObj.object = VALIDATOR.escape(data[0].file_name);
+                                        recordObj.mime_type = VALIDATOR.escape(data[0].mime_type);
                                         recordObj.is_published = data[0].is_published;
                                         recordObj.mods = updated_record.mods;
 
-                                        modslibdisplay.create_display_record(recordObj, function (result) {
+                                        MODS.create_display_record(recordObj, function (result) {
 
                                             let tmp = JSON.parse(result);
 
@@ -332,26 +271,26 @@ exports.update_metadata_cron = function (req, callback) {
                                             update_mods(record, updated_record, obj, function (result) {
 
                                                 if (result.updates !== true) {
-                                                    logger.module().error('ERROR: [/repository/model module (update_metadata_cron/update_records/update_mods)] Unable to update mods record ' + data[0].mods_id);
+                                                    LOGGER.module().error('ERROR: [/repository/model module (update_metadata_cron/update_records/update_mods)] Unable to update mods record ' + data[0].mods_id);
                                                 } else {
 
                                                     // update admin index
-                                                    request.post({
-                                                        url: config.apiUrl + '/api/admin/v1/indexer?api_key=' + config.apiKey,
+                                                    REQUEST.post({
+                                                        url: CONFIG.apiUrl + '/api/admin/v1/indexer?api_key=' + config.apiKey,
                                                         form: {
                                                             'sip_uuid': data[0].sip_uuid
                                                         }
                                                     }, function (error, httpResponse, body) {
 
                                                         if (error) {
-                                                            logger.module().fatal('FATAL: [/repository/model module (update_metadata_cron/update_records/update_mods)] indexer error ' + error);
+                                                            LOGGER.module().fatal('FATAL: [/repository/model module (update_metadata_cron/update_records/update_mods)] indexer error ' + error);
                                                             return false;
                                                         }
 
                                                         if (httpResponse.statusCode === 200) {
                                                             return false;
                                                         } else {
-                                                            logger.module().fatal('FATAL: [/repository/model module (update_metadata_cron/update_records/update_mods)] http error ' + httpResponse.statusCode + '/' + body);
+                                                            LOGGER.module().fatal('FATAL: [/repository/model module (update_metadata_cron/update_records/update_mods)] http error ' + httpResponse.statusCode + '/' + body);
                                                             return false;
                                                         }
                                                     });
@@ -359,8 +298,8 @@ exports.update_metadata_cron = function (req, callback) {
                                                     if (recordObj.is_published === 1) {
 
                                                         // update public index
-                                                        request.post({
-                                                            url: config.apiUrl + '/api/admin/v1/indexer?api_key=' + config.apiKey,
+                                                        REQUEST.post({
+                                                            url: CONFIG.apiUrl + '/api/admin/v1/indexer?api_key=' + CONFIG.apiKey,
                                                             form: {
                                                                 'sip_uuid': data[0].sip_uuid,
                                                                 'publish': true
@@ -368,14 +307,14 @@ exports.update_metadata_cron = function (req, callback) {
                                                         }, function (error, httpResponse, body) {
 
                                                             if (error) {
-                                                                logger.module().fatal('FATAL: [/repository/model module (update_metadata_cron/update_records/update_mods)] indexer error ' + error);
+                                                                LOGGER.module().fatal('FATAL: [/repository/model module (update_metadata_cron/update_records/update_mods)] indexer error ' + error);
                                                                 return false;
                                                             }
 
                                                             if (httpResponse.statusCode === 200) {
                                                                 return false;
                                                             } else {
-                                                                logger.module().fatal('FATAL: [/repository/model module (update_metadata_cron/update_records/update_mods)] http error ' + httpResponse.statusCode + '/' + body);
+                                                                LOGGER.module().fatal('FATAL: [/repository/model module (update_metadata_cron/update_records/update_mods)] http error ' + httpResponse.statusCode + '/' + body);
                                                                 return false;
                                                             }
                                                         });
@@ -387,7 +326,7 @@ exports.update_metadata_cron = function (req, callback) {
                                         return null;
                                     })
                                     .catch(function (error) {
-                                        logger.module().fatal('FATAL: [/repository/model module (update_metadata_cron/update_records/update_mods)] Unable to get mods update records ' + error);
+                                        LOGGER.module().fatal('FATAL: [/repository/model module (update_metadata_cron/update_records/update_mods)] Unable to get mods update records ' + error);
                                         throw 'FATAL: [/repository/model module (update_metadata_cron/update_records/update_mods)] Unable to get mods update records ' + error;
                                     });
                             });
@@ -398,17 +337,17 @@ exports.update_metadata_cron = function (req, callback) {
                     return null;
                 })
                 .catch(function (error) {
-                    logger.module().fatal('FATAL: [/repository/model module (update_metadata_cron/update_records/update_mods)] Unable to get update records ' + error);
+                    LOGGER.module().fatal('FATAL: [/repository/model module (update_metadata_cron/update_records/update_mods)] Unable to get update records ' + error);
                     throw 'FATAL: [/repository/model module (update_metadata_cron/update_records/update_mods)] Unable to get update records ' + error;
                 });
 
         } else {
-            logger.module().info('INFO: [/repository/model module (update_metadata_cron/update_records/update_mods)] No mods record updates found.');
+            LOGGER.module().info('INFO: [/repository/model module (update_metadata_cron/update_records/update_mods)] No mods record updates found.');
             callback(null, obj);
         }
     }
 
-    async.waterfall([
+    ASYNC.waterfall([
         get_session_token,
         get_record_updates,
         save_record_updates,
@@ -416,20 +355,20 @@ exports.update_metadata_cron = function (req, callback) {
     ], function (error, results) {
 
         if (error) {
-            logger.module().error('ERROR: [/repository/model module (update_metadata_cron/async.waterfall)] ' + error);
+            LOGGER.module().error('ERROR: [/repository/model module (update_metadata_cron/async.waterfall)] ' + error);
             throw 'ERROR: [/repository/model module (update_metadata_cron/async.waterfall)] ' + error;
         }
 
-        archivespace.destroy_session_token(results.session, function (result) {
+        ARCHIVESSPACE.destroy_session_token(results.session, function (result) {
 
             if (result.error === false) {
-                logger.module().info('INFO: [/repository/model module (update_metadata_cron/async.waterfall)] Archivesspace session destroyed.');
+                LOGGER.module().info('INFO: [/repository/model module (update_metadata_cron/async.waterfall)] Archivesspace session destroyed.');
             } else {
-                logger.module().info('INFO: [/repository/model module (update_metadata_cron/async.waterfall)] Unable to destroy Archivesspace session.');
+                LOGGER.module().info('INFO: [/repository/model module (update_metadata_cron/async.waterfall)] Unable to destroy Archivesspace session.');
             }
         });
 
-        logger.module().info('INFO: [/repository/model module (update_metadata_cron/async.waterfall)] records updated');
+        LOGGER.module().info('INFO: [/repository/model module (update_metadata_cron/async.waterfall)] records updated');
 
     });
 
@@ -460,7 +399,7 @@ exports.update_thumbnail = function (req, callback) {
     obj.pid = req.body.pid;
     obj.thumbnail = req.body.thumbnail_url;
 
-    knex(REPO_OBJECTS)
+    DB(REPO_OBJECTS)
         .where({
             pid: obj.pid,
             is_active: 1
@@ -471,7 +410,7 @@ exports.update_thumbnail = function (req, callback) {
         .then(function (data) {
 
             // Get existing record from repository
-            knex(REPO_OBJECTS)
+            DB(REPO_OBJECTS)
                 .select('*')
                 .where({
                     pid: obj.pid,
@@ -480,24 +419,24 @@ exports.update_thumbnail = function (req, callback) {
                 .then(function (data) {
 
                     if (data.length === 0) {
-                        logger.module().info('INFO: [/repository/model module (update_thumbnail)] There were no repository records found to update');
+                        LOGGER.module().info('INFO: [/repository/model module (update_thumbnail)] There were no repository records found to update');
                         return false;
                     }
 
                     let recordObj = {};
-                    recordObj.pid = validator.escape(data[0].pid);
-                    recordObj.is_member_of_collection = validator.escape(data[0].is_member_of_collection);
-                    recordObj.object_type = validator.escape(data[0].object_type);
-                    recordObj.sip_uuid = validator.escape(data[0].sip_uuid);
-                    recordObj.handle = validator.escape(data[0].handle);
-                    recordObj.entry_id = validator.escape(data[0].entry_id);
-                    recordObj.thumbnail = validator.escape(data[0].thumbnail);
-                    recordObj.object = validator.escape(data[0].file_name);
-                    recordObj.mime_type = validator.escape(data[0].mime_type);
-                    recordObj.mods = validator.escape(data[0].mods);
+                    recordObj.pid = VALIDATOR.escape(data[0].pid);
+                    recordObj.is_member_of_collection = VALIDATOR.escape(data[0].is_member_of_collection);
+                    recordObj.object_type = VALIDATOR.escape(data[0].object_type);
+                    recordObj.sip_uuid = VALIDATOR.escape(data[0].sip_uuid);
+                    recordObj.handle = VALIDATOR.escape(data[0].handle);
+                    recordObj.entry_id = VALIDATOR.escape(data[0].entry_id);
+                    recordObj.thumbnail = VALIDATOR.escape(data[0].thumbnail);
+                    recordObj.object = VALIDATOR.escape(data[0].file_name);
+                    recordObj.mime_type = VALIDATOR.escape(data[0].mime_type);
+                    recordObj.mods = VALIDATOR.escape(data[0].mods);
                     recordObj.is_published = data[0].is_published;
 
-                    modslibdisplay.create_display_record(recordObj, function (result) {
+                    MODS.create_display_record(recordObj, function (result) {
 
                         let tmp = JSON.parse(result);
 
@@ -522,7 +461,7 @@ exports.update_thumbnail = function (req, callback) {
 
                         }
 
-                        knex(REPO_OBJECTS)
+                        DB(REPO_OBJECTS)
                             .where({
                                 is_member_of_collection: recordObj.is_member_of_collection,
                                 pid: recordObj.pid,
@@ -534,15 +473,15 @@ exports.update_thumbnail = function (req, callback) {
                             .then(function (data) {
 
                                 // re-index admin record
-                                request.post({
-                                    url: config.apiUrl + '/api/admin/v1/indexer?api_key=' + config.apiKey,
+                                REQUEST.post({
+                                    url: CONFIG.apiUrl + '/api/admin/v1/indexer?api_key=' + CONFIG.apiKey,
                                     form: {
                                         'sip_uuid': recordObj.sip_uuid
                                     }
                                 }, function (error, httpResponse, body) {
 
                                     if (error) {
-                                        logger.module().error('ERROR: [/repository/model module (update_thumbnail)] ' + error);
+                                        LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail)] ' + error);
                                         return false;
                                     }
 
@@ -554,7 +493,7 @@ exports.update_thumbnail = function (req, callback) {
                                             // wait to make sure updated admin record is ready
                                             setTimeout(function () {
 
-                                                let reindex_url = config.apiUrl + '/api/admin/v1/indexer/reindex?api_key=' + config.apiKey,
+                                                let reindex_url = CONFIG.apiUrl + '/api/admin/v1/indexer/reindex?api_key=' + CONFIG.apiKey,
                                                     query = {
                                                         'bool': {
                                                             'must': {
@@ -565,7 +504,7 @@ exports.update_thumbnail = function (req, callback) {
                                                         }
                                                     };
 
-                                                request.post({
+                                                REQUEST.post({
                                                     url: reindex_url,
                                                     form: {
                                                         'query': query
@@ -574,14 +513,14 @@ exports.update_thumbnail = function (req, callback) {
                                                 }, function (error, httpResponse, body) {
 
                                                     if (error) {
-                                                        logger.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail ' + error);
+                                                        LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail ' + error);
                                                         return false;
                                                     }
 
                                                     if (httpResponse.statusCode === 200) {
                                                         return false;
                                                     } else {
-                                                        logger.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail ' + httpResponse.statusCode + '/' + body);
+                                                        LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail ' + httpResponse.statusCode + '/' + body);
                                                         return false;
                                                     }
 
@@ -592,22 +531,22 @@ exports.update_thumbnail = function (req, callback) {
 
                                         return false;
                                     } else {
-                                        logger.module().error('ERROR: [/repository/model module (update_thumbnail)] http error ' + httpResponse.statusCode + '/' + body);
+                                        LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail)] http error ' + httpResponse.statusCode + '/' + body);
                                         return false;
                                     }
                                 });
 
                             })
                             .catch(function (error) {
-                                logger.module().fatal('FATAL: [/repository/model module (update_thumbnail/create_display_record/modslibdisplay.create_display_record)] unable to update display record ' + error);
-                                throw 'FATAL: [/repository/model module (update_thumbnail/create_display_record/modslibdisplay.create_display_record)] unable to update display record ' + error;
+                                LOGGER.module().fatal('FATAL: [/repository/model module (update_thumbnail/create_display_record/MODS.create_display_record)] unable to update display record ' + error);
+                                throw 'FATAL: [/repository/model module (update_thumbnail/create_display_record/MODS.create_display_record)] unable to update display record ' + error;
                             });
                     });
 
                     return null;
                 })
                 .catch(function (error) {
-                    logger.module().fatal('FATAL: [/repository/model module (update_thumbnail)] unable to get mods update records ' + error);
+                    LOGGER.module().fatal('FATAL: [/repository/model module (update_thumbnail)] unable to get mods update records ' + error);
                     throw 'FATAL: [/repository/model module (update_thumbnail)] unable to get mods update records ' + error;
                 });
 
@@ -619,7 +558,7 @@ exports.update_thumbnail = function (req, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/repository/model module (update_thumbnail)] unable to update mods records ' + error);
+            LOGGER.module().fatal('FATAL: [/repository/model module (update_thumbnail)] unable to update mods records ' + error);
             throw 'FATAL: [/repository/model module (update_thumbnail)] unable to update mods records ' + error;
         });
 };
@@ -633,14 +572,7 @@ exports.update_thumbnail = function (req, callback) {
  */
 const update_mods = function (record, updated_record, obj, callback) {
 
-    /*
-    if (validator.isEmpty(record.mods_id) === true) {
-        logger.module().fatal('FATAL: [/repository/model module (update_mods)] unable to update mods.');
-        return false;
-    }
-    */
-
-    knex(REPO_OBJECTS)
+    DB(REPO_OBJECTS)
         .where({
             mods_id: record.mods_id,
             is_active: 1
@@ -651,7 +583,7 @@ const update_mods = function (record, updated_record, obj, callback) {
         })
         .then(function (data) {
 
-            knexQ(ARCHIVESSPACE_QUEUE)
+            DBQ(ARCHIVESSPACE_QUEUE)
                 .where({
                     mods_id: record.mods_id
                 })
@@ -664,14 +596,14 @@ const update_mods = function (record, updated_record, obj, callback) {
                     return null;
                 })
                 .catch(function (error) {
-                    logger.module().fatal('FATAL: [/repository/model module (update_mods)] unable to update mods records ' + error);
+                    LOGGER.module().fatal('FATAL: [/repository/model module (update_mods)] unable to update mods records ' + error);
                     throw 'FATAL: [/repository/model module (update_mods)] unable to update mods records ' + error;
                 });
 
             return null;
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/repository/model module (update_mods)] unable to update mods records ' + error);
+            LOGGER.module().fatal('FATAL: [/repository/model module (update_mods)] unable to update mods records ' + error);
             throw 'FATAL: [/repository/model module (update_mods)] unable to update mods records ' + error;
         });
 };
@@ -700,7 +632,7 @@ exports.create_collection_object = function (req, callback) {
 
         let obj = {};
 
-        knex(REPO_OBJECTS)
+        DB(REPO_OBJECTS)
             .count('uri as uri')
             .where('uri', data.uri)
             .then(function (result) {
@@ -715,7 +647,7 @@ exports.create_collection_object = function (req, callback) {
                 callback(null, obj);
             })
             .catch(function (error) {
-                logger.module().fatal('FATAL: [/repository/model module (create_collection_object)] unable to check uri ' + error);
+                LOGGER.module().fatal('FATAL: [/repository/model module (create_collection_object)] unable to check uri ' + error);
             });
     }
 
@@ -727,7 +659,7 @@ exports.create_collection_object = function (req, callback) {
             return false;
         }
 
-        archivespace.get_session_token(function (response) {
+        ARCHIVESSPACE.get_session_token(function (response) {
 
             let result = response.data,
                 obj = {},
@@ -744,14 +676,14 @@ exports.create_collection_object = function (req, callback) {
                 token = JSON.parse(result);
 
                 if (token.session === undefined) {
-                    logger.module().error('ERROR: [/repository/model module (create_collection_object/get_session_token/archivespace.get_session_token)] session token is undefined');
+                    LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/get_session_token/ARCHIVESSPACE.get_session_token)] session token is undefined');
                     obj.session = null;
                     callback(null, obj);
                     return false;
                 }
 
                 if (token.error === true) {
-                    logger.module().error('ERROR: [/repository/model module (create_collection_object/get_session_token/archivespace.get_session_token)] session token error' + token.error_message);
+                    LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/get_session_token/ARCHIVESSPACE.get_session_token)] session token error' + token.error_message);
                     obj.session = null;
                     callback(null, obj);
                     return false;
@@ -768,7 +700,7 @@ exports.create_collection_object = function (req, callback) {
                 return false;
 
             } catch (error) {
-                logger.module().fatal('FATAL: [/repository/model module (create_collection_object/get_session_token/archivespace.get_session_token)] session token error ' + error);
+                LOGGER.module().fatal('FATAL: [/repository/model module (create_collection_object/get_session_token/ARCHIVESSPACE.get_session_token)] session token error ' + error);
             }
         });
 
@@ -783,11 +715,11 @@ exports.create_collection_object = function (req, callback) {
 
         setTimeout(function () {
 
-            archivespace.get_mods(obj.uri, obj.session, function (response) {
+            ARCHIVESSPACE.get_mods(obj.uri, obj.session, function (response) {
 
                 if (response.error !== undefined && response.error === true) {
 
-                    logger.module().error('ERROR: [/repository/model module (create_collection_object/get_mods)] unable to get mods ' + response.error_message);
+                    LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/get_mods)] unable to get mods ' + response.error_message);
 
                     obj.mods = null;
                     callback(null, obj);
@@ -798,7 +730,6 @@ exports.create_collection_object = function (req, callback) {
                 obj.mods = response.mods;
                 obj.is_member_of_collection = data.is_member_of_collection;
 
-                // delete obj.uri;
                 delete obj.session;
                 callback(null, obj);
             });
@@ -814,11 +745,11 @@ exports.create_collection_object = function (req, callback) {
         }
 
         try {
-            obj.pid = uuid(config.uuidDomain, uuid.DNS);
+            obj.pid = UUID(CONFIG.uuidDomain, UUID.DNS);
             obj.sip_uuid = obj.pid;
             callback(null, obj);
         } catch (error) {
-            logger.module().error('ERROR: [/repository/model module (create_collection_object/get_pid)] unable to generate uuid');
+            LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/get_pid)] unable to generate uuid');
             obj.pid = null;
             callback(null, obj);
         }
@@ -832,12 +763,12 @@ exports.create_collection_object = function (req, callback) {
             return false;
         }
 
-        logger.module().info('INFO: [/repository/model module (create_collection_object/get_handle)] getting handle');
+        LOGGER.module().info('INFO: [/repository/model module (create_collection_object/get_handle)] getting handle');
 
-        handles.create_handle(obj.pid, function (handle) {
+        HANDLES.create_handle(obj.pid, function (handle) {
 
             if (handle.error !== undefined && handle.error === true) {
-                logger.module().error('ERROR: [/repository/model module (create_collection_object/get_handle/handles.create_handle)] handle error');
+                LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/get_handle/handles.create_handle)] handle error');
                 obj.handle = handle.message;
                 callback(null, obj);
                 return false;
@@ -855,7 +786,7 @@ exports.create_collection_object = function (req, callback) {
             return false;
         }
 
-        modslibdisplay.create_display_record(obj, function (result) {
+        MODS.create_display_record(obj, function (result) {
             obj.display_record = result;
             callback(null, obj);
         });
@@ -868,13 +799,13 @@ exports.create_collection_object = function (req, callback) {
             return false;
         }
 
-        knex(REPO_OBJECTS)
+        DB(REPO_OBJECTS)
             .insert(obj)
             .then(function (data) {
                 callback(null, obj);
             })
             .catch(function (error) {
-                logger.module().fatal('FATAL: [/repository/model module (create_collection_object/save_record)] unable to save collection record ' + error);
+                LOGGER.module().fatal('FATAL: [/repository/model module (create_collection_object/save_record)] unable to save collection record ' + error);
                 obj.error = 'FATAL: unable to save collection record ' + error;
                 callback(null, obj);
             });
@@ -887,16 +818,8 @@ exports.create_collection_object = function (req, callback) {
             return false;
         }
 
-        /*
-        if (validator.isUUID(obj.sip_uuid) === false || validator.isEmpty(obj.sip_uuid) === true) {
-            logger.module().error('ERROR: [/repository/model module (create_collection_object/index_collection)] unable to index collection record');
-            obj.indexed = false;
-            return false;
-        }
-        */
-
-        request.post({
-            url: config.apiUrl + '/api/admin/v1/indexer?api_key=' + config.apiKey,
+        REQUEST.post({
+            url: CONFIG.apiUrl + '/api/admin/v1/indexer?api_key=' + CONFIG.apiKey,
             form: {
                 'sip_uuid': obj.sip_uuid
             },
@@ -904,7 +827,7 @@ exports.create_collection_object = function (req, callback) {
         }, function (error, httpResponse, body) {
 
             if (error) {
-                logger.module().error('ERROR: [/repository/model module (create_collection_object/index_collection)] unable to index collection record ' + error);
+                LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/index_collection)] unable to index collection record ' + error);
                 obj.indexed = false;
                 return false;
             }
@@ -915,12 +838,12 @@ exports.create_collection_object = function (req, callback) {
                 return false;
             } else {
                 obj.indexed = false;
-                logger.module().error('ERROR: [/repository/model module (create_collection_object/index_collection)] unable to index collection record ' + body);
+                LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/index_collection)] unable to index collection record ' + body);
             }
         });
     }
 
-    async.waterfall([
+    ASYNC.waterfall([
         check_uri,
         get_session_token,
         get_mods,
@@ -932,12 +855,12 @@ exports.create_collection_object = function (req, callback) {
     ], function (error, results) {
 
         if (error) {
-            logger.module().error('ERROR: [/repository/model module (create_collection_object/async.waterfall)] ' + error);
+            LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/async.waterfall)] ' + error);
         }
 
         if (results.dupe === false) {
 
-            logger.module().info('INFO: [/repository/model module (create_collection_object/async.waterfall)] collection record saved');
+            LOGGER.module().info('INFO: [/repository/model module (create_collection_object/async.waterfall)] collection record saved');
 
             callback({
                 status: 201,
@@ -990,9 +913,9 @@ exports.publish_objects = function (req, callback) {
 
         let obj = {};
         obj.is_member_of_collection = pid;
-        obj.api_url = config.apiUrl + '/api/admin/v1/indexer';
+        obj.api_url = CONFIG.apiUrl + '/api/admin/v1/indexer';
 
-        knex(REPO_OBJECTS)
+        DB(REPO_OBJECTS)
             .where({
                 pid: obj.is_member_of_collection,
                 is_active: 1
@@ -1004,7 +927,7 @@ exports.publish_objects = function (req, callback) {
                 callback(null, obj);
             })
             .catch(function (error) {
-                logger.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection pid ' + error);
+                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection pid ' + error);
                 callback(null, 'failed');
             });
     }
@@ -1016,9 +939,9 @@ exports.publish_objects = function (req, callback) {
             return false;
         }
 
-        let update_doc_url = config.apiUrl + '/api/admin/v1/indexer/update_fragment?api_key=' + config.apiKey;
+        let update_doc_url = CONFIG.apiUrl + '/api/admin/v1/indexer/update_fragment?api_key=' + CONFIG.apiKey;
 
-        request.put({
+        REQUEST.put({
             url: update_doc_url,
             form: {
                 'sip_uuid': obj.is_member_of_collection,
@@ -1032,7 +955,7 @@ exports.publish_objects = function (req, callback) {
         }, function (error, httpResponse, body) {
 
             if (error) {
-                logger.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + error);
+                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + error);
                 obj.status = 'failed';
                 callback(null, obj);
                 return false;
@@ -1042,7 +965,7 @@ exports.publish_objects = function (req, callback) {
                 callback(null, obj);
                 return false;
             } else {
-                logger.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
+                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
                 obj.status = 'failed';
                 callback(null, obj);
             }
@@ -1057,7 +980,7 @@ exports.publish_objects = function (req, callback) {
             return false;
         }
 
-        let reindex_url = config.apiUrl + '/api/admin/v1/indexer/reindex?api_key=' + config.apiKey,
+        let reindex_url = CONFIG.apiUrl + '/api/admin/v1/indexer/reindex?api_key=' + CONFIG.apiKey,
             query = {
                 'bool': {
                     'must': {
@@ -1068,7 +991,7 @@ exports.publish_objects = function (req, callback) {
                 }
             };
 
-        request.post({
+        REQUEST.post({
             url: reindex_url,
             form: {
                 'query': query
@@ -1077,7 +1000,7 @@ exports.publish_objects = function (req, callback) {
         }, function (error, httpResponse, body) {
 
             if (error) {
-                logger.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection admin record ' + error);
+                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection admin record ' + error);
                 obj.status = 'failed';
                 callback(null, obj);
                 return false;
@@ -1087,7 +1010,7 @@ exports.publish_objects = function (req, callback) {
                 callback(null, obj);
                 return false;
             } else {
-                logger.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
+                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
                 obj.status = 'failed';
                 callback(null, obj);
             }
@@ -1102,7 +1025,7 @@ exports.publish_objects = function (req, callback) {
             return false;
         }
 
-        knex(REPO_OBJECTS)
+        DB(REPO_OBJECTS)
             .where({
                 is_member_of_collection: obj.is_member_of_collection,
                 is_active: 1
@@ -1114,22 +1037,14 @@ exports.publish_objects = function (req, callback) {
                 callback(null, obj);
             })
             .catch(function (error) {
-                logger.module().error('ERROR: [/repository/model module (publish_objects/publish_child_objects)] unable to publish collection pid ' + error);
+                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_child_objects)] unable to publish collection pid ' + error);
                 callback(null, 'failed');
             });
     }
 
     function update_collection_object_docs(obj, callback) {
 
-        /*
-        if (validator.isUUID(obj.is_member_of_collection) === false || validator.isEmpty(obj.is_member_of_collection) === true) {
-            logger.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record');
-            obj.status = 'failed';
-            return false;
-        }
-        */
-
-        knex(REPO_OBJECTS)
+        DB(REPO_OBJECTS)
             .select('sip_uuid')
             .where({
                 is_member_of_collection: obj.is_member_of_collection,
@@ -1154,9 +1069,9 @@ exports.publish_objects = function (req, callback) {
                             return false;
                         }
 
-                        let update_doc_url = config.apiUrl + '/api/admin/v1/indexer/update_fragment?api_key=' + config.apiKey;
+                        let update_doc_url = CONFIG.apiUrl + '/api/admin/v1/indexer/update_fragment?api_key=' + CONFIG.apiKey;
 
-                        request.put({
+                        REQUEST.put({
                             url: update_doc_url,
                             form: {
                                 'sip_uuid': record.sip_uuid,
@@ -1170,7 +1085,7 @@ exports.publish_objects = function (req, callback) {
                         }, function (error, httpResponse, body) {
 
                             if (error) {
-                                logger.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + error);
+                                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + error);
                                 obj.status = 'failed';
                                 return false;
                             }
@@ -1178,7 +1093,7 @@ exports.publish_objects = function (req, callback) {
                             if (httpResponse.statusCode === 200) {
                                 return false;
                             } else {
-                                logger.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
+                                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
                                 obj.status = 'failed';
                             }
 
@@ -1188,7 +1103,7 @@ exports.publish_objects = function (req, callback) {
                 }, 150);
             })
             .catch(function (error) {
-                logger.module().fatal('FATAL: [/repository/model module (publish_objects/index_objects)] unable to index published object ' + error);
+                LOGGER.module().fatal('FATAL: [/repository/model module (publish_objects/index_objects)] unable to index published object ' + error);
                 callback(null, obj);
             });
     }
@@ -1200,7 +1115,7 @@ exports.publish_objects = function (req, callback) {
             return false;
         }
 
-        let reindex_url = config.apiUrl + '/api/admin/v1/indexer/reindex?api_key=' + config.apiKey,
+        let reindex_url = CONFIG.apiUrl + '/api/admin/v1/indexer/reindex?api_key=' + CONFIG.apiKey,
             query = {
                 'bool': {
                     'must': {
@@ -1211,7 +1126,7 @@ exports.publish_objects = function (req, callback) {
                 }
             };
 
-        request.post({
+        REQUEST.post({
             url: reindex_url,
             form: {
                 'query': query
@@ -1220,7 +1135,7 @@ exports.publish_objects = function (req, callback) {
         }, function (error, httpResponse, body) {
 
             if (error) {
-                logger.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection admin record ' + error);
+                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection admin record ' + error);
                 obj.status = 'failed';
                 callback(null, obj);
                 return false;
@@ -1230,7 +1145,7 @@ exports.publish_objects = function (req, callback) {
                 callback(null, obj);
                 return false;
             } else {
-                logger.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
+                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
                 obj.status = 'failed';
                 callback(null, obj);
             }
@@ -1249,24 +1164,24 @@ exports.publish_objects = function (req, callback) {
 
         let obj = {};
         obj.sip_uuid = pid;
-        obj.api_url = config.apiUrl + '/api/admin/v1/indexer';
+        obj.api_url = CONFIG.apiUrl + '/api/admin/v1/indexer';
 
         if (obj.sip_uuid === undefined || obj.sip_uuid.length === 0) {
             return false;
         }
 
-        knex(REPO_OBJECTS)
+        DB(REPO_OBJECTS)
             .select('is_member_of_collection')
             .where({
                 sip_uuid: obj.sip_uuid,
                 is_active: 1
             })
             .then(function (data) {
-                obj.is_member_of_collection = validator.escape(data[0].is_member_of_collection);
+                obj.is_member_of_collection = VALIDATOR.escape(data[0].is_member_of_collection);
                 callback(null, obj);
             })
             .catch(function (error) {
-                logger.module().fatal('FATAL: [/repository/model module (get_admin_object)] Unable to get object ' + error);
+                LOGGER.module().fatal('FATAL: [/repository/model module (get_admin_object)] Unable to get object ' + error);
                 throw 'FATAL: [/repository/model module (get_admin_object)] Unable to get object ' + error;
             });
     }
@@ -1276,7 +1191,7 @@ exports.publish_objects = function (req, callback) {
      */
     function check_collection (obj, callback) {
 
-        knex(REPO_OBJECTS)
+        DB(REPO_OBJECTS)
             .select('is_published')
             .where({
                 pid: obj.is_member_of_collection,
@@ -1294,7 +1209,7 @@ exports.publish_objects = function (req, callback) {
                 callback(null, obj);
             })
             .catch(function (error) {
-                logger.module().fatal('FATAL: [/repository/model module (check_collection)] Unable to check collection ' + error);
+                LOGGER.module().fatal('FATAL: [/repository/model module (check_collection)] Unable to check collection ' + error);
                 throw 'FATAL: [/repository/model module (check_collection)] Unable to check collection ' + error;
             });
     }
@@ -1306,7 +1221,7 @@ exports.publish_objects = function (req, callback) {
             return false;
         }
 
-        knex(REPO_OBJECTS)
+        DB(REPO_OBJECTS)
             .where({
                 sip_uuid: obj.sip_uuid,
                 is_active: 1
@@ -1318,7 +1233,7 @@ exports.publish_objects = function (req, callback) {
                 callback(null, obj);
             })
             .catch(function (error) {
-                logger.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection pid ' + error);
+                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection pid ' + error);
                 callback(null, 'failed');
             });
     }
@@ -1332,9 +1247,9 @@ exports.publish_objects = function (req, callback) {
 
         setTimeout(function () {
 
-            let update_doc_url = config.apiUrl + '/api/admin/v1/indexer/update_fragment?api_key=' + config.apiKey;
+            let update_doc_url = CONFIG.apiUrl + '/api/admin/v1/indexer/update_fragment?api_key=' + CONFIG.apiKey;
 
-            request.put({
+            REQUEST.put({
                 url: update_doc_url,
                 form: {
                     'sip_uuid': obj.sip_uuid,
@@ -1348,7 +1263,7 @@ exports.publish_objects = function (req, callback) {
             }, function (error, httpResponse, body) {
 
                 if (error) {
-                    logger.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + error);
+                    LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + error);
                     obj.status = 'failed';
                     return false;
                 }
@@ -1357,11 +1272,10 @@ exports.publish_objects = function (req, callback) {
                     callback(null, obj);
                     return false;
                 } else {
-                    logger.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
+                    LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
                     obj.status = 'failed';
                     callback(null, obj);
                 }
-
             });
 
         }, 500);
@@ -1374,7 +1288,7 @@ exports.publish_objects = function (req, callback) {
             return false;
         }
 
-        let reindex_url = config.apiUrl + '/api/admin/v1/indexer/reindex?api_key=' + config.apiKey,
+        let reindex_url = CONFIG.apiUrl + '/api/admin/v1/indexer/reindex?api_key=' + CONFIG.apiKey,
             query = {
                 'bool': {
                     'must': {
@@ -1387,7 +1301,7 @@ exports.publish_objects = function (req, callback) {
 
          setTimeout(function () {
 
-             request.post({
+             REQUEST.post({
                  url: reindex_url,
                  form: {
                      'query': query
@@ -1398,7 +1312,7 @@ exports.publish_objects = function (req, callback) {
                  console.log(body);
 
                  if (error) {
-                     logger.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection admin record ' + error);
+                     LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection admin record ' + error);
                      obj.status = 'failed';
                      callback(null, obj);
                      return false;
@@ -1408,7 +1322,7 @@ exports.publish_objects = function (req, callback) {
                      callback(null, obj);
                      return false;
                  } else {
-                     logger.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
+                     LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
                      obj.status = 'failed';
                      callback(null, obj);
                  }
@@ -1421,7 +1335,7 @@ exports.publish_objects = function (req, callback) {
     // publish collection and all of its objects
     if (type === 'collection') {
 
-        async.waterfall([
+        ASYNC.waterfall([
             update_collection_record,
             update_collection_doc,
             publish_collection,
@@ -1431,11 +1345,11 @@ exports.publish_objects = function (req, callback) {
         ], function (error, results) {
 
             if (error) {
-                logger.module().error('ERROR: [/repository/model module (publish_objects/async.waterfall)] ' + error);
+                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/async.waterfall)] ' + error);
                 throw 'ERROR: [/repository/model module (publish_objects/async.waterfall)] ' + error;
             }
 
-            logger.module().info('INFO: [/repository/model module (publish_objects/async.waterfall)] collection published');
+            LOGGER.module().info('INFO: [/repository/model module (publish_objects/async.waterfall)] collection published');
         });
 
         callback({
@@ -1449,7 +1363,7 @@ exports.publish_objects = function (req, callback) {
 
     if (type === 'object') {
 
-        async.waterfall([
+        ASYNC.waterfall([
             get_collection_uuid,
             check_collection,
             update_object_record,
@@ -1458,7 +1372,7 @@ exports.publish_objects = function (req, callback) {
         ], function (error, results) {
 
             if (error) {
-                logger.module().error('ERROR: [/repository/model module (publish_objects/async.waterfall)] ' + error);
+                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/async.waterfall)] ' + error);
                 throw 'ERROR: [/repository/model module (publish_objects/async.waterfall)] ' + error;
             }
 
@@ -1472,7 +1386,7 @@ exports.publish_objects = function (req, callback) {
 
             } else {
 
-                logger.module().info('INFO: [/repository/model module (publish_objects/async.waterfall)] object published');
+                LOGGER.module().info('INFO: [/repository/model module (publish_objects/async.waterfall)] object published');
 
                 callback({
                     status: 201,
@@ -1506,15 +1420,15 @@ exports.unpublish_objects = function (req, callback) {
 
         let obj = {};
         obj.is_member_of_collection = pid;
-        obj.api_url = config.apiUrl + '/api/admin/v1/indexer';
+        obj.api_url = CONFIG.apiUrl + '/api/admin/v1/indexer';
 
-        request.delete({
-            url: obj.api_url + '?pid=' + obj.is_member_of_collection + '&api_key=' + config.apiKey,
+        REQUEST.delete({
+            url: obj.api_url + '?pid=' + obj.is_member_of_collection + '&api_key=' + CONFIG.apiKey,
             timeout: 25000
         }, function (error, httpResponse, body) {
 
             if (error) {
-                logger.module().error('ERROR: [/repository/model module (unpublish_objects/unpublish_collection)] unable to remove published record from index ' + error);
+                LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/unpublish_collection)] unable to remove published record from index ' + error);
                 obj.status = 'failed';
                 callback(null, obj);
                 return false;
@@ -1524,7 +1438,7 @@ exports.unpublish_objects = function (req, callback) {
                 callback(null, obj);
                 return false;
             } else {
-                logger.module().error('ERROR: [/repository/model module (unpublish_objects/unpublish_collection)] unable to remove published record from index ' + httpResponse.statusCode + '/' + body);
+                LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/unpublish_collection)] unable to remove published record from index ' + httpResponse.statusCode + '/' + body);
                 obj.status = 'failed';
                 callback(null, obj);
             }
@@ -1539,7 +1453,7 @@ exports.unpublish_objects = function (req, callback) {
             return false;
         }
 
-        knex(REPO_OBJECTS)
+        DB(REPO_OBJECTS)
             .select('sip_uuid')
             .where({
                 is_member_of_collection: obj.is_member_of_collection,
@@ -1559,27 +1473,27 @@ exports.unpublish_objects = function (req, callback) {
                         }
 
                         // remove objects from public index
-                        request.delete({
-                            url: obj.api_url + '?pid=' + record.sip_uuid  + '&api_key=' + config.apiKey,
+                        REQUEST.delete({
+                            url: obj.api_url + '?pid=' + record.sip_uuid  + '&api_key=' + CONFIG.apiKey,
                             timeout: 25000
                         }, function (error, httpResponse, body) {
 
                             if (error) {
-                                logger.module().error('ERROR: [/repository/model module (unpublish_objects/unindex_objects)] unable to remove published record from index ' + error);
+                                LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/unindex_objects)] unable to remove published record from index ' + error);
                                 return false;
                             }
 
                             if (httpResponse.statusCode === 204) {
                                 return false;
                             } else {
-                                logger.module().error('ERROR: [/repository/model module (unpublish_objects/unindex_objects)] unable to remove published record from index ' + httpResponse.statusCode + '/' + body);
+                                LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/unindex_objects)] unable to remove published record from index ' + httpResponse.statusCode + '/' + body);
                             }
                         });
 
                         // update admin objects to unpublished status
-                        let update_doc_url = config.apiUrl + '/api/admin/v1/indexer/update_fragment?api_key=' + config.apiKey;
+                        let update_doc_url = CONFIG.apiUrl + '/api/admin/v1/indexer/update_fragment?api_key=' + CONFIG.apiKey;
 
-                        request.put({
+                        REQUEST.put({
                             url: update_doc_url,
                             form: {
                                 'sip_uuid': record.sip_uuid,
@@ -1593,7 +1507,7 @@ exports.unpublish_objects = function (req, callback) {
                         }, function (error, httpResponse, body) {
 
                             if (error) {
-                                logger.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + error);
+                                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + error);
                                 obj.status = 'failed';
                                 return false;
                             }
@@ -1601,7 +1515,7 @@ exports.unpublish_objects = function (req, callback) {
                             if (httpResponse.statusCode === 200) {
                                 return false;
                             } else {
-                                logger.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
+                                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
                                 obj.status = 'failed';
                             }
                         });
@@ -1617,7 +1531,7 @@ exports.unpublish_objects = function (req, callback) {
 
             })
             .catch(function (error) {
-                logger.module().fatal('FATAL: [/repository/model module (unpublish_objects/unindex_objects)] unable to remove published record from index ' + error);
+                LOGGER.module().fatal('FATAL: [/repository/model module (unpublish_objects/unindex_objects)] unable to remove published record from index ' + error);
                 callback(null, obj);
             });
     }
@@ -1630,9 +1544,9 @@ exports.unpublish_objects = function (req, callback) {
             return false;
         }
 
-        let update_doc_url = config.apiUrl + '/api/admin/v1/indexer/update_fragment?api_key=' + config.apiKey;
+        let update_doc_url = CONFIG.apiUrl + '/api/admin/v1/indexer/update_fragment?api_key=' + CONFIG.apiKey;
 
-        request.put({
+        REQUEST.put({
             url: update_doc_url,
             form: {
                 'sip_uuid': obj.is_member_of_collection,
@@ -1646,7 +1560,7 @@ exports.unpublish_objects = function (req, callback) {
         }, function (error, httpResponse, body) {
 
             if (error) {
-                logger.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + error);
+                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + error);
                 obj.status = 'failed';
                 callback(null, obj);
                 return false;
@@ -1656,7 +1570,7 @@ exports.unpublish_objects = function (req, callback) {
                 callback(null, obj);
                 return false;
             } else {
-                logger.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
+                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
                 obj.status = 'failed';
                 callback(null, obj);
             }
@@ -1667,7 +1581,7 @@ exports.unpublish_objects = function (req, callback) {
     // update db record
     function update_collection_record(obj, callback) {
 
-        knex(REPO_OBJECTS)
+        DB(REPO_OBJECTS)
             .where({
                 sip_uuid: obj.is_member_of_collection,
                 is_active: 1
@@ -1679,7 +1593,7 @@ exports.unpublish_objects = function (req, callback) {
                 callback(null, obj);
             })
             .catch(function (error) {
-                logger.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection pid ' + error);
+                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection pid ' + error);
                 callback(null, 'failed');
             });
     }
@@ -1692,7 +1606,7 @@ exports.unpublish_objects = function (req, callback) {
             return false;
         }
 
-        knex(REPO_OBJECTS)
+        DB(REPO_OBJECTS)
             .where({
                 is_member_of_collection: obj.is_member_of_collection,
                 is_active: 1
@@ -1704,7 +1618,7 @@ exports.unpublish_objects = function (req, callback) {
                 callback(null, obj);
             })
             .catch(function (error) {
-                logger.module().error('ERROR: [/repository/model module (publish_objects/publish_child_objects)] unable to publish collection pid ' + error);
+                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_child_objects)] unable to publish collection pid ' + error);
                 callback(null, 'failed');
             });
     }
@@ -1717,20 +1631,20 @@ exports.unpublish_objects = function (req, callback) {
     function unpublish_object(callback) {
 
         let obj = {};
-        obj.api_url = config.apiUrl + '/api/admin/v1/indexer';
+        obj.api_url = CONFIG.apiUrl + '/api/admin/v1/indexer';
         obj.pid = pid;
 
         if (obj.pid === undefined || obj.pid.length === 0) {
             return false;
         }
 
-        request.delete({
-            url: obj.api_url + '?pid=' + obj.pid  + '&api_key=' + config.apiKey,
+        REQUEST.delete({
+            url: obj.api_url + '?pid=' + obj.pid  + '&api_key=' + CONFIG.apiKey,
             timeout: 25000
         }, function (error, httpResponse, body) {
 
             if (error) {
-                logger.module().error('ERROR: [/repository/model module (unpublish_objects/unindex_objects)] unable to remove published record from index ' + error);
+                LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/unindex_objects)] unable to remove published record from index ' + error);
                 obj.status = 'failed';
                 callback(null, obj);
                 return false;
@@ -1740,8 +1654,7 @@ exports.unpublish_objects = function (req, callback) {
                 callback(null, obj);
                 return false;
             } else {
-                logger.module().error('ERROR: [/repository/model module (unpublish_objects/unindex_objects)] unable to remove published record from index ' + httpResponse.statusCode + '/' + body);
-                // obj.status = 'failed';
+                LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/unindex_objects)] unable to remove published record from index ' + httpResponse.statusCode + '/' + body);
                 callback(null, obj);
             }
         });
@@ -1755,9 +1668,9 @@ exports.unpublish_objects = function (req, callback) {
             return false;
         }
 
-        let update_doc_url = config.apiUrl + '/api/admin/v1/indexer/update_fragment?api_key=' + config.apiKey;
+        let update_doc_url = CONFIG.apiUrl + '/api/admin/v1/indexer/update_fragment?api_key=' + CONFIG.apiKey;
 
-        request.put({
+        REQUEST.put({
             url: update_doc_url,
             form: {
                 'sip_uuid': obj.pid,
@@ -1771,7 +1684,7 @@ exports.unpublish_objects = function (req, callback) {
         }, function (error, httpResponse, body) {
 
             if (error) {
-                logger.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + error);
+                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + error);
                 obj.status = 'failed';
                 callback(null, obj);
                 return false;
@@ -1781,7 +1694,7 @@ exports.unpublish_objects = function (req, callback) {
                 callback(null, obj);
                 return false;
             } else {
-                logger.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
+                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
                 obj.status = 'failed';
                 callback(null, obj);
             }
@@ -1797,7 +1710,7 @@ exports.unpublish_objects = function (req, callback) {
             return false;
         }
 
-        knex(REPO_OBJECTS)
+        DB(REPO_OBJECTS)
             .where({
                 pid: obj.pid,
                 is_active: 1
@@ -1809,7 +1722,7 @@ exports.unpublish_objects = function (req, callback) {
                 callback(null, obj);
             })
             .catch(function (error) {
-                logger.module().error('ERROR: [/repository/model module (unpublish_objects/update_object_record)] unable to unpublish object ' + error);
+                LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/update_object_record)] unable to unpublish object ' + error);
                 obj.status = 'failed';
                 callback(null, obj);
             });
@@ -1818,7 +1731,7 @@ exports.unpublish_objects = function (req, callback) {
     // unpublish collection and all of its objects
     if (type === 'collection') {
 
-        async.waterfall([
+        ASYNC.waterfall([
             unpublish_collection,
             unpublish_collection_docs,
             update_collection_doc,
@@ -1827,11 +1740,11 @@ exports.unpublish_objects = function (req, callback) {
         ], function (error, results) {
 
             if (error) {
-                logger.module().error('ERROR: [/repository/model module (unpublish_objects/async.waterfall)] ' + error);
+                LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/async.waterfall)] ' + error);
                 throw 'ERROR: async (unpublish_object)';
             }
 
-            logger.module().info('INFO: [/repository/model module (unpublish_objects/async.waterfall)] collection unpublished');
+            LOGGER.module().info('INFO: [/repository/model module (unpublish_objects/async.waterfall)] collection unpublished');
         });
 
         callback({
@@ -1844,18 +1757,18 @@ exports.unpublish_objects = function (req, callback) {
 
     } else if (type === 'object') {
 
-        async.waterfall([
+        ASYNC.waterfall([
             unpublish_object,
             update_object_doc,
             update_object_record
         ], function (error, results) {
 
             if (error) {
-                logger.module().error('ERROR: [/repository/model module (unpublish_objects/async.waterfall)] ' + error);
+                LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/async.waterfall)] ' + error);
                 throw 'ERROR: async (unpublish_object)';
             }
 
-            logger.module().info('INFO: [/repository/model module (unpublish_objects/async.waterfall)] object unpublished');
+            LOGGER.module().info('INFO: [/repository/model module (unpublish_objects/async.waterfall)] object unpublished');
         });
 
         callback({
@@ -1908,7 +1821,7 @@ exports.reset_display_record = function (req, callback) {
         // all records
         if (params.none !== undefined) {
 
-            knex(REPO_OBJECTS)
+            DB(REPO_OBJECTS)
                 .select('is_member_of_collection', 'pid', 'uri', 'handle', 'object_type', 'mods', 'thumbnail', 'file_name', 'mime_type', 'is_published')
                 .whereNot({
                     mods: null,
@@ -1919,14 +1832,14 @@ exports.reset_display_record = function (req, callback) {
                     callback(null, obj);
                 })
                 .catch(function (error) {
-                    logger.module().fatal('FATAL: [/repository/model module (reset_display_record/get_data)] unable to get record ' + error);
+                    LOGGER.module().fatal('FATAL: [/repository/model module (reset_display_record/get_data)] unable to get record ' + error);
                     throw 'FATAL: [/repository/model module (reset_display_record/get_data)] unable to get record ' + error;
                 });
 
         } else {
 
             // single record
-            knex(REPO_OBJECTS)
+            DB(REPO_OBJECTS)
                 .select('is_member_of_collection', 'pid', 'uri', 'handle', 'object_type', 'mods', 'thumbnail', 'file_name', 'mime_type', 'is_published')
                 .where(params)
                 .whereNot({
@@ -1938,7 +1851,7 @@ exports.reset_display_record = function (req, callback) {
                     callback(null, obj);
                 })
                 .catch(function (error) {
-                    logger.module().fatal('FATAL: [/repository/model module (reset_display_record/get_data)] unable to get record ' + error);
+                    LOGGER.module().fatal('FATAL: [/repository/model module (reset_display_record/get_data)] unable to get record ' + error);
                     throw 'FATAL: [/repository/model module (reset_display_record/get_data)] unable to get record ' + error;
                 });
         }
@@ -1956,11 +1869,11 @@ exports.reset_display_record = function (req, callback) {
 
             let record = obj.data.pop();
 
-            modslibdisplay.create_display_record(record, function (display_record) {
+            MODS.create_display_record(record, function (display_record) {
 
                 let recordObj = JSON.parse(display_record);
 
-                knex(REPO_OBJECTS)
+                DB(REPO_OBJECTS)
                     .where({
                         is_member_of_collection: recordObj.is_member_of_collection,
                         pid: recordObj.pid,
@@ -1971,24 +1884,24 @@ exports.reset_display_record = function (req, callback) {
                     })
                     .then(function (data) {})
                     .catch(function (error) {
-                        logger.module().fatal('FATAL: [/repository/model module (reset_display_record/create_display_record/modslibdisplay.create_display_record)] unable to save collection record ' + error);
-                        throw 'FATAL: [/repository/model module (reset_display_record/create_display_record/modslibdisplay.create_display_record)] unable to save collection record ' + error;
+                        LOGGER.module().fatal('FATAL: [/repository/model module (reset_display_record/create_display_record/MODS.create_display_record)] unable to save collection record ' + error);
+                        throw 'FATAL: [/repository/model module (reset_display_record/create_display_record/MODS.create_display_record)] unable to save collection record ' + error;
                     });
             });
 
         }, 2000);
     }
 
-    async.waterfall([
+    ASYNC.waterfall([
         get_data,
         create_display_record
     ], function (error, results) {
 
         if (error) {
-            logger.module().error('ERROR: [/repository/model module (reset_display_record/async.waterfall)] ' + error);
+            LOGGER.module().error('ERROR: [/repository/model module (reset_display_record/async.waterfall)] ' + error);
         }
 
-        logger.module().info('INFO: [/repository/model module (reset_display_record/async.waterfall)] display record reset');
+        LOGGER.module().info('INFO: [/repository/model module (reset_display_record/async.waterfall)] display record reset');
     });
 
     callback({

@@ -69,9 +69,9 @@ exports.get_index_record = function (req, callback) {
                 collection_record.uri = validator.escape(data[0].uri);
                 collection_record.is_member_of_collection = validator.escape(data[0].is_member_of_collection);
                 collection_record.handle = validator.escape(data[0].handle);
-                collection_record.thumbnail = validator.escape(data[0].thumbnail);
                 collection_record.object_type = validator.escape(data[0].object_type);
-                collection_record.title = validator.escape(record.display_record.title);
+                collection_record.title = record.display_record.title;
+                collection_record.thumbnail = data[0].thumbnail;
                 collection_record.is_published = data[0].is_published;
 
                 // get collection abstract
@@ -173,8 +173,8 @@ exports.index_records = function (req, callback) {
                         collection_record.is_member_of_collection = validator.escape(data[0].is_member_of_collection);
                         collection_record.handle = validator.escape(data[0].handle);
                         collection_record.object_type = validator.escape(data[0].object_type);
-                        collection_record.title = validator.escape(record.display_record.title);
-                        collection_record.thumbnail = validator.escape(data[0].thumbnail);
+                        collection_record.title = record.display_record.title;
+                        collection_record.thumbnail = data[0].thumbnail;
                         collection_record.is_published = data[0].is_published;
 
                         // get collection abstract

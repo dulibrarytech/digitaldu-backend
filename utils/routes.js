@@ -20,7 +20,6 @@
 
 const Utils = require('../utils/controller'),
     token = require('../libs/tokens');
-    // apikey = require('../libs/api-key');
 
 module.exports = function (app) {
 

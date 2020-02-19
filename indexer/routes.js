@@ -24,23 +24,23 @@ let Indexer = require('../indexer/controller'),
 module.exports = function (app) {
 
     app.route('/api/admin/v1/indexer')
-        .post(Indexer.index_record);
+        .post(token.verify, Indexer.index_record);
 
     app.route('/api/admin/v1/indexer/all')
-        .post(Indexer.index_records);
+        .post(token.verify, Indexer.index_records);
 
     app.route('/api/admin/v1/indexer/index/create')
-        .post(Indexer.create_repo_index);
+        .post(token.verify, Indexer.create_repo_index);
 
     app.route('/api/admin/v1/indexer/index/delete')
-        .post(Indexer.delete_repo_index);
+        .post(token.verify, Indexer.delete_repo_index);
 
     app.route('/api/admin/v1/indexer/update_fragment')
-        .put(Indexer.update_fragment);
+        .put(token.verify, Indexer.update_fragment);
 
     app.route('/api/admin/v1/indexer/reindex')
-        .post(Indexer.reindex);
+        .post(token.verify, Indexer.reindex);
 
     app.route('/api/admin/v1/indexer/')
-        .delete(Indexer.unindex_record);
+        .delete(token.verify, Indexer.unindex_record);
 };
