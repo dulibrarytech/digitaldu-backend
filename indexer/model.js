@@ -21,7 +21,7 @@
 const config = require('../config/config'),
     service = require('../indexer/service'),
     async = require('async'),
-    // validator = require('validator'),
+    validator = require('validator'),
     knex = require('../config/db')(),
     logger = require('../libs/log4'),
     REPO_OBJECTS = 'tbl_objects';
@@ -33,8 +33,6 @@ const config = require('../config/config'),
  * @returns {boolean}
  */
 exports.get_index_record = function (req, callback) {
-
-    console.log('get_index_record');
 
     if (req.body.sip_uuid === undefined || req.body.sip_uuid.length === 0) {
         callback({
@@ -382,9 +380,6 @@ exports.reindex = function (req, callback) {
 exports.unindex_record = function (req, callback) {
 
     let pid = req.query.pid;
-
-    console.log(pid);
-    console.log('unindex_record');
 
     if (pid !== undefined || pid.length === 0) {
 

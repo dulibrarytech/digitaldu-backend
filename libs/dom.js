@@ -63,12 +63,11 @@ exports.sanitize_req_query = function(req, res, next) {
     }
 
     let keys = Object.keys(req.query);
-    console.log(req.query);
+
     keys.map(function (prop) {
-        console.log(prop);
+
         if (req.query.hasOwnProperty(prop) && typeof req.query[prop] === 'string') {
             req.query[prop] = DOMPurify.sanitize(req.query[prop]);
-            console.log('value: ', req.query[prop]);
         }
     });
 
