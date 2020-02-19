@@ -30,7 +30,9 @@ const config = require('../config/config'),
 exports.verify = function (req, res, next) {
 
     let api_key = req.query.api_key;
+    console.log(api_key);
 
+    /*
     if (api_key === config.apiKey) {
 
         next();
@@ -43,4 +45,5 @@ exports.verify = function (req, res, next) {
             message: 'Unauthorized request'
         });
     }
+    */
 };

@@ -21,6 +21,7 @@
 const config = require('../config/config'),
     service = require('../indexer/service'),
     async = require('async'),
+    // validator = require('validator'),
     knex = require('../config/db')(),
     logger = require('../libs/log4'),
     REPO_OBJECTS = 'tbl_objects';
@@ -33,7 +34,9 @@ const config = require('../config/config'),
  */
 exports.get_index_record = function (req, callback) {
 
-    if (req.body.sip_uuid === undefined) {
+    console.log('get_index_record');
+
+    if (req.body.sip_uuid === undefined || req.body.sip_uuid.length === 0) {
         callback({
             status: 400,
             message: 'Bad request.'
@@ -64,13 +67,13 @@ exports.get_index_record = function (req, callback) {
             if (record.display_record.jsonmodel_type !== undefined && record.display_record.jsonmodel_type === 'resource') {
 
                 let collection_record = {};
-                collection_record.pid = data[0].pid;
-                collection_record.uri = data[0].uri;
-                collection_record.is_member_of_collection = data[0].is_member_of_collection;
-                collection_record.handle = data[0].handle;
-                collection_record.thumbnail = data[0].thumbnail;
-                collection_record.object_type = data[0].object_type;
-                collection_record.title = record.display_record.title;
+                collection_record.pid = validator.escape(data[0].pid);
+                collection_record.uri = validator.escape(data[0].uri);
+                collection_record.is_member_of_collection = validator.escape(data[0].is_member_of_collection);
+                collection_record.handle = validator.escape(data[0].handle);
+                collection_record.thumbnail = validator.escape(data[0].thumbnail);
+                collection_record.object_type = validator.escape(data[0].object_type);
+                collection_record.title = validator.escape(record.display_record.title);
                 collection_record.is_published = data[0].is_published;
 
                 // get collection abstract
@@ -167,13 +170,13 @@ exports.index_records = function (req, callback) {
                     if (record.display_record.jsonmodel_type !== undefined && record.display_record.jsonmodel_type === 'resource') {
 
                         let collection_record = {};
-                        collection_record.pid = data[0].pid;
-                        collection_record.uri = data[0].uri;
-                        collection_record.is_member_of_collection = data[0].is_member_of_collection;
-                        collection_record.handle = data[0].handle;
-                        collection_record.object_type = data[0].object_type;
-                        collection_record.title = record.display_record.title;
-                        collection_record.thumbnail = data[0].thumbnail;
+                        collection_record.pid = validator.escape(data[0].pid);
+                        collection_record.uri = validator.escape(data[0].uri);
+                        collection_record.is_member_of_collection = validator.escape(data[0].is_member_of_collection);
+                        collection_record.handle = validator.escape(data[0].handle);
+                        collection_record.object_type = validator.escape(data[0].object_type);
+                        collection_record.title = validator.escape(record.display_record.title);
+                        collection_record.thumbnail = validator.escape(data[0].thumbnail);
                         collection_record.is_published = data[0].is_published;
 
                         // get collection abstract
@@ -298,6 +301,16 @@ exports.update_fragment = function (req, callback) {
     let sip_uuid = req.body.sip_uuid,
         doc_fragment = req.body.fragment;
 
+    if (sip_uuid === undefined || doc_fragment === undefined) {
+
+        callback({
+            status: 400,
+            message: 'Bad request.'
+        });
+
+        return false;
+    }
+
     service.update_fragment({
         index: config.elasticSearchBackIndex,
         type: 'data',
@@ -331,6 +344,16 @@ exports.reindex = function (req, callback) {
 
     let query = req.body.query;
 
+    if (query !== undefined) {
+
+        callback({
+            status: 400,
+            message: 'Bad request.'
+        });
+
+        return false;
+    }
+
     service.reindex({
         body: {
             "source": {
@@ -359,6 +382,19 @@ exports.reindex = function (req, callback) {
 exports.unindex_record = function (req, callback) {
 
     let pid = req.query.pid;
+
+    console.log(pid);
+    console.log('unindex_record');
+
+    if (pid !== undefined || pid.length === 0) {
+
+        callback({
+            status: 400,
+            message: 'Bad request.'
+        });
+
+        return false;
+    }
 
     service.unindex_record({
         index: config.elasticSearchFrontIndex,

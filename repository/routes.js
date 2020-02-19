@@ -19,8 +19,7 @@
 'use strict';
 
 const Repo = require('../repository/controller'),
-    token = require('../libs/tokens'),
-    apikey = require('../libs/api-key');
+    token = require('../libs/tokens');
 
 module.exports = function (app) {
 
@@ -30,7 +29,7 @@ module.exports = function (app) {
     app.route('/api/admin/v1/repo/object')
         .get(token.verify, Repo.get_display_record)
         .post(token.verify, Repo.create_collection_object)
-        .put(apikey.verify, Repo.update_metadata_cron);
+        .put(token.verify, Repo.update_metadata_cron);
 
     app.route('/api/admin/v1/repo/object/unpublished')
         .get(token.verify, Repo.get_unpublished_admin_objects);

@@ -48,7 +48,7 @@ module.exports = function () {
 
     app.use(express.static('./public'));
     app.use(xss.sanitize_req_query);
-    app.use(xss.sanitize_req_body);
+    // app.use(xss.sanitize_req_body);
     app.set('views', './views');
     app.set('view engine', 'ejs');
 

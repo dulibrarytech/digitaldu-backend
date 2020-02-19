@@ -30,9 +30,9 @@ const config = require('../config/config'),
     archivematica = require('../libs/archivematica'),
     archivespace = require('../libs/archivespace'),
     logger = require('../libs/log4'),
-    knex = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects',
     ARCHIVESSPACE_QUEUE = 'tbl_archivesspace_queue',
+    knex = require('../config/db')(),
     knexQ = require('knex')({
         client: 'mysql2',
         connection: {
@@ -42,88 +42,6 @@ const config = require('../config/config'),
             database: config.dbQueueName
         }
     });
-
-/** NOT USED
- * Gets objects by collection
- * @param req
- * @param callback
-
-exports.get_objects = function (req, callback) {
-
-    let pid = req.query.pid;
-
-    if (pid === undefined || pid.length === 0) {
-
-        callback({
-            status: 400,
-            message: 'Missing PID.',
-            data: []
-        });
-
-        return false;
-    }
-
-    knex(REPO_OBJECTS)
-        .select('is_member_of_collection', 'pid', 'object_type', 'display_record', 'thumbnail', 'mime_type', 'is_compound', 'created')
-        .where({
-            is_member_of_collection: pid,
-            is_active: 1,
-            is_published: 1
-        })
-        .then(function (data) {
-            callback({
-                status: 200,
-                message: 'Objects retrieved.',
-                data: data
-            });
-        })
-        .catch(function (error) {
-            logger.module().fatal('FATAL: [/repository/model module (get_objects)] Unable to get objects ' + error);
-            throw 'FATAL: [/repository/model module (get_objects)] Unable to get objects ' + error;
-        });
-};
- */
-
-/** NOT USED
- * Gets object by pid
- * @param req
- * @param callback
-
-exports.get_object = function (req, callback) {
-
-    let pid = req.query.pid;
-
-    if (pid === undefined || pid.length === 0) {
-
-        callback({
-            status: 400,
-            message: 'Missing PID.',
-            data: []
-        });
-
-        return false;
-    }
-
-    knex(REPO_OBJECTS)
-        .select('is_member_of_collection', 'pid', 'object_type', 'display_record', 'mime_type', 'is_compound', 'created')
-        .where({
-            pid: pid,
-            is_active: 1,
-            is_published: 1
-        })
-        .then(function (data) {
-            callback({
-                status: 200,
-                message: 'Object retrieved.',
-                data: data
-            });
-        })
-        .catch(function (error) {
-            logger.module().fatal('FATAL: [/repository/model module (get_object)] Unable to get object ' + error);
-            throw 'FATAL: [/repository/model module (get_object)] Unable to get object ' + error;
-        });
-};
- */
 
 /** DEPRECATED.  App is using elasticsearch to render data
  * Get object by collection (admin dashboard)
@@ -189,7 +107,7 @@ exports.get_display_record = function (req, callback) {
 
     let pid = req.query.pid;
 
-    if (pid === undefined || validator.isUUID(pid) === false || validator.isEmpty(pid)) {
+    if (pid === undefined || pid.length === 0) {
         callback({
             status: 400,
             message: 'Bad request.',
@@ -352,10 +270,12 @@ exports.update_metadata_cron = function (req, callback) {
 
                             archivespace.get_mods(record.mods_id, obj.session, function (updated_record) {
 
+                                /*
                                 if (validator.isEmpty(record.mods_id)) {
                                     logger.module().fatal('ERROR: [/repository/model module (update_metadata_cron/update_records)] Unable to get record.');
                                     return false;
                                 }
+                                */
 
                                 // Get existing record from repository
                                 knex(REPO_OBJECTS)
@@ -526,7 +446,7 @@ exports.update_metadata_cron = function (req, callback) {
  */
 exports.update_thumbnail = function (req, callback) {
 
-    if (validator.isEmpty(req.body.pid) === true || validator.isUUID(req.body.pid) === false || validator.isURL(req.body.thumbnail_url)) {
+    if (req.body.pid === undefined || req.body.pid.length === 0) {
 
         callback({
             status: 400,
@@ -537,7 +457,7 @@ exports.update_thumbnail = function (req, callback) {
     }
 
     let obj = {};
-    obj.pid = dom.sanitize(req.body.pid);
+    obj.pid = req.body.pid;
     obj.thumbnail = req.body.thumbnail_url;
 
     knex(REPO_OBJECTS)
@@ -713,10 +633,12 @@ exports.update_thumbnail = function (req, callback) {
  */
 const update_mods = function (record, updated_record, obj, callback) {
 
+    /*
     if (validator.isEmpty(record.mods_id) === true) {
         logger.module().fatal('FATAL: [/repository/model module (update_mods)] unable to update mods.');
         return false;
     }
+    */
 
     knex(REPO_OBJECTS)
         .where({
@@ -768,7 +690,7 @@ exports.create_collection_object = function (req, callback) {
 
         callback({
             status: 400,
-            message: 'Bad request'
+            message: 'Bad request.'
         });
 
         return false;
@@ -965,11 +887,13 @@ exports.create_collection_object = function (req, callback) {
             return false;
         }
 
+        /*
         if (validator.isUUID(obj.sip_uuid) === false || validator.isEmpty(obj.sip_uuid) === true) {
-            logger.module().error('ERROR: [/repository/model module (create_collection_object/index_collection)] unable to index collection record ' + error);
+            logger.module().error('ERROR: [/repository/model module (create_collection_object/index_collection)] unable to index collection record');
             obj.indexed = false;
             return false;
         }
+        */
 
         request.post({
             url: config.apiUrl + '/api/admin/v1/indexer?api_key=' + config.apiKey,
@@ -1046,10 +970,11 @@ exports.create_collection_object = function (req, callback) {
  */
 exports.publish_objects = function (req, callback) {
 
-    if (req.body.pid === undefined || validator.isUUID(req.body.pid) === false || validator.isEmpty(req.body.pid) === true) {
+    if (req.body.pid === undefined || req.body.pid.length === 0) {
+
         callback({
             status: 400,
-            message: 'Bad request'
+            message: 'Bad request.'
         });
 
         return false;
@@ -1058,15 +983,14 @@ exports.publish_objects = function (req, callback) {
     /*
         Publish collections and associated objects
      */
-    var api_url = config.apiUrl + '/api/admin/v1/indexer?api_key=' + config.apiKey,
-        pid = req.body.pid,
+    const pid = req.body.pid,
         type = req.body.type;
 
     function update_collection_record(callback) {
 
         let obj = {};
         obj.is_member_of_collection = pid;
-        obj.api_url = api_url;
+        obj.api_url = config.apiUrl + '/api/admin/v1/indexer';
 
         knex(REPO_OBJECTS)
             .where({
@@ -1197,11 +1121,13 @@ exports.publish_objects = function (req, callback) {
 
     function update_collection_object_docs(obj, callback) {
 
+        /*
         if (validator.isUUID(obj.is_member_of_collection) === false || validator.isEmpty(obj.is_member_of_collection) === true) {
             logger.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record');
             obj.status = 'failed';
             return false;
         }
+        */
 
         knex(REPO_OBJECTS)
             .select('sip_uuid')
@@ -1323,9 +1249,9 @@ exports.publish_objects = function (req, callback) {
 
         let obj = {};
         obj.sip_uuid = pid;
-        obj.api_url = api_url;
+        obj.api_url = config.apiUrl + '/api/admin/v1/indexer';
 
-        if (validator.isUUID(obj.sip_uuid) === false || validator.isEmpty(obj.sip_uuid) === true) {
+        if (obj.sip_uuid === undefined || obj.sip_uuid.length === 0) {
             return false;
         }
 
@@ -1568,11 +1494,10 @@ exports.publish_objects = function (req, callback) {
  */
 exports.unpublish_objects = function (req, callback) {
 
-    const api_url = config.apiUrl + '/api/admin/v1/indexer?api_key=' + config.apiKey,
-    type = req.body.type,
+    const type = req.body.type,
     pid = req.body.pid;
 
-    if (validator.isUUID(pid) === false || validator.isEmpty(pid) === true || type === undefined) {
+    if (pid === undefined || pid.length === 0 || type === undefined) {
         return false;
     }
 
@@ -1581,10 +1506,10 @@ exports.unpublish_objects = function (req, callback) {
 
         let obj = {};
         obj.is_member_of_collection = pid;
-        obj.api_url = api_url;
+        obj.api_url = config.apiUrl + '/api/admin/v1/indexer';
 
         request.delete({
-            url: obj.api_url + '?pid=' + obj.is_member_of_collection,
+            url: obj.api_url + '?pid=' + obj.is_member_of_collection + '&api_key=' + config.apiKey,
             timeout: 25000
         }, function (error, httpResponse, body) {
 
@@ -1635,7 +1560,7 @@ exports.unpublish_objects = function (req, callback) {
 
                         // remove objects from public index
                         request.delete({
-                            url: obj.api_url + '?pid=' + record.sip_uuid,
+                            url: obj.api_url + '?pid=' + record.sip_uuid  + '&api_key=' + config.apiKey,
                             timeout: 25000
                         }, function (error, httpResponse, body) {
 
@@ -1792,15 +1717,15 @@ exports.unpublish_objects = function (req, callback) {
     function unpublish_object(callback) {
 
         let obj = {};
-        obj.api_url = api_url;
+        obj.api_url = config.apiUrl + '/api/admin/v1/indexer';
         obj.pid = pid;
 
-        if (validator.isUUID(obj.pid) === false || validator.isEmpty(obj.pid) === true) {
+        if (obj.pid === undefined || obj.pid.length === 0) {
             return false;
         }
 
         request.delete({
-            url: obj.api_url + '?pid=' + obj.pid,
+            url: obj.api_url + '?pid=' + obj.pid  + '&api_key=' + config.apiKey,
             timeout: 25000
         }, function (error, httpResponse, body) {
 
@@ -1891,7 +1816,7 @@ exports.unpublish_objects = function (req, callback) {
     }
 
     // unpublish collection and all of its objects
-    if (type === 'collection') { // req.body.pid.length !== 0 && req.body.type === 'collection'
+    if (type === 'collection') {
 
         async.waterfall([
             unpublish_collection,
@@ -1965,12 +1890,12 @@ exports.reset_display_record = function (req, callback) {
 
         callback({
             status: 400,
-            message: 'Bad request'
+            message: 'Bad request.'
         });
 
-    } else if (req.body.pid !== undefined || validator.isUUID(req.body.pid) === true) {
+    } else if (req.body.pid !== undefined) {
         params.pid = req.body.pid;
-    } else if (req.body.is_member_of_collection !== undefined || validator.isUUID(req.body.pid) === true) {
+    } else if (req.body.is_member_of_collection !== undefined) {
         params.is_member_of_collection = req.body.is_member_of_collection;
     } else if (req.body.pid === undefined && req.body.is_member_of_collection === undefined) {
         params.none = true;
@@ -2071,68 +1996,3 @@ exports.reset_display_record = function (req, callback) {
         message: 'updating display record(s).'
     });
 };
-
-/** TODO: refactor to make use of archivematica download link. make use of shell.js
- * Downloads AIP from archivematica
- * @param req
- * @param callback
-
-exports.get_object_download = function (req, callback) {
-
-    let pid = req.query.pid;
-
-    if (pid === undefined || validator.isUUID(pid) === false || validator.isEmpty(pid) === true) {
-        callback({
-            status: 400,
-            message: 'Bad request.',
-            data: []
-        });
-
-        return false;
-    }
-
-    // keep query to handle legacy pids
-    knex(REPO_OBJECTS)
-        .select('sip_uuid')
-        .where({
-            pid: pid,
-            object_type: 'object',
-            is_active: 1
-        })
-        .then(function (data) {
-
-            if (data.length === 0) {
-
-                callback({
-                    status: 500,
-                    message: 'Unable to download AIP.',
-                });
-            }
-
-            archivematica.download_aip(data[0].sip_uuid, function (aip) {
-
-                if (aip.error === true) {
-
-                    callback({
-                        status: 500,
-                        message: 'Unable to download AIP.',
-                    });
-
-                    return false;
-                }
-
-                callback({
-                    status: 200,
-                    content_type: 'application/x-7z-compressed',
-                    file: aip
-                });
-            });
-        })
-        .catch(function (error) {
-            logger.module().fatal('FATAL: [/repository/model module (get_object_download)] unable to get object sip_uuid ' + error);
-            let obj = {};
-            obj.error = 'FATAL: unable to get object sip_uuid ' + error;
-            callback(null, obj);
-        });
-};
- */

@@ -49,8 +49,9 @@ exports.create = function (username) {
 exports.verify = function (req, res, next) {
 
     let token = req.headers['x-access-token'] || req.query.t;
+    let key = req.query.api_key;
 
-    if (token) {
+    if (token !== undefined) {
 
         jwt.verify(token, config.tokenSecret, function (error, decoded) {
 
@@ -69,20 +70,18 @@ exports.verify = function (req, res, next) {
             next();
         });
 
-    } else {
+    } else if (key !== undefined)  {
 
-        let key = req.query.api_key;
-
-        if (key !== undefined && key === config.apiKey) {
+        if (key === config.apiKey) {
             next();
             return false;
+        } else {
+
+            logger.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify api key');
+
+            res.status(401).send({
+                message: 'Unauthorized request'
+            });
         }
-
-        logger.module().error('ERROR: [/libs/tokens lib (verify)] Unauthorized request');
-
-        res.status(401).send({
-            message: 'Unauthorized request'
-        });
-
     }
 };

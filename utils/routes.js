@@ -19,22 +19,23 @@
 'use strict';
 
 const Utils = require('../utils/controller'),
-    apikey = require('../libs/api-key');
+    token = require('../libs/tokens');
+    // apikey = require('../libs/api-key');
 
 module.exports = function (app) {
 
     app.route('/api/admin/v1/utils/objects')
-        .get(apikey.verify, Utils.check_objects);
+        .get(token.verify, Utils.check_objects);
 
     app.route('/api/admin/v1/utils/reindex')
-        .post(apikey.verify, Utils.reindex);
+        .post(token.verify, Utils.reindex);
 
     app.route('/api/admin/v1/utils/uuids')
-        .get(apikey.verify, Utils.get_uuids);
+        .get(token.verify, Utils.get_uuids);
 
     app.route('/api/admin/v1/utils/objects/ids')
-        .get(apikey.verify, Utils.get_archivesspace_ids);
+        .get(token.verify, Utils.get_archivesspace_ids);
 
     app.route('/api/admin/v1/utils/objects/fix-compounds')
-        .get(apikey.verify, Utils.fix_compound_objects);
+        .get(token.verify, Utils.fix_compound_objects);
 };

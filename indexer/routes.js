@@ -19,28 +19,28 @@
 'use strict';
 
 let Indexer = require('../indexer/controller'),
-    apikey = require('../libs/api-key');
+    token = require('../libs/tokens');
 
 module.exports = function (app) {
 
     app.route('/api/admin/v1/indexer')
-        .post(apikey.verify, Indexer.index_record);
+        .post(Indexer.index_record);
 
     app.route('/api/admin/v1/indexer/all')
-        .post(apikey.verify, Indexer.index_records);
+        .post(Indexer.index_records);
 
     app.route('/api/admin/v1/indexer/index/create')
-        .post(apikey.verify, Indexer.create_repo_index);
+        .post(Indexer.create_repo_index);
 
     app.route('/api/admin/v1/indexer/index/delete')
-        .post(apikey.verify, Indexer.delete_repo_index);
+        .post(Indexer.delete_repo_index);
 
     app.route('/api/admin/v1/indexer/update_fragment')
-        .put(apikey.verify, Indexer.update_fragment);
+        .put(Indexer.update_fragment);
 
     app.route('/api/admin/v1/indexer/reindex')
-        .post(apikey.verify, Indexer.reindex);
+        .post(Indexer.reindex);
 
     app.route('/api/admin/v1/indexer/')
-        .delete(apikey.verify, Indexer.unindex_record);
+        .delete(Indexer.unindex_record);
 };

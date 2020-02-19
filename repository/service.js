@@ -102,7 +102,7 @@ exports.get_thumbnail = function (req, callback) {
 
     let tn = req.query.tn;
 
-    if (tn === undefined) {
+    if (tn === undefined || validator.isEmpty(tn) === true) {
 
         callback({
             status: 400,
@@ -128,7 +128,7 @@ exports.get_tn = function (req, callback) {
     let uuid = req.query.uuid,
         type = req.query.type;
 
-    if (uuid === undefined || type === undefined) {
+    if (uuid === undefined || type === undefined || validator.isUUID(uuid) === false) {
 
         callback({
             status: 400,
@@ -152,7 +152,7 @@ exports.get_viewer = function (req, callback) {
 
     let uuid = req.query.uuid;
 
-    if (uuid === undefined) {
+    if (uuid === undefined || validator.isEmpty(uuid) === true) {
 
         callback({
             status: 400,
@@ -176,6 +176,16 @@ exports.get_viewer = function (req, callback) {
  * @param callback
  */
 exports.get_admin_objects = function (req, callback) {
+
+    if (req.query.pid === undefined || validator.isEmpty(req.query.pid) === true) {
+
+        callback({
+            status: 400,
+            message: 'Bad request.'
+        });
+
+        return false;
+    }
 
     let is_member_of_collection = req.query.pid,
         page = req.query.page,
@@ -233,6 +243,16 @@ exports.get_admin_objects = function (req, callback) {
  */
 exports.get_unpublished_admin_objects = function (req, callback) {
 
+    if (req.query.pid === undefined || validator.isEmpty(req.query.pid) === true) {
+
+        callback({
+            status: 400,
+            message: 'Bad request.'
+        });
+
+        return false;
+    }
+
     let is_member_of_collection = req.query.pid,
         page = req.query.page,
         total_on_page = 10,
@@ -252,6 +272,7 @@ exports.get_unpublished_admin_objects = function (req, callback) {
         page = (page - 1) * total_on_page;
     }
 
+    /*
     let query_dist = {
         'query': {
             'bool': {
@@ -263,6 +284,7 @@ exports.get_unpublished_admin_objects = function (req, callback) {
             }
         }
     };
+    */
 
     let query = {
         'query': {
@@ -280,7 +302,6 @@ exports.get_unpublished_admin_objects = function (req, callback) {
             }
         }
     };
-
 
     client.search({
         from: page,

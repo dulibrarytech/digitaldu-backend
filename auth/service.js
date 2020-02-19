@@ -21,7 +21,6 @@
 const config = require('../config/config'),
     request = require('request'),
     validator = require('validator'),
-    dom = require('../libs/dom'),
     logger = require('../libs/log4');
 
 exports.authenticate = function (username, password, callback) {
@@ -31,7 +30,7 @@ exports.authenticate = function (username, password, callback) {
         let errorObj = {
             status: 400,
             success: false,
-            message: 'An error has occurred.'
+            message: 'Bad request.'
         };
 
         callback(errorObj);
@@ -40,8 +39,8 @@ exports.authenticate = function (username, password, callback) {
 
     request.post({
             url: config.ldap, form: {
-                username: dom.sanitize(username),
-                password: dom.sanitize(password)
+                username: username,
+                password: password
             }
         },
         function (error, headers, response) {
