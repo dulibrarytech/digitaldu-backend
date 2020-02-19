@@ -28,21 +28,9 @@ const CONFIG = require('../config/config'),
     ARCHIVESSPACE = require('../libs/archivespace'),
     LOGGER = require('../libs/log4'),
     DB = require('../config/db')(),
-    DBQ = require('../config/dbqueue'),
+    DBQ = require('../config/dbqueue')(),
     REPO_OBJECTS = 'tbl_objects',
     ARCHIVESSPACE_QUEUE = 'tbl_archivesspace_queue';
-
-    /*
-    const DBQ = require('knex')({
-        client: 'mysql2',
-        connection: {
-            host: config.dbQueueHost,
-            user: config.dbQueueUser,
-            password: config.dbQueuePassword,
-            database: config.dbQueueName
-        }
-    });
-    */
 
 /**
  * Gets object display record
@@ -69,7 +57,7 @@ exports.get_display_record = function (req, callback) {
             pid: pid,
             is_active: 1
         })
-        .then(function(data) {
+        .then(function (data) {
             callback({
                 status: 200,
                 message: 'Object retrieved.',
@@ -276,7 +264,7 @@ exports.update_metadata_cron = function (req, callback) {
 
                                                     // update admin index
                                                     REQUEST.post({
-                                                        url: CONFIG.apiUrl + '/api/admin/v1/indexer?api_key=' + config.apiKey,
+                                                        url: CONFIG.apiUrl + '/api/admin/v1/indexer?api_key=' + CONFIG.apiKey,
                                                         form: {
                                                             'sip_uuid': data[0].sip_uuid
                                                         }
@@ -904,7 +892,7 @@ exports.publish_objects = function (req, callback) {
     }
 
     /*
-        Publish collections and associated objects
+     Publish collections and associated objects
      */
     const pid = req.body.pid,
         type = req.body.type;
@@ -1154,13 +1142,13 @@ exports.publish_objects = function (req, callback) {
     }
 
     /*
-        Publish single objects
+     Publish single objects
      */
 
     /*
-        gets object's collection uuid
+     gets object's collection uuid
      */
-    function get_collection_uuid (callback) {
+    function get_collection_uuid(callback) {
 
         let obj = {};
         obj.sip_uuid = pid;
@@ -1187,9 +1175,9 @@ exports.publish_objects = function (req, callback) {
     }
 
     /*
-        checks if collection is published
+     checks if collection is published
      */
-    function check_collection (obj, callback) {
+    function check_collection(obj, callback) {
 
         DB(REPO_OBJECTS)
             .select('is_published')
@@ -1214,7 +1202,7 @@ exports.publish_objects = function (req, callback) {
             });
     }
 
-    function update_object_record (obj, callback) {
+    function update_object_record(obj, callback) {
 
         if (obj.is_published === false) {
             callback(null, obj);
@@ -1238,7 +1226,7 @@ exports.publish_objects = function (req, callback) {
             });
     }
 
-    function update_object_doc (obj, callback) {
+    function update_object_doc(obj, callback) {
 
         if (obj.is_published === false) {
             callback(null, obj);
@@ -1299,37 +1287,35 @@ exports.publish_objects = function (req, callback) {
                 }
             };
 
-         setTimeout(function () {
+        setTimeout(function () {
 
-             REQUEST.post({
-                 url: reindex_url,
-                 form: {
-                     'query': query
-                 },
-                 timeout: 25000
-             }, function (error, httpResponse, body) {
+            REQUEST.post({
+                url: reindex_url,
+                form: {
+                    'query': query
+                },
+                timeout: 25000
+            }, function (error, httpResponse, body) {
 
-                 console.log(body);
+                if (error) {
+                    LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection admin record ' + error);
+                    obj.status = 'failed';
+                    callback(null, obj);
+                    return false;
+                }
 
-                 if (error) {
-                     LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection admin record ' + error);
-                     obj.status = 'failed';
-                     callback(null, obj);
-                     return false;
-                 }
+                if (httpResponse.statusCode === 200) {
+                    callback(null, obj);
+                    return false;
+                } else {
+                    LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
+                    obj.status = 'failed';
+                    callback(null, obj);
+                }
 
-                 if (httpResponse.statusCode === 200) {
-                     callback(null, obj);
-                     return false;
-                 } else {
-                     LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
-                     obj.status = 'failed';
-                     callback(null, obj);
-                 }
+            });
 
-             });
-
-         }, 3000);
+        }, 3000);
     }
 
     // publish collection and all of its objects
@@ -1409,14 +1395,14 @@ exports.publish_objects = function (req, callback) {
 exports.unpublish_objects = function (req, callback) {
 
     const type = req.body.type,
-    pid = req.body.pid;
+        pid = req.body.pid;
 
     if (pid === undefined || pid.length === 0 || type === undefined) {
         return false;
     }
 
     // remove record from public index
-    function unpublish_collection (callback) {
+    function unpublish_collection(callback) {
 
         let obj = {};
         obj.is_member_of_collection = pid;
@@ -1474,7 +1460,7 @@ exports.unpublish_objects = function (req, callback) {
 
                         // remove objects from public index
                         REQUEST.delete({
-                            url: obj.api_url + '?pid=' + record.sip_uuid  + '&api_key=' + CONFIG.apiKey,
+                            url: obj.api_url + '?pid=' + record.sip_uuid + '&api_key=' + CONFIG.apiKey,
                             timeout: 25000
                         }, function (error, httpResponse, body) {
 
@@ -1624,7 +1610,7 @@ exports.unpublish_objects = function (req, callback) {
     }
 
     /*
-        unpublish single objects
+     unpublish single objects
      */
 
     // remove record from public index
@@ -1639,7 +1625,7 @@ exports.unpublish_objects = function (req, callback) {
         }
 
         REQUEST.delete({
-            url: obj.api_url + '?pid=' + obj.pid  + '&api_key=' + CONFIG.apiKey,
+            url: obj.api_url + '?pid=' + obj.pid + '&api_key=' + CONFIG.apiKey,
             timeout: 25000
         }, function (error, httpResponse, body) {
 
@@ -1882,7 +1868,8 @@ exports.reset_display_record = function (req, callback) {
                     .update({
                         display_record: display_record
                     })
-                    .then(function (data) {})
+                    .then(function (data) {
+                    })
                     .catch(function (error) {
                         LOGGER.module().fatal('FATAL: [/repository/model module (reset_display_record/create_display_record/MODS.create_display_record)] unable to save collection record ' + error);
                         throw 'FATAL: [/repository/model module (reset_display_record/create_display_record/MODS.create_display_record)] unable to save collection record ' + error;
