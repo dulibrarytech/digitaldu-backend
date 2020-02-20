@@ -18,47 +18,47 @@
 
 'use strict';
 
-const http = require('http'),
-    express = require('express'),
-    compress = require('compression'),
-    bodyParser = require('body-parser'),
-    methodOverride = require('method-override'),
-    helmet = require('helmet'),
-    xss = require('../libs/dom'),
-    fs = require('fs');
+const HTTP = require('http'),
+    EXPRESS = require('express'),
+    COMPRESS = require('compression'),
+    BODYPARSER = require('body-parser'),
+    METHODOVERRIDE = require('method-override'),
+    HELMET = require('helmet'),
+    XSS = require('../libs/dom');
 
-module.exports = function () {
+module.exports = function() {
 
-    const app = express();
-    let server = http.createServer(app);
-    server.listen(process.env.APP_PORT);
+    const APP = EXPRESS(),
+        SERVER = HTTP.createServer(APP);
+
+    SERVER.listen(process.env.APP_PORT);
 
     if (process.env.NODE_ENV === 'development') {
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
     } else if (process.env.NODE_ENV === 'production') {
-        app.use(compress());
+        APP.use(COMPRESS());
     }
 
-    app.use(bodyParser.urlencoded({
+    APP.use(BODYPARSER.urlencoded({
         extended: true
     }));
-    app.use(bodyParser.json());
-    app.use(methodOverride());
-    app.use(helmet());
+    APP.use(BODYPARSER.json());
+    APP.use(METHODOVERRIDE());
+    APP.use(HELMET());
 
-    app.use(express.static('./public'));
-    app.use(xss.sanitize_req_query);
-    // app.use(xss.sanitize_req_body);
-    app.set('views', './views');
-    app.set('view engine', 'ejs');
+    APP.use(EXPRESS.static('./public'));
+    APP.use(XSS.sanitize_req_query);
+    APP.use(XSS.sanitize_req_body);
+    APP.set('views', './views');
+    APP.set('view engine', 'ejs');
 
-    require('../auth/routes.js')(app);
-    require('../users/routes.js')(app);
-    require('../repository/routes.js')(app);
-    require('../indexer/routes.js')(app);
-    require('../dashboard/routes.js')(app);
-    require('../stats/routes.js')(app);
-    require('../import/routes.js')(app);
-    require('../search/routes.js')(app);
-    require('../utils/routes.js')(app);
+    require('../auth/routes.js')(APP);
+    require('../users/routes.js')(APP);
+    require('../repository/routes.js')(APP);
+    require('../indexer/routes.js')(APP);
+    require('../dashboard/routes.js')(APP);
+    require('../stats/routes.js')(APP);
+    require('../import/routes.js')(APP);
+    require('../search/routes.js')(APP);
+    require('../utils/routes.js')(APP);
 };
