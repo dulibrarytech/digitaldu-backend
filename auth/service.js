@@ -18,14 +18,14 @@
 
 'use strict';
 
-const config = require('../config/config'),
-    request = require('request'),
-    validator = require('validator'),
-    logger = require('../libs/log4');
+const CONFIG = require('../config/config'),
+    REQUEST = require('request'),
+    VALIDATOR = require('validator'),
+    LOGGER = require('../libs/log4');
 
 exports.authenticate = function (username, password, callback) {
 
-    if (validator.isInt(username) === false || validator.isEmpty(password) === true) {
+    if (VALIDATOR .isInt(username) === false || VALIDATOR.isEmpty(password) === true) {
 
         let errorObj = {
             status: 400,
@@ -37,8 +37,8 @@ exports.authenticate = function (username, password, callback) {
         return false;
     }
 
-    request.post({
-            url: config.ldap, form: {
+    REQUEST.post({
+            url: CONFIG.ldap, form: {
                 username: username,
                 password: password
             }
@@ -47,7 +47,7 @@ exports.authenticate = function (username, password, callback) {
 
             if (error) {
 
-                logger.module().error('ERROR: [/auth/service module (authenticate)] request to LDAP failed ' + error);
+                LOGGER.module().error('ERROR: [/auth/service module (authenticate)] request to LDAP failed ' + error);
 
                 let errorObj = {
                     status: 500,
