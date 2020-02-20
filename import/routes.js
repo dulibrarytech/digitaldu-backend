@@ -18,69 +18,68 @@
 
 'use strict';
 
-const Import = require('../import/controller'),
-    token = require('../libs/tokens');
+const IMPORT = require('../import/controller'),
+    TOKEN = require('../libs/tokens');
 
 module.exports = function (app) {
 
     app.route('/api/admin/v1/import/list')
-        .get(Import.list);
+        .get(IMPORT.list);
 
     app.route('/api/admin/v1/import/queue_objects')
-        .post(token.verify, Import.queue_objects);
+        .post(TOKEN.verify, IMPORT.queue_objects);
 
     app.route('/api/admin/v1/import/start_transfer')
-        .post(Import.start_transfer);
+        .post(TOKEN.verify, IMPORT.start_transfer);
 
     app.route('/api/admin/v1/import/approve_transfer')
-        .post(Import.approve_transfer);
+        .post(TOKEN.verify, IMPORT.approve_transfer);
 
     app.route('/api/admin/v1/import/transfer_status')
-        .get(Import.get_transfer_status);
+        .get(TOKEN.verify, IMPORT.get_transfer_status);
 
     app.route('/api/admin/v1/import/ingest_status')
-        .get(Import.get_ingest_status);
+        .get(TOKEN.verify, IMPORT.get_ingest_status);
 
     app.route('/api/admin/v1/import/import_dip')
-        .get(Import.import_dip);
+        .get(TOKEN.verify, IMPORT.import_dip);
 
     app.route('/api/admin/v1/import/create_repo_record')
-        .get(Import.create_repo_record);
+        .get(TOKEN.verify, IMPORT.create_repo_record);
 
     app.route('/api/admin/v1/import/status')
-        .get(Import.get_import_status);
+        .get(TOKEN.verify, IMPORT.get_import_status);
 
     app.route('/api/admin/v1/import/incomplete')
-        .get(Import.get_import_incomplete);
+        .get(TOKEN.verify, IMPORT.get_import_incomplete);
 
     app.route('/api/admin/v1/import/complete')
-        .get(Import.get_import_complete);
+        .get(TOKEN.verify, IMPORT.get_import_complete);
 
     app.route('/api/admin/v1/import/mods')
-        .post(Import.import_mods);
+        .post(TOKEN.verify, IMPORT.import_mods);
 
     app.route('/api/admin/v1/import/mods_id')
-        .post(Import.import_mods_id);
+        .post(TOKEN.verify, IMPORT.import_mods_id);
 
     app.route('/api/admin/v1/import/thumbnail')
-        .post(Import.import_thumbnail);
+        .post(TOKEN.verify, IMPORT.import_thumbnail);
 
     app.route('/api/admin/v1/import/master')
-        .post(Import.import_master);
+        .post(TOKEN.verify, IMPORT.import_master);
 
     app.route('/api/admin/v1/import/checksum')
-        .post(Import.import_checksum);
+        .post(TOKEN.verify, IMPORT.import_checksum);
 
     app.route('/api/admin/v1/import/poll/transfer_status')
-        .get(token.verify, Import.poll_transfer_status);
+        .get(TOKEN.verify, IMPORT.poll_transfer_status);
 
     app.route('/api/admin/v1/import/poll/ingest_status')
-        .get(token.verify, Import.poll_ingest_status);
+        .get(TOKEN.verify, IMPORT.poll_ingest_status);
 
     app.route('/api/admin/v1/import/poll/import_status')
-        .get(token.verify, Import.poll_import_status);
+        .get(TOKEN.verify, IMPORT.poll_import_status);
 
     app.route('/api/admin/v1/import/poll/fail_queue')
-        .get(token.verify, Import.poll_fail_queue);
-
+        .get(TOKEN.verify, IMPORT.poll_fail_queue);
 };

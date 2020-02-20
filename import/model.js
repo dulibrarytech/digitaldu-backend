@@ -18,17 +18,17 @@
 
 'use strict';
 
-const config = require('../config/config'),
-    archivematica = require('../libs/archivematica'),
-    archivespace = require('../libs/archivespace'),
-    duracloud = require('../libs/duracloud'),
-    modslibdisplay = require('../libs/display-record'),
-    metslib = require('../libs/mets'),
-    logger = require('../libs/log4'),
-    uuid = require('uuid'),
-    async = require('async'),
-    request = require('request'),
-    knex = require('../config/db')(),
+const CONFIG = require('../config/config'),
+    ARCHIVEMATICA = require('../libs/archivematica'),
+    ARCHIVESSPACE = require('../libs/archivespace'),
+    DURACLOUD = require('../libs/duracloud'),
+    MODS = require('../libs/display-record'),
+    METS = require('../libs/mets'),
+    LOGGER = require('../libs/log4'),
+    ASYNC = require('async'),
+    REQUEST = require('request'),
+    VALIDATOR = require('validator'),
+    DB = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects';
 
 /** TODO: refactor to check null fields
@@ -38,7 +38,7 @@ const config = require('../config/config'),
  */
 exports.get_import_incomplete = function (req, callback) {
 
-    knex(REPO_OBJECTS)
+    DB(REPO_OBJECTS)
         .select('id', 'sip_uuid', 'handle', 'mods_id', 'mods', 'display_record', 'thumbnail', 'file_name', 'mime_type', 'checksum', 'object_type', 'created')
         .orWhere('thumbnail', null)
         .orWhere('file_name', null)
@@ -46,7 +46,6 @@ exports.get_import_incomplete = function (req, callback) {
         .orWhere('checksum', null)
         .orWhere('mods', null)
         .orWhere('display_record', null)
-        // .andWhere('object_type', 'object')
         .orderBy('created', 'desc')
         .then(function (data) {
 
@@ -59,7 +58,7 @@ exports.get_import_incomplete = function (req, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/import/model module (get_import_incomplete)] unable to get incomplete records ' + error);
+            LOGGER.module().fatal('FATAL: [/import/model module (get_import_incomplete)] unable to get incomplete records ' + error);
             throw 'FATAL: [/import/model module (get_import_incomplete)] unable to get incomplete records ' + error;
         });
 };
@@ -71,7 +70,7 @@ exports.get_import_incomplete = function (req, callback) {
  */
 exports.get_import_complete = function (req, callback) {
 
-    knex(REPO_OBJECTS)
+    DB(REPO_OBJECTS)
         .select('id', 'sip_uuid', 'is_member_of_collection', 'pid', 'handle', 'mods_id', 'mods', 'display_record', 'thumbnail', 'file_name', 'mime_type', 'created')
         .whereRaw('DATE(created) = CURRENT_DATE')
         .where({
@@ -89,7 +88,7 @@ exports.get_import_complete = function (req, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/import/model module (get_import_complete)] unable to get complete records ' + error);
+            LOGGER.module().fatal('FATAL: [/import/model module (get_import_complete)] unable to get complete records ' + error);
             throw 'FATAL: [/import/model module (get_import_complete)] unable to get complete records ' + error;
         });
 };
@@ -107,11 +106,13 @@ exports.import_mods_id = function (req, callback) {
     if (sip_uuid === undefined || mods_id === undefined) {
         callback({
             status: 400,
-            message: 'Bad Request'
+            message: 'Bad Request.'
         });
+
+        return false;
     }
 
-    knex(REPO_OBJECTS)
+    DB(REPO_OBJECTS)
         .where({
             sip_uuid: sip_uuid,
             is_complete: 0
@@ -139,7 +140,7 @@ exports.import_mods_id = function (req, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/import/model module (import_mods_id)] unable to save mods id ' + error);
+            LOGGER.module().fatal('FATAL: [/import/model module (import_mods_id)] unable to save mods id ' + error);
             throw 'FATAL: [/import/model module (import_mods_id)] unable to save mods id ' + error;
         });
 };
@@ -157,8 +158,10 @@ exports.import_mods = function (req, callback) {
     if (sip_uuid === undefined || mods_id === undefined || mods_id === null) {
         callback({
             status: 400,
-            message: 'Bad Request'
+            message: 'Bad Request.'
         });
+
+        return false;
     }
 
     function get_token(callback) {
@@ -167,7 +170,7 @@ exports.import_mods = function (req, callback) {
         obj.sip_uuid = sip_uuid;
         obj.mods_id = mods_id;
 
-        archivespace.get_session_token(function (response) {
+        ARCHIVESSPACE.get_session_token(function (response) {
 
             let data = response.data,
                 token;
@@ -177,7 +180,7 @@ exports.import_mods = function (req, callback) {
                 obj.token = token.session;
                 callback(null, obj);
             } catch (error) {
-                logger.module().error('ERROR: [/import/model module (import_mods/archivespace.get_session_token)] session token error ' + error);
+                LOGGER.module().error('ERROR: [/import/model module (import_mods/archivespace.get_session_token)] session token error ' + error);
                 obj.token = null;
                 callback(null, obj);
             }
@@ -192,10 +195,10 @@ exports.import_mods = function (req, callback) {
             return false;
         }
 
-        archivespace.get_mods(obj.mods_id, obj.token, function (response) {
+        ARCHIVESSPACE.get_mods(obj.mods_id, obj.token, function (response) {
 
             if (response.error !== undefined && response.error === true) {
-                logger.module().error('ERROR: [/import/model module (import_mods/get_mods/archivespace.get_mods)] unable to get mods ' + response.error_message);
+                LOGGER.module().error('ERROR: [/import/model module (import_mods/get_mods/archivespace.get_mods)] unable to get mods ' + response.error_message);
                 obj.mods = null;
                 callback(null, obj);
                 return false;
@@ -214,7 +217,7 @@ exports.import_mods = function (req, callback) {
             return false;
         }
 
-        knex(REPO_OBJECTS)
+        DB(REPO_OBJECTS)
             .select('sip_uuid', 'is_member_of_collection', 'pid', 'handle', 'mods_id', 'mods', 'display_record', 'thumbnail', 'file_name', 'mime_type')
             .where({
                 sip_uuid: obj.sip_uuid
@@ -266,17 +269,17 @@ exports.import_mods = function (req, callback) {
                     record.mods_id = null;
                 }
 
-                record.pid = data[0].pid;
-                record.is_member_of_collection = data[0].is_member_of_collection;
-                record.object_type = data.object_type;
-                record.handle = data[0].handle;
+                record.pid = VALIDATOR.escape(data[0].pid);
+                record.is_member_of_collection = VALIDATOR.escape(data[0].is_member_of_collection);
+                record.object_type = VALIDATOR.escape(data.object_type);
+                record.handle = VALIDATOR.escape(data[0].handle);
                 record.mods = mods;
 
                 if (missing.length > 0) {
                     record.missing = missing;
                 }
 
-                modslibdisplay.create_display_record(record, function (display_record) {
+                MODS.create_display_record(record, function (display_record) {
 
                     let modsUpdateObj = {};
                     modsUpdateObj.mods = mods;
@@ -288,7 +291,7 @@ exports.import_mods = function (req, callback) {
                         modsUpdateObj.is_complete = 1;
                     }
 
-                    knex(REPO_OBJECTS)
+                    DB(REPO_OBJECTS)
                         .where({
                             sip_uuid: obj.sip_uuid
                         })
@@ -297,8 +300,8 @@ exports.import_mods = function (req, callback) {
                             return null;
                         })
                         .catch(function (error) {
-                            logger.module().fatal('FATAL: [/import/model module (import_mods/create_display_record/modslibdisplay.create_display_record)] unable to save record ' + error);
-                            throw 'FATAL: [/import/model module (import_mods/create_display_record/modslibdisplay.create_display_record)] unable to save record ' + error;
+                            LOGGER.module().fatal('FATAL: [/import/model module (import_mods/create_display_record/MODS.create_display_record)] unable to save record ' + error);
+                            throw 'FATAL: [/import/model module (import_mods/create_display_record/MODS.create_display_record)] unable to save record ' + error;
                         });
                 });
 
@@ -306,19 +309,19 @@ exports.import_mods = function (req, callback) {
                 return null;
             })
             .catch(function (error) {
-                logger.module().fatal('FATAL: [/import/model module (import_mods/modslibdisplay.create_display_record)] unable to save record ' + error);
-                throw 'FATAL: [/import/model module (import_mods/modslibdisplay.create_display_record)] unable to save record ' + error;
+                LOGGER.module().fatal('FATAL: [/import/model module (import_mods/MODS.create_display_record)] unable to save record ' + error);
+                throw 'FATAL: [/import/model module (import_mods/MODS.create_display_record)] unable to save record ' + error;
             });
     }
 
-    async.waterfall([
+    ASYNC.waterfall([
         get_token,
         get_mods,
         create_display_record
     ], function (error, results) {
 
         if (error) {
-            logger.module().error('ERROR: [/import/model module (import_mods/async.waterfall)] ' + error);
+            LOGGER.module().error('ERROR: [/import/model module (import_mods/async.waterfall)] ' + error);
         }
 
         if (results.mods === null) {
@@ -331,7 +334,7 @@ exports.import_mods = function (req, callback) {
             return false;
         }
 
-        logger.module().info('INFO: [/import/model module (import_mods/async.waterfall)] mods imported');
+        LOGGER.module().info('INFO: [/import/model module (import_mods/async.waterfall)] mods imported');
 
         callback({
             status: 201,
@@ -349,106 +352,18 @@ exports.import_thumbnail = function (req, callback) {
 
     let sip_uuid = req.body.sip_uuid;
 
+    if (sip_uuid === undefined) {
+        callback({
+            status: 400,
+            message: 'Bad Request.'
+        });
+
+        return false;
+    }
+
     update_missing_component(sip_uuid, 'thumbnail', function (result) {
         callback(result);
     });
-
-    return false;
-};
-
-exports.import_checksum = function (req, callback) {
-
-    let sip_uuid = req.body.sip_uuid;
-
-    // TODO: checksum in duracloud / HEAD request (master)
-    duracloud.get_object_manifest(obj, function (response) {
-
-        /*
-         if manifest is not present proceed with retrieving data
-         */
-        if (response.error !== undefined && response.error === true) {
-
-            logger.module().error('ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_manifest)] unable to get manifest or manifest does not exist ' + response.error_message);
-            obj.manifest = false;
-            callback(null, obj);
-            return false;
-
-        } else {
-
-            let manifest = manifestlib.process_manifest(response);
-
-            obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file + '.dura-manifest';
-            obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
-            obj.manifest = true;
-
-            if (manifest.length > 0) {
-                obj.checksum = manifest[0].checksum;
-                obj.file_size = manifest[0].file_size;
-            } else {
-                obj.checksum = null;
-                obj.file_size = null;
-                logger.module().error('ERROR: [/import/queue module (get_object_manifest)] unable to get data from manifest');
-            }
-
-            callback(null, obj);
-            return false;
-        }
-    });
-
-
-    // gets headers only
-    duracloud.get_object_info(obj, function (response) {
-
-        if (response.error === true) {
-
-            logger.module().error('ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_info)] Unable to get duracloud object ' + response.error_message);
-
-            let failObj = {
-                is_member_of_collection: '',
-                sip_uuid: sip_uuid,
-                message: 'ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_info)] Unable to get duracloud object ' + response.error_message
-            };
-
-            importlib.save_to_fail_queue(failObj);
-            importlib.clear_queue_record({
-                sip_uuid: sip_uuid
-            }, function (result) {
-                if (result === true) {
-                    callback(null, obj);
-                }
-            });
-
-            return false;
-        }
-
-        obj.checksum = response.headers['content-md5'];
-        obj.file_size = response.headers['content-length'];
-
-    });
-
-
-    knex(REPO_OBJECTS)
-        .where({
-            sip_uuid: sip_uuid
-        })
-        .update({
-            checksum: ''
-        })
-        .then(function (data) {
-
-            /*
-            callback({
-                status: 201,
-                message: 'MODS ID imported.'
-            });
-            */
-
-            return null;
-        })
-        .catch(function (error) {
-            logger.module().fatal('FATAL: [/import/model module (import_mods_id)] unable to save mods id ' + error);
-            throw 'FATAL: [/import/model module (import_mods_id)] unable to save mods id ' + error;
-        });
 
     return false;
 };
@@ -461,6 +376,15 @@ exports.import_checksum = function (req, callback) {
 exports.import_master = function (req, callback) {
 
     let sip_uuid = req.body.sip_uuid;
+
+    if (sip_uuid === undefined) {
+        callback({
+            status: 400,
+            message: 'Bad Request.'
+        });
+
+        return false;
+    }
 
     update_missing_component(sip_uuid, 'master', function (result) {
         callback(result);
@@ -476,10 +400,10 @@ exports.import_master = function (req, callback) {
  */
 const update_missing_component = function (sip_uuid, type, callback) {
 
-    archivematica.get_dip_path(sip_uuid, function (dip_path) {
+    ARCHIVEMATICA.get_dip_path(sip_uuid, function (dip_path) {
 
         if (dip_path.error !== undefined && dip_path.error === true) {
-            logger.module().fatal('FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path)] dip path error ' + dip_path.error.message);
+            LOGGER.module().fatal('FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path)] dip path error ' + dip_path.error.message);
             throw 'FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path)] dip path error ' + dip_path.error.message;
         }
 
@@ -488,22 +412,22 @@ const update_missing_component = function (sip_uuid, type, callback) {
             dip_path: dip_path
         };
 
-        duracloud.get_mets(data, function (response) {
+        DURACLOUD.get_mets(data, function (response) {
 
             if (response.error !== undefined && response.error === true) {
-                logger.module().fatal('FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to get mets');
+                LOGGER.module().fatal('FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to get mets');
                 throw 'FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to get mets';
             }
 
             let record = {};
 
             if (type === 'thumbnail') {
-                let metsResults = metslib.process_mets(sip_uuid, dip_path, response.mets);
-                record.thumbnail = metsResults[0].dip_path + '/thumbnails/' + metsResults[0].uuid + '.jpg';
+                let metsResults = METS.process_mets(sip_uuid, dip_path, response.mets);
+                record.thumbnail = VALIDATOR.escape(metsResults[0].dip_path) + '/thumbnails/' + VALIDATOR.escape(metsResults[0].uuid) + '.jpg';
             } else if (type === 'master') {
 
-                let metsResults = metslib.process_mets(sip_uuid, dip_path, response.mets),
-                    master = metsResults[0].dip_path + '/objects/' + metsResults[0].uuid + '-' + metsResults[0].file;
+                let metsResults = METS.process_mets(sip_uuid, dip_path, response.mets),
+                    master = VALIDATOR.escape(metsResults[0].dip_path) + '/objects/' + VALIDATOR.escape(metsResults[0].uuid) + '-' + VALIDATOR.escape(metsResults[0].file);
 
 
                 if (master.indexOf('tif') !== -1) {
@@ -518,7 +442,7 @@ const update_missing_component = function (sip_uuid, type, callback) {
             }
 
             // update db record
-            knex(REPO_OBJECTS)
+            DB(REPO_OBJECTS)
                 .where({
                     sip_uuid: sip_uuid
                 })
@@ -528,42 +452,42 @@ const update_missing_component = function (sip_uuid, type, callback) {
                     /*
                      rebuild display record
                      */
-                    request.post({
-                        url: config.apiUrl + '/api/admin/v1/repo/reset',
+                    REQUEST.post({
+                        url: CONFIG.apiUrl + '/api/admin/v1/repo/reset?api_key=' + CONFIG.apiKey,
                         form: {
                             'pid': sip_uuid
                         }
                     }, function (error, httpResponse, body) {
 
                         if (error) {
-                            logger.module().error('ERROR: /import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] indexer error ' + error);
+                            LOGGER.module().error('ERROR: /import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] indexer error ' + error);
                             return false;
                         }
 
                         if (httpResponse.statusCode === 201) {
 
-                            logger.module().info('INFO: /import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets) display record rebuilt ');
+                            LOGGER.module().info('INFO: /import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets) display record rebuilt ');
 
                             setTimeout(function () {
 
                                 /*
                                  reindex record
                                  */
-                                request.post({
-                                    url: config.apiUrl + '/api/admin/v1/indexer',
+                                REQUEST.post({
+                                    url: CONFIG.apiUrl + '/api/admin/v1/indexer?api_key=' + CONFIG.apiKey,
                                     form: {
                                         'sip_uuid': sip_uuid
                                     }
                                 }, function (error, httpResponse, body) {
 
                                     if (error) {
-                                        logger.module().error('ERROR: /import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] indexer error ' + error);
+                                        LOGGER.module().error('ERROR: /import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] indexer error ' + error);
                                         return false;
                                     }
 
                                     if (httpResponse.statusCode === 200) {
 
-                                        logger.module().info('INFO: /import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets) record reindexed');
+                                        LOGGER.module().info('INFO: /import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets) record reindexed');
 
                                         callback({
                                             status: 201,
@@ -573,7 +497,7 @@ const update_missing_component = function (sip_uuid, type, callback) {
                                         return false;
 
                                     } else {
-                                        logger.module().error('ERROR: /import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] http error ' + httpResponse.statusCode + '/' + body);
+                                        LOGGER.module().error('ERROR: /import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] http error ' + httpResponse.statusCode + '/' + body);
                                         return false;
                                     }
                                 });
@@ -583,7 +507,7 @@ const update_missing_component = function (sip_uuid, type, callback) {
                             return false;
 
                         } else {
-                            logger.module().error('ERROR: /import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] http error ' + httpResponse.statusCode + '/' + body);
+                            LOGGER.module().error('ERROR: /import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] http error ' + httpResponse.statusCode + '/' + body);
                             return false;
                         }
                     });
@@ -591,7 +515,7 @@ const update_missing_component = function (sip_uuid, type, callback) {
                     return null;
                 })
                 .catch(function (error) {
-                    logger.module().fatal('FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to save record ' + error);
+                    LOGGER.module().fatal('FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to save record ' + error);
                     throw 'FATAL: [/import/model module (import_thumbnail/archivematica.get_dip_path/duracloud.get_mets)] unable to save record ' + error;
                 });
         });

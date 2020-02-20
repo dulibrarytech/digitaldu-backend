@@ -18,48 +18,28 @@
 
 'use strict';
 
-const fs = require('fs'),
-    path = require('path'),
-    config = require('../config/config'),
-    modslibdisplay = require('../libs/display-record'),
-    metslib = require('../libs/mets'),
-    importlib = require('../libs/transfer-ingest'),
-    mimetypelib = require('../libs/mime-types'),
-    manifestlib = require('../libs/manifest'),
+const CONFIG = require('../config/config'),
+    FS = require('fs'),
+    MODS = require('../libs/display-record'),
+    METS = require('../libs/mets'),
+    TRANSFER_INGEST = require('../libs/transfer-ingest'),
+    MIME_TYPE = require('../libs/mime-types'),
+    MANIFEST = require('../libs/manifest'),
     handles = require('../libs/handles'),
-    archivematica = require('../libs/archivematica'),
-    duracloud = require('../libs/duracloud'),
-    archivespace = require('../libs/archivespace'),
-    logger = require('../libs/log4'),
-    crypto = require('crypto'),
-    async = require('async'),
-    moment = require('moment'),
-    socketclient = require('socket.io-client')(config.host),
-    request = require('request'),
-    knexQ = require('knex')({
-        client: 'mysql2',
-        connection: {
-            host: config.dbQueueHost,
-            user: config.dbQueueUser,
-            password: config.dbQueuePassword,
-            database: config.dbQueueName
-        }
-    }),
-    knex = require('knex')({
-        client: 'mysql2',
-        connection: {
-            host: config.dbHost,
-            user: config.dbUser,
-            password: config.dbPassword,
-            database: config.dbName
-        }
-    }),
+    ARCHIVEMATICA = require('../libs/archivematica'),
+    ARCHIVESSPACE = require('../libs/archivespace'),
+    DURACLOUD = require('../libs/duracloud'),
+    LOGGER = require('../libs/log4'),
+    ASYNC = require('async'),
+    MOMENT = require('moment'),
+    REQUEST = require('request'),
+    DBQ = require('../config/dbqueue')(),
+    TRANSFER_APPROVAL_TIMER = CONFIG.transferApprovalTimer,
+    TRANSFER_STATUS_CHECK_INTERVAL = CONFIG.transferStatusCheckInterval,
+    INGEST_STATUS_CHECK_INTERVAL = CONFIG.ingestStatusCheckInterval,
     TRANSFER_QUEUE = 'tbl_archivematica_queue',
     IMPORT_QUEUE = 'tbl_duracloud_queue',
-    FAIL_QUEUE = 'tbl_fail_queue',
-    TRANSFER_APPROVAL_TIMER = config.transferApprovalTimer,
-    TRANSFER_STATUS_CHECK_INTERVAL = config.transferStatusCheckInterval,
-    INGEST_STATUS_CHECK_INTERVAL = config.ingestStatusCheckInterval;
+    FAIL_QUEUE = 'tbl_fail_queue';
 
 /**
  * Gets list of folders from Archivematica sftp server
@@ -68,7 +48,7 @@ const fs = require('fs'),
  */
 exports.list = function (req, callback) {
 
-    knexQ(TRANSFER_QUEUE)
+    DBQ(TRANSFER_QUEUE)
         .count('id as count')
         .then(function (data) {
 
@@ -76,11 +56,11 @@ exports.list = function (req, callback) {
 
                 let query = req.query.collection;
 
-                archivematica.list(query, function (results) {
+                ARCHIVEMATICA.list(query, function (results) {
 
                     if (results.error !== undefined && results.error === true) {
 
-                        logger.module().fatal('FATAL: [/import/queue module (list)] unable to get files from Archivematica SFTP server');
+                        LOGGER.module().fatal('FATAL: [/import/queue module (list)] unable to get files from Archivematica SFTP server');
 
                         callback({
                             status: 400,
@@ -110,7 +90,7 @@ exports.list = function (req, callback) {
             }
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/import/queue module (list)] queue progress check failed ' + error);
+            LOGGER.module().fatal('FATAL: [/import/queue module (list)] queue progress check failed ' + error);
             throw 'FATAL: [/import/queue module (list)] queue progress check failed ' + error;
         });
 };
@@ -126,7 +106,7 @@ exports.queue_objects = function (req, callback) {
 
     if (req.body === undefined) {
 
-        logger.module().error('ERROR: [/import/queue module (queue_objects)] missing payload body. unable to start ingest process');
+        LOGGER.module().error('ERROR: [/import/queue module (queue_objects)] missing payload body. unable to start ingest process');
 
         callback({
             status: 404,
@@ -145,7 +125,7 @@ exports.queue_objects = function (req, callback) {
      */
     const check_collection = function (callback) {
 
-        importlib.check_collection(transfer_data.collection, function (result) {
+        TRANSFER_INGEST.check_collection(transfer_data.collection, function (result) {
 
             /*
              if collection does not exist set status to false in order to terminate ingest of objects
@@ -171,46 +151,46 @@ exports.queue_objects = function (req, callback) {
             return false;
         }
 
-        logger.module().info('INFO: [/import/queue module (queue_objects/start_transfer)] starting ingest process');
+        LOGGER.module().info('INFO: [/import/queue module (queue_objects/start_transfer)] starting ingest process');
 
         /*
          Saves transfer data to queue
          */
-        importlib.save_transfer_records(transfer_data, function (result) {
+        TRANSFER_INGEST.save_transfer_records(transfer_data, function (result) {
 
             if (result.recordCount === 0) {
 
-                logger.module().FATAL('FATAL: [/import/queue module (queue_objects/start_transfer/importlib.save_transfer_records)] unable to save records to ingest queue');
+                LOGGER.module().FATAL('FATAL: [/import/queue module (queue_objects/start_transfer/TRANSFER_INGEST.save_transfer_records)] unable to save records to ingest queue');
 
                 let failObj = {
                     is_member_of_collection: obj.collection.replace('_', ':'),
-                    message: 'FATAL: [/import/queue module (queue_objects/start_transfer/importlib.save_transfer_records)]Unable to save records to ingest queue'
+                    message: 'FATAL: [/import/queue module (queue_objects/start_transfer/TRANSFER_INGEST.save_transfer_records)]Unable to save records to ingest queue'
                 };
 
-                importlib.save_to_fail_queue(failObj);
+                TRANSFER_INGEST.save_to_fail_queue(failObj);
                 return false;
             }
 
             /*
              Send request to start transfer
              */
-            request.post({
-                url: config.apiUrl + '/api/admin/v1/import/start_transfer',
+            REQUEST.post({
+                url: CONFIG.apiUrl + '/api/admin/v1/import/start_transfer',
                 form: {
                     'collection': transfer_data.collection
                 }
             }, function (error, httpResponse, body) {
 
                 if (error) {
-                    logger.module().fatal('FATAL: [/import/queue module (queue_objects/start_transfer/importlib.save_transfer_records)] unable to begin transfer ' + error);
-                    throw 'FATAL: [/import/queue module (queue_objects/start_transfer/importlib.save_transfer_records)] unable to begin transfer ' + error;
+                    LOGGER.module().fatal('FATAL: [/import/queue module (queue_objects/start_transfer/TRANSFER_INGEST.save_transfer_records)] unable to begin transfer ' + error);
+                    throw 'FATAL: [/import/queue module (queue_objects/start_transfer/TRANSFER_INGEST.save_transfer_records)] unable to begin transfer ' + error;
                 }
 
                 if (httpResponse.statusCode === 200) {
                     return false;
                 } else {
-                    logger.module().fatal('FATAL: [/import/queue module (queue_objects/start_transfer/importlib.save_transfer_records)] unable to begin transfer ' + httpResponse.statusCode + '/' + error);
-                    throw 'FATAL: [/import/queue module (queue_objects/start_transfer/importlib.save_transfer_records)] unable to begin transfer ' + httpResponse.statusCode + '/' + error;
+                    LOGGER.module().fatal('FATAL: [/import/queue module (queue_objects/start_transfer/TRANSFER_INGEST.save_transfer_records)] unable to begin transfer ' + httpResponse.statusCode + '/' + error);
+                    throw 'FATAL: [/import/queue module (queue_objects/start_transfer/TRANSFER_INGEST.save_transfer_records)] unable to begin transfer ' + httpResponse.statusCode + '/' + error;
                 }
             });
 
@@ -218,13 +198,13 @@ exports.queue_objects = function (req, callback) {
         });
     };
 
-    async.waterfall([
+    ASYNC.waterfall([
         check_collection,
         save_transfer_records
     ], function (error, obj) {
 
         if (error) {
-            logger.module().error('ERROR: [/import/queue module (queue_objects/async.waterfall)] ' + error);
+            LOGGER.module().error('ERROR: [/import/queue module (queue_objects/async.waterfall)] ' + error);
         }
 
         if (obj.collection_status !== undefined && obj.collection_status === false) {
@@ -234,10 +214,10 @@ exports.queue_objects = function (req, callback) {
                 message: 'Unable to move forward with import due to incorrect collection pid.'
             };
 
-            importlib.save_to_fail_queue(failObj);
+            TRANSFER_INGEST.save_to_fail_queue(failObj);
         }
 
-        logger.module().info('INFO: [/import/queue module (queue_objects/async.waterfall)] transfer records queued');
+        LOGGER.module().info('INFO: [/import/queue module (queue_objects/async.waterfall)] transfer records queued');
 
         return false;
     });
@@ -256,20 +236,20 @@ exports.queue_objects = function (req, callback) {
  */
 exports.start_transfer = function (req, callback) {
 
-    logger.module().info('INFO: [/import/queue module (start_transfer)] starting transfer (start_transfer)');
+    LOGGER.module().info('INFO: [/import/queue module (start_transfer)] starting transfer (start_transfer)');
 
     let collection = req.body.collection;
 
     if (collection === undefined) {
 
-        logger.module().fatal('FATAL: [/import/queue module (start_transfer)] collection undefined. unable to start transfer');
+        LOGGER.module().fatal('FATAL: [/import/queue module (start_transfer)] collection undefined. unable to start transfer');
 
         let failObj = {
             is_member_of_collection: 'No collection',
             message: 'Collection undefined. unable to start transfer.'
         };
 
-        importlib.save_to_fail_queue(failObj);
+        TRANSFER_INGEST.save_to_fail_queue(failObj);
 
         callback({
             status: 400,
@@ -279,37 +259,37 @@ exports.start_transfer = function (req, callback) {
         return false;
     }
 
-    importlib.start_transfer(collection, function (object) {
+    TRANSFER_INGEST.start_transfer(collection, function (object) {
 
         /*
          Initiates file transfer on Archivematica service
          */
-        archivematica.start_tranfser(object, function (response) {
+        ARCHIVEMATICA.start_tranfser(object, function (response) {
 
             if (response.error !== undefined && response.error === true) {
 
-                logger.module().fatal('FATAL: [/import/queue module (start_transfer/importlib.start_transfer/archivematica.start_tranfser)] transfer error ' + response);
+                LOGGER.module().fatal('FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_tranfser)] transfer error ' + response);
 
                 let failObj = {
                     is_member_of_collection: collection,
                     message: response
                 };
 
-                importlib.save_to_fail_queue(failObj);
-                importlib.clear_queue_record({
+                TRANSFER_INGEST.save_to_fail_queue(failObj);
+                TRANSFER_INGEST.clear_queue_record({
                     is_member_of_collection: collection
                 }, function (result) {
 
                     if (result === true) {
-                        importlib.restart_import();
+                        TRANSFER_INGEST.restart_import();
                     }
 
                 });
 
-                throw 'FATAL: [/import/queue module (start_transfer/importlib.start_transfer/archivematica.start_tranfser)] transfer error ' + response;
+                throw 'FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_tranfser)] transfer error ' + response;
             }
 
-            importlib.confirm_transfer(response, object.id);
+            TRANSFER_INGEST.confirm_transfer(response, object.id);
 
             /*
              Give transfer time to complete before approving it
@@ -319,23 +299,23 @@ exports.start_transfer = function (req, callback) {
                 /*
                  Send request to approve transfer
                  */
-                request.post({
-                    url: config.apiUrl + '/api/admin/v1/import/approve_transfer',
+                REQUEST.post({
+                    url: CONFIG.apiUrl + '/api/admin/v1/import/approve_transfer',
                     form: {
                         'collection': collection
                     }
                 }, function (error, httpResponse, body) {
 
                     if (error) {
-                        logger.module().fatal('FATAL: [/import/queue module (start_transfer/importlib.start_transfer/archivematica.start_tranfser)] http error. unable to approve transfer ' + error);
-                        throw 'FATAL: [/import/queue module (start_transfer/importlib.start_transfer/archivematica.start_tranfser)] http error. unable to approve transfer ' + error;
+                        LOGGER.module().fatal('FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_tranfser)] http error. unable to approve transfer ' + error);
+                        throw 'FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_tranfser)] http error. unable to approve transfer ' + error;
                     }
 
                     if (httpResponse.statusCode === 200) {
                         return false;
                     } else {
-                        logger.module().fatal('FATAL: [/import/queue module (start_transfer/importlib.start_transfer/archivematica.start_tranfser)] http error. unable to approve transfer ' + httpResponse.statusCode + '/' + body);
-                        throw 'FATAL: [/import/queue module (start_transfer/importlib.start_transfer/archivematica.start_tranfser)] http error. unable to approve transfer ' + httpResponse.statusCode + '/' + body;
+                        LOGGER.module().fatal('FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_tranfser)] http error. unable to approve transfer ' + httpResponse.statusCode + '/' + body);
+                        throw 'FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_tranfser)] http error. unable to approve transfer ' + httpResponse.statusCode + '/' + body;
                     }
                 });
 
@@ -361,7 +341,7 @@ exports.approve_transfer = function (req, callback) {
 
     if (collection === undefined) {
 
-        logger.module().error('ERROR: [/import/queue module (approve_transfer)] collection undefined');
+        LOGGER.module().error('ERROR: [/import/queue module (approve_transfer)] collection undefined');
 
         callback({
             status: 400,
@@ -374,15 +354,15 @@ exports.approve_transfer = function (req, callback) {
     /*
      Gets transferred record from queue
      */
-    importlib.get_transferred_record(collection, function (object) {
+    TRANSFER_INGEST.get_transferred_record(collection, function (object) {
 
-        archivematica.approve_transfer(object.transfer_folder, function (response) {
+        ARCHIVEMATICA.approve_transfer(object.transfer_folder, function (response) {
 
-            importlib.confirm_transfer_approval(response, object, function (result) {
+            TRANSFER_INGEST.confirm_transfer_approval(response, object, function (result) {
 
                 if (result.error !== undefined && result.error === true) {
 
-                    logger.module().error('ERROR: [/import/queue module (approve_transfer/importlib.get_transferred_record/archivematica.approve_transfer/importlib.confirm_transfer_approval)] unable to confirm transfer approval ' + result);
+                    LOGGER.module().error('ERROR: [/import/queue module (approve_transfer/TRANSFER_INGEST.get_transferred_record/archivematica.approve_transfer/TRANSFER_INGEST.confirm_transfer_approval)] unable to confirm transfer approval ' + result);
 
                     let failObj = {
                         is_member_of_collection: collection,
@@ -390,37 +370,37 @@ exports.approve_transfer = function (req, callback) {
                         message: 'Transfer not approved ' + object.transfer_folder
                     };
 
-                    importlib.save_to_fail_queue(failObj);
-                    importlib.clear_queue_record({
+                    TRANSFER_INGEST.save_to_fail_queue(failObj);
+                    TRANSFER_INGEST.clear_queue_record({
                         transfer_uuid: object.transfer_uuid
                     }, function (result) {
                         if (result === true) {
-                            importlib.restart_import();
+                            TRANSFER_INGEST.restart_import();
                         }
                     });
 
                     return false;
                 }
 
-                logger.module().info('INFO: [/import/queue module (approve_transfer/importlib.get_transferred_record/archivematica.approve_transfer/importlib.confirm_transfer_approval)] transfer approved');
+                LOGGER.module().info('INFO: [/import/queue module (approve_transfer/TRANSFER_INGEST.get_transferred_record/archivematica.approve_transfer/TRANSFER_INGEST.confirm_transfer_approval)] transfer approved');
 
                 /*
                  Send request to begin transfer status checks
                  */
-                request.get({
-                    url: config.apiUrl + '/api/admin/v1/import/transfer_status?collection=' + result.is_member_of_collection + '&transfer_uuid=' + result.transfer_uuid
+                REQUEST.get({
+                    url: CONFIG.apiUrl + '/api/admin/v1/import/transfer_status?collection=' + result.is_member_of_collection + '&transfer_uuid=' + result.transfer_uuid
                 }, function (error, httpResponse, body) {
 
                     if (error) {
-                        logger.module().fatal('FATAL: [/import/queue module (approve_transfer/importlib.get_transferred_record/archivematica.approve_transfer/importlib.confirm_transfer_approval)] http error ' + error);
-                        throw 'FATAL: [/import/queue module (approve_transfer/importlib.get_transferred_record/archivematica.approve_transfer/importlib.confirm_transfer_approval)] http error ' + error;
+                        LOGGER.module().fatal('FATAL: [/import/queue module (approve_transfer/TRANSFER_INGEST.get_transferred_record/archivematica.approve_transfer/TRANSFER_INGEST.confirm_transfer_approval)] http error ' + error);
+                        throw 'FATAL: [/import/queue module (approve_transfer/TRANSFER_INGEST.get_transferred_record/archivematica.approve_transfer/TRANSFER_INGEST.confirm_transfer_approval)] http error ' + error;
                     }
 
                     if (httpResponse.statusCode === 200) {
                         return false;
                     } else {
-                        logger.module().fatal('FATAL: [/import/queue module (approve_transfer/importlib.get_transferred_record/archivematica.approve_transfer/importlib.confirm_transfer_approval)] http error ' + httpResponse.statusCode + '/' + body);
-                        throw 'FATAL: [/import/queue module (approve_transfer/importlib.get_transferred_record/archivematica.approve_transfer/importlib.confirm_transfer_approval)] http error ' + httpResponse.statusCode + '/' + body;
+                        LOGGER.module().fatal('FATAL: [/import/queue module (approve_transfer/TRANSFER_INGEST.get_transferred_record/archivematica.approve_transfer/TRANSFER_INGEST.confirm_transfer_approval)] http error ' + httpResponse.statusCode + '/' + body);
+                        throw 'FATAL: [/import/queue module (approve_transfer/TRANSFER_INGEST.get_transferred_record/archivematica.approve_transfer/TRANSFER_INGEST.confirm_transfer_approval)] http error ' + httpResponse.statusCode + '/' + body;
                     }
                 });
             });
@@ -445,7 +425,7 @@ exports.get_transfer_status = function (req, callback) {
         transfer_uuid = req.query.transfer_uuid;
 
     if (is_member_of_collection === undefined || transfer_uuid === undefined) {
-        logger.module().error('ERROR: [/import/queue module (get_transfer_status)] unable to start transfer checks');
+        LOGGER.module().error('ERROR: [/import/queue module (get_transfer_status)] unable to start transfer checks');
         callback({
             status: 400,
             message: 'Unable to start transfer checks.'
@@ -454,23 +434,23 @@ exports.get_transfer_status = function (req, callback) {
         return false;
     }
 
-    logger.module().info('INFO: [/import/queue module (get_transfer_status)] checking transfer status');
+    LOGGER.module().info('INFO: [/import/queue module (get_transfer_status)] checking transfer status');
 
     /*
      Check transfer status every few seconds
      */
     let timer = setInterval(function () {
 
-        archivematica.get_transfer_status(transfer_uuid, function (response) {
+        ARCHIVEMATICA.get_transfer_status(transfer_uuid, function (response) {
 
             /*
              Updates import queue
              */
-            importlib.update_transfer_status(response, function (result) {
+            TRANSFER_INGEST.update_transfer_status(response, function (result) {
 
                 if (result.error !== undefined && result.error === true) {
 
-                    logger.module().error('ERROR: [/import/queue module (get_transfer_status/archivematica.get_transfer_status/importlib.update_transfer_status)] transfer status : ' + result.message);
+                    LOGGER.module().error('ERROR: [/import/queue module (get_transfer_status/archivematica.get_transfer_status/TRANSFER_INGEST.update_transfer_status)] transfer status : ' + result.message);
                     clearInterval(timer);
 
                     let failObj = {
@@ -479,7 +459,7 @@ exports.get_transfer_status = function (req, callback) {
                         message: 'Transfer status: ' + result.message
                     };
 
-                    importlib.save_to_fail_queue(failObj);
+                    TRANSFER_INGEST.save_to_fail_queue(failObj);
                     return false;
                 }
 
@@ -488,21 +468,21 @@ exports.get_transfer_status = function (req, callback) {
                     clearInterval(timer);
 
                     // Send request to begin ingest status checks
-                    request.get({
-                        url: config.apiUrl + '/api/admin/v1/import/ingest_status?sip_uuid=' + result.sip_uuid
+                    REQUEST.get({
+                        url: CONFIG.apiUrl + '/api/admin/v1/import/ingest_status?sip_uuid=' + result.sip_uuid
                     }, function (error, httpResponse, body) {
 
                         if (error) {
-                            logger.module().error('ERROR: [/import/queue module (get_transfer_status/archivematica.get_transfer_status/importlib.update_transfer_status)] http error ' + error);
+                            LOGGER.module().error('ERROR: [/import/queue module (get_transfer_status/archivematica.get_transfer_status/TRANSFER_INGEST.update_transfer_status)] http error ' + error);
                         }
 
                         if (httpResponse.statusCode === 200) {
                             setTimeout(function () {
-                                archivematica.clear_transfer(transfer_uuid);
+                                ARCHIVEMATICA.clear_transfer(transfer_uuid);
                             }, 5000);
                             return false;
                         } else {
-                            logger.module().error('ERROR: [/import/queue module (get_transfer_status/archivematica.get_transfer_status/importlib.update_transfer_status)] http error ' + httpResponse.statusCode + '/' + body);
+                            LOGGER.module().error('ERROR: [/import/queue module (get_transfer_status/archivematica.get_transfer_status/TRANSFER_INGEST.update_transfer_status)] http error ' + httpResponse.statusCode + '/' + body);
                         }
                     });
 
@@ -530,7 +510,7 @@ exports.get_ingest_status = function (req, callback) {
     let sip_uuid = req.query.sip_uuid;
 
     if (sip_uuid === undefined) {
-        logger.module().error('ERROR: [/import/queue module (get_ingest_status)] sip uuid undefined');
+        LOGGER.module().error('ERROR: [/import/queue module (get_ingest_status)] sip uuid undefined');
         callback({
             status: 400,
             message: 'Unable to start ingest checks.'
@@ -539,23 +519,23 @@ exports.get_ingest_status = function (req, callback) {
         return false;
     }
 
-    logger.module().info('INFO: [/import/queue module (get_ingest_status)] checking ingest status');
+    LOGGER.module().info('INFO: [/import/queue module (get_ingest_status)] checking ingest status');
 
     /*
      Check ingest status every few seconds
      */
     let timer = setInterval(function () {
 
-        archivematica.get_ingest_status(sip_uuid, function (response) {
+        ARCHIVEMATICA.get_ingest_status(sip_uuid, function (response) {
 
             /*
              Updates import queue
              */
-            importlib.update_ingest_status(response, sip_uuid, function (result) {
+            TRANSFER_INGEST.update_ingest_status(response, sip_uuid, function (result) {
 
                 if (result.error !== undefined && result.error === true) {
 
-                    logger.module().error('ERROR: [/import/queue module (get_ingest_status/archivematica.get_ingest_status/importlib.update_ingest_status)] unable to update ingest status');
+                    LOGGER.module().error('ERROR: [/import/queue module (get_ingest_status/archivematica.get_ingest_status/TRANSFER_INGEST.update_ingest_status)] unable to update ingest status');
 
                     let failObj = {
                         is_member_of_collection: '',
@@ -563,7 +543,7 @@ exports.get_ingest_status = function (req, callback) {
                         message: 'Ingest status: ' + result.message
                     };
 
-                    importlib.save_to_fail_queue(failObj);
+                    TRANSFER_INGEST.save_to_fail_queue(failObj);
                     return false;
                 }
 
@@ -574,18 +554,18 @@ exports.get_ingest_status = function (req, callback) {
                     /*
                      Send request to import DIP data
                      */
-                    request.get({
-                        url: config.apiUrl + '/api/admin/v1/import/import_dip?sip_uuid=' + result.sip_uuid
+                    REQUEST.get({
+                        url: CONFIG.apiUrl + '/api/admin/v1/import/import_dip?sip_uuid=' + result.sip_uuid
                     }, function (error, httpResponse, body) {
 
                         if (error) {
-                            logger.module().error('ERROR: [/import/queue module (get_ingest_status/archivematica.get_ingest_status/importlib.update_ingest_status)] import dip request error ' + error);
+                            LOGGER.module().error('ERROR: [/import/queue module (get_ingest_status/archivematica.get_ingest_status/TRANSFER_INGEST.update_ingest_status)] import dip request error ' + error);
                         }
 
                         if (httpResponse.statusCode === 200) {
                             return false;
                         } else {
-                            logger.module().error('ERROR: [/import/queue module (get_ingest_status/archivematica.get_ingest_status/importlib.update_ingest_status)] import dip request error ' + httpResponse.statusCode + '/' + body);
+                            LOGGER.module().error('ERROR: [/import/queue module (get_ingest_status/archivematica.get_ingest_status/TRANSFER_INGEST.update_ingest_status)] import dip request error ' + httpResponse.statusCode + '/' + body);
                         }
 
                     });
@@ -619,7 +599,7 @@ exports.import_dip = function (req, callback) {
 
     if (sip_uuid === undefined) {
 
-        logger.module().error('ERROR: [/import/queue module (import_dip)] sip_uuid is undefined');
+        LOGGER.module().error('ERROR: [/import/queue module (import_dip)] sip_uuid is undefined');
 
         callback({
             status: 400,
@@ -629,10 +609,10 @@ exports.import_dip = function (req, callback) {
         return false;
     }
 
-    archivematica.get_dip_path(sip_uuid, function (dip_path) {
+    ARCHIVEMATICA.get_dip_path(sip_uuid, function (dip_path) {
 
         if (dip_path.error !== undefined && dip_path.error === true) {
-            logger.module().error('ERROR: [/import/queue module (import_dip/archivematica.get_dip_path)] dip path error ' + dip_path.error.message);
+            LOGGER.module().error('ERROR: [/import/queue module (import_dip/archivematica.get_dip_path)] dip path error ' + dip_path.error.message);
             throw 'ERROR: [/import/queue module (import_dip/archivematica.get_dip_path)] dip path error ' + dip_path.error.message;
         }
 
@@ -641,11 +621,11 @@ exports.import_dip = function (req, callback) {
             dip_path: dip_path
         };
 
-        duracloud.get_mets(data, function (response) {
+        DURACLOUD.get_mets(data, function (response) {
 
             if (response.error !== undefined && response.error === true) {
 
-                logger.module().error('ERROR: [/import/queue module (import_dip/archivematica.get_dip_path/duracloud.get_mets)] unable to get mets');
+                LOGGER.module().error('ERROR: [/import/queue module (import_dip/archivematica.get_dip_path/duracloud.get_mets)] unable to get mets');
 
                 let failObj = {
                     is_member_of_collection: '',
@@ -653,41 +633,41 @@ exports.import_dip = function (req, callback) {
                     message: response
                 };
 
-                importlib.save_to_fail_queue(failObj);
-                importlib.clear_queue_record({
+                TRANSFER_INGEST.save_to_fail_queue(failObj);
+                TRANSFER_INGEST.clear_queue_record({
                     sip_uuid: data.sip_uuid
                 }, function (result) {
                     if (result === true) {
-                        importlib.restart_import();
+                        TRANSFER_INGEST.restart_import();
                     }
                 });
 
                 throw 'ERROR: [/import/queue module (import_dip/archivematica.get_dip_path/duracloud.get_mets)] unable to get mets';
             }
 
-            let metsResults = metslib.process_mets(sip_uuid, dip_path, response.mets);
+            let metsResults = METS.process_mets(sip_uuid, dip_path, response.mets);
 
-            importlib.save_mets_data(metsResults, function (result) {
+            TRANSFER_INGEST.save_mets_data(metsResults, function (result) {
 
                 if (result === 'done') {
 
                     /*
                      Send request to create repository record
                      */
-                    request.get({
-                        url: config.apiUrl + '/api/admin/v1/import/create_repo_record?sip_uuid=' + sip_uuid
+                    REQUEST.get({
+                        url: CONFIG.apiUrl + '/api/admin/v1/import/create_repo_record?sip_uuid=' + sip_uuid
                     }, function (error, httpResponse, body) {
 
                         if (error) {
-                            logger.module().fatal('FATAL: [/import/queue module (import_dip/archivematica.get_dip_path/duracloud.get_mets/importlib.save_mets_data)] create repo record request error ' + error);
-                            throw 'FATAL: [/import/queue module (import_dip/archivematica.get_dip_path/duracloud.get_mets/importlib.save_mets_data)] create repo record request error' + error;
+                            LOGGER.module().fatal('FATAL: [/import/queue module (import_dip/archivematica.get_dip_path/duracloud.get_mets/TRANSFER_INGEST.save_mets_data)] create repo record request error ' + error);
+                            throw 'FATAL: [/import/queue module (import_dip/archivematica.get_dip_path/duracloud.get_mets/TRANSFER_INGEST.save_mets_data)] create repo record request error' + error;
                         }
 
                         if (httpResponse.statusCode === 200) {
                             return false;
                         } else {
-                            logger.module().fatal('FATAL: [/import/queue module (import_dip/archivematica.get_dip_path/duracloud.get_mets/importlib.save_mets_data)] http create repo record request error ' + httpResponse.statusCode + '/' + body);
-                            throw 'FATAL: [/import/queue module (import_dip/archivematica.get_dip_path/duracloud.get_mets/importlib.save_mets_data)] http create repo record request error ' + httpResponse.statusCode + '/' + body;
+                            LOGGER.module().fatal('FATAL: [/import/queue module (import_dip/archivematica.get_dip_path/duracloud.get_mets/TRANSFER_INGEST.save_mets_data)] http create repo record request error ' + httpResponse.statusCode + '/' + body);
+                            throw 'FATAL: [/import/queue module (import_dip/archivematica.get_dip_path/duracloud.get_mets/TRANSFER_INGEST.save_mets_data)] http create repo record request error ' + httpResponse.statusCode + '/' + body;
                         }
                     });
                 }
@@ -714,7 +694,7 @@ exports.create_repo_record = function (req, callback) {
     if (sip_uuid === undefined || sip_uuid === null) {
         // no need to move forward if sip_uuid is missing
         // TODO: log to fail queue
-        logger.module().error('ERROR: [/import/queue module (create_repo_record)] sip uuid undefined');
+        LOGGER.module().error('ERROR: [/import/queue module (create_repo_record)] sip uuid undefined');
 
         callback({
             status: 400,
@@ -727,7 +707,7 @@ exports.create_repo_record = function (req, callback) {
     // 1.) get collection record from queue using sip_uuid
     function get_collection(callback) {
 
-        importlib.get_collection(sip_uuid, function (result) {
+        TRANSFER_INGEST.get_collection(sip_uuid, function (result) {
 
             if (result === null || result === undefined) {
                 get_collection(callback);
@@ -745,7 +725,7 @@ exports.create_repo_record = function (req, callback) {
     // 2.)
     function get_uri_txt(obj, callback) {
 
-        importlib.get_uri_txt(obj.sip_uuid, function (data) {
+        TRANSFER_INGEST.get_uri_txt(obj.sip_uuid, function (data) {
 
             // uri.txt is not present
             if (data.length === 0) {
@@ -754,7 +734,7 @@ exports.create_repo_record = function (req, callback) {
                 obj.dip_path = null;
                 obj.file = null;
                 obj.uuid = null;
-                logger.module().error('ERROR: [/import/queue module (get_uri_txt/importlib.get_uri_txt)] unable to get uri txt');
+                LOGGER.module().error('ERROR: [/import/queue module (get_uri_txt/TRANSFER_INGEST.get_uri_txt)] unable to get uri txt');
                 callback(null, obj);
                 return false;
             }
@@ -775,13 +755,13 @@ exports.create_repo_record = function (req, callback) {
         // no need to assign mods id if dip_path is not available
         if (obj.dip_path === null) {
             obj.mods_id = null;
-            logger.module().error('ERROR: [/import/queue module (get_object_uri_data)] unable to get uri data - dip_path is null');
+            LOGGER.module().error('ERROR: [/import/queue module (get_object_uri_data)] unable to get uri data - dip_path is null');
             callback(null, obj);
             return false;
         }
 
         // downloads uri.txt file
-        duracloud.get_uri(obj, function (response) {
+        DURACLOUD.get_uri(obj, function (response) {
             let uriArr = response.split('/');
             obj.uri = response;
             obj.mods_id = uriArr[uriArr.length - 1].trim();
@@ -797,7 +777,7 @@ exports.create_repo_record = function (req, callback) {
             return false;
         }
 
-        importlib.save_mods_id(obj.mods_id, obj.sip_uuid, function (result) {
+        TRANSFER_INGEST.save_mods_id(obj.mods_id, obj.sip_uuid, function (result) {
             callback(null, obj);
         });
     }
@@ -805,13 +785,13 @@ exports.create_repo_record = function (req, callback) {
     // 5.)
     function get_object(obj, callback) {
 
-        importlib.get_object(obj.sip_uuid, function (data) {
+        TRANSFER_INGEST.get_object(obj.sip_uuid, function (data) {
 
             if (data.length === 0) {
                 obj.dip_path = null;
                 obj.file = null;
                 obj.uuid = null;
-                logger.module().error('ERROR: [/import/queue module (get_object/importlib.get_object)] unable to get object - dip_path is null');
+                LOGGER.module().error('ERROR: [/import/queue module (get_object/TRANSFER_INGEST.get_object)] unable to get object - dip_path is null');
                 callback(null, obj);
                 return false;
             }
@@ -835,35 +815,35 @@ exports.create_repo_record = function (req, callback) {
             obj.file_name = null;
             obj.thumbnail = null;
             obj.mime_type = null;
-            logger.module().error('ERROR: [/import/queue module (get_object_file_data)] unable to get object file data - dip_path is null');
+            LOGGER.module().error('ERROR: [/import/queue module (get_object_file_data)] unable to get object file data - dip_path is null');
             callback(null, obj);
             return false;
         }
 
         // if unable to get mime type from mets, check file extension
         if (obj.mime_type === undefined) {
-            logger.module().info('INFO: [/import/queue module (create_repo_record/get_object_file_data)] failed to get mime type from METS');
-            obj.mime_type = mimetypelib.get_mime_type(obj.file);
+            LOGGER.module().info('INFO: [/import/queue module (create_repo_record/get_object_file_data)] failed to get mime type from METS');
+            obj.mime_type = MIME_TYPE.get_mime_type(obj.file);
         }
 
         /*
          Get dura-manifest xml document
          */
-        duracloud.get_object_manifest(obj, function (response) {
+        DURACLOUD.get_object_manifest(obj, function (response) {
 
             /*
              if manifest is not present proceed with retrieving data
              */
             if (response.error !== undefined && response.error === true) {
 
-                logger.module().error('ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_manifest)] unable to get manifest or manifest does not exist ' + response.error_message);
+                LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_manifest)] unable to get manifest or manifest does not exist ' + response.error_message);
                 obj.manifest = false;
                 callback(null, obj);
                 return false;
 
             } else {
 
-                let manifest = manifestlib.process_manifest(response);
+                let manifest = MANIFEST.process_manifest(response);
 
                 obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file + '.dura-manifest';
                 obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
@@ -875,7 +855,7 @@ exports.create_repo_record = function (req, callback) {
                 } else {
                     obj.checksum = null;
                     obj.file_size = null;
-                    logger.module().error('ERROR: [/import/queue module (get_object_manifest)] unable to get data from manifest');
+                    LOGGER.module().error('ERROR: [/import/queue module (get_object_manifest)] unable to get data from manifest');
                 }
 
                 callback(null, obj);
@@ -898,11 +878,11 @@ exports.create_repo_record = function (req, callback) {
         setTimeout(function () {
 
             // gets headers only
-            duracloud.get_object_info(obj, function (response) {
+            DURACLOUD.get_object_info(obj, function (response) {
 
                 if (response.error === true) {
 
-                    logger.module().error('ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_info)] Unable to get duracloud object ' + response.error_message);
+                    LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_info)] Unable to get duracloud object ' + response.error_message);
 
                     let failObj = {
                         is_member_of_collection: '',
@@ -910,8 +890,8 @@ exports.create_repo_record = function (req, callback) {
                         message: 'ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_info)] Unable to get duracloud object ' + response.error_message
                     };
 
-                    importlib.save_to_fail_queue(failObj);
-                    importlib.clear_queue_record({
+                    TRANSFER_INGEST.save_to_fail_queue(failObj);
+                    TRANSFER_INGEST.clear_queue_record({
                         sip_uuid: sip_uuid
                     }, function (result) {
                         if (result === true) {
@@ -929,7 +909,7 @@ exports.create_repo_record = function (req, callback) {
                 callback(null, obj);
             });
 
-        }, 20000);  // TODO: place in .env config
+        }, 20000);
 
         return false;
     }
@@ -937,11 +917,11 @@ exports.create_repo_record = function (req, callback) {
     // 8.)
     function get_token(obj, callback) {
 
-        if (fs.existsSync('./tmp/st.txt')) {
+        if (FS.existsSync('./tmp/st.txt')) {
 
-            let st_file = fs.statSync('./tmp/st.txt'),
-                now = moment().startOf('day'),
-                st_created_date_time = moment(st_file.birthtime),
+            let st_file = FS.statSync('./tmp/st.txt'),
+                now = MOMENT().startOf('day'),
+                st_created_date_time = MOMENT(st_file.birthtime),
                 st_expire_date_time = st_created_date_time.clone().add(5, 'days');
 
             if (st_expire_date_time.isBefore(now)) {
@@ -958,10 +938,10 @@ exports.create_repo_record = function (req, callback) {
             } else if (st_expire_date_time.isAfter(now)) {
 
                 // if token is still valid, get the token from the txt file
-                fs.readFile('./tmp/st.txt', {encoding: 'utf-8'}, function (error, data) {
+                FS.readFile('./tmp/st.txt', {encoding: 'utf-8'}, function (error, data) {
 
                     if (error) {
-                        logger.module().error('ERROR: [/import/queue module (create_repo_record/get_token)] unable to read session token file ' + error);
+                        LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/get_token)] unable to read session token file ' + error);
                         return false;
                     }
 
@@ -980,7 +960,7 @@ exports.create_repo_record = function (req, callback) {
          */
         function new_token() {
 
-            archivespace.get_session_token(function (response) {
+            ARCHIVESSPACE.get_session_token(function (response) {
 
                 let data = response.data,
                     token;
@@ -995,10 +975,10 @@ exports.create_repo_record = function (req, callback) {
 
                     token = JSON.parse(data);
 
-                    fs.writeFile('./tmp/st.txt', token.session, function (error) {
+                    FS.writeFile('./tmp/st.txt', token.session, function (error) {
 
                         if (error) {
-                            logger.module().error('ERROR: [/import/queue module (create_repo_record/get_token/archivespace.get_session_token)] unable to save session token to file');
+                            LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/get_token/ARCHIVESSPACE.get_session_token)] unable to save session token to file');
                             callback({
                                 error: true,
                                 error_message: error
@@ -1006,21 +986,21 @@ exports.create_repo_record = function (req, callback) {
                         }
 
                         if (token.session === undefined) {
-                            logger.module().error('ERROR: [/import/queue module (create_repo_record/get_token/archivespace.get_session_token)] session token is undefined');
+                            LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/get_token/ARCHIVESSPACE.get_session_token)] session token is undefined');
                             obj.session = null;
                             callback(null, obj);
                             return false;
                         }
 
                         if (token.error === true) {
-                            logger.module().error('ERROR: [/import/queue module (create_repo_record/get_token/archivespace.get_session_token)] session token error' + token.error_message);
+                            LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/get_token/ARCHIVESSPACE.get_session_token)] session token error' + token.error_message);
                             obj.session = null;
                             callback(null, obj);
                             return false;
                         }
 
-                        if (!fs.existsSync('./tmp/st.txt')) {
-                            logger.module().error('ERROR: [/import/queue module (create_repo_record/get_token/archivespace.get_session_token)] st.txt was not created');
+                        if (!FS.existsSync('./tmp/st.txt')) {
+                            LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/get_token/ARCHIVESSPACE.get_session_token)] st.txt was not created');
                         }
 
                         obj.session = token.session;
@@ -1030,7 +1010,7 @@ exports.create_repo_record = function (req, callback) {
                     });
 
                 } catch (error) {
-                    logger.module().error('ERROR: [/import/queue module (create_repo_record/get_token/archivespace.get_session_token)] session token error ' + error);
+                    LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/get_token/ARCHIVESSPACE.get_session_token)] session token error ' + error);
                 }
             });
         }
@@ -1048,11 +1028,11 @@ exports.create_repo_record = function (req, callback) {
 
         setTimeout(function () {
 
-            archivespace.get_mods(obj.mods_id, obj.session, function (response) {
+            ARCHIVESSPACE.get_mods(obj.mods_id, obj.session, function (response) {
 
                 if (response.error !== undefined && response.error === true) {
 
-                    logger.module().error('ERROR: [/import/queue module (create_repo_record/get_mods)] unable to get mods ' + response.error_message);
+                    LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/get_mods)] unable to get mods ' + response.error_message);
 
                     obj.mods = null;
                     callback(null, obj);
@@ -1078,7 +1058,7 @@ exports.create_repo_record = function (req, callback) {
         handles.create_handle(obj.pid, function (handle) {
 
             if (handle.error !== undefined && handle.error === true) {
-                logger.module().error('ERROR: [/import/queue module (create_repo_record/get_handle/handles.create_handle)] handle error ' + handle.message);
+                LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/get_handle/handles.create_handle)] handle error ' + handle.message);
                 obj.handle = handle.message;
                 callback(null, obj);
                 return false;
@@ -1093,7 +1073,7 @@ exports.create_repo_record = function (req, callback) {
     function create_display_record(obj, callback) {
 
         if (obj.mods === null) {
-            logger.module().info('INFO: [/import/queue module (create_repo_record/create_display_record)] display record not created because we were not able to get MODS from archivesspace');
+            LOGGER.module().info('INFO: [/import/queue module (create_repo_record/create_display_record)] display record not created because we were not able to get MODS from archivesspace');
             callback(null, obj);
             return false;
         }
@@ -1101,7 +1081,7 @@ exports.create_repo_record = function (req, callback) {
         obj.object_type = 'object';
         obj.is_published = 0;
 
-        modslibdisplay.create_display_record(obj, function (result) {
+        MODS.create_display_record(obj, function (result) {
 
             let tmp = JSON.parse(result);
 
@@ -1109,7 +1089,7 @@ exports.create_repo_record = function (req, callback) {
 
                 let parts = tmp.display_record.parts;
 
-                importlib.get_compound_object_parts(obj.sip_uuid, parts, function (compound) {
+                TRANSFER_INGEST.get_compound_object_parts(obj.sip_uuid, parts, function (compound) {
 
                     tmp.compound = compound;
                     obj.is_compound = 1;
@@ -1131,10 +1111,10 @@ exports.create_repo_record = function (req, callback) {
             return false;
         }
 
-        fs.unlink('./tmp/' + obj.file, function (error) {
+        FS.unlink('./tmp/' + obj.file, function (error) {
 
             if (error) {
-                logger.module().error('ERROR: [/import/queue module (create_repo_record/delete_file)] file delete error ' + error);
+                LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/delete_file)] file delete error ' + error);
             }
 
             callback(null, obj);
@@ -1149,9 +1129,9 @@ exports.create_repo_record = function (req, callback) {
             return false;
         }
 
-        logger.module().info('INFO: [/import/queue module (create_repo_record/create_repo_record)] saving repository record to db');
+        LOGGER.module().info('INFO: [/import/queue module (create_repo_record/create_repo_record)] saving repository record to db');
 
-        importlib.create_repo_record(obj, function (result) {
+        TRANSFER_INGEST.create_repo_record(obj, function (result) {
             callback(null, obj);
         });
     }
@@ -1160,7 +1140,7 @@ exports.create_repo_record = function (req, callback) {
     function index(obj, callback) {
 
         if (obj.mods === null) {
-            logger.module().info('INFO: [/import/queue module (create_repo_record/index)] display record not indexed because we were not able to get MODS from archivesspace');
+            LOGGER.module().info('INFO: [/import/queue module (create_repo_record/index)] display record not indexed because we were not able to get MODS from archivesspace');
             callback(null, obj);
             return false;
         }
@@ -1168,15 +1148,15 @@ exports.create_repo_record = function (req, callback) {
         /*
          Send request to index repository record
          */
-        request.post({
-            url: config.apiUrl + '/api/admin/v1/indexer?api_key=' + config.apiKey,
+        REQUEST.post({
+            url: CONFIG.apiUrl + '/api/admin/v1/indexer?api_key=' + CONFIG.apiKey,
             form: {
                 'sip_uuid': obj.sip_uuid
             }
         }, function (error, httpResponse, body) {
 
             if (error) {
-                logger.module().error('ERROR: [/import/queue module (create_repo_record/index)] indexer error ' + error);
+                LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/index)] indexer error ' + error);
                 return false;
             }
 
@@ -1185,7 +1165,7 @@ exports.create_repo_record = function (req, callback) {
                 callback(null, obj);
                 return false;
             } else {
-                logger.module().error('ERROR: [/import/queue module (create_repo_record/index)] http error ' + httpResponse.statusCode + '/' + body);
+                LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/index)] http error ' + httpResponse.statusCode + '/' + body);
                 return false;
             }
         });
@@ -1194,14 +1174,14 @@ exports.create_repo_record = function (req, callback) {
     // 14.)
     function cleanup_queue(obj, callback) {
 
-        logger.module().info('INFO: [/import/queue module (create_repo_record/cleanup_queue)] cleaning up local queue ' + obj.sip_uuid);
+        LOGGER.module().info('INFO: [/import/queue module (create_repo_record/cleanup_queue)] cleaning up local queue ' + obj.sip_uuid);
 
-        archivematica.clear_ingest(obj.sip_uuid);
+        ARCHIVEMATICA.clear_ingest(obj.sip_uuid);
 
-        importlib.cleanup(obj, function (result) {
+        TRANSFER_INGEST.cleanup(obj, function (result) {
 
             if (result !== true) {
-                logger.module().error('ERROR: [/import/queue module (create_repo_record/cleanup_queue)] unable to clean up queue');
+                LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/cleanup_queue)] unable to clean up queue');
                 return false;
             }
 
@@ -1210,7 +1190,7 @@ exports.create_repo_record = function (req, callback) {
         });
     }
 
-    async.waterfall([
+    ASYNC.waterfall([
         get_collection,
         get_uri_txt,
         get_object_uri_data,
@@ -1228,7 +1208,7 @@ exports.create_repo_record = function (req, callback) {
     ], function (error, results) {
 
         if (error) {
-            logger.module().error('ERROR: [/import/queue module (create_repo_record/async.waterfall)] ' + error);
+            LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/async.waterfall)] ' + error);
         }
 
         if (results.mods === null && results.dip_path === null) {
@@ -1239,35 +1219,35 @@ exports.create_repo_record = function (req, callback) {
                 message: 'Unable to create repository record'
             };
 
-            importlib.save_to_fail_queue(failObj);
-            importlib.clear_queue_record({
+            TRANSFER_INGEST.save_to_fail_queue(failObj);
+            TRANSFER_INGEST.clear_queue_record({
                 sip_uuid: results.sip_uuid
             }, function (result) {
                 if (result === true) {
-                    importlib.restart_import();
+                    TRANSFER_INGEST.restart_import();
                 }
             });
         }
 
-        logger.module().info('INFO: [/import/queue module (create_repo_record/async.waterfall)] record imported');
+        LOGGER.module().info('INFO: [/import/queue module (create_repo_record/async.waterfall)] record imported');
 
         // look for null values in object as it indicates that the record is incomplete
         // TODO: not working
         /*
-        for (let i in results) {
-            if (results[i] === null) {
-                importlib.flag_incomplete_record(results);
-                logger.module().info('INFO: [/import/queue module (create_repo_record/async.waterfall)] ' + results.sip_uuid + ' is incomplete');
-                break;
-            }
-        }
-        */
+         for (let i in results) {
+         if (results[i] === null) {
+         TRANSFER_INGEST.flag_incomplete_record(results);
+         LOGGER.module().info('INFO: [/import/queue module (create_repo_record/async.waterfall)] ' + results.sip_uuid + ' is incomplete');
+         break;
+         }
+         }
+         */
 
         let collection = results.is_member_of_collection.replace(':', '_');
 
         // start next transfer
         // get queue record count for current collection
-        importlib.check_queue(collection, function (result) {
+        TRANSFER_INGEST.check_queue(collection, function (result) {
 
             if (result.status === 0) {
                 // ingest complete
@@ -1278,24 +1258,24 @@ exports.create_repo_record = function (req, callback) {
             /*
              Send request to begin next transfer
              */
-            request.post({
-                url: config.apiUrl + '/api/admin/v1/import/start_transfer',
+            REQUEST.post({
+                url: CONFIG.apiUrl + '/api/admin/v1/import/start_transfer',
                 form: {
                     'collection': collection
                 }
             }, function (error, httpResponse, body) {
 
                 if (error) {
-                    logger.module().fatal('FATAL: [/import/queue module (create_repo_record/async.waterfall/importlib.check_queue)] unable to begin transfer ' + error);
-                    throw 'FATAL: [/import/queue module (create_repo_record/async.waterfall/importlib.check_queue)] unable to begin transfer ' + error;
+                    LOGGER.module().fatal('FATAL: [/import/queue module (create_repo_record/async.waterfall/TRANSFER_INGEST.check_queue)] unable to begin transfer ' + error);
+                    throw 'FATAL: [/import/queue module (create_repo_record/async.waterfall/TRANSFER_INGEST.check_queue)] unable to begin transfer ' + error;
                 }
 
                 if (httpResponse.statusCode === 200) {
-                    logger.module().info('INFO: [/import/queue module (create_repo_record/async.waterfall/importlib.check_queue)] sending request to start next transfer (async)');
+                    LOGGER.module().info('INFO: [/import/queue module (create_repo_record/async.waterfall/TRANSFER_INGEST.check_queue)] sending request to start next transfer (async)');
                     return false;
                 } else {
-                    logger.module().fatal('FATAL: [/import/queue module (create_repo_record/async.waterfall/importlib.check_queue)] unable to begin next transfer ' + body);
-                    throw 'FATAL: [/import/queue module (create_repo_record/async.waterfall/importlib.check_queue)] unable to begin next transfer ' + body;
+                    LOGGER.module().fatal('FATAL: [/import/queue module (create_repo_record/async.waterfall/TRANSFER_INGEST.check_queue)] unable to begin next transfer ' + body);
+                    throw 'FATAL: [/import/queue module (create_repo_record/async.waterfall/TRANSFER_INGEST.check_queue)] unable to begin next transfer ' + body;
                 }
             });
 
@@ -1315,7 +1295,7 @@ exports.create_repo_record = function (req, callback) {
  */
 exports.poll_ingest_status = function (req, callback) {
 
-    knexQ(TRANSFER_QUEUE)
+    DBQ(TRANSFER_QUEUE)
         .count('id as count')
         .then(function (data) {
             callback({
@@ -1324,7 +1304,7 @@ exports.poll_ingest_status = function (req, callback) {
             });
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/import/queue module (check_ingest_status) transfer queue database error' + error);
+            LOGGER.module().fatal('FATAL: [/import/queue module (check_ingest_status) transfer queue database error' + error);
             throw 'FATAL: [/import/queue module (check_ingest_status) transfer queue database error' + error;
         });
 };
@@ -1336,7 +1316,7 @@ exports.poll_ingest_status = function (req, callback) {
  */
 exports.poll_transfer_status = function (req, callback) {
 
-    knexQ(TRANSFER_QUEUE)
+    DBQ(TRANSFER_QUEUE)
         .select('*')
         .where({
             transfer_status: 1
@@ -1349,7 +1329,7 @@ exports.poll_transfer_status = function (req, callback) {
             });
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/import/queue module (check_transfer_status) transfer queue database error ' + error);
+            LOGGER.module().fatal('FATAL: [/import/queue module (check_transfer_status) transfer queue database error ' + error);
             throw 'FATAL: [/import/queue module (check_transfer_status) transfer queue database error ' + error;
         });
 };
@@ -1361,7 +1341,7 @@ exports.poll_transfer_status = function (req, callback) {
  */
 exports.poll_import_status = function (req, callback) {
 
-    knexQ(IMPORT_QUEUE)
+    DBQ(IMPORT_QUEUE)
         .select('sip_uuid', 'uuid', 'file', 'file_id', 'type', 'type', 'dip_path', 'mime_type', 'message', 'status', 'created')
         .whereRaw('DATE(created) = CURRENT_DATE')
         .orderBy('created', 'desc')
@@ -1373,7 +1353,7 @@ exports.poll_import_status = function (req, callback) {
             });
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/import/queue module (import status broadcasts)] import queue database error ' + error);
+            LOGGER.module().fatal('FATAL: [/import/queue module (import status broadcasts)] import queue database error ' + error);
             throw 'FATAL: [/import/queue module (import status broadcasts)] import queue database error ' + error;
         });
 };
@@ -1385,7 +1365,7 @@ exports.poll_import_status = function (req, callback) {
  */
 exports.poll_fail_queue = function (req, callback) {
 
-    knexQ(FAIL_QUEUE)
+    DBQ(FAIL_QUEUE)
         .select('*')
         .orderBy('created', 'desc')
         .then(function (data) {
@@ -1395,7 +1375,7 @@ exports.poll_fail_queue = function (req, callback) {
             });
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/import/queue module (import failure broadcasts)] fail queue database error ' + error);
+            LOGGER.module().fatal('FATAL: [/import/queue module (import failure broadcasts)] fail queue database error ' + error);
             throw 'FATAL: [/import/queue module (import failure broadcasts)] fail queue database error ' + error;
         });
 };

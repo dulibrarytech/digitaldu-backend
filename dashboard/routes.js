@@ -18,71 +18,59 @@
 
 'use strict';
 
-const Dashboard = require('../dashboard/controller');
+const DASHBOARD = require('../dashboard/controller');
 
 module.exports = function (app) {
 
-    /* These routes are used to load HTML pages */
     app.route('/dashboard/home')
-        .get(Dashboard.get_dashboard_home);
+        .get(DASHBOARD.get_dashboard_home);
 
-    /* collections */
     app.route('/dashboard/collections')
-        .get(Dashboard.get_dashboard_collections);
+        .get(DASHBOARD.get_dashboard_collections);
 
     app.route('/dashboard/collections/add')
-        .get(Dashboard.get_dashboard_collection_add_form);
+        .get(DASHBOARD.get_dashboard_collection_add_form);
 
-    /* objects */
     app.route('/dashboard/objects')
-        .get(Dashboard.get_dashboard_objects);
+        .get(DASHBOARD.get_dashboard_objects);
 
     app.route('/dashboard/objects/unpublished')
-        .get(Dashboard.get_dashboard_unpublished_objects);
+        .get(DASHBOARD.get_dashboard_unpublished_objects);
 
     app.route('/dashboard/object')
-        .get(Dashboard.get_dashboard_object_detail);
+        .get(DASHBOARD.get_dashboard_object_detail);
 
-    /* update thumbnail */
     app.route('/dashboard/object/thumbnail')
-        .get(Dashboard.update_dashboard_thumbnail);
+        .get(DASHBOARD.update_dashboard_thumbnail);
 
-    /* download objects */
-    app.route('/dashboard/object/download')
-        .get(Dashboard.get_dashboard_download);
-
-    /* import objects */
     app.route('/dashboard/import')
-        .get(Dashboard.get_dashboard_import);
+        .get(DASHBOARD.get_dashboard_import);
 
-    /* import object files */
     app.route('/dashboard/import/files')
-        .get(Dashboard.get_dashboard_import_files);
+        .get(DASHBOARD.get_dashboard_import_files);
 
-    /* renders transfer status page */
     app.route('/dashboard/import/status')
-        .get(Dashboard.get_dashboard_import_status);
+        .get(DASHBOARD.get_dashboard_import_status);
 
     app.route('/dashboard/import/incomplete')
-        .get(Dashboard.get_dashboard_import_incomplete);
+        .get(DASHBOARD.get_dashboard_import_incomplete);
 
     app.route('/dashboard/import/complete')
-        .get(Dashboard.get_dashboard_import_complete);
+        .get(DASHBOARD.get_dashboard_import_complete);
 
-    /* users */
     app.route('/dashboard/users')
-        .get(Dashboard.get_dashboard_users);
+        .get(DASHBOARD.get_dashboard_users);
 
     app.route('/dashboard/users/edit')
-        .get(Dashboard.get_dashboard_user_edit_form);
+        .get(DASHBOARD.get_dashboard_user_edit_form);
 
     app.route('/dashboard/users/add')
-        .get(Dashboard.get_dashboard_user_add_form);
-
-    app.route('/dashboard/error')
-        .get(Dashboard.get_dashboard_error);
+        .get(DASHBOARD.get_dashboard_user_add_form);
 
     app.route('/dashboard/search')
-        .get(Dashboard.get_dashboard_search);
+        .get(DASHBOARD.get_dashboard_search);
+
+    app.route('/dashboard/error')
+        .get(DASHBOARD.get_dashboard_error);
 
 };
