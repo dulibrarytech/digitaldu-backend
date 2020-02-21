@@ -1152,7 +1152,6 @@ exports.publish_objects = function (req, callback) {
 
         let obj = {};
         obj.sip_uuid = pid;
-        // obj.api_url = CONFIG.apiUrl + '/api/admin/v1/indexer';
 
         if (obj.sip_uuid === undefined || obj.sip_uuid.length === 0) {
             return false;

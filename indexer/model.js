@@ -341,7 +341,7 @@ exports.reindex = function (req, callback) {
 
     let query = req.body.query;
 
-    if (query !== undefined) {
+    if (query === undefined) {
 
         callback({
             status: 400,
@@ -380,7 +380,7 @@ exports.unindex_record = function (req, callback) {
 
     let pid = req.query.pid;
 
-    if (pid !== undefined || pid.length === 0) {
+    if (pid === undefined || pid.length === 0) {
 
         callback({
             status: 400,
