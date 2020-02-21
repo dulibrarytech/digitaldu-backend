@@ -18,11 +18,11 @@
 
 'use strict';
 
-const Stats = require('../stats/controller'),
-    token = require('../libs/tokens');
+const STATS = require('../stats/controller'),
+    TOKEN = require('../libs/tokens');
 
 module.exports = function (app) {
 
     app.route('/api/admin/v1/stats')
-        .get(token.verify, Stats.get_stats);
+        .get(TOKEN.verify, STATS.get_stats);
 };

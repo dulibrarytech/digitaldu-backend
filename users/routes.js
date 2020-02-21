@@ -18,13 +18,13 @@
 
 'use strict';
 
-const Users = require('../users/controller'),
-    token = require('../libs/tokens');
+const USERS = require('../users/controller'),
+    TOKEN = require('../libs/tokens');
 
 module.exports = function (app) {
 
     app.route('/api/admin/v1/users')
-        .get(token.verify, Users.get_users)
-        .put(token.verify, Users.update_user)
-        .post(token.verify, Users.save_user);
+        .get(TOKEN.verify, USERS.get_users)
+        .put(TOKEN.verify, USERS.update_user)
+        .post(TOKEN.verify, USERS.save_user);
 };

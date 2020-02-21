@@ -18,11 +18,10 @@
 
 'use strict';
 
-const config = require('../config/config'),
-    service = require('../indexer/service'),
-    async = require('async'),
-    validator = require('validator'),
-    knex = require('../config/db')(),
+const CONFIG = require('../config/config'),
+    SERVICE = require('../indexer/service'),
+    VALIDATOR = require('validator'),
+    DB = require('../config/db')(),
     logger = require('../libs/log4'),
     REPO_OBJECTS = 'tbl_objects';
 
@@ -47,12 +46,12 @@ exports.get_index_record = function (req, callback) {
         elasticSearchIndex;
 
     if (req.body.publish !== undefined && req.body.publish === 'true') {
-        elasticSearchIndex = config.elasticSearchFrontIndex;
+        elasticSearchIndex = CONFIG.elasticSearchFrontIndex;
     } else {
-        elasticSearchIndex = config.elasticSearchBackIndex;
+        elasticSearchIndex = CONFIG.elasticSearchBackIndex;
     }
 
-    knex(REPO_OBJECTS)
+    DB(REPO_OBJECTS)
         .select('pid', 'is_member_of_collection', 'uri', 'handle', 'thumbnail', 'object_type', 'display_record', 'is_published')
         .where({
             sip_uuid: sip_uuid,
@@ -65,11 +64,11 @@ exports.get_index_record = function (req, callback) {
             if (record.display_record.jsonmodel_type !== undefined && record.display_record.jsonmodel_type === 'resource') {
 
                 let collection_record = {};
-                collection_record.pid = validator.escape(data[0].pid);
-                collection_record.uri = validator.escape(data[0].uri);
-                collection_record.is_member_of_collection = validator.escape(data[0].is_member_of_collection);
-                collection_record.handle = validator.escape(data[0].handle);
-                collection_record.object_type = validator.escape(data[0].object_type);
+                collection_record.pid = VALIDATOR.escape(data[0].pid);
+                collection_record.uri = VALIDATOR.escape(data[0].uri);
+                collection_record.is_member_of_collection = VALIDATOR.escape(data[0].is_member_of_collection);
+                collection_record.handle = VALIDATOR.escape(data[0].handle);
+                collection_record.object_type = VALIDATOR.escape(data[0].object_type);
                 collection_record.title = record.display_record.title;
                 collection_record.thumbnail = data[0].thumbnail;
                 collection_record.is_published = data[0].is_published;
@@ -98,7 +97,7 @@ exports.get_index_record = function (req, callback) {
                 delete record.display_record.language;
             }
 
-            service.index_record({
+            SERVICE.index_record({
                 index: elasticSearchIndex,
                 type: 'data',
                 id: record.pid.replace('codu:', ''),
@@ -143,12 +142,12 @@ exports.index_records = function (req, callback) {
     if (req.body.index_name !== undefined) {
         index_name = req.body.index_name;
     } else {
-        index_name = config.elasticSearchBackIndex;
+        index_name = CONFIG.elasticSearchBackIndex;
     }
 
     function index (index_name) {
 
-        knex(REPO_OBJECTS)
+        DB(REPO_OBJECTS)
             .select('pid', 'is_member_of_collection', 'uri', 'handle', 'object_type', 'display_record', 'thumbnail', 'is_published')
             .where({
                 is_indexed: 0,
@@ -168,11 +167,11 @@ exports.index_records = function (req, callback) {
                     if (record.display_record.jsonmodel_type !== undefined && record.display_record.jsonmodel_type === 'resource') {
 
                         let collection_record = {};
-                        collection_record.pid = validator.escape(data[0].pid);
-                        collection_record.uri = validator.escape(data[0].uri);
-                        collection_record.is_member_of_collection = validator.escape(data[0].is_member_of_collection);
-                        collection_record.handle = validator.escape(data[0].handle);
-                        collection_record.object_type = validator.escape(data[0].object_type);
+                        collection_record.pid = VALIDATOR.escape(data[0].pid);
+                        collection_record.uri = VALIDATOR.escape(data[0].uri);
+                        collection_record.is_member_of_collection = VALIDATOR.escape(data[0].is_member_of_collection);
+                        collection_record.handle = VALIDATOR.escape(data[0].handle);
+                        collection_record.object_type = VALIDATOR.escape(data[0].object_type);
                         collection_record.title = record.display_record.title;
                         collection_record.thumbnail = data[0].thumbnail;
                         collection_record.is_published = data[0].is_published;
@@ -215,7 +214,7 @@ exports.index_records = function (req, callback) {
                         }
                     }
 
-                    service.index_record({
+                    SERVICE.index_record({
                         index: index_name,
                         type: 'data',
                         id: record.pid.replace('codu:', ''),
@@ -224,7 +223,7 @@ exports.index_records = function (req, callback) {
 
                         if (response.result === 'created' || response.result === 'updated') {
 
-                            knex(REPO_OBJECTS)
+                            DB(REPO_OBJECTS)
                                 .where({
                                     pid: record.pid
                                 })
@@ -238,7 +237,7 @@ exports.index_records = function (req, callback) {
                                         setTimeout(function () {
                                             // index next record
                                             index(index_name);
-                                        }, config.indexTimer);
+                                        }, CONFIG.indexTimer);
 
                                     } else {
                                         logger.module().error('ERROR: [/indexer/model module (index_records)] more than one record was updated');
@@ -266,7 +265,7 @@ exports.index_records = function (req, callback) {
     }
 
     // reset is_indexed fields
-    knex(REPO_OBJECTS)
+    DB(REPO_OBJECTS)
         .where({
             is_indexed: 1,
             is_active: 1
@@ -309,8 +308,8 @@ exports.update_fragment = function (req, callback) {
         return false;
     }
 
-    service.update_fragment({
-        index: config.elasticSearchBackIndex,
+    SERVICE.update_fragment({
+        index: CONFIG.elasticSearchBackIndex,
         type: 'data',
         id: sip_uuid,
         body: doc_fragment
@@ -352,15 +351,15 @@ exports.reindex = function (req, callback) {
         return false;
     }
 
-    service.reindex({
+    SERVICE.reindex({
         body: {
             "source": {
-                "index": config.elasticSearchBackIndex,
+                "index": CONFIG.elasticSearchBackIndex,
                 "type": 'data',
                 "query": query
             },
             "dest": {
-                "index": config.elasticSearchFrontIndex
+                "index": CONFIG.elasticSearchFrontIndex
             }
         }
     }, function (response) {
@@ -391,8 +390,8 @@ exports.unindex_record = function (req, callback) {
         return false;
     }
 
-    service.unindex_record({
-        index: config.elasticSearchFrontIndex,
+    SERVICE.unindex_record({
+        index: CONFIG.elasticSearchFrontIndex,
         type: 'data',
         id: pid.replace('codu:', '')
     }, function (response) {

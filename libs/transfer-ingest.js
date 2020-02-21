@@ -16,28 +16,10 @@
 
 */
 
-const config = require('../config/config'),
-    archivematica = require('../libs/archivematica'),
-    logger = require('../libs/log4'),
-    request = require('request'),
-    knexQ = require('knex')({
-        client: 'mysql2',
-        connection: {
-            host: config.dbQueueHost,
-            user: config.dbQueueUser,
-            password: config.dbQueuePassword,
-            database: config.dbQueueName
-        }
-    }),
-    knex = require('knex')({
-        client: 'mysql2',
-        connection: {
-            host: config.dbHost,
-            user: config.dbUser,
-            password: config.dbPassword,
-            database: config.dbName
-        }
-    }),
+const REQUEST = require('request'),
+    DB = require('../config/db')(),
+    DBQ = require('../config/dbqueue')(),
+    LOGGER = require('../libs/log4'),
     QUEUE = 'tbl_archivematica_queue',
     IMPORT_QUEUE = 'tbl_duracloud_queue',
     FAIL_QUEUE = 'tbl_fail_queue',
@@ -52,7 +34,7 @@ exports.check_collection = function (pid, callback) {
 
     'use strict';
 
-    knex(REPO_OBJECTS)
+    DB(REPO_OBJECTS)
         .count('pid as count')
         .where({
             object_type: 'collection',
@@ -69,7 +51,7 @@ exports.check_collection = function (pid, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (check_collection)] database queue error ' + error);
+            LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (check_collection)] database queue error ' + error);
             throw 'FATAL: [/libs/transfer-ingest lib (check_collection)] database queue error ' + error;
         });
 };
@@ -103,7 +85,7 @@ exports.save_transfer_records = function (transfer_data, callback) {
 
     // Save import objects to transfer queue
     let chunkSize = importObjects.length;
-    knexQ.batchInsert(QUEUE, importObjects, chunkSize)
+    DBQ.batchInsert(QUEUE, importObjects, chunkSize)
         .then(function (data) {
 
             let obj = {};
@@ -112,7 +94,7 @@ exports.save_transfer_records = function (transfer_data, callback) {
 
             if (data.length === 0) {
                 obj.message = 'Data not saved.';
-                logger.module().fatal('FATAL: [/libs/transfer-ingest lib (save_transfer_records)] unable to save queue data');
+                LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (save_transfer_records)] unable to save queue data');
                 throw 'FATAL: [/libs/transfer-ingest lib (save_transfer_records)] unable to save queue data';
                 // TODO: clear queue and log to fail queue
             }
@@ -121,7 +103,7 @@ exports.save_transfer_records = function (transfer_data, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (save_transfer_records)] unable to save queue data');
+            LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (save_transfer_records)] unable to save queue data');
             throw 'FATAL: [/libs/transfer-ingest lib (save_transfer_records)] unable to save queue data' + error;
         });
 };
@@ -136,7 +118,7 @@ exports.start_transfer = function (collection, callback) {
     'use strict';
 
     // Get one transfer queue record
-    knexQ(QUEUE)
+    DBQ(QUEUE)
         .select('id', 'is_member_of_collection', 'object')
         .where({
             is_member_of_collection: collection,
@@ -162,7 +144,7 @@ exports.start_transfer = function (collection, callback) {
                 callback: function (data) {
                     if (data !== 1) {
                         // TODO: clear queue and log to fail queue
-                        logger.module().fatal('FATAL: [/libs/transfer-ingest lib (start_transfer)] database transfer queue error. data !== 1');
+                        LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (start_transfer)] database transfer queue error. data !== 1');
                         return false;
                     }
 
@@ -178,7 +160,7 @@ exports.start_transfer = function (collection, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().error('FATAL: [/libs/transfer-ingest lib (start_transfer)] database transfer queue error' + error);
+            LOGGER.module().error('FATAL: [/libs/transfer-ingest lib (start_transfer)] database transfer queue error' + error);
             throw 'FATAL: [/libs/transfer-ingest lib (start_transfer)] database transfer queue error' + error ;
         });
 };
@@ -215,7 +197,7 @@ exports.confirm_transfer = function (response, id) {
             callback: function (data) {
 
                 if (data !== 1) {
-                    logger.module().error('ERROR: [/libs/transfer-ingest lib (confirm_transfer)] database transfer queue error. data !==1');
+                    LOGGER.module().error('ERROR: [/libs/transfer-ingest lib (confirm_transfer)] database transfer queue error. data !==1');
                     return false;
                 }
 
@@ -257,7 +239,7 @@ exports.confirm_transfer = function (response, id) {
         callback: function (data) {
 
             if (data !== 1) {
-                logger.module().error('ERROR: [/libs/transfer-ingest lib (confirm_transfer)] database transfer queue error. data !==1');
+                LOGGER.module().error('ERROR: [/libs/transfer-ingest lib (confirm_transfer)] database transfer queue error. data !==1');
                 return false;
             }
 
@@ -279,7 +261,7 @@ exports.get_transferred_record = function (collection, callback) {
     'use strict';
 
     // Get one transfer queue record
-    knexQ(QUEUE)
+    DBQ(QUEUE)
         .select('id', 'is_member_of_collection', 'transfer_folder')
         .where({
             is_member_of_collection: collection,
@@ -301,7 +283,7 @@ exports.get_transferred_record = function (collection, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (get_transferred_record)] database transfer queue error' + error);
+            LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (get_transferred_record)] database transfer queue error' + error);
             throw 'FATAL: [/libs/transfer-ingest lib (get_transferred_record)] database transfer queue error' + error;
         });
 };
@@ -325,7 +307,7 @@ exports.confirm_transfer_approval = function (response, object, callback) {
     try {
         json = JSON.parse(response);
     } catch (e) {
-        logger.module().error('ERROR: [/libs/transfer-ingest lib (confirm_transfer_approval)] unable to parse confirmation response');
+        LOGGER.module().error('ERROR: [/libs/transfer-ingest lib (confirm_transfer_approval)] unable to parse confirmation response');
         return false;
     }
 
@@ -346,7 +328,7 @@ exports.confirm_transfer_approval = function (response, object, callback) {
             callback: function (data) {
 
                 if (data !== 1) {
-                    logger.module().error('ERROR: [/libs/transfer-ingest lib (confirm_transfer_approval)] unable to update database queue. data !==1');
+                    LOGGER.module().error('ERROR: [/libs/transfer-ingest lib (confirm_transfer_approval)] unable to update database queue. data !==1');
                     return false;
                 }
 
@@ -392,7 +374,7 @@ exports.update_transfer_status = function (response, callback) {
 
     if (json.status === 'COMPLETE' && json.sip_uuid !== undefined) {
 
-        knexQ(QUEUE)
+        DBQ(QUEUE)
             .count('sip_uuid as count')
             .where({
                 sip_uuid: json.sip_uuid,
@@ -416,7 +398,7 @@ exports.update_transfer_status = function (response, callback) {
                         callback: function (data) {
 
                             if (data !== 1) {
-                                logger.module().error('ERROR: [/libs/transfer-ingest lib (update_transfer_status)] updated more than one record in database queue. data !==1');
+                                LOGGER.module().error('ERROR: [/libs/transfer-ingest lib (update_transfer_status)] updated more than one record in database queue. data !==1');
                                 return false;
                             } else {
 
@@ -437,7 +419,7 @@ exports.update_transfer_status = function (response, callback) {
                 return null;
             })
             .catch(function (error) {
-                logger.module().fatal('FATAL: [/libs/transfer-ingest lib (update_transfer_status)] database queue error ' + error);
+                LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (update_transfer_status)] database queue error ' + error);
                 throw 'FATAL: [/libs/transfer-ingest lib (update_transfer_status)] database queue error ' + error;
             });
 
@@ -459,7 +441,7 @@ exports.update_transfer_status = function (response, callback) {
             callback: function (data) {
 
                 if (data !== 1) {
-                    logger.module().error('ERROR: [/libs/transfer-ingest lib (update_transfer_status)] database queue error. data !==1');
+                    LOGGER.module().error('ERROR: [/libs/transfer-ingest lib (update_transfer_status)] database queue error. data !==1');
                     return false;
                 }
 
@@ -525,7 +507,7 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
             callback: function (data) {
 
                 if (data !== 1) {
-                    logger.module().error('ERROR: [/libs/transfer-ingest lib (update_ingest_status)] database queue error. data!==1 ' + json.status);
+                    LOGGER.module().error('ERROR: [/libs/transfer-ingest lib (update_ingest_status)] database queue error. data!==1 ' + json.status);
 
                     callback({
                         complete: false
@@ -566,7 +548,7 @@ exports.update_ingest_status = function (response, sip_uuid, callback) {
             callback: function (data) {
 
                 if (data !== 1) {
-                    logger.module().error('ERROR: [/libs/transfer-ingest lib (update_ingest_status)] database queue error data!==1 ' + json.status);
+                    LOGGER.module().error('ERROR: [/libs/transfer-ingest lib (update_ingest_status)] database queue error data!==1 ' + json.status);
                     return false;
                 }
 
@@ -602,7 +584,7 @@ exports.save_mets_data = function (obj, callback) {
 
     'use strict';
 
-    knexQ(IMPORT_QUEUE)
+    DBQ(IMPORT_QUEUE)
         .count('sip_uuid as count')
         .where({
             sip_uuid: obj[0].sip_uuid
@@ -611,14 +593,14 @@ exports.save_mets_data = function (obj, callback) {
 
             if (result[0].count !== 2) {
 
-                knexQ(IMPORT_QUEUE)
+                DBQ(IMPORT_QUEUE)
                     .insert(obj)
                     .then(function (data) {
                         callback('done');
                         return null;
                     })
                     .catch(function (error) {
-                        logger.module().fatal('FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save mets ' + error);
+                        LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save mets ' + error);
                         throw 'FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save mets ' + error;
                     });
             }
@@ -626,7 +608,7 @@ exports.save_mets_data = function (obj, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save mets ' + error);
+            LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save mets ' + error);
             throw 'FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save mets ' + error;
         });
 
@@ -642,7 +624,7 @@ exports.get_uri_txt = function (sip_uuid, callback) {
 
     'use strict';
 
-    knexQ(IMPORT_QUEUE)
+    DBQ(IMPORT_QUEUE)
         .select('*')
         .where({
             sip_uuid: sip_uuid,
@@ -656,7 +638,7 @@ exports.get_uri_txt = function (sip_uuid, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (get_uri_txt)] unable to get uri txt file ' + error);
+            LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (get_uri_txt)] unable to get uri txt file ' + error);
             throw 'FATAL: [/libs/transfer-ingest lib (get_uri_txt)] unable to get uri txt file ' + error;
         });
 };
@@ -670,7 +652,7 @@ exports.get_collection = function (sip_uuid, callback) {
 
     'use strict';
 
-    knexQ(QUEUE)
+    DBQ(QUEUE)
         .select('is_member_of_collection')
         .where({
             sip_uuid: sip_uuid
@@ -680,7 +662,7 @@ exports.get_collection = function (sip_uuid, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (get_collection)] unable to get collection ' + error);
+            LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (get_collection)] unable to get collection ' + error);
             throw 'FATAL: [/libs/transfer-ingest lib (get_collection)] unable to get collection ' + error;
         });
 };
@@ -707,7 +689,7 @@ exports.save_mods_id = function (mods_id, sip_uuid, callback) {
         callback: function (data) {
 
             if (data !== 1) {
-                logger.module().error('ERROR: [/libs/transfer-ingest lib (save_mods_id)] unable to save mods id.  data !==1');
+                LOGGER.module().error('ERROR: [/libs/transfer-ingest lib (save_mods_id)] unable to save mods id.  data !==1');
                 throw 'ERROR: [/libs/transfer-ingest lib (save_mods_id)] unable to save mods id.  data !==1';
             }
 
@@ -729,7 +711,7 @@ exports.get_object = function (sip_uuid, callback) {
 
     'use strict';
 
-    knexQ(IMPORT_QUEUE)
+    DBQ(IMPORT_QUEUE)
         .select('*')
         .where({
             sip_uuid: sip_uuid,
@@ -742,7 +724,7 @@ exports.get_object = function (sip_uuid, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (get_object)] unable to get object ' + error);
+            LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (get_object)] unable to get object ' + error);
             throw 'FATAL: [/libs/transfer-ingest lib (get_object)] unable to get object ' + error;
         });
 };
@@ -761,14 +743,14 @@ exports.create_repo_record = function (obj, callback) {
     delete obj.file;
     delete obj.uuid;
 
-    knex(REPO_OBJECTS)
+    DB(REPO_OBJECTS)
         .insert(obj)
         .then(function (data) {
             callback(true);
             return null;
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (create_repo_record)] unable to create repo record ' + error);
+            LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (create_repo_record)] unable to create repo record ' + error);
             throw 'FATAL: [/libs/transfer-ingest lib (create_repo_record)] unable to create repo record ' + error;
         });
 };
@@ -782,14 +764,14 @@ exports.cleanup = function (obj, callback) {
 
     'use strict';
 
-    knexQ(QUEUE)
+    DBQ(QUEUE)
         .where({
             sip_uuid: obj.sip_uuid
         })
         .del()
         .then(function (data) {
 
-            knexQ(IMPORT_QUEUE)
+            DBQ(IMPORT_QUEUE)
                 .where({
                     sip_uuid: obj.sip_uuid
                 })
@@ -799,14 +781,14 @@ exports.cleanup = function (obj, callback) {
                     return null;
                 })
                 .catch(function (error) {
-                    logger.module().fatal('FATAL: [/libs/transfer-ingest lib (cleanup/QUEUE)] unable to clean up queue ' + error);
+                    LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (cleanup/QUEUE)] unable to clean up queue ' + error);
                     throw 'FATAL: [/libs/transfer-ingest lib (cleanup/QUEUE)] unable to clean up queue ' + error;
                 });
 
             return null;
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (cleanup/IMPORT_QUEUE)] unable to clean up queue ' + error);
+            LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (cleanup/IMPORT_QUEUE)] unable to clean up queue ' + error);
             throw 'FATAL: [/libs/transfer-ingest lib (cleanup/IMPORT_QUEUE)] unable to clean up queue ' + error;
         });
 };
@@ -819,7 +801,7 @@ exports.flag_incomplete_record = function (obj) {
 
     'use strict';
 
-    knex(REPO_OBJECTS)
+    DB(REPO_OBJECTS)
         .where({
             sip_uuid: obj.sip_uuid
         })
@@ -830,7 +812,7 @@ exports.flag_incomplete_record = function (obj) {
             return null;
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (flag_incomplete_record)] unable to flag incomplete record ' + error);
+            LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (flag_incomplete_record)] unable to flag incomplete record ' + error);
             throw 'FATAL: [/libs/transfer-ingest lib (flag_incomplete_record)] unable to flag incomplete record ' + error;
         });
 
@@ -845,7 +827,7 @@ exports.check_queue = function (is_member_of_collection, callback) {
 
     'use strict';
 
-    knexQ(QUEUE)
+    DBQ(QUEUE)
         .count('is_member_of_collection as count')
         .where({
             is_member_of_collection: is_member_of_collection
@@ -865,7 +847,7 @@ exports.check_queue = function (is_member_of_collection, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (check_queue)] unable to check queue ' + error);
+            LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (check_queue)] unable to check queue ' + error);
             throw 'FATAL: [/libs/transfer-ingest lib (check_queue)] unable to check queue ' + error;
         });
 };
@@ -878,13 +860,13 @@ exports.save_to_fail_queue = function (obj) {
 
     'use strict';
 
-    knexQ(FAIL_QUEUE)
+    DBQ(FAIL_QUEUE)
         .insert(obj)
         .then(function (data) {
             return null;
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (save_to_fail_queue)] unable to save to fail queue ' + error);
+            LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (save_to_fail_queue)] unable to save to fail queue ' + error);
             throw 'FATAL: [/libs/transfer-ingest lib (save_to_fail_queue)] unable to save to fail queue ' + error;
         });
 };
@@ -897,7 +879,7 @@ exports.get_import_collection = function (callback) {
 
     'use strict';
 
-    knexQ(QUEUE)
+    DBQ(QUEUE)
         .select('*')
         .distinct('is_member_of_collection')
         .limit(1)
@@ -906,7 +888,7 @@ exports.get_import_collection = function (callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (get_import_collection)] unable to get import collection ' + error);
+            LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (get_import_collection)] unable to get import collection ' + error);
             throw 'FATAL: [/libs/transfer-ingest lib (get_import_collection)] unable to get import collection ' + error;
         });
 };
@@ -918,7 +900,7 @@ exports.restart_import = function () {
 
     'use strict';
 
-    knexQ(QUEUE)
+    DBQ(QUEUE)
         .select('*')
         .distinct('is_member_of_collection')
         .limit(1)
@@ -929,7 +911,7 @@ exports.restart_import = function () {
                 return false;
             }
 
-            request.post({
+            REQUEST.post({
                 url: config.apiUrl + '/api/admin/v1/import/start_transfer',
                 form: {
                     'collection': data[0].is_member_of_collection
@@ -937,15 +919,15 @@ exports.restart_import = function () {
             }, function (error, httpResponse, body) {
 
                 if (error) {
-                    logger.module().fatal('FATAL: [/libs/transfer-ingest lib (restart_import)] unable to restart transfer (request async)' + error);
+                    LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (restart_import)] unable to restart transfer (request async)' + error);
                     throw 'FATAL: [/libs/transfer-ingest lib (restart_import)] unable to restart transfer (request async)' + error;
                 }
 
                 if (httpResponse.statusCode === 200) {
-                    logger.module().info('INFO: [/libs/transfer-ingest lib (restart_import)] sending request to restart transfer (request async)');
+                    LOGGER.module().info('INFO: [/libs/transfer-ingest lib (restart_import)] sending request to restart transfer (request async)');
                     return false;
                 } else {
-                    logger.module().fatal('FATAL: [/libs/transfer-ingest lib (restart_import)] unable to restart transfer ' + httpResponse.statusCode + '/' + body + ' (request async)');
+                    LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (restart_import)] unable to restart transfer ' + httpResponse.statusCode + '/' + body + ' (request async)');
                     throw 'FATAL: [/libs/transfer-ingest lib (restart_import)] unable to begin restart transfer ' + httpResponse.statusCode + '/' + body + ' (request async)';
                 }
             });
@@ -953,7 +935,7 @@ exports.restart_import = function () {
             return null;
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (restart_import)] unable unable to restart import ' + error);
+            LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (restart_import)] unable unable to restart import ' + error);
             throw 'FATAL: [/libs/transfer-ingest lib (restart_import)] unable to restart import ' + error;
         });
 };
@@ -968,7 +950,7 @@ exports.get_compound_object_parts = function (sip_uuid, parts, callback) {
 
     'use strict';
 
-    knexQ(IMPORT_QUEUE)
+    DBQ(IMPORT_QUEUE)
         .select('uuid', 'file', 'dip_path')
         .where({
             type: 'object',
@@ -1000,7 +982,7 @@ exports.get_compound_object_parts = function (sip_uuid, parts, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (get_compound_object_parts)] unable to get compound object parts ' + error);
+            LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (get_compound_object_parts)] unable to get compound object parts ' + error);
             throw 'FATAL: [/libs/transfer-ingest lib (get_compound_object_parts)] unable to get compound object parts ' + error;
         });
 };
@@ -1014,7 +996,7 @@ exports.clear_queue_record = function (obj, callback) {
 
     'use strict';
 
-    knexQ(QUEUE)
+    DBQ(QUEUE)
         .where(obj)
         .del()
         .then(function (data) {
@@ -1028,7 +1010,7 @@ exports.clear_queue_record = function (obj, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (clear_queue_record)] unable to clean up queue ' + error);
+            LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (clear_queue_record)] unable to clean up queue ' + error);
             throw 'FATAL: [/libs/transfer-ingest lib (clear_queue_record)] unable to clean up queue ' + error;
         });
 };
@@ -1041,12 +1023,12 @@ const update_queue = function (obj) {
 
     'use strict';
 
-    knexQ(obj.table)
+    DBQ(obj.table)
         .where(obj.where)
         .update(obj.update)
         .then(obj.callback)
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/libs/transfer-ingest lib (update_queue)] unable to update queue ' + error);
+            LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (update_queue)] unable to update queue ' + error);
             throw 'FATAL: [/libs/transfer-ingest lib (update_queue)] unable to update queue ' + error;
         });
 };

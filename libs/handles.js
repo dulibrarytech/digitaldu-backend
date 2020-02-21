@@ -16,15 +16,15 @@
 
  */
 
-const config = require('../config/config'),
-    logger = require('../libs/log4'),
-    request = require('request'),
-    HANDLE_HOST = config.handleHost,
-    HANDLE_PREFIX = config.handlePrefix,
-    HANDLE_USER = config.handleUsername,
-    HANDLE_PASSWORD = config.handlePwd,
-    HANDLE_TARGET = config.handleTarget,
-    HANDLE_SERVER = config.handleServer;
+const CONFIG = require('../config/config'),
+    LOGGER = require('../libs/log4'),
+    REQUEST = require('request'),
+    HANDLE_HOST = CONFIG.handleHost,
+    HANDLE_PREFIX = CONFIG.handlePrefix,
+    HANDLE_USER = CONFIG.handleUsername,
+    HANDLE_PASSWORD = CONFIG.handlePwd,
+    HANDLE_TARGET = CONFIG.handleTarget,
+    HANDLE_SERVER = CONFIG.handleServer;
 
 /**
  * Creates handle
@@ -37,7 +37,7 @@ exports.create_handle = function (pid, callback) {
 
     if (pid === undefined) {
 
-        logger.module().error('ERROR: Unable to create handle. (pid is undefined)');
+        LOGGER.module().error('ERROR: Unable to create handle. (pid is undefined)');
 
         callback({
             error: true,
@@ -57,11 +57,11 @@ exports.create_handle = function (pid, callback) {
         }
     };
 
-    request(options, function (error, response, body) {
+    REQUEST(options, function (error, response, body) {
 
         if (error) {
 
-            logger.module().error('ERROR: [/libs/handles lib (create_handle)] Unable to create handle. ' + error);
+            LOGGER.module().error('ERROR: [/libs/handles lib (create_handle)] Unable to create handle. ' + error);
 
             callback({
                 error: true,
@@ -73,14 +73,14 @@ exports.create_handle = function (pid, callback) {
 
         if (response.statusCode === 201) {
 
-            logger.module().info('INFO: [/libs/handles lib (create_handle)] Handle for object: ' + pid + ' had been created.');
+            LOGGER.module().info('INFO: [/libs/handles lib (create_handle)] Handle for object: ' + pid + ' had been created.');
 
             let handle = HANDLE_SERVER + HANDLE_PREFIX + '/' + pid;
             callback(handle);
 
         } else if (response.statusCode === 409) {
 
-            logger.module().error('ERROR: [/libs/handles lib (create_handle)] Handle already exists (conflict)');
+            LOGGER.module().error('ERROR: [/libs/handles lib (create_handle)] Handle already exists (conflict)');
 
             callback({
                 error: true,
@@ -89,7 +89,7 @@ exports.create_handle = function (pid, callback) {
 
         } else {
 
-            logger.module().error('ERROR: [/libs/handles lib (create_handle)] Unable to create new handle ' + response.statusCode);
+            LOGGER.module().error('ERROR: [/libs/handles lib (create_handle)] Unable to create new handle ' + response.statusCode);
 
             callback({
                 error: true,
@@ -110,7 +110,7 @@ exports.update_handle = function (pid, callback) {
 
     if (pid === undefined) {
 
-        logger.module().error('ERROR: [/libs/handles lib (update_handle)] Unable to create handle. (pid is undefined)');
+        LOGGER.module().error('ERROR: [/libs/handles lib (update_handle)] Unable to create handle. (pid is undefined)');
 
         callback({
             error: true,
@@ -130,11 +130,11 @@ exports.update_handle = function (pid, callback) {
         }
     };
 
-    request(options, function (error, response, body) {
+    REQUEST(options, function (error, response, body) {
 
         if (error) {
 
-            logger.module().error('ERROR: [/libs/handles lib (update_handle)] Unable to create handle. ' + error);
+            LOGGER.module().error('ERROR: [/libs/handles lib (update_handle)] Unable to create handle. ' + error);
 
             callback({
                 error: true,
@@ -146,14 +146,14 @@ exports.update_handle = function (pid, callback) {
 
         if (response.statusCode === 204) {
 
-            logger.module().info('INFO: [/libs/handles lib (update_handle)] Handle for object: ' + pid + ' had been updated.');
+            LOGGER.module().info('INFO: [/libs/handles lib (update_handle)] Handle for object: ' + pid + ' had been updated.');
 
             let handle = HANDLE_SERVER + HANDLE_PREFIX + '/' + pid;
             callback(handle);
 
         } else {
 
-            logger.module().error('ERROR: [/libs/handles lib (update_handle)] Unable to update handle. ' + response.statusCode);
+            LOGGER.module().error('ERROR: [/libs/handles lib (update_handle)] Unable to update handle. ' + response.statusCode);
 
             callback({
                 error: true,

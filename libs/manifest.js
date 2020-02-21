@@ -18,7 +18,7 @@
 
 'use strict';
 
-const xmldoc = require('xmldoc');
+const XMLDOC = require('xmldoc');
 
 /**
  * Parses out chunk info from XML and constructs object containing video chunk references in duracloud
@@ -27,7 +27,7 @@ const xmldoc = require('xmldoc');
  */
 exports.process_manifest = function (xml) {
 
-    let document = new xmldoc.XmlDocument(xml),
+    let document = new XMLDOC.XmlDocument(xml),
         chunks = document.childNamed('chunks'),
         arr = [],
         obj = {};

@@ -18,11 +18,8 @@
 
 'use strict';
 
-const config = require('../config/config'),
-    fs = require('fs'),
-    validator = require('validator'),
-    logger = require('../libs/log4'),
-    knex =require('../config/db')(),
+const LOGGER = require('../libs/log4'),
+    DB =require('../config/db')(),
     USERS = 'tbl_users';
 
 /**
@@ -33,7 +30,7 @@ const config = require('../config/config'),
  */
 exports.get_users = function (req, callback) {
 
-    if (req.query.id !== undefined) {
+    if (req.query.id !== undefined && req.query.id.length !== 0) {
 
         get_user(req, function (user) {
             callback(user);
@@ -42,7 +39,7 @@ exports.get_users = function (req, callback) {
         return false;
     }
 
-    knex(USERS)
+    DB(USERS)
         .select(
         'tbl_users.id',
         'tbl_users.du_id',
@@ -60,7 +57,7 @@ exports.get_users = function (req, callback) {
             });
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/users/model module (get_users)] unable to get users ' + error);
+            LOGGER.module().fatal('FATAL: [/users/model module (get_users)] unable to get users ' + error);
             throw 'FATAL: [/users/model module (get_users)] unable to get users ' + error;
         });
 };
@@ -74,7 +71,7 @@ const get_user = function (req, callback) {
 
     let id = req.query.id;
 
-    if (id === undefined) {
+    if (id === undefined || id.length === 0) {
 
         callback({
             status: 400,
@@ -82,12 +79,13 @@ const get_user = function (req, callback) {
         });
     }
 
-    knex(USERS)
+    DB(USERS)
         .select('id', 'du_id', 'email', 'first_name', 'last_name', 'is_active', 'created')
         .where({
             id: id
         })
         .then(function (data) {
+
             callback({
                 status: 200,
                 data: data,
@@ -95,7 +93,7 @@ const get_user = function (req, callback) {
             });
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/users/model module (get_user)] unable to get user ' + error);
+            LOGGER.module().fatal('FATAL: [/users/model module (get_user)] unable to get user ' + error);
             throw 'FATAL: [/users/model module (get_user)] unable to get user ' + error;
         });
 };
@@ -107,7 +105,7 @@ const get_user = function (req, callback) {
  */
 exports.check_auth_user = function (username, callback) {
 
-    knex(USERS)
+    DB(USERS)
         .select('id')
         .where({
             du_id: username,
@@ -128,7 +126,7 @@ exports.check_auth_user = function (username, callback) {
             }
         })
         .catch(function (error) {
-            logger.module().error('FATAL: [/users/model module (check_auth_user)] unable to check auth ' + error);
+            LOGGER.module().error('FATAL: [/users/model module (check_auth_user)] unable to check auth ' + error);
             throw 'FATAL: [/users/model module (check_auth_user)] unable to check auth ' + error;
         });
 };
@@ -140,7 +138,7 @@ exports.check_auth_user = function (username, callback) {
  */
 exports.get_auth_user_data = function (username, callback) {
 
-    knex(USERS)
+    DB(USERS)
         .select('id', 'du_id', 'email', 'first_name', 'last_name')
         .where({
             du_id: username,
@@ -159,7 +157,7 @@ exports.get_auth_user_data = function (username, callback) {
             }
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/users/model module (get_auth_user_data)] unable to get user data ' + error);
+            LOGGER.module().fatal('FATAL: [/users/model module (get_auth_user_data)] unable to get user data ' + error);
             throw 'FATAL: [/users/model module (get_auth_user_data)] unable to get user data ' + error;
         });
 };
@@ -174,9 +172,17 @@ exports.update_user = function (req, callback) {
     let User = req.body,
         id = User.id;
 
+    if (User === undefined || id.length === 0) {
+
+        callback({
+            status: 400,
+            message: 'Bad Request.'
+        });
+    }
+
     delete User.id;
 
-    knex(USERS)
+    DB(USERS)
         .where({
             id: id
         })
@@ -196,7 +202,7 @@ exports.update_user = function (req, callback) {
             return null;
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/users/model module (update_user)] unable to update user record ' + error);
+            LOGGER.module().fatal('FATAL: [/users/model module (update_user)] unable to update user record ' + error);
             throw 'FATAL: [/users/model module (update_user)] unable to update user record ' + error;
         });
 };
@@ -221,7 +227,7 @@ exports.save_user = function (req, callback) {
         return false;
     }
 
-    knex(USERS)
+    DB(USERS)
         .insert(userObj)
         .then(function (data) {
             callback({
@@ -230,7 +236,7 @@ exports.save_user = function (req, callback) {
             });
         })
         .catch(function (error) {
-            logger.module().error('FATAL: [/users/model module (save_user)] unable to get user data ' + error);
+            LOGGER.module().error('FATAL: [/users/model module (save_user)] unable to get user data ' + error);
             throw 'FATAL: [/users/model module (save_user)] unable to get user data ' + error;
         });
 };

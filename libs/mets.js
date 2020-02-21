@@ -18,12 +18,12 @@
 
 'use strict';
 
-const xmldoc = require('xmldoc'),
+const XMLDOC = require('xmldoc'),
     _ = require('lodash');
 
 exports.process_mets = function (sip_uuid, dip_path, xml) {
 
-    let document = new xmldoc.XmlDocument(xml),
+    let document = new XMLDOC.XmlDocument(xml),
         Obj = {},
         Arr = [],
         mime_type;

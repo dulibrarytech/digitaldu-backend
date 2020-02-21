@@ -18,10 +18,10 @@
 
 'use strict';
 
-const createdompurify = require('dompurify'),
+const CREATEDOMPURIFY = require('dompurify'),
     {JSDOM} = require('jsdom'),
-    window = new JSDOM('').window,
-    DOMPurify = createdompurify(window);
+    WINDOW = new JSDOM('').window,
+    DOMPURIFY = CREATEDOMPURIFY(WINDOW);
 
 /**
  * Middleware function used to sanitize body (form) inputs
@@ -42,7 +42,7 @@ exports.sanitize_req_body = function(req, res, next) {
         if (req.body.hasOwnProperty(prop)) {
 
             if (prop !== 'is_active' && typeof req.body[prop] === 'string') {
-                req.body[prop] = DOMPurify.sanitize(req.body[prop]);
+                req.body[prop] = DOMPURIFY.sanitize(req.body[prop]);
             }
         }
     });
@@ -67,7 +67,7 @@ exports.sanitize_req_query = function(req, res, next) {
     keys.map(function (prop) {
 
         if (req.query.hasOwnProperty(prop) && typeof req.query[prop] === 'string') {
-            req.query[prop] = DOMPurify.sanitize(req.query[prop]);
+            req.query[prop] = DOMPURIFY.sanitize(req.query[prop]);
         }
     });
 

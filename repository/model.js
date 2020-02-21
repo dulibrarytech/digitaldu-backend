@@ -901,7 +901,7 @@ exports.publish_objects = function (req, callback) {
 
         let obj = {};
         obj.is_member_of_collection = pid;
-        obj.api_url = CONFIG.apiUrl + '/api/admin/v1/indexer';
+        //obj.api_url = CONFIG.apiUrl + '/api/admin/v1/indexer';
 
         DB(REPO_OBJECTS)
             .where({
@@ -1152,7 +1152,7 @@ exports.publish_objects = function (req, callback) {
 
         let obj = {};
         obj.sip_uuid = pid;
-        obj.api_url = CONFIG.apiUrl + '/api/admin/v1/indexer';
+        // obj.api_url = CONFIG.apiUrl + '/api/admin/v1/indexer';
 
         if (obj.sip_uuid === undefined || obj.sip_uuid.length === 0) {
             return false;
@@ -1406,10 +1406,10 @@ exports.unpublish_objects = function (req, callback) {
 
         let obj = {};
         obj.is_member_of_collection = pid;
-        obj.api_url = CONFIG.apiUrl + '/api/admin/v1/indexer';
+        // obj.api_url = CONFIG.apiUrl + '/api/admin/v1/indexer';
 
         REQUEST.delete({
-            url: obj.api_url + '?pid=' + obj.is_member_of_collection + '&api_key=' + CONFIG.apiKey,
+            url: CONFIG.apiUrl + '/api/admin/v1/indexer?pid=' + obj.is_member_of_collection + '&api_key=' + CONFIG.apiKey,
             timeout: 25000
         }, function (error, httpResponse, body) {
 
@@ -1460,7 +1460,7 @@ exports.unpublish_objects = function (req, callback) {
 
                         // remove objects from public index
                         REQUEST.delete({
-                            url: obj.api_url + '?pid=' + record.sip_uuid + '&api_key=' + CONFIG.apiKey,
+                            url: CONFIG.apiUrl + '/api/admin/v1/indexer?pid=' + record.sip_uuid + '&api_key=' + CONFIG.apiKey,
                             timeout: 25000
                         }, function (error, httpResponse, body) {
 
@@ -1617,7 +1617,7 @@ exports.unpublish_objects = function (req, callback) {
     function unpublish_object(callback) {
 
         let obj = {};
-        obj.api_url = CONFIG.apiUrl + '/api/admin/v1/indexer';
+        // obj.api_url = CONFIG.apiUrl + '/api/admin/v1/indexer';
         obj.pid = pid;
 
         if (obj.pid === undefined || obj.pid.length === 0) {
@@ -1625,7 +1625,7 @@ exports.unpublish_objects = function (req, callback) {
         }
 
         REQUEST.delete({
-            url: obj.api_url + '?pid=' + obj.pid + '&api_key=' + CONFIG.apiKey,
+            url: CONFIG.apiUrl + '/api/admin/v1/indexer?pid=' + obj.pid + '&api_key=' + CONFIG.apiKey,
             timeout: 25000
         }, function (error, httpResponse, body) {
 
@@ -1769,7 +1769,7 @@ exports.unpublish_objects = function (req, callback) {
 
         callback({
             status: 400,
-            message: 'Bad request'
+            message: 'Bad request.'
         });
 
         return false;
@@ -1792,9 +1792,9 @@ exports.reset_display_record = function (req, callback) {
             message: 'Bad request.'
         });
 
-    } else if (req.body.pid !== undefined) {
+    } else if (req.body.pid !== undefined && req.body.pid !== 0) {
         params.pid = req.body.pid;
-    } else if (req.body.is_member_of_collection !== undefined) {
+    } else if (req.body.is_member_of_collection !== undefined && req.body.is_member_of_collection.length !== 0) {
         params.is_member_of_collection = req.body.is_member_of_collection;
     } else if (req.body.pid === undefined && req.body.is_member_of_collection === undefined) {
         params.none = true;

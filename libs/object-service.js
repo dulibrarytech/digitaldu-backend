@@ -16,9 +16,9 @@
 
  */
 
-const config = require('../config/config'),
-    logger = require('../libs/log4'),
-    request = require('request');
+const CONFIG = require('../config/config'),
+    LOGGER = require('../libs/log4'),
+    REQUEST = require('request');
 
 /**
  * Gets thumbnail from TN service
@@ -29,16 +29,16 @@ exports.get_tn = function (uuid, type, callback) {
 
     'use strict';
 
-    let apiUrl = config.tnService + 'discovery/datastream/' + uuid + '/tn';
+    let apiUrl = CONFIG.tnService + 'discovery/datastream/' + uuid + '/tn';
 
     // TODO: check type when file is not available to determine which replacement image to render
 
-    request.get({
+    REQUEST.get({
         url: apiUrl,
         encoding: null,
         timeout: 45000,
         headers: {
-            'x-api-key': config.tnServiceApiKey
+            'x-api-key': CONFIG.tnServiceApiKey
         }
     }, function (error, httpResponse, body) {
 
@@ -46,7 +46,7 @@ exports.get_tn = function (uuid, type, callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: [/libs/tn-service lib (get_tn)] Unable to get thumbnail from TN service' + error);
+            LOGGER.module().error('ERROR: [/libs/tn-service lib (get_tn)] Unable to get thumbnail from TN service' + error);
 
             callback({
                 error: true,
@@ -69,12 +69,9 @@ exports.get_tn = function (uuid, type, callback) {
 
         } else {
 
-            logger.module().error('ERROR: [/libs/tn-service lib (get_tn)] Unable to get thumbnail from TN service ' + httpResponse.statusCode + '/' + body);
+            LOGGER.module().error('ERROR: [/libs/tn-service lib (get_tn)] Unable to get thumbnail from TN service ' + httpResponse.statusCode + '/' + body);
 
             // TODO: check audio, video image mime types
-            if (type) {
-                //...
-            }
 
             callback({
                 error: true,
@@ -96,20 +93,20 @@ exports.get_viewer = function (uuid, callback) {
 
     'use strict';
 
-    let apiUrl = config.tnService + 'discovery/viewer/' + uuid;
+    let apiUrl = CONFIG.tnService + 'discovery/viewer/' + uuid;
 
-    request.get({
+    REQUEST.get({
         url: apiUrl,
         encoding: null,
         timeout: 45000,
         headers: {
-            'x-api-key': config.tnServiceApiKey
+            'x-api-key': CONFIG.tnServiceApiKey
         }
     }, function (error, httpResponse, body) {
 
         if (error) {
 
-            logger.module().error('ERROR: [/libs/object-service lib (get_tn)] Unable to get viewer ' + error);
+            LOGGER.module().error('ERROR: [/libs/object-service lib (get_tn)] Unable to get viewer ' + error);
 
             callback({
                 error: true,
@@ -132,7 +129,7 @@ exports.get_viewer = function (uuid, callback) {
 
         } else {
 
-            logger.module().error('ERROR: [/libs/duracloud lib (get_thumbnail)] Unable to get duracloud thumbnail ' + httpResponse.statusCode + '/' + body);
+            LOGGER.module().error('ERROR: [/libs/duracloud lib (get_thumbnail)] Unable to get duracloud thumbnail ' + httpResponse.statusCode + '/' + body);
 
             callback({
                 error: true,

@@ -18,10 +18,10 @@
 
 'use strict';
 
-const Stats = require('../stats/model');
+const STATS = require('../stats/model');
 
 exports.get_stats = function (req, res) {
-    Stats.get_stats(req, function (data) {
+    STATS.get_stats(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };

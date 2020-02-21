@@ -18,71 +18,64 @@
 
 'use strict';
 
-const config = require('../config/config'),
-    Repo = require('../repository/model'),
-    Service = require('../repository/service'),
-    path = require('path');
+const REPO = require('../repository/model'),
+    SERVICE = require('../repository/service'),
+    PATH = require('path');
 
-/* gets objects by is_member_of_collection pid for discovery layer
-exports.get_objects = function (req, res) {
-    Repo.get_objects(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
- */
-
-/* gets single object for discovery layer
-exports.get_object = function (req, res) {
-    Repo.get_object(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
- */
-
-/* gets objects for administrators */
-exports.get_admin_objects = function (req, res) {
-    Service.get_admin_objects(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-/* gets unpublished objects by collection */
-exports.get_unpublished_admin_objects = function (req, res) {
-    Service.get_unpublished_admin_objects(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-/* gets single administrator object */
 exports.get_display_record = function (req, res) {
-    Repo.get_display_record(req, function (data) {
+    REPO.get_display_record(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
 
 exports.create_collection_object = function (req, res) {
-    Repo.create_collection_object(req, function (data) {
+    REPO.create_collection_object(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
 
-exports.get_thumbnail = function (req, res) {
-    Service.get_thumbnail(req, function (data) {
-
-        if (data.error === true) {
-            res.sendFile(path.join(__dirname, '../public', data.data));
-        } else {
-            res.status(data.status).end(data.data, 'binary');
-        }
+exports.update_thumbnail = function (req, res) {
+    REPO.update_thumbnail(req, function (data) {
+        res.status(data.status).send(data.data);
     });
 };
 
-// tn service
+exports.update_metadata_cron = function (req, res) {
+    REPO.update_metadata_cron(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+/* imports object(s) for administrators */
+exports.get_import_admin_objects = function (req, res) {
+    REPO.get_import_admin_objects(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.publish_objects = function (req, res) {
+    REPO.publish_objects(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.unpublish_objects = function (req, res) {
+    REPO.unpublish_objects(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.reset_display_record = function (req, res) {
+    REPO.reset_display_record(req, function (data) {
+        res.status(data.status).send(data);
+    });
+};
+
 exports.get_tn = function (req, res) {
-    Service.get_tn(req, function (data) {
+    SERVICE.get_tn(req, function (data) {
 
         if (data.error === true) {
-            res.sendFile(path.join(__dirname, '../public', data.data));
+            res.sendFile(PATH.join(__dirname, '../public', data.data));
         } else {
             res.status(data.status).end(data.data, 'binary');
         }
@@ -90,65 +83,36 @@ exports.get_tn = function (req, res) {
 };
 
 exports.get_viewer = function (req, res) {
-    Service.get_viewer(req, function (data) {
+    SERVICE.get_viewer(req, function (data) {
         res.redirect(data.data);
     });
 };
 
-exports.update_thumbnail = function (req, res) {
-    Repo.update_thumbnail(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.update_metadata_cron = function (req, res) {
-    Repo.update_metadata_cron(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-/* imports object(s) for administrators */
-exports.get_import_admin_objects = function (req, res) {
-    Repo.get_import_admin_objects(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.publish_objects = function (req, res) {
-    Repo.publish_objects(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.unpublish_objects = function (req, res) {
-    Repo.unpublish_objects(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.reset_display_record = function (req, res) {
-    Repo.reset_display_record(req, function (data) {
-        res.status(data.status).send(data);
-    });
-};
-
-/*
-exports.get_object_download = function (req, res) {
-    Repo.get_object_download(req, function (data) {
-
-        if (data.file === undefined) {
-            res.status(data.status).send(data);
-            return false;
-        }
-
-        res.set('Content-Type', data.content_type);
-        res.download(data.file);
-    });
-};
-*/
-
 exports.ping = function (req, res) {
-    Service.ping_services(req, function (data) {
+    SERVICE.ping_services(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.get_thumbnail = function (req, res) {
+    SERVICE.get_thumbnail(req, function (data) {
+
+        if (data.error === true) {
+            res.sendFile(PATH.join(__dirname, '../public', data.data));
+        } else {
+            res.status(data.status).end(data.data, 'binary');
+        }
+    });
+};
+
+exports.get_admin_objects = function (req, res) {
+    SERVICE.get_admin_objects(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.get_unpublished_admin_objects = function (req, res) {
+    SERVICE.get_unpublished_admin_objects(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };

@@ -18,13 +18,12 @@
 
 'use strict';
 
-const config = require('../config/config'),
-    logger = require('../libs/log4'),
-    request = require('request'),
-    async = require('async'),
-    es = require('elasticsearch'),
-    client = new es.Client({
-        host: config.elasticSearch
+const CONFIG = require('../config/config'),
+    LOGGER = require('../libs/log4'),
+    ASYNC = require('async'),
+    ES = require('elasticsearch'),
+    CLIENT = new ES.Client({
+        host: CONFIG.elasticSearch
     });
 
 /**
@@ -47,23 +46,23 @@ exports.create_repo_index = function (req, callback) {
         let obj = {};
         obj.index_name = req.body.index_name;
 
-        client.indices.create({
+        CLIENT.indices.create({
             index: obj.index_name,
             body: {
                 'settings': {
-                    'number_of_shards': config.elasticSearchShards,
-                    'number_of_replicas': config.elasticSearchReplicas
+                    'number_of_shards': CONFIG.elasticSearchShards,
+                    'number_of_replicas': CONFIG.elasticSearchReplicas
                 }
             }
 
         }).then(function (result) {
 
             if (result.acknowledged === true) {
-                logger.module().info('INFO: [/indexer/service module (create_repo_index/create_index)] new index created');
+                LOGGER.module().info('INFO: [/indexer/service module (create_repo_index/create_index)] new index created');
                 obj.index_created = true;
                 callback(null, obj);
             } else {
-                logger.module().error('ERROR: [/indexer/service module (create_repo_index/create_index)] unable to create new index (createIndex)');
+                LOGGER.module().error('ERROR: [/indexer/service module (create_repo_index/create_index)] unable to create new index (createIndex)');
                 obj.index_created = false;
                 callback(null, obj);
             }
@@ -85,35 +84,35 @@ exports.create_repo_index = function (req, callback) {
             properties: mappingObj
         };
 
-        client.indices.putMapping({
+        CLIENT.indices.putMapping({
             index: obj.index_name,
             type: 'data',
             body: body
         }).then(function (result) {
 
             if (result.acknowledged === true) {
-                logger.module().info('INFO: [/indexer/service module (create_repo_index/create_mapping)] mapping created');
+                LOGGER.module().info('INFO: [/indexer/service module (create_repo_index/create_mapping)] mapping created');
                 obj.mappingCreated = true;
                 callback(null, obj);
                 return false;
             } else {
-                logger.module().error('ERROR: [/indexer/service module (create_repo_index/create_mapping)] unable to create mapping');
+                LOGGER.module().error('ERROR: [/indexer/service module (create_repo_index/create_mapping)] unable to create mapping');
                 obj.mappingCreated = false;
                 return false;
             }
         });
     }
 
-    async.waterfall([
+    ASYNC.waterfall([
         create_index,
         create_mapping
     ], function (error, results) {
 
         if (error) {
-            logger.module().error('ERROR: [/indexer/service module (create_repo_index/async.waterfall)] ' + error);
+            LOGGER.module().error('ERROR: [/indexer/service module (create_repo_index/async.waterfall)] ' + error);
         }
 
-        logger.module().info('INFO: [/indexer/service module (create_repo_index/async.waterfall)] index created');
+        LOGGER.module().info('INFO: [/indexer/service module (create_repo_index/async.waterfall)] index created');
     });
 
     callback({
@@ -137,17 +136,17 @@ exports.delete_repo_index = function (req, callback) {
         });
     }
 
-    client.indices.delete({
+    CLIENT.indices.delete({
         index: req.body.index_name
     }).then(function (result) {
 
         let message = '';
 
         if (result.acknowledged === true) {
-            logger.module().info('INFO: [/indexer/service module (create_repo_index/delete_repo_index)] index deleted');
+            LOGGER.module().info('INFO: [/indexer/service module (create_repo_index/delete_repo_index)] index deleted');
             message = 'index deleted';
         } else {
-            logger.module().error('ERROR: [/indexer/service module (create_repo_index/delete_repo_index)] unable to delete index (deleteIndex)');
+            LOGGER.module().error('ERROR: [/indexer/service module (create_repo_index/delete_repo_index)] unable to delete index (deleteIndex)');
             message = 'index not deleted';
         }
 
@@ -166,11 +165,11 @@ exports.delete_repo_index = function (req, callback) {
  */
 exports.index_record = function (obj, callback) {
 
-    client.index(obj, function (error, response) {
+    CLIENT.index(obj, function (error, response) {
 
         if (error) {
 
-            logger.module().error('ERROR: [/indexer/service module (index_record/client.index)] unable to index record ' + error);
+            LOGGER.module().error('ERROR: [/indexer/service module (index_record/client.index)] unable to index record ' + error);
 
             callback({
                 message: 'ERROR: unable to index record ' + error
@@ -190,11 +189,11 @@ exports.index_record = function (obj, callback) {
  */
 exports.update_fragment = function (obj, callback) {
 
-    client.update(obj, function (error, response) {
+    CLIENT.update(obj, function (error, response) {
 
         if (error) {
 
-            logger.module().error('ERROR: [/indexer/service module (update_fragment/client.update)] unable to update fragment ' + error);
+            LOGGER.module().error('ERROR: [/indexer/service module (update_fragment/client.update)] unable to update fragment ' + error);
 
             callback({
                 message: 'ERROR: unable to update fragment ' + error
@@ -214,11 +213,11 @@ exports.update_fragment = function (obj, callback) {
  */
 exports.reindex = function (obj, callback) {
 
-    client.reindex(obj, function (error, response) {
+    CLIENT.reindex(obj, function (error, response) {
 
         if (error) {
 
-            logger.module().error('ERROR: [/indexer/service module (reindex/client.reindex)] unable to reindex record ' + error);
+            LOGGER.module().error('ERROR: [/indexer/service module (reindex/client.reindex)] unable to reindex record ' + error);
 
             callback({
                 message: 'ERROR: unable to reindex record ' + error
@@ -238,11 +237,11 @@ exports.reindex = function (obj, callback) {
  */
 exports.unindex_record = function (obj, callback) {
 
-    client.delete(obj, function (error, response) {
+    CLIENT.delete(obj, function (error, response) {
 
         if (error) {
 
-            logger.module().error('ERROR: [/indexer/service module (unindex_record/client.delete)] unable to unindex record ' + error);
+            LOGGER.module().error('ERROR: [/indexer/service module (unindex_record/client.delete)] unable to unindex record ' + error);
 
             callback({
                 message: 'ERROR: unable to unindex record ' + error

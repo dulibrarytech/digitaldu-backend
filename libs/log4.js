@@ -18,9 +18,9 @@
 
 'use strict';
 
-const log4js = require('log4js');
+const LOG4JS = require('log4js');
 
-log4js.configure({
+LOG4JS.configure({
     appenders: {
         out: { type: 'stdout' },
         repo: {
@@ -38,5 +38,5 @@ log4js.configure({
 });
 
 exports.module = function () {
-    return log4js.getLogger();
+    return LOG4JS.getLogger();
 };

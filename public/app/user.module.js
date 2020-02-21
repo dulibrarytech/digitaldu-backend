@@ -95,7 +95,7 @@ const userModule = (function () {
             domModule.val('#first_name', user.first_name);
             domModule.val('#last_name', user.last_name);
 
-            if (user.status === 1) {
+            if (user.is_active === 1) {
                 $('#is_active').prop('checked', true);
             } else {
                 $('#is_active').prop('checked', false);
@@ -437,6 +437,7 @@ const userModule = (function () {
     /** DEPRECATE
      * Sets session token in request header
      */
+    /*
     obj.setHeaderUserToken = function () {
 
         let data = JSON.parse(window.sessionStorage.getItem('repo_token'));
@@ -453,6 +454,7 @@ const userModule = (function () {
             }
         });
     };
+    */
 
     /**
      * Gets user profile data after authentication

@@ -18,9 +18,9 @@
 
 'use strict';
 
-const jwt = require('jsonwebtoken'),
-    config = require('../config/config'),
-    logger = require('../libs/log4');
+const CONFIG = require('../config/config'),
+    JWT = require('jsonwebtoken'),
+    LOGGER = require('../libs/log4');
 
 /**
  * Creates session token
@@ -31,12 +31,12 @@ exports.create = function (username) {
 
     let tokenData = {
         sub: username,
-        iss: config.tokenIssuer
+        iss: CONFIG.tokenIssuer
     };
 
-    return jwt.sign(tokenData, config.tokenSecret, {
-        algorithm: config.tokenAlgo,
-        expiresIn: config.tokenExpires
+    return JWT.sign(tokenData, CONFIG.tokenSecret, {
+        algorithm: CONFIG.tokenAlgo,
+        expiresIn: CONFIG.tokenExpires
     });
 };
 
@@ -53,11 +53,11 @@ exports.verify = function (req, res, next) {
 
     if (token !== undefined) {
 
-        jwt.verify(token, config.tokenSecret, function (error, decoded) {
+        JWT.verify(token, CONFIG.tokenSecret, function (error, decoded) {
 
             if (error) {
 
-                logger.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify token ' + error);
+                LOGGER.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify token ' + error);
 
                 res.status(401).send({
                     message: 'Unauthorized request ' + error
@@ -72,12 +72,12 @@ exports.verify = function (req, res, next) {
 
     } else if (key !== undefined)  {
 
-        if (key === config.apiKey) {
+        if (key === CONFIG.apiKey) {
             next();
             return false;
         } else {
 
-            logger.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify api key');
+            LOGGER.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify api key');
 
             res.status(401).send({
                 message: 'Unauthorized request'

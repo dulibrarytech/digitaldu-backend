@@ -16,10 +16,9 @@
 
  */
 
-const config = require('../config/config'),
-    request = require('request'),
-    logger = require('../libs/log4');
-
+const CONFIG = require('../config/config'),
+    REQUEST = require('request'),
+    LOGGER = require('../libs/log4');
 
 /**
  * Pings Archivesspace to check availability
@@ -29,16 +28,16 @@ exports.ping = function (callback) {
 
     'use strict';
 
-    let apiUrl = config.archivespaceHost;
+    let apiUrl = CONFIG.archivespaceHost;
 
-    request.get({
+    REQUEST.get({
         url: apiUrl,
         timeout: 45000
     }, function(error, httpResponse, body) {
 
         if (error) {
 
-            logger.module().error('ERROR: [/libs/archivesspace lib (ping)] request to archivesspace failed ' + error);
+            LOGGER.module().error('ERROR: [/libs/archivesspace lib (ping)] request to archivesspace failed ' + error);
 
             callback({
                 error: true,
@@ -61,7 +60,7 @@ exports.ping = function (callback) {
 
         } else {
 
-            logger.module().error('ERROR: [/libs/archivesspace lib (ping)] request to archivesspace failed ' + error);
+            LOGGER.module().error('ERROR: [/libs/archivesspace lib (ping)] request to archivesspace failed ' + error);
 
             callback({
                 error: true,
@@ -85,16 +84,16 @@ exports.get_mods = function (id, session, callback) {
     'use strict';
 
     // TODO: refactor to make use of full uri by default for both resources and archival_objects
-    let apiUrl = config.archivespaceHost + '/repositories/' + config.archivespaceRepositoryid + '/archival_objects/' + id + '/repository';
+    let apiUrl = CONFIG.archivespaceHost + '/repositories/' + CONFIG.archivespaceRepositoryid + '/archival_objects/' + id + '/repository';
 
     // check if id is a collection uri
     let uri = id.split('/');
 
     if (uri.length > 1) {
-        apiUrl = config.archivespaceHost + id;
+        apiUrl = CONFIG.archivespaceHost + id;
     }
 
-    request.get({
+    REQUEST.get({
         url: apiUrl,
         headers: {
             'X-ArchivesSpace-Session': session
@@ -104,7 +103,7 @@ exports.get_mods = function (id, session, callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed ' + error);
+            LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed ' + error);
 
             callback({
                 error: true,
@@ -125,7 +124,7 @@ exports.get_mods = function (id, session, callback) {
 
         } else {
 
-            logger.module().error('ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed ' + httpResponse.statusCode + '/' + error);
+            LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed ' + httpResponse.statusCode + '/' + error);
 
             callback({
                 error: true,
@@ -146,9 +145,9 @@ exports.get_record_updates = function (session, callback) {
 
     'use strict';
 
-    let apiUrl = config.archivespaceHost + '/update-feed';
+    let apiUrl = CONFIG.archivespaceHost + '/update-feed';
 
-    request.get({
+    REQUEST.get({
         url: apiUrl,
         headers: {
             'X-ArchivesSpace-Session': session
@@ -158,7 +157,7 @@ exports.get_record_updates = function (session, callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: [/libs/archivesspace lib (get_record_updates)] request to archivesspace failed ' + error);
+            LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_record_updates)] request to archivesspace failed ' + error);
 
             callback({
                 error: true,
@@ -179,7 +178,7 @@ exports.get_record_updates = function (session, callback) {
 
         } else {
 
-            logger.module().error('ERROR: [/libs/archivesspace lib (get_record_updates)] unable to fetch record updates ' + error);
+            LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_record_updates)] unable to fetch record updates ' + error);
 
             callback({
                 error: true,
@@ -199,9 +198,9 @@ exports.get_session_token = function (callback) {
 
     'use strict';
 
-    let apiUrl = config.archivespaceHost + '/users/' + config.archivespaceUser + '/login?password=' + config.archivespacePassword + '&expiring=false';
+    let apiUrl = CONFIG.archivespaceHost + '/users/' + CONFIG.archivespaceUser + '/login?password=' + CONFIG.archivespacePassword + '&expiring=false';
 
-    request.post({
+    REQUEST.post({
         url: apiUrl,
         headers: {
             'Content-Type': 'application/json'
@@ -211,7 +210,7 @@ exports.get_session_token = function (callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: [/libs/archivesspace lib (get_session_token)] unable get archivesspace session token ' + error);
+            LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_session_token)] unable get archivesspace session token ' + error);
 
             callback({
                 error: true,
@@ -230,7 +229,7 @@ exports.get_session_token = function (callback) {
 
         } else {
 
-            logger.module().error('ERROR: [/libs/archivesspace lib (get_session_token)] unable get archivesspace session token ' + httpResponse.statusCode + '/' + error);
+            LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_session_token)] unable get archivesspace session token ' + httpResponse.statusCode + '/' + error);
 
             callback({
                 error: true,
@@ -248,9 +247,9 @@ exports.destroy_session_token = function (session, callback) {
 
     'use strict';
 
-    let apiUrl = config.archivespaceHost + '/logout';
+    let apiUrl = CONFIG.archivespaceHost + '/logout';
 
-    request.post({
+    REQUEST.post({
         url: apiUrl,
         headers: {
             'Content-Type': 'application/json',
@@ -261,7 +260,7 @@ exports.destroy_session_token = function (session, callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: [/libs/archivesspace lib (get_session_token)] unable get archivesspace session token ' + error);
+            LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_session_token)] unable get archivesspace session token ' + error);
 
             callback({
                 error: true,
@@ -280,7 +279,7 @@ exports.destroy_session_token = function (session, callback) {
 
         } else {
 
-            logger.module().error('ERROR: [/libs/archivesspace lib (get_session_token)] unable get archivesspace session token ' + httpResponse.statusCode + '/' + error);
+            LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_session_token)] unable get archivesspace session token ' + httpResponse.statusCode + '/' + error);
 
             callback({
                 error: true,

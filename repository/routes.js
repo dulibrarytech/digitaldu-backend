@@ -18,41 +18,41 @@
 
 'use strict';
 
-const Repo = require('../repository/controller'),
-    token = require('../libs/tokens');
+const REPO = require('../repository/controller'),
+    TOKEN = require('../libs/tokens');
 
 module.exports = function (app) {
 
     app.route('/api/admin/v1/repo/objects')
-        .get(token.verify, Repo.get_admin_objects);
+        .get(TOKEN.verify, REPO.get_admin_objects);
 
     app.route('/api/admin/v1/repo/object')
-        .get(token.verify, Repo.get_display_record)
-        .post(token.verify, Repo.create_collection_object)
-        .put(token.verify, Repo.update_metadata_cron);
+        .get(TOKEN.verify, REPO.get_display_record)
+        .post(TOKEN.verify, REPO.create_collection_object)
+        .put(TOKEN.verify, REPO.update_metadata_cron);
 
     app.route('/api/admin/v1/repo/object/unpublished')
-        .get(token.verify, Repo.get_unpublished_admin_objects);
+        .get(TOKEN.verify, REPO.get_unpublished_admin_objects);
 
     app.route('/api/admin/v1/repo/object/thumbnail')
-        .get(token.verify, Repo.get_thumbnail)
-        .post(token.verify, Repo.update_thumbnail);
+        .get(TOKEN.verify, REPO.get_thumbnail)
+        .post(TOKEN.verify, REPO.update_thumbnail);
 
     app.route('/api/admin/v1/repo/object/tn')
-        .get(token.verify, Repo.get_tn);
+        .get(TOKEN.verify, REPO.get_tn);
 
     app.route('/api/admin/v1/repo/object/viewer')
-        .get(token.verify, Repo.get_viewer);
+        .get(TOKEN.verify, REPO.get_viewer);
 
     app.route('/api/admin/v1/repo/publish')
-        .post(token.verify, Repo.publish_objects);
+        .post(TOKEN.verify, REPO.publish_objects);
 
     app.route('/api/admin/v1/repo/unpublish')
-        .post(token.verify, Repo.unpublish_objects);
+        .post(TOKEN.verify, REPO.unpublish_objects);
 
     app.route('/api/admin/v1/repo/ping/services')
-        .get(token.verify, Repo.ping);
+        .get(TOKEN.verify, REPO.ping);
 
     app.route('/api/admin/v1/repo/reset')
-        .post(Repo.reset_display_record);
+        .post(TOKEN.verify, REPO.reset_display_record);
 };

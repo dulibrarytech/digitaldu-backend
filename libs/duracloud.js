@@ -16,10 +16,9 @@
 
  */
 
-const config = require('../config/config'),
-    logger = require('../libs/log4'),
-    fs = require('fs'),
-    request = require('request');
+const CONFIG = require('../config/config'),
+    LOGGER = require('../libs/log4'),
+    REQUEST = require('request');
 
 /**
  * Pings duracloud service to check availability
@@ -29,16 +28,16 @@ exports.ping = function (callback) {
 
     'use strict';
 
-    let apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi;
+    let apiUrl = 'https://' + CONFIG.duraCloudUser + ':' + CONFIG.duraCloudPwd + '@' + CONFIG.duraCloudApi;
 
-        request.get({
+    REQUEST.get({
         url: apiUrl,
         timeout: 25000
     }, function (error, httpResponse, body) {
 
         if (error) {
 
-            logger.module().error('ERROR: [/libs/duracloud lib (ping)] unable to ping duracloud ' + error);
+            LOGGER.module().error('ERROR: [/libs/duracloud lib (ping)] unable to ping duracloud ' + error);
 
             callback({
                 error: true,
@@ -59,7 +58,7 @@ exports.ping = function (callback) {
 
         } else {
 
-            logger.module().error('ERROR: [/libs/duracloud lib (ping)] Unable to ping duracloud ' + httpResponse.statusCode + '/' + body);
+            LOGGER.module().error('ERROR: [/libs/duracloud lib (ping)] Unable to ping duracloud ' + httpResponse.statusCode + '/' + body);
 
             callback({
                 error: true,
@@ -82,15 +81,15 @@ exports.get_mets = function (data, callback) {
     'use strict';
 
     let mets = 'METS.' + data.sip_uuid + '.xml',
-        apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + 'dip-store/' + data.dip_path + '/' + mets;
+        apiUrl = 'https://' + CONFIG.duraCloudUser + ':' + CONFIG.duraCloudPwd + '@' + CONFIG.duraCloudApi + 'dip-store/' + data.dip_path + '/' + mets;
 
-    request.get({
+    REQUEST.get({
         url: apiUrl
     }, function (error, httpResponse, body) {
 
         if (error) {
 
-            logger.module().error('ERROR: [/libs/duracloud lib (get_mets)] Unable to get METS ' + error);
+            LOGGER.module().error('ERROR: [/libs/duracloud lib (get_mets)] Unable to get METS ' + error);
 
             callback({
                 error: true,
@@ -102,7 +101,7 @@ exports.get_mets = function (data, callback) {
 
         if (httpResponse.statusCode !== 200) {
 
-            logger.module().error('ERROR: [/libs/duracloud lib (get_mets)] Unable to get METS: status code: ' + httpResponse.statusCode + '/' + body);
+            LOGGER.module().error('ERROR: [/libs/duracloud lib (get_mets)] Unable to get METS: status code: ' + httpResponse.statusCode + '/' + body);
 
             callback({
                 error: true,
@@ -141,16 +140,16 @@ exports.get_object_info = function (data, callback) {
         data.file = data.file.replace('wav', 'mp3');
     }
 
-    let apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + 'dip-store/' + dip_path + '/objects/' + data.uuid + '-' + data.file;
+    let apiUrl = 'https://' + CONFIG.duraCloudUser + ':' + CONFIG.duraCloudPwd + '@' + CONFIG.duraCloudApi + 'dip-store/' + dip_path + '/objects/' + data.uuid + '-' + data.file;
 
-    request.head({
+    REQUEST.head({
         url: apiUrl,
         timeout: 45000
     }, function (error, httpResponse, body) {
 
         if (error) {
 
-            logger.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud object ' + error);
+            LOGGER.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud object ' + error);
 
             callback({
                 error: true,
@@ -168,7 +167,7 @@ exports.get_object_info = function (data, callback) {
 
         } else {
 
-            logger.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud object ' + httpResponse.statusCode + '/' + body);
+            LOGGER.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud object ' + httpResponse.statusCode + '/' + body);
 
             callback({
                 error: true,
@@ -190,16 +189,16 @@ exports.get_uri = function (data, callback) {
     'use strict';
 
     let dip_path = data.dip_path,
-        apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + 'dip-store/' + dip_path + '/objects/' + data.uuid + '-' + data.file;
+        apiUrl = 'https://' + CONFIG.duraCloudUser + ':' + CONFIG.duraCloudPwd + '@' + CONFIG.duraCloudApi + 'dip-store/' + dip_path + '/objects/' + data.uuid + '-' + data.file;
 
-    request.get({
+    REQUEST.get({
         url: apiUrl,
         timeout: 45000
     }, function (error, httpResponse, body) {
 
         if (error) {
 
-            logger.module().error('ERROR: [/libs/duracloud lib (get_uri)] Unable to get duracloud uri object ' + error);
+            LOGGER.module().error('ERROR: [/libs/duracloud lib (get_uri)] Unable to get duracloud uri object ' + error);
 
             callback({
                 error: true,
@@ -214,7 +213,7 @@ exports.get_uri = function (data, callback) {
 
         } else {
 
-            logger.module().error('ERROR: [/libs/duracloud lib (get_uri)] Unable to get duracloud uri object ' + httpResponse.statusCode + '/' + body);
+            LOGGER.module().error('ERROR: [/libs/duracloud lib (get_uri)] Unable to get duracloud uri object ' + httpResponse.statusCode + '/' + body);
 
             callback({
                 error: true,
@@ -236,16 +235,16 @@ exports.get_object_manifest = function (data, callback) {
     'use strict';
 
     let dip_path = data.dip_path,
-        apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + 'dip-store/' + dip_path + '/objects/' + data.uuid + '-' + data.file  + '.dura-manifest';
+        apiUrl = 'https://' + CONFIG.duraCloudUser + ':' + CONFIG.duraCloudPwd + '@' + CONFIG.duraCloudApi + 'dip-store/' + dip_path + '/objects/' + data.uuid + '-' + data.file  + '.dura-manifest';
 
-    request.get({
+    REQUEST.get({
         url: apiUrl,
         timeout: 45000
     }, function (error, httpResponse, body) {
 
         if (error) {
 
-            logger.module().error('ERROR: [/libs/duracloud lib (get_object_manifest)] Unable to get duracloud video manifest ' + error);
+            LOGGER.module().error('ERROR: [/libs/duracloud lib (get_object_manifest)] Unable to get duracloud video manifest ' + error);
 
             callback({
                 error: true,
@@ -260,7 +259,7 @@ exports.get_object_manifest = function (data, callback) {
 
         } else {
 
-            logger.module().error('ERROR: [/libs/duracloud lib (get_object_manifest)] Unable to get manifest ' + body);
+            LOGGER.module().error('ERROR: [/libs/duracloud lib (get_object_manifest)] Unable to get manifest ' + body);
 
             callback({
                 error: true,
@@ -281,9 +280,9 @@ exports.get_thumbnail = function (tn, callback) {
 
     'use strict';
 
-    let apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + 'dip-store/' + tn;
+    let apiUrl = 'https://' + CONFIG.duraCloudUser + ':' + CONFIG.duraCloudPwd + '@' + CONFIG.duraCloudApi + 'dip-store/' + tn;
 
-    request.get({
+    REQUEST.get({
         url: apiUrl,
         encoding: null,
         timeout: 45000
@@ -293,7 +292,7 @@ exports.get_thumbnail = function (tn, callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: [/libs/duracloud lib (get_thumbnail)] Unable to get duracloud thumbnail ' + error);
+            LOGGER.module().error('ERROR: [/libs/duracloud lib (get_thumbnail)] Unable to get duracloud thumbnail ' + error);
 
             callback({
                 error: true,
@@ -316,7 +315,7 @@ exports.get_thumbnail = function (tn, callback) {
 
         } else {
 
-            logger.module().error('ERROR: [/libs/duracloud lib (get_thumbnail)] Unable to get duracloud thumbnail ' + httpResponse.statusCode + '/' + body);
+            LOGGER.module().error('ERROR: [/libs/duracloud lib (get_thumbnail)] Unable to get duracloud thumbnail ' + httpResponse.statusCode + '/' + body);
 
             callback({
                 error: true,

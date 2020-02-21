@@ -18,17 +18,16 @@
 
 'use strict';
 
-const config = require('../config/config'),
-    archivematica = require('../libs/archivematica'),
-    archivespace = require('../libs/archivespace'),
-    duracloud = require('../libs/duracloud'),
-    objectservice = require('../libs/object-service'),
-    logger = require('../libs/log4'),
-    async = require('async'),
-    validator = require('validator'),
-    es = require('elasticsearch'),
-    client = new es.Client({
-        host: config.elasticSearch
+const CONFIG = require('../config/config'),
+    ARCHIVEMATICA = require('../libs/archivematica'),
+    ARCHIVESSPACE = require('../libs/archivespace'),
+    DURACLOUD = require('../libs/duracloud'),
+    OBJECT_SERVICE = require('../libs/object-service'),
+    LOGGER = require('../libs/log4'),
+    ASYNC = require('async'),
+    ES = require('elasticsearch'),
+    CLIENT = new ES.Client({
+        host: CONFIG.elasticSearch
     });
 
 /**
@@ -40,7 +39,7 @@ exports.ping_services = function (req, callback) {
 
     function ping_archivematica(callback) {
 
-        archivematica.ping_api(function (response) {
+        ARCHIVEMATICA.ping_api(function (response) {
             let obj = {};
             obj.archivematica = response.status;
             callback(null, obj);
@@ -49,15 +48,15 @@ exports.ping_services = function (req, callback) {
 
     function ping_archivematica_storage(obj, callback) {
 
-        archivematica.ping_storage_api(function (response) {
+        ARCHIVEMATICA.ping_storage_api(function (response) {
             obj.archivematica_storage = response.status;
             callback(null, obj);
         });
     }
 
-    function ping_archivespace(obj, callback) {
+    function ping_archivesspace(obj, callback) {
 
-        archivespace.ping(function (response) {
+        ARCHIVESSPACE.ping(function (response) {
             obj.archivespace = response.status;
             callback(null, obj);
         });
@@ -66,21 +65,21 @@ exports.ping_services = function (req, callback) {
 
     function ping_duracloud(obj, callback) {
 
-        duracloud.ping(function (response) {
+        DURACLOUD.ping(function (response) {
             obj.duracloud = response.status;
             callback(null, obj);
         });
     }
 
-    async.waterfall([
+    ASYNC.waterfall([
         ping_archivematica,
         ping_archivematica_storage,
-        ping_archivespace,
+        ping_archivesspace,
         ping_duracloud
     ], function (error, results) {
 
         if (error) {
-            logger.module().error('ERROR: [/repository/service module (ping_services/async.waterfall)] unable to ping third-party services ' + error);
+            LOGGER.module().error('ERROR: [/repository/service module (ping_services/async.waterfall)] unable to ping third-party services ' + error);
             return false;
         }
 
@@ -102,17 +101,17 @@ exports.get_thumbnail = function (req, callback) {
 
     let tn = req.query.tn;
 
-    if (tn === undefined || validator.isEmpty(tn) === true) {
+    if (tn === undefined || tn.length === 0) {
 
         callback({
             status: 400,
-            message: 'Bad request'
+            message: 'Bad request.'
         });
 
         return false;
     }
 
-    duracloud.get_thumbnail(tn, function (response) {
+    DURACLOUD.get_thumbnail(tn, function (response) {
         callback(response);
     });
 };
@@ -128,17 +127,17 @@ exports.get_tn = function (req, callback) {
     let uuid = req.query.uuid,
         type = req.query.type;
 
-    if (uuid === undefined || type === undefined || validator.isUUID(uuid) === false) {
+    if (uuid === undefined || uuid.length === 0 || type === undefined) {
 
         callback({
             status: 400,
-            message: 'Bad request'
+            message: 'Bad request.'
         });
 
         return false;
     }
 
-    objectservice.get_tn(uuid, type, function (response) {
+    OBJECT_SERVICE.get_tn(uuid, type, function (response) {
         callback(response);
     });
 };
@@ -152,17 +151,17 @@ exports.get_viewer = function (req, callback) {
 
     let uuid = req.query.uuid;
 
-    if (uuid === undefined || validator.isEmpty(uuid) === true) {
+    if (uuid === undefined || uuid.length === 0) {
 
         callback({
             status: 400,
-            message: 'Bad request'
+            message: 'Bad request.'
         });
 
         return false;
     }
 
-    let apiUrl = config.tnService + 'discovery/viewer/' + uuid + '?key=' + config.tnServiceApiKey;
+    let apiUrl = CONFIG.tnService + 'discovery/viewer/' + uuid + '?key=' + CONFIG.tnServiceApiKey;
 
     callback({
         status: 200,
@@ -177,7 +176,7 @@ exports.get_viewer = function (req, callback) {
  */
 exports.get_admin_objects = function (req, callback) {
 
-    if (req.query.pid === undefined || validator.isEmpty(req.query.pid) === true) {
+    if (req.query.pid === undefined || req.query.pid.length === 0) {
 
         callback({
             status: 400,
@@ -218,10 +217,10 @@ exports.get_admin_objects = function (req, callback) {
         }
     };
 
-    client.search({
+    CLIENT.search({
         from: page,
         size: total_on_page,
-        index: config.elasticSearchBackIndex,
+        index: CONFIG.elasticSearchBackIndex,
         type: 'data',
         sort: sort,
         body: query
@@ -243,7 +242,7 @@ exports.get_admin_objects = function (req, callback) {
  */
 exports.get_unpublished_admin_objects = function (req, callback) {
 
-    if (req.query.pid === undefined || validator.isEmpty(req.query.pid) === true) {
+    if (req.query.pid === undefined || req.query.pid.length === 0) {
 
         callback({
             status: 400,
@@ -272,20 +271,6 @@ exports.get_unpublished_admin_objects = function (req, callback) {
         page = (page - 1) * total_on_page;
     }
 
-    /*
-    let query_dist = {
-        'query': {
-            'bool': {
-                'must': {
-                    'match': {
-                        'is_member_of_collection.keyword': is_member_of_collection
-                    }
-                }
-            }
-        }
-    };
-    */
-
     let query = {
         'query': {
             'bool': {
@@ -303,10 +288,10 @@ exports.get_unpublished_admin_objects = function (req, callback) {
         }
     };
 
-    client.search({
+    CLIENT.search({
         from: page,
         size: total_on_page,
-        index: config.elasticSearchBackIndex,
+        index: CONFIG.elasticSearchBackIndex,
         type: 'data',
         sort: sort,
         body: query

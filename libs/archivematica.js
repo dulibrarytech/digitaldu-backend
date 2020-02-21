@@ -16,10 +16,10 @@
 
  */
 
-const config = require('../config/config'),
-    client = require('ssh2-sftp-client'),
-    request = require('request'),
-    fs = require('fs'),
+const CONFIG = require('../config/config'),
+    CLIENT = require('ssh2-sftp-client'),
+    REQUEST = require('request'),
+    FS = require('fs'),
     logger = require('../libs/log4');
 
 /**
@@ -30,9 +30,9 @@ exports.ping_api = function (callback) {
 
     'use strict';
 
-    let apiUrl = config.archivematicaApi + 'administration/dips/atom/levels/?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
+    let apiUrl = CONFIG.archivematicaApi + 'administration/dips/atom/levels/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
 
-    request.get({
+    REQUEST.get({
         url: apiUrl,
         timeout: 25000
     }, function (error, httpResponse, body) {
@@ -81,9 +81,9 @@ exports.ping_storage_api = function (callback) {
 
     'use strict';
 
-    let apiUrl = config.archivematicaStorageApi + 'v2/file/?username=' + config.archivematicaStorageUsername + '&api_key=' + config.archivematicaStorageApiKey;
+    let apiUrl = CONFIG.archivematicaStorageApi + 'v2/file/?username=' + CONFIG.archivematicaStorageUsername + '&api_key=' + CONFIG.archivematicaStorageApiKey;
 
-    request.get({
+    REQUEST.get({
         url: apiUrl,
         timeout: 25000
     }, function (error, httpResponse, body) {
@@ -132,22 +132,22 @@ exports.list = function (folder, callback) {
 
     'use strict';
 
-    const sftp = new client();
+    const sftp = new CLIENT();
 
     sftp.connect({
 
-        host: config.sftpHost,
+        host: CONFIG.sftpHost,
         port: '22',
-        username: config.sftpId,
-        password: config.sftpPwd
+        username: CONFIG.sftpId,
+        password: CONFIG.sftpPwd
 
     }).then(function () {
 
-        let remotePath = config.sftpRemotePath;
+        let remotePath = CONFIG.sftpRemotePath;
 
         if (folder !== 'null') {
             let path = folder.replace(/,/g, '/');
-            remotePath = config.sftpRemotePath + '/' + path;
+            remotePath = CONFIG.sftpRemotePath + '/' + path;
         }
 
         return sftp.list(remotePath);
@@ -169,14 +169,14 @@ exports.start_tranfser = function (transferObj, callback) {
 
     'use strict';
 
-    let transferSource = config.archivematicaTransferSource,
-        sftpPath = config.sftpRemotePath,
+    let transferSource = CONFIG.archivematicaTransferSource,
+        sftpPath = CONFIG.sftpRemotePath,
         location = transferSource + ':' + sftpPath + '/' + transferObj.is_member_of_collection + '/' + transferObj.object,
         buffer = new Buffer(location),
         encodedLocation = buffer.toString('base64'),
-        apiUrl = config.archivematicaApi + 'transfer/start_transfer/?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
+        apiUrl = CONFIG.archivematicaApi + 'transfer/start_transfer/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
 
-    request.post({
+    REQUEST.post({
         url: apiUrl,
         form: {
             'name': transferObj.is_member_of_collection + '_' + transferObj.object + '_transfer',
@@ -218,9 +218,9 @@ exports.approve_transfer = function (transferFolder, callback) {
 
     'use strict';
 
-    let apiUrl = config.archivematicaApi + 'transfer/approve?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
+    let apiUrl = CONFIG.archivematicaApi + 'transfer/approve?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
 
-    request.post({
+    REQUEST.post({
         url: apiUrl,
         form: {
             'type': 'standard',
@@ -265,9 +265,9 @@ exports.get_transfer_status = function (uuid, callback) {
 
     'use strict';
 
-    let apiUrl = config.archivematicaApi + 'transfer/status/' + uuid + '/?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
+    let apiUrl = CONFIG.archivematicaApi + 'transfer/status/' + uuid + '/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
 
-    request.get({
+    REQUEST.get({
         url: apiUrl,
         timeout: 25000
     }, function (error, httpResponse, body) {
@@ -302,9 +302,9 @@ exports.get_ingest_status = function (uuid, callback) {
 
     'use strict';
 
-    let apiUrl = config.archivematicaApi + 'ingest/status/' + uuid + '/?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
+    let apiUrl = CONFIG.archivematicaApi + 'ingest/status/' + uuid + '/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
 
-    request.get({
+    REQUEST.get({
         url: apiUrl,
         timeout: 25000
     }, function (error, httpResponse, body) {
@@ -340,9 +340,9 @@ exports.get_dip_path = function (uuid, callback) {
 
     'use strict';
 
-    let apiUrl = config.archivematicaStorageApi + 'v2/file/' + uuid + '/?username=' + config.archivematicaStorageUsername + '&api_key=' + config.archivematicaStorageApiKey;
+    let apiUrl = CONFIG.archivematicaStorageApi + 'v2/file/' + uuid + '/?username=' + CONFIG.archivematicaStorageUsername + '&api_key=' + CONFIG.archivematicaStorageApiKey;
 
-    request.get({
+    REQUEST.get({
         url: apiUrl,
         timeout: 55000
     }, function (error, httpResponse, body) {
@@ -400,9 +400,9 @@ exports.clear_transfer = function (uuid) {
 
     'use strict';
 
-    let apiUrl = config.archivematicaApi + 'transfer/' + uuid + '/delete/?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
+    let apiUrl = CONFIG.archivematicaApi + 'transfer/' + uuid + '/delete/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
 
-    request.delete({
+    REQUEST.delete({
         url: apiUrl,
         timeout: 55000
     }, function (error, httpResponse, body) {
@@ -430,9 +430,9 @@ exports.clear_ingest = function (uuid) {
 
     'use strict';
 
-    let apiUrl = config.archivematicaApi + 'ingest/' + uuid + '/delete/?username=' + config.archivematicaUsername + '&api_key=' + config.archivematicaApiKey;
+    let apiUrl = CONFIG.archivematicaApi + 'ingest/' + uuid + '/delete/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
 
-    request.delete({
+    REQUEST.delete({
         url: apiUrl,
         timeout: 55000
     }, function (error, httpResponse, body) {
@@ -461,14 +461,14 @@ exports.download_aip = function (sip_uuid, callback) {
 
     'use strict';
 
-    if (fs.existsSync('./tmp/' + sip_uuid + '.7z')) {
+    if (FS.existsSync('./tmp/' + sip_uuid + '.7z')) {
         callback('./tmp/' + sip_uuid + '.7z');
         return false;
     }
 
-    let apiUrl = config.archivematicaStorageApi + 'v2/file/' + sip_uuid + '/download/?username=' + config.archivematicaStorageUsername + '&api_key=' + config.archivematicaStorageApiKey;
+    let apiUrl = CONFIG.archivematicaStorageApi + 'v2/file/' + sip_uuid + '/download/?username=' + CONFIG.archivematicaStorageUsername + '&api_key=' + CONFIG.archivematicaStorageApiKey;
 
-    request.get({
+    REQUEST.get({
         url: apiUrl,
         timeout: 600000
     }, function (error, httpResponse, body) {
@@ -497,7 +497,7 @@ exports.download_aip = function (sip_uuid, callback) {
             return false;
         }
 
-        fs.writeFile('./tmp/' + sip_uuid + '.7z', body, function(error) {
+        FS.writeFile('./tmp/' + sip_uuid + '.7z', body, function(error) {
 
             if (error) {
 
@@ -511,7 +511,7 @@ exports.download_aip = function (sip_uuid, callback) {
 
             setTimeout(function () {
 
-                if (fs.existsSync('./tmp/' + sip_uuid + '.7z')) {
+                if (FS.existsSync('./tmp/' + sip_uuid + '.7z')) {
                     callback('./tmp/' + sip_uuid + '.7z');
                     return false;
                 }

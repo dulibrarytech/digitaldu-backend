@@ -18,53 +18,53 @@
 
 'use strict';
 
-const Indexer = require('../indexer/model'),
-    Service = require('../indexer/service');
+const MODEL = require('../indexer/model'),
+    SERVICE = require('../indexer/service');
 
 exports.index_record = function (req, res) {
-    Indexer.get_index_record(req, function (data) {
+    MODEL.get_index_record(req, function (data) {
         res.status(data.status).send(data);
     });
 };
 
 exports.unindex_record = function (req, res) {
-    Indexer.unindex_record(req, function (data) {
+    MODEL.unindex_record(req, function (data) {
         res.status(data.status).send(data);
     });
 };
 
 exports.index_records = function (req, res) {
-    Indexer.index_records(req, function (data) {
+    MODEL.index_records(req, function (data) {
         res.status(data.status).send(data);
     });
 };
 
 exports.update_fragment = function (req, res) {
-    Indexer.update_fragment(req, function (data) {
+    MODEL.update_fragment(req, function (data) {
         res.status(data.status).send(data);
     });
 };
 
 exports.reindex = function (req, res) {
-    Indexer.reindex(req, function (data) {
+    MODEL.reindex(req, function (data) {
         res.status(data.status).send(data);
     });
 };
 
 exports.index_data = function (req, res) {
-    Indexer.index_data(req, function (data) {
+    MODEL.index_data(req, function (data) {
         res.status(data.status).send(data);
     });
 };
 
 exports.create_repo_index = function (req, res) {
-    Service.create_repo_index(req, function (data) {
+    SERVICE.create_repo_index(req, function (data) {
         res.status(data.status).send(data);
     });
 };
 
 exports.delete_repo_index = function (req, res) {
-    Service.delete_repo_index(req, function (data) {
+    SERVICE.delete_repo_index(req, function (data) {
         res.status(data.status).send(data);
     });
 };

@@ -18,11 +18,10 @@
 
 'use strict';
 
-const config = require('../config/config'),
-    dom = require('../libs/dom'),
-    es = require('elasticsearch'),
-    client = new es.Client({
-        host: config.elasticSearch
+const CONFIG = require('../config/config'),
+    ES = require('elasticsearch'),
+    CLIENT = new ES.Client({
+        host: CONFIG.elasticSearch
     });
 
 /**
@@ -60,10 +59,10 @@ exports.get_search_results = function (req, callback) {
         page = (page - 1) * total_on_page;
     }
 
-    client.search({
+    CLIENT.search({
         from: page,
         size: total_on_page,
-        index: config.elasticSearchBackIndex,
+        index: CONFIG.elasticSearchBackIndex,
         type: 'data',
         q: q
     }).then(function (body) {

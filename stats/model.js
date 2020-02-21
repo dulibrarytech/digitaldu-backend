@@ -18,15 +18,14 @@
 
 'use strict';
 
-const fs = require('fs'),
-    config = require('../config/config'),
-    logger = require('../libs/log4'),
-    async = require('async'),
-    knex =require('../config/db')();
+const ASYNC = require('async'),
+    DB =require('../config/db')(),
+    LOGGER = require('../libs/log4'),
+    REPO_OBJECTS = 'tbl_objects';
 
 exports.get_stats = function (req, callback) {
 
-    async.waterfall([
+    ASYNC.waterfall([
         getPublishedCollectionCount,
         getPublishedObjectCount,
         getTotalCollectionCount,
@@ -38,7 +37,7 @@ exports.get_stats = function (req, callback) {
     ], function (error, results) {
 
         if (error) {
-            logger.module().error('ERROR: [/stats/model module (get_stats/async.waterfall)] unable to generate stats ' + error);
+            LOGGER.module().error('ERROR: [/stats/model module (get_stats/async.waterfall)] unable to generate stats ' + error);
             return false;
         }
 
@@ -52,7 +51,7 @@ exports.get_stats = function (req, callback) {
     function getPublishedCollectionCount(callback) {
 
         // published collection count
-        knex('tbl_objects')
+        DB(REPO_OBJECTS)
             .count('object_type as published_collection_count')
             .where({
                 object_type: 'collection',
@@ -66,7 +65,7 @@ exports.get_stats = function (req, callback) {
 
             })
             .catch(function (error) {
-                logger.module().fatal('FATAL: [/stats/model module (get_stats/getPublishedCollectionCount)] unable to get published collection count ' + error);
+                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/getPublishedCollectionCount)] unable to get published collection count ' + error);
                 throw 'FATAL: [/stats/model module (get_stats/getPublishedCollectionCount)] unable to get published collection count ' + error;
             });
     }
@@ -74,7 +73,7 @@ exports.get_stats = function (req, callback) {
     function getPublishedObjectCount(results, callback) {
 
         // published object count
-        knex('tbl_objects')
+        DB(REPO_OBJECTS)
             .count('object_type as published_object_count')
             .where({
                 object_type: 'object',
@@ -83,12 +82,12 @@ exports.get_stats = function (req, callback) {
             })
             .then(function (data) {
 
-                results.published_object_count = data[0].published_object_count;
+                results.published_object_count = parseInt(data[0].published_object_count);
                 callback(null, results);
                 return null;
             })
             .catch(function (error) {
-                logger.module().fatal('FATAL: [/stats/model module (get_stats/getPublishedObjectCount)] unable to get published object count ' + error);
+                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/getPublishedObjectCount)] unable to get published object count ' + error);
                 throw 'FATAL: [/stats/model module (get_stats/getPublishedObjectCount)] unable to get published object count ' + error;
             });
     }
@@ -96,7 +95,7 @@ exports.get_stats = function (req, callback) {
     function getTotalCollectionCount(results, callback) {
 
         // total collection count
-        knex('tbl_objects')
+        DB(REPO_OBJECTS)
             .count('object_type as total_collection_count')
             .where({
                 object_type: 'collection',
@@ -104,12 +103,12 @@ exports.get_stats = function (req, callback) {
             })
             .then(function (data) {
 
-                results.total_collection_count = data[0].total_collection_count;
+                results.total_collection_count = parseInt(data[0].total_collection_count);
                 callback(null, results);
                 return null;
             })
             .catch(function (error) {
-                logger.module().fatal('FATAL: [/stats/model module (get_stats/getTotalCollectionCount)] unable to get total collection count ' + error);
+                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/getTotalCollectionCount)] unable to get total collection count ' + error);
                 throw 'FATAL: [/stats/model module (get_stats/getTotalCollectionCount)] unable to get total collection count ' + error;
             });
     }
@@ -117,7 +116,7 @@ exports.get_stats = function (req, callback) {
     function getTotalObjectCount(results, callback) {
 
         // total object count
-        knex('tbl_objects')
+        DB(REPO_OBJECTS)
             .count('object_type as total_object_count')
             .where({
                 object_type: 'object',
@@ -130,14 +129,14 @@ exports.get_stats = function (req, callback) {
                 return null;
             })
             .catch(function (error) {
-                logger.module().fatal('FATAL: [/stats/model module (get_stats/getTotalObjectCount)] unable to get total object count ' + error);
+                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/getTotalObjectCount)] unable to get total object count ' + error);
                 throw 'FATAL: [/stats/model module (get_stats/getTotalObjectCount)] unable to get total object count ' + error;
             });
     }
 
     function getTotalImageCount(results, callback) {
 
-        knex('tbl_objects')
+        DB(REPO_OBJECTS)
             .count('mime_type as total_image_count')
             .where({
                 mime_type: 'image/tiff',
@@ -158,14 +157,14 @@ exports.get_stats = function (req, callback) {
                 return null;
             })
             .catch(function (error) {
-                logger.module().fatal('FATAL: [/stats/model module (get_stats/getTotalImageCount)] unable to get total image count ' + error);
+                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/getTotalImageCount)] unable to get total image count ' + error);
                 throw 'FATAL: [/stats/model module (get_stats/getTotalImageCount)] unable to get total image count ' + error;
             });
     }
 
     function getTotalPdfCount(results, callback) {
 
-        knex('tbl_objects')
+        DB(REPO_OBJECTS)
             .count('mime_type as total_pdf_count')
             .where({
                 mime_type: 'application/pdf',
@@ -178,14 +177,14 @@ exports.get_stats = function (req, callback) {
                 return null;
             })
             .catch(function (error) {
-                logger.module().fatal('FATAL: [/stats/model module (get_stats/getTotalPdfCount)] unable to get total pdf count ' + error);
+                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/getTotalPdfCount)] unable to get total pdf count ' + error);
                 throw 'FATAL: [/stats/model module (get_stats/getTotalPdfCount)] unable to get total pdf count ' + error;
             });
     }
 
     function getTotalAudioCount(results, callback) {
 
-        knex('tbl_objects')
+        DB(REPO_OBJECTS)
             .count('mime_type as total_audio_count')
             .where({
                 mime_type: 'audio/x-wav',
@@ -198,14 +197,14 @@ exports.get_stats = function (req, callback) {
                 return null;
             })
             .catch(function (error) {
-                logger.module().fatal('FATAL: [/stats/model module (get_stats/getTotalAudioCount)] unable to get total audio count ' + error);
+                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/getTotalAudioCount)] unable to get total audio count ' + error);
                 throw 'FATAL: [/stats/model module (get_stats/getTotalAudioCount)] unable to get total audio count ' + error;
             });
     }
 
     function getTotalVideoCount(results, callback) {
 
-        knex('tbl_objects')
+        DB(REPO_OBJECTS)
             .count('mime_type as total_video_count')
             .where({
                 mime_type: 'video/mp4',
@@ -218,7 +217,7 @@ exports.get_stats = function (req, callback) {
                 return null;
             })
             .catch(function (error) {
-                logger.module().fatal('FATAL: [/stats/model module (get_stats/getTotalVideoCount)] unable to get total video count ' + error);
+                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/getTotalVideoCount)] unable to get total video count ' + error);
                 throw 'FATAL: [/stats/model module (get_stats/getTotalVideoCount)] unable to get total video count ' + error;
             });
     }
