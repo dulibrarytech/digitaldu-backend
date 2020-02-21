@@ -48,7 +48,7 @@ const userModule = (function () {
             html += '<td>' + DOMPurify.sanitize(user.last_name) + '</td>';
             html += '<td>' + DOMPurify.sanitize(user.email) + '</td>';
 
-            if (user.status === 1) {
+            if (user.is_active === 1) {
                 html += '<td>Active</td>';
             } else {
                 html += '<td>Inactive</td>';

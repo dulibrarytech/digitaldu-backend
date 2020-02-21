@@ -5,9 +5,9 @@
 # http://www.sequelpro.com/
 # https://github.com/sequelpro/sequelpro
 #
-# Host: 127.0.0.1 (MySQL 5.5.64-MariaDB)
+# Host: 127.0.0.1 (MySQL 5.7.26)
 # Database: repo
-# Generation Time: 2019-11-11 18:16:25 +0000
+# Generation Time: 2020-02-21 18:05:36 +0000
 # ************************************************************
 
 
@@ -39,7 +39,6 @@ CREATE TABLE `tbl_objects` (
   `uri` varchar(255) DEFAULT NULL,
   `mime_type` varchar(255) DEFAULT NULL,
   `entry_id` varchar(20) DEFAULT NULL,
-  `aip_path` varchar(255) DEFAULT '',
   `checksum` varchar(255) DEFAULT NULL,
   `file_size` int(11) DEFAULT NULL,
   `sip_uuid` varchar(255) DEFAULT NULL,
@@ -48,7 +47,7 @@ CREATE TABLE `tbl_objects` (
   `is_restricted` tinyint(1) NOT NULL DEFAULT '0',
   `is_active` tinyint(1) NOT NULL DEFAULT '1',
   `is_complete` tinyint(1) NOT NULL DEFAULT '1',
-  `is_indexed` int(1) NOT NULL DEFAULT '0',
+  `is_indexed` tinyint(1) NOT NULL DEFAULT '0',
   `created` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `is_member_of_collection_index` (`is_member_of_collection`),
@@ -74,7 +73,7 @@ CREATE TABLE `tbl_users` (
   `email` varchar(255) DEFAULT NULL,
   `first_name` varchar(255) DEFAULT NULL,
   `last_name` varchar(255) DEFAULT NULL,
-  `status` tinyint(1) DEFAULT '1',
+  `is_active` tinyint(1) DEFAULT '1',
   `created` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
