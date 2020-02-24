@@ -65,9 +65,9 @@ exports.get_index_record = function (req, callback) {
 
                 let collection_record = {};
                 collection_record.pid = VALIDATOR.escape(data[0].pid);
-                collection_record.uri = VALIDATOR.escape(data[0].uri);
+                collection_record.uri = data[0].uri;
                 collection_record.is_member_of_collection = VALIDATOR.escape(data[0].is_member_of_collection);
-                collection_record.handle = VALIDATOR.escape(data[0].handle);
+                collection_record.handle = data[0].handle;
                 collection_record.object_type = VALIDATOR.escape(data[0].object_type);
                 collection_record.title = record.display_record.title;
                 collection_record.thumbnail = data[0].thumbnail;
@@ -168,9 +168,9 @@ exports.index_records = function (req, callback) {
 
                         let collection_record = {};
                         collection_record.pid = VALIDATOR.escape(data[0].pid);
-                        collection_record.uri = VALIDATOR.escape(data[0].uri);
+                        collection_record.uri = data[0].uri;
                         collection_record.is_member_of_collection = VALIDATOR.escape(data[0].is_member_of_collection);
-                        collection_record.handle = VALIDATOR.escape(data[0].handle);
+                        collection_record.handle = data[0].handle;
                         collection_record.object_type = VALIDATOR.escape(data[0].object_type);
                         collection_record.title = record.display_record.title;
                         collection_record.thumbnail = data[0].thumbnail;
