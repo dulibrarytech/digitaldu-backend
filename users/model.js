@@ -228,15 +228,36 @@ exports.save_user = function (req, callback) {
     }
 
     DB(USERS)
-        .insert(userObj)
+        .count('du_id as du_id')
+        .where('du_id', userObj.du_id)
         .then(function (data) {
-            callback({
-                status: 201,
-                message: 'User created.'
-            });
+
+            if (data[0].du_id === 1) {
+                callback({
+                    status: 200,
+                    message: 'User is already in the system.'
+                });
+
+                return false;
+            }
+
+            DB(USERS)
+                .insert(userObj)
+                .then(function (data) {
+                    callback({
+                        status: 201,
+                        message: 'User created.'
+                    });
+                })
+                .catch(function (error) {
+                    LOGGER.module().error('FATAL: [/users/model module (save_user)] unable to get user data ' + error);
+                    throw 'FATAL: [/users/model module (save_user)] unable to get user data ' + error;
+                });
         })
         .catch(function (error) {
-            LOGGER.module().error('FATAL: [/users/model module (save_user)] unable to get user data ' + error);
-            throw 'FATAL: [/users/model module (save_user)] unable to get user data ' + error;
+            LOGGER.module().error('FATAL: [/users/model module (save_user)] unable to save user data ' + error);
+            throw 'FATAL: [/users/model module (save_user)] unable to save user data ' + error;
         });
+
+    return false;
 };

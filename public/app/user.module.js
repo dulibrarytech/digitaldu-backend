@@ -326,6 +326,11 @@ const userModule = (function () {
                     }, 4000);
                 });
 
+            } else if (response.status === 200) {
+
+                domModule.html('#message', '<div class="alert alert-warning">User with DU ID ' + obj.du_id + ' is already in the system</div>');
+                domModule.show('#user-form');
+
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to add user.');
             }
