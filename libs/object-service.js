@@ -31,8 +31,6 @@ exports.get_tn = function (uuid, type, callback) {
 
     let apiUrl = CONFIG.tnService + 'discovery/datastream/' + uuid + '/tn?key=' + CONFIG.TN_SERVICE_API_KEY;
 
-    // TODO: check type when file is not available to determine which replacement image to render
-
     REQUEST.get({
         url: apiUrl,
         encoding: null,
@@ -70,8 +68,6 @@ exports.get_tn = function (uuid, type, callback) {
         } else {
 
             LOGGER.module().error('ERROR: [/libs/tn-service lib (get_tn)] Unable to get thumbnail from TN service ' + httpResponse.statusCode + '/' + body);
-
-            // TODO: check audio, video image mime types
 
             callback({
                 error: true,
