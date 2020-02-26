@@ -29,7 +29,7 @@ exports.get_tn = function (uuid, type, callback) {
 
     'use strict';
 
-    let apiUrl = CONFIG.tnService + 'discovery/datastream/' + uuid + '/tn?key=' + CONFIG.TN_SERVICE_API_KEY;
+    let apiUrl = CONFIG.tnService + 'discovery/datastream/' + uuid + '/tn?key=' + CONFIG.tnServiceApiKey;
 
     REQUEST.get({
         url: apiUrl,
@@ -73,64 +73,6 @@ exports.get_tn = function (uuid, type, callback) {
                 error: true,
                 status: 200,
                 data: missing_tn
-            });
-
-            return false;
-        }
-    });
-};
-
-/** NOT USED
- * Gets viewer
- * @param uuid
- * @param callback
- */
-exports.get_viewer = function (uuid, callback) {
-
-    'use strict';
-
-    let apiUrl = CONFIG.tnService + 'discovery/viewer/' + uuid;
-
-    REQUEST.get({
-        url: apiUrl,
-        encoding: null,
-        timeout: 45000,
-        headers: {
-            'x-api-key': CONFIG.tnServiceApiKey
-        }
-    }, function (error, httpResponse, body) {
-
-        if (error) {
-
-            LOGGER.module().error('ERROR: [/libs/object-service lib (get_tn)] Unable to get viewer ' + error);
-
-            callback({
-                error: true,
-                status: 200,
-                data:''
-            });
-
-            return false;
-        }
-
-        if (httpResponse.statusCode === 200) {
-
-            callback({
-                error: false,
-                status: 200,
-                data: body
-            });
-
-            return false;
-
-        } else {
-
-            LOGGER.module().error('ERROR: [/libs/duracloud lib (get_thumbnail)] Unable to get duracloud thumbnail ' + httpResponse.statusCode + '/' + body);
-
-            callback({
-                error: true,
-                status: 404,
-                data: body
             });
 
             return false;
