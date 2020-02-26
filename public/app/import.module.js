@@ -259,13 +259,15 @@ const importModule = (function () {
         };
 
         let url = api + '/api/admin/v1/import/queue_objects',
+            token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
                 body: JSON.stringify(data),
-                mode: 'cors'
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
             });
 
         const callback = function (response) {
@@ -312,9 +314,14 @@ const importModule = (function () {
             url = api + '/api/admin/v1/import/list?collection=' + folder;
         }
 
-        let request = new Request(url, {
+        let token = userModule.getUserToken(),
+            request = new Request(url, {
                 method: 'GET',
-                mode: 'cors'
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
             });
 
         const callback = function (response) {
@@ -349,9 +356,14 @@ const importModule = (function () {
         domModule.html('#message', '<p><strong>Loading...</strong></p>');
 
         let url = api + '/api/admin/v1/import/incomplete',
+            token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'GET',
-                mode: 'cors'
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
             });
 
         const callback = function (response) {
@@ -378,7 +390,7 @@ const importModule = (function () {
                 }, 4000);
 
             } else {
-                helperModule.renderError('Error: (HTTP status ' + response.status + '. Unable to get incomplete records.');
+                helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to get incomplete records.');
             }
         };
 
@@ -393,9 +405,14 @@ const importModule = (function () {
         domModule.html('#message', '<p><strong>Loading...</strong></p>');
 
         let url = api + '/api/admin/v1/import/complete',
+            token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'GET',
-                mode: 'cors'
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
             });
 
         const callback = function (response) {
@@ -423,7 +440,7 @@ const importModule = (function () {
                 }, 4000);
 
             } else {
-                helperModule.renderError('Error: (HTTP status ' + response.status + '. Unable to get complete records.');
+                helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to get complete records.');
             }
         };
 
@@ -499,13 +516,15 @@ const importModule = (function () {
     obj.importModsId = function (sip_uuid, mods_id) {
 
         let url = api + '/api/admin/v1/import/mods_id',
+            token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
                 body: JSON.stringify({mods_id: mods_id, sip_uuid: sip_uuid}),
-                mode: 'cors'
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
             });
 
         const callback = function (response) {
@@ -572,13 +591,15 @@ const importModule = (function () {
         }
 
         let url = api + '/api/admin/v1/import/mods',
+            token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
                 body: JSON.stringify({mods_id: mods_id, sip_uuid: sip_uuid}),
-                mode: 'cors'
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
             });
 
         const callback = function (response) {
@@ -620,13 +641,15 @@ const importModule = (function () {
         }
 
         let url = api + '/api/admin/v1/import/thumbnail',
+            token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
                 body: JSON.stringify({sip_uuid: sip_uuid}),
-                mode: 'cors'
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
             });
 
         const callback = function (response) {
@@ -668,13 +691,15 @@ const importModule = (function () {
         }
 
         let url = api + '/api/admin/v1/import/master',
+            token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
                 body: JSON.stringify({sip_uuid: sip_uuid}),
-                mode: 'cors'
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
             });
 
         const callback = function (response) {
@@ -704,67 +729,6 @@ const importModule = (function () {
     };
 
     /**
-     * Imports missing handle
-     * @param sip_uuid
-     */
-    /* TODO: DEPRECATE
-     obj.importHandle = function (sip_uuid) {
-     // TODO
-     // console.log('import handle: ', sip_uuid);
-     // console.log('import handle: ', pid);
-     };
-     */
-
-    /* TODO: DEPRECATE
-    obj.importMimeType = function (sip_uuid) {
-        // TODO: console.log('import mime type: ', sip_uuid);
-    };
-    */
-
-    /* TODO: DEPRECATE
-    obj.importChecksum = function (sip_uuid) {
-
-        if (sip_uuid === undefined) {
-            // TODO: render message
-            return false;
-        }
-
-        let url = api + '/api/admin/v1/import/checksum',
-            request = new Request(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({sip_uuid: sip_uuid}),
-                mode: 'cors'
-            });
-
-        const callback = function (response) {
-
-            if (response.status === 201) {
-
-                let responses = document.querySelector('#responses');
-                responses.innerHTML = '<p><strong>Checksum added to repository record</strong></p>';
-
-                setTimeout(function () {
-
-                    if (document.querySelector('#responses')) {
-                        document.querySelector('#responses').innerHTML = '';
-                    }
-
-                }, 5000);
-
-            } else {
-                let message = 'Error: (HTTP status ' + DOMPurify.sanitize(response.status) + '. Unable to import MODS.';
-                helperModule.renderError(message);
-            }
-        };
-
-        http.req(request, callback);
-    };
-    */
-
-    /**
      * Gets transfer status
      */
     const get_transfer_status = function () {
@@ -772,13 +736,14 @@ const importModule = (function () {
         function transfer_status_http() {
 
             let url = api + '/api/admin/v1/import/poll/transfer_status',
+                token = userModule.getUserToken(),
                 request = new Request(url, {
                     method: 'GET',
+                    mode: 'cors',
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-access-token': userModule.getUserToken()
-                    },
-                    mode: 'cors'
+                        'x-access-token': token
+                    }
                 });
 
             const callback = function (response) {
@@ -845,13 +810,14 @@ const importModule = (function () {
         function ingest_status_http() {
 
             let url = api + '/api/admin/v1/import/poll/ingest_status',
+                token = userModule.getUserToken(),
                 request = new Request(url, {
                     method: 'GET',
+                    mode: 'cors',
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-access-token': userModule.getUserToken()
+                        'x-access-token': token
                     },
-                    mode: 'cors'
                 });
 
             const callback = function (response) {
@@ -901,13 +867,14 @@ const importModule = (function () {
         function import_status_http() {
 
             let url = api + '/api/admin/v1/import/poll/import_status',
+                token = userModule.getUserToken(),
                 request = new Request(url, {
                     method: 'GET',
+                    mode: 'cors',
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-access-token': userModule.getUserToken()
-                    },
-                    mode: 'cors'
+                        'x-access-token': token
+                    }
                 });
 
             const callback = function (response) {
@@ -971,13 +938,14 @@ const importModule = (function () {
         function fail_status_http() {
 
             let url = api + '/api/admin/v1/import/poll/fail_queue',
+                token = userModule.getUserToken(),
                 request = new Request(url, {
                     method: 'GET',
+                    mode: 'cors',
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-access-token': userModule.getUserToken()
-                    },
-                    mode: 'cors'
+                        'x-access-token': token
+                    }
                 });
 
             const callback = function (response) {
@@ -1034,7 +1002,6 @@ const importModule = (function () {
     };
 
     obj.init = function () {
-        userModule.renderUserName();
         helperModule.ping();
         get_ingest_status();
         get_transfer_status();
