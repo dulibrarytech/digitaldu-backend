@@ -29,7 +29,7 @@ exports.get_tn = function (uuid, type, callback) {
 
     'use strict';
 
-    let apiUrl = CONFIG.tnService + 'discovery/datastream/' + uuid + '/tn';
+    let apiUrl = CONFIG.tnService + 'discovery/datastream/' + uuid + '/tn?key=' + CONFIG.TN_SERVICE_API_KEY;
 
     // TODO: check type when file is not available to determine which replacement image to render
 

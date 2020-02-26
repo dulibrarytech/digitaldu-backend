@@ -25,7 +25,7 @@ const CONFIG = require('../config/config'),
 
 exports.authenticate = function (username, password, callback) {
 
-    if (VALIDATOR .isInt(username) === false || VALIDATOR.isEmpty(password) === true) {
+    if (VALIDATOR .isNumeric(username) === false || VALIDATOR.isEmpty(password) === true) {
 
         let errorObj = {
             status: 400,

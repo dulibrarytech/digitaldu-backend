@@ -28,8 +28,8 @@ exports.login = function (req, res) {
 
     if (req.body !== undefined) {
 
-        let username = VALIDATOR.trim(req.body.username),
-            password = VALIDATOR.trim(req.body.password);
+        let username = req.body.username.trim(),
+            password = req.body.password.trim();
 
         if (username.length === 0) {
 
@@ -47,7 +47,7 @@ exports.login = function (req, res) {
 
             return false;
 
-        } else if (!VALIDATOR.isNumeric(username)) {
+        } else if (VALIDATOR.isNumeric(username) === false) {
 
             res.status(401).send({
                 message: 'Authenticate failed due to invalid username.  Please enter a DU ID. i.e. 871******'
