@@ -1,5 +1,4 @@
 <% include partials/header.ejs %>
-
 <body class="nav-md">
 <div class="container body">
     <div class="main_container">
@@ -8,55 +7,30 @@
                 <div class="navbar nav_title" style="border: 0;">
                     <a href="index.html" class="site_title"><i class="fa fa-archive"></i> <span>DU Repository</span></a>
                 </div>
-
                 <div class="clearfix"></div>
-
-                <!-- menu profile quick info -->
                 <% include partials/menu-profile.ejs %>
-                <!-- /menu profile quick info -->
-
                 <br>
-
-                <!-- sidebar menu -->
                 <% include partials/nav.ejs %>
-                <!-- /sidebar menu -->
-
-                <!-- /menu footer buttons -->
                 <% include partials/sidebar-footer.ejs %>
-                <!-- /menu footer buttons -->
             </div>
         </div>
-
-        <!-- top navigation -->
         <% include partials/top-nav.ejs %>
-        <!-- /top navigation -->
-
-        <!-- page content -->
         <div class="right_col" role="main">
-            <div class="">
-
+            <div>
                 <div class="page-title">
-                    <div class="title_left">
-                        <!--<h3> Media Gallery <small> gallery design</small> </h3>-->
-                    </div>
-
+                    <div class="title_left"></div>
                     <div class="title_right">
-                        <!--<div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">-->
                         <% include partials/search.ejs %>
                     </div>
                 </div>
-
                 <div class="clearfix"></div>
-
                 <div class="row">
                     <div class="col-md-12">
                         <div class="row"><div id="ping"><p><strong>Checking third-party services...</strong></p></div></div>
                         <div class="x_panel">
                             <div class="x_title">
                                 <h2>Import Collection Objects</h2>
-                                <ul class="nav navbar-right"><!-- panel_toolbox -->
-                                    <!--<li><a href="#"><i class="fa fa-plus"></i>&nbsp;Import All Objects</a></li>-->
-                                </ul>
+                                <ul class="nav navbar-right"><!-- panel_toolbox --></ul>
                                 <div class="clearfix"></div>
                             </div>
                             <div class="x_content">
@@ -78,22 +52,18 @@
                             </div>
                         </div>
                     </div>
-                </div> <!-- end row -->
+                </div>
             </div>
         </div>
-        <!-- /page content -->
-        <!-- footer content -->
         <% include partials/footer.ejs %>
-        <!-- /footer content -->
     </div>
-
     <script src="../../vendors/jquery/dist/jquery.min.js"></script>
     <script src="../../vendors/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="../../vendors/nprogress/nprogress.js"></script>
     <script src="../../js/dompurify/purify.min.js"></script>
-    <script src="../../vendors/moment/min/moment.min.js"></script>
-    <script src="https://momentjs.com/downloads/moment-timezone-with-data.js"></script>
-    <script src="../../build/js/custom.js"></script>
+    <script src="../../js/moment/moment.min.js"></script>
+    <script src="../../js/moment/moment.timezone.js"></script>
+    <script src="../../assets/js/theme_sidebar.js"></script>
     <script src="../../app/dom.module.js"></script>
     <script src="../../app/helper.module.js"></script>
     <script src="../../app/config.module.js"></script>
