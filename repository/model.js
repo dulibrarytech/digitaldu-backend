@@ -416,12 +416,12 @@ exports.update_thumbnail = function (req, callback) {
                     recordObj.is_member_of_collection = VALIDATOR.escape(data[0].is_member_of_collection);
                     recordObj.object_type = VALIDATOR.escape(data[0].object_type);
                     recordObj.sip_uuid = VALIDATOR.escape(data[0].sip_uuid);
-                    recordObj.handle = VALIDATOR.escape(data[0].handle);
-                    recordObj.entry_id = VALIDATOR.escape(data[0].entry_id);
-                    recordObj.thumbnail = VALIDATOR.escape(data[0].thumbnail);
-                    recordObj.object = VALIDATOR.escape(data[0].file_name);
-                    recordObj.mime_type = VALIDATOR.escape(data[0].mime_type);
-                    recordObj.mods = VALIDATOR.escape(data[0].mods);
+                    recordObj.handle = data[0].handle;
+                    recordObj.entry_id = data[0].entry_id;
+                    recordObj.thumbnail = data[0].thumbnail;
+                    recordObj.object = data[0].file_name;
+                    recordObj.mime_type = data[0].mime_type;
+                    recordObj.mods = data[0].mods;
                     recordObj.is_published = data[0].is_published;
 
                     MODS.create_display_record(recordObj, function (result) {
