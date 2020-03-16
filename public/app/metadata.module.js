@@ -60,7 +60,12 @@ const metadataModule = (function () {
         } else if (record.thumbnail.search('http') === 0) {
             tn = DOMPurify.sanitize(record.thumbnail);
         } else {
-            tn = api + '/api/admin/v1/repo/object/tn?uuid=' + DOMPurify.sanitize(record.pid) + '&type=' + DOMPurify.sanitize(record.mime_type) + '&t=' + token;
+
+            if (record.object_type === 'collection') {
+                tn = api + '/api/admin/v1/repo/object/tn?uuid=' + DOMPurify.sanitize(record.thumbnail) + '&type=' + DOMPurify.sanitize(record.mime_type) + '&t=' + token;
+            } else if (record.object_type === 'object') {
+                tn = api + '/api/admin/v1/repo/object/tn?uuid=' + DOMPurify.sanitize(record.pid) + '&type=' + DOMPurify.sanitize(record.mime_type) + '&t=' + token;
+            }
         }
 
         return tn;

@@ -72,6 +72,7 @@ exports.reset_display_record = function (req, res) {
 };
 
 exports.get_tn = function (req, res) {
+
     SERVICE.get_tn(req, function (data) {
 
         if (data.error === true) {

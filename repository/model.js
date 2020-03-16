@@ -383,9 +383,20 @@ exports.update_thumbnail = function (req, callback) {
         return false;
     }
 
+    let pid = req.body.pid;
+
+    /*
+    if (req.body.thumbnail_url.indexOf('http') === -1 || req.body.thumbnail_url.indexOf('https') === -1) {
+        thumbnail = pid;
+    } else {
+        thumbnail = req.body.thumbnail_url;
+    }
+    */
+
+    let thumbnail = req.body.thumbnail_url;
     let obj = {};
-    obj.pid = req.body.pid;
-    obj.thumbnail = req.body.thumbnail_url;
+    obj.pid = pid;
+    obj.thumbnail = thumbnail;
 
     DB(REPO_OBJECTS)
         .where({
