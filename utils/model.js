@@ -277,7 +277,7 @@ exports.check_objects = function (req, callback) {
     // 'audio/x-wav'
 
     knex(REPO_OBJECTS)
-        .select('sip_uuid', 'object_type', 'thumbnail', 'file_name', 'file_size', 'mime_type', 'is_compound', 'created')
+        .select('sip_uuid', 'object_type', 'mods', 'thumbnail', 'file_name', 'file_size', 'mime_type', 'is_compound', 'created')
         .where({
             object_type: 'object',
             mime_type: mime_type,
@@ -294,6 +294,27 @@ exports.check_objects = function (req, callback) {
                 }
 
                 let record = data.pop();
+                let mods = JSON.parse(record.mods);
+                var call_number = 'none';
+
+                if (mods === null && mods.parts === null) {
+                    return false;
+                }
+
+                if (mods.parts.length > 1) {
+
+                    let partsArr = [];
+                    for (let i=0;i<mods.parts.length;i++) {
+                        partsArr.push(mods.parts[i].title);
+                    }
+
+                    call_number = partsArr.toString();
+
+                } else if (mods.parts.length === 1) {
+                    call_number = mods.parts[0].title;
+                } else {
+                    call_number = 'call number not found';
+                }
 
                 if (record.file_name === null) {
                     console.log('sip_uuid: ', record.sip_uuid);
@@ -305,13 +326,19 @@ exports.check_objects = function (req, callback) {
                     timeout: 25000
                 }, function (error, httpResponse, body) {
 
+                    if (httpResponse !== undefined) {
+                        console.log(httpResponse.statusCode);
+                    }
+
                     if (error) {
                         logger.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud object ' + error);
+
 
                         let obj = {
                             sip_uuid: record.sip_uuid,
                             object: record.file_name,
                             type: 'master',
+                            call_number: call_number,
                             mime_type: record.mime_type,
                             status_code: 0
                         };
@@ -428,7 +455,7 @@ exports.check_objects = function (req, callback) {
                     }
                 });
 
-            }, 550);
+            }, 450);
 
             callback({
                 status: 200,
@@ -448,7 +475,7 @@ exports.check_objects = function (req, callback) {
 exports.get_archivesspace_ids = function (req, callback) {
 
     knexQ('tbl_incomplete_queue')
-        .distinct('sip_uuid')
+        .distinct('sip_uuid', 'call_number')
         .then(function (data) {
 
             let timer = setInterval(function () {
@@ -470,6 +497,7 @@ exports.get_archivesspace_ids = function (req, callback) {
                         let obj = {};
                         obj.sip_uuid = record.sip_uuid.trim();
                         obj.uri = data[0].uri.trim();
+                        obj.call_number = record.call_number.trim();
 
                         knexQ('broken_tiffs')
                             .insert(obj)
@@ -487,7 +515,7 @@ exports.get_archivesspace_ids = function (req, callback) {
                         throw 'FATAL: [/utils/model module (check_objects)] Unable to check objects ' + error;
                     });
 
-            }, 550);
+            }, 150);
 
         })
         .catch(function (error) {

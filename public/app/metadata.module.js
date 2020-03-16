@@ -110,6 +110,8 @@ const metadataModule = (function () {
             }
 
             menu += '<p><a href="' + api + '/dashboard/objects/unpublished?pid=' + DOMPurify.sanitize(record.pid) + '"><i class="fa fa-info-circle"></i>&nbsp;Unpublished objects</a></p>';
+            menu += '<p><a href="' + api + '/dashboard/object/thumbnail?pid=' + DOMPurify.sanitize(record.pid) + '"><i class="fa fa-edit"></i>&nbsp;Change Thumbnail</a></p>';
+
         }
 
         return menu;

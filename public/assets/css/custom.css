@@ -871,11 +871,13 @@ footer {
     }
 }
 
+/*
 .tile-stats.sparkline {
     padding: 10px;
     text-align: center
 }
-
+*/
+/*
 .jqstooltip {
     background: #34495E !important;
     width: 30px !important;
@@ -886,6 +888,7 @@ footer {
 .tooltip {
     display: block !important
 }
+*/
 
 .tiles {
     border-top: 1px solid #ccc;
@@ -1236,48 +1239,8 @@ td span {
     padding: 10px 20px
 }
 
-/*
-h3.degrees {
-    font-size: 22px;
-    font-weight: 400;
-    text-align: center
-}
-*/
-
-/*
-.degrees:after {
-    content: "o";
-    position: relative;
-    top: -12px;
-    font-size: 13px;
-    font-weight: 300
-}
-*/
-
-/*
-.daily-weather .day {
-    font-size: 14px;
-    border-top: 2px solid rgba(115, 135, 156, 0.36);
-    text-align: center;
-    border-bottom: 2px solid rgba(115, 135, 156, 0.36);
-    padding: 5px 0
-}
-
-.weather-days .col-sm-2 {
-    overflow: hidden;
-    width: 16.66666667%
-}
-
-.weather .row {
-    margin-bottom: 0
-}
-
-.bulk-actions {
-    display: none
-}
-*/
-
 /* Tables */
+
 table.countries_list {
     width: 100%
 }
@@ -1293,13 +1256,6 @@ table.countries_list td {
     background: #ddd !important;
     border-color: #ddd !important
 }
-
-/*
-.paging_full_numbers a.paginate_active {
-    background-color: rgba(38, 185, 154, 0.59) !important;
-    border-color: rgba(38, 185, 154, 0.59) !important
-}
-*/
 
 button.DTTT_button,
 div.DTTT_button,
@@ -1424,11 +1380,6 @@ td.details {
     text-decoration: none !important
 }
 
-/*
-.paging_full_numbers a.paginate_active {
-    background-color: #99B3FF
-}
-*/
 table.display tr.even.row_selected td {
     background-color: #B0BED9
 }
@@ -1436,16 +1387,6 @@ table.display tr.even.row_selected td {
 table.display tr.odd.row_selected td {
     background-color: #9FAFD1
 }
-
-/*
-div.box {
-    height: 100px;
-    padding: 10px;
-    overflow: auto;
-    border: 1px solid #8080FF;
-    background-color: #E5E5FF
-}
-*/
 
 ul.msg_list li {
     background: #f7f7f7;
@@ -1553,39 +1494,6 @@ ul.to_do li {
 ul.to_do p {
     margin: 0
 }
-
-/*
-.dashboard-widget {
-    background: #f6f6f6;
-    border-top: 5px solid #79C3DF;
-    border-radius: 3px;
-    padding: 5px 10px 10px
-}
-*/
-
-/*
-.dashboard-widget .dashboard-widget-title {
-    font-weight: normal;
-    border-bottom: 1px solid #c1cdcd;
-    margin: 0 0 10px 0;
-    padding-bottom: 5px;
-    padding-left: 40px;
-    line-height: 30px
-}
-*/
-
-/*
-.dashboard-widget .dashboard-widget-title i {
-    font-size: 100%;
-    margin-left: -35px;
-    margin-right: 10px;
-    color: #33a1c9;
-    padding: 3px 6px;
-    border: 1px solid #abd9ea;
-    border-radius: 5px;
-    background: #fff
-}
-*/
 
 ul.quick-list {
     width: 45%;
@@ -2248,13 +2156,6 @@ legend {
 .autocomplete-selected {
     background: #f0f0f0
 }
-/*
-.autocomplete-suggestions strong {
-    font-weight: normal;
-    color: #3399ff;
-    font-weight: bolder
-}
-*/
 
 .btn {
     border-radius: 3px
@@ -3284,4 +3185,3 @@ fieldset {
     background-color: #ffff !important;
 }
 
-/** /bootstrap-datetimepicker **/
