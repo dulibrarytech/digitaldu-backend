@@ -1182,6 +1182,9 @@ function get_mapping () {
                     "ignore_above": 256
                 }
             }
+        },
+        "created": {
+            "type": "date"
         }
     };
 }

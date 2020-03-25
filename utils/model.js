@@ -678,6 +678,8 @@ exports.reindex = function (req, callback) {
                 })
                 .then(function (data) {
 
+                    console.log('Record index count: ', data[0].is_indexed_count);
+
                     if (data[0].is_indexed_count < 50) {
                         clearInterval(timer);
                         obj.reindex_complete = true;

@@ -52,7 +52,7 @@ exports.get_index_record = function (req, callback) {
     }
 
     DB(REPO_OBJECTS)
-        .select('pid', 'is_member_of_collection', 'uri', 'handle', 'thumbnail', 'object_type', 'display_record', 'is_published')
+        .select('pid', 'is_member_of_collection', 'uri', 'handle', 'thumbnail', 'object_type', 'display_record', 'is_published', 'created')
         .where({
             sip_uuid: sip_uuid,
             is_active: 1
@@ -72,6 +72,7 @@ exports.get_index_record = function (req, callback) {
                 collection_record.title = record.display_record.title;
                 collection_record.thumbnail = data[0].thumbnail;
                 collection_record.is_published = data[0].is_published;
+                collection_record.date = data[0].created;
 
                 // get collection abstract
                 if (record.display_record.notes !== undefined) {
@@ -148,7 +149,7 @@ exports.index_records = function (req, callback) {
     function index (index_name) {
 
         DB(REPO_OBJECTS)
-            .select('pid', 'is_member_of_collection', 'uri', 'handle', 'object_type', 'display_record', 'thumbnail', 'is_published')
+            .select('pid', 'is_member_of_collection', 'uri', 'handle', 'object_type', 'display_record', 'thumbnail', 'is_published', 'created')
             .where({
                 is_indexed: 0,
                 is_active: 1
@@ -175,6 +176,7 @@ exports.index_records = function (req, callback) {
                         collection_record.title = record.display_record.title;
                         collection_record.thumbnail = data[0].thumbnail;
                         collection_record.is_published = data[0].is_published;
+                        collection_record.date = data[0].created;
 
                         // get collection abstract
                         if (record.display_record.notes !== undefined) {
@@ -212,6 +214,8 @@ exports.index_records = function (req, callback) {
                                 delete record.display_record.language;
                             }
                         }
+
+                        record.created = data[0].created;
                     }
 
                     SERVICE.index_record({

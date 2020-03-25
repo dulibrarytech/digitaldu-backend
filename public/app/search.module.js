@@ -62,7 +62,6 @@ const searchModule = (function () {
             html += '<div class="col-md-3" style="padding: 5px">';
             html += metadataModule.createCollectionMenu(record);
             html += metadataModule.createObjectMenu(record);
-            html += '<p><a href="' + api + '/dashboard/object/thumbnail?pid=' + DOMPurify.sanitize(record.pid) + '"><i class="fa fa-edit"></i>&nbsp;Change Thumbnail</a></p>';
             html += '</div>';
             html += '</div>';
             html += '<hr>';
