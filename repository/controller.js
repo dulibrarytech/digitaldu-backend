@@ -40,6 +40,12 @@ exports.update_thumbnail = function (req, res) {
     });
 };
 
+exports.update_metadata_record = function (req, res) {
+    REPO.update_metadata_record (req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
 exports.update_metadata_cron = function (req, res) {
     REPO.update_metadata_cron(req, function (data) {
         res.status(data.status).send(data.data);

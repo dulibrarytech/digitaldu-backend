@@ -71,6 +71,321 @@ exports.get_display_record = function (req, callback) {
 };
 
 /**
+ * updates single metadata record
+ * @param req
+ * @param callback
+ */
+exports.update_metadata_record = function(req, callback) {
+
+    if (req.body.sip_uuid === undefined) {
+
+        callback({
+            status: 400,
+            message: 'Bad Request.'
+        });
+
+        return false;
+    }
+
+    let sip_uuid = req.body.sip_uuid;
+
+    // 1.)
+    function get_token(callback) {
+
+        ARCHIVESSPACE.get_session_token(function (response) {
+
+            let result = response.data,
+                obj = {},
+                token;
+
+            obj.sip_uuid = sip_uuid;
+
+            try {
+
+                token = JSON.parse(result);
+
+                if (token.session === undefined) {
+                    LOGGER.module().error('ERROR: [/repository/model module (update_metadata_record/get_session_token/ARCHIVESSPACE.get_session_token)] session token is undefined');
+                    obj.session = null;
+                    callback(null, obj);
+                    return false;
+                }
+
+                if (token.error === true) {
+                    LOGGER.module().error('ERROR: [/repository/model module (update_metadata_record/get_session_token/ARCHIVESSPACE.get_session_token)] session token error' + token.error_message);
+                    obj.session = null;
+                    callback(null, obj);
+                    return false;
+                }
+
+                obj.session = token.session;
+                callback(null, obj);
+                return false;
+
+            } catch (error) {
+                LOGGER.module().fatal('FATAL: [/repository/model module (update_metadata_record/get_session_token/ARCHIVESSPACE.get_session_token)] session token error ' + error);
+                throw 'FATAL: [/repository/model module (update_metadata_record/get_session_token/ARCHIVESSPACE.get_session_token)] session token error ' + error;
+            }
+        });
+    }
+
+    // 2.)
+    function get_mods_id(obj, callback) {
+
+        if (obj.session === null) {
+            callback(null, obj);
+            return false;
+        }
+
+        DB(REPO_OBJECTS)
+            .select('mods_id')
+            .where({
+                sip_uuid: obj.sip_uuid
+            })
+            .then(function(data) {
+                obj.mods_id = data[0].mods_id;
+                callback(null, obj);
+            })
+            .catch(function(error) {
+                LOGGER.module().fatal('FATAL: [/repository/model module (update_metadata_record/get_session_token/ARCHIVESSPACE.get_session_token)] session token error ' + error);
+                throw 'FATAL: [/repository/model module (update_metadata_record/get_session_token/ARCHIVESSPACE.get_session_token)] session token error ' + error;
+            });
+    }
+
+    // 3.)
+    function get_mods(obj, callback) {
+
+        if (obj.session === null) {
+            callback(null, obj);
+            return false;
+        }
+
+        ARCHIVESSPACE.get_mods(obj.mods_id, obj.session, function(data) {
+
+            if (data.error === true) {
+                LOGGER.module().error('ERROR: [/repository/model module (update_metadata_record/get_mods)] Unable to get mods');
+                obj.error = true;
+                callback(null, obj);
+                return false;
+            }
+
+            obj.mods = data.mods;
+            callback(null, obj);
+        });
+    }
+
+    // 4.)
+    function update_mods(obj, callback) {
+
+        if (obj.session === null) {
+            callback(null, obj);
+            return false;
+        }
+
+        DB(REPO_OBJECTS)
+            .where({
+                sip_uuid: obj.sip_uuid
+            })
+            .update({
+                mods: obj.mods
+            })
+            .then(function(data) {
+
+                if (data === 1) {
+                    obj.updated = true;
+                } else {
+                    obj.updated = false;
+                }
+
+                callback(null, obj);
+            })
+            .catch(function(error) {
+                LOGGER.module().fatal('FATAL: [/repository/model module (update_metadata_record/update_mods)] unable to update mods ' + error);
+                throw 'FATAL: [/repository/model module (update_metadata_record/update_mods)] unable to update mods ' + error;
+            });
+    }
+
+    // 5.)
+    function update_display_record(obj, callback) {
+
+        if (obj.session === null || obj.updated === false) {
+            callback(null, obj);
+            return false;
+        }
+
+        DB(REPO_OBJECTS)
+            .select('*')
+            .where({
+                mods_id: obj.mods_id,
+                is_active: 1
+            })
+            .then(function (data) {
+
+                if (data.length === 0) {
+                    LOGGER.module().info('INFO: [/repository/model module (update_metadata_record/update_display_record)] unable to update display record');
+                    return false;
+                }
+
+                let recordObj = {};
+                recordObj.pid = VALIDATOR.escape(data[0].pid);
+                recordObj.is_member_of_collection = VALIDATOR.escape(data[0].is_member_of_collection);
+                recordObj.object_type = data[0].object_type;
+                recordObj.sip_uuid = data[0].sip_uuid;
+                recordObj.handle = data[0].handle;
+                recordObj.entry_id = data[0].entry_id;
+                recordObj.thumbnail = data[0].thumbnail;
+                recordObj.object = data[0].file_name;
+                recordObj.mime_type = data[0].mime_type;
+                recordObj.is_published = data[0].is_published;
+                recordObj.mods = obj.mods;
+
+                MODS.create_display_record(recordObj, function (result) {
+
+                    let tmp = JSON.parse(result);
+
+                    if (tmp.is_compound === 1 && tmp.object_type !== 'collection') {
+
+                        let currentRecord = JSON.parse(data[0].display_record),
+                            currentCompoundParts = currentRecord.display_record.parts;
+
+                        let updatedParts = tmp.display_record.parts.filter(function(elem) {
+
+                            for (let i=0;i<currentCompoundParts.length;i++) {
+
+                                if (elem.title === currentCompoundParts[i].title) {
+                                    elem.caption = currentCompoundParts[i].caption;
+                                    elem.object = currentCompoundParts[i].object;
+                                    elem.thumbnail = currentCompoundParts[i].thumbnail;
+                                    return elem;
+                                }
+                            }
+
+                        });
+
+                        delete tmp.display_record.parts;
+                        delete tmp.compound;
+
+                        if (currentCompoundParts !== undefined) {
+                            tmp.display_record.parts = updatedParts; // currentCompoundParts;
+                            tmp.compound = updatedParts; // currentCompoundParts;
+                        }
+
+                        obj.display_record = JSON.stringify(tmp);
+
+                    } else if (tmp.is_compound === 0 || tmp.object_type === 'collection') {
+
+                        obj.display_record = result;
+
+                    }
+
+                    obj.is_published = recordObj.is_published;
+                    callback(null, obj);
+                });
+
+                return null;
+            })
+            .catch(function (error) {
+                LOGGER.module().fatal('FATAL: [/repository/model module (update_metadata_cron/update_records/update_mods)] Unable to get mods update records ' + error);
+                throw 'FATAL: [/repository/model module (update_metadata_cron/update_records/update_mods)] Unable to get mods update records ' + error;
+            });
+    }
+
+    // 6.)
+    function update_admin_index(obj, callback) {
+
+        if (obj.session === null || obj.updated === false) {
+            callback(null, obj);
+            return false;
+        }
+
+        // update admin index
+        REQUEST.post({
+            url: CONFIG.apiUrl + '/api/admin/v1/indexer?api_key=' + CONFIG.apiKey,
+            form: {
+                'sip_uuid': obj.sip_uuid
+            }
+        }, function (error, httpResponse, body) {
+
+            if (error) {
+                LOGGER.module().error('ERROR: [/repository/model module (update_metadata_record/index_admin_record)] indexer error ' + error);
+                return false;
+            }
+
+            if (httpResponse.statusCode === 200) {
+                obj.admin_index = true;
+                callback(null, obj);
+                return false;
+            } else {
+                LOGGER.module().error('ERROR: [/repository/model module (update_metadata_record/index_admin_record)] http error ' + httpResponse.statusCode + '/' + body);
+                obj.admin_index = false;
+                callback(null, obj);
+                return false;
+            }
+        });
+    }
+
+    function update_public_index(obj, callback) {
+
+        if (obj.session === null || obj.updated === false || obj.admin_index === false) {
+            callback(null, obj);
+            return false;
+        }
+
+        if (obj.is_published === 1) {
+
+            // update public index
+            REQUEST.post({
+                url: CONFIG.apiUrl + '/api/admin/v1/indexer?api_key=' + CONFIG.apiKey,
+                form: {
+                    'sip_uuid': obj.sip_uuid,
+                    'publish': true
+                }
+            }, function (error, httpResponse, body) {
+
+                if (error) {
+                    LOGGER.module().error('ERROR: [/repository/model module (update_metadata_cron/update_records/update_mods)] indexer error ' + error);
+                    return false;
+                }
+
+                if (httpResponse.statusCode === 200) {
+                    obj.public_index = true;
+                    callback(null, obj);
+                    return false;
+                } else {
+                    LOGGER.module().error('ERROR: [/repository/model module (update_metadata_cron/update_records/update_mods)] http error ' + httpResponse.statusCode + '/' + body);
+                    obj.public_index = false;
+                    callback(null, obj);
+                    return false;
+                }
+            });
+        }
+    }
+
+    ASYNC.waterfall([
+        get_token,
+        get_mods_id,
+        get_mods,
+        update_mods,
+        update_display_record,
+        update_admin_index,
+        update_public_index
+    ], function (error, results) {
+
+        if (error) {
+            LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/async.waterfall)] ' + error);
+        }
+
+        LOGGER.module().info('INFO: [/repository/model module (update_metadata_record/async.waterfall)] record ' + results.sip_uuid + ' updated');
+
+        callback({
+            status: 201,
+            message: 'Record updated.'
+        });
+
+    });
+};
+
+/**
  * Gets metadata updates from archivesspace update feed
  * @param req
  * @param callback
