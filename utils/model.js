@@ -369,7 +369,7 @@ exports.batch_update_metadata = function (req, callback) {
                     throw 'ERROR: [/utils/model module (batch_update_metadata/update_metadata_records)] unable to get sip_uuid ' + error;
                 });
 
-        }, 1000);
+        }, 15000);
     }
 
     async.waterfall([

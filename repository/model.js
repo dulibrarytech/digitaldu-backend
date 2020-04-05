@@ -181,7 +181,13 @@ exports.update_metadata_record = function(req, callback) {
                 LOGGER.module().info('INFO: no update required for record ' + obj.sip_uuid);
 
                 ARCHIVESSPACE.destroy_session_token(obj.session, function(result) {
-                    LOGGER.module().info('INFO: ArchivesSpace session terminated.');
+
+                    if (result.error === false) {
+                        LOGGER.module().info('INFO: ArchivesSpace session terminated. ' + result.data);
+                    } else {
+                        LOGGER.module().error('ERROR: [/repository/model module (update_metadata_record/get_mods)] Unable to terminate session');
+                    }
+
                 });
 
                 obj.session = null;
@@ -419,7 +425,12 @@ exports.update_metadata_record = function(req, callback) {
         if (results.session !== null) {
 
             ARCHIVESSPACE.destroy_session_token(results.session, function(result) {
-                LOGGER.module().info('INFO: ArchivesSpace session terminated. ' + result);
+
+                if (result.error === false) {
+                    LOGGER.module().info('INFO: ArchivesSpace session terminated. ' + result.data);
+                } else {
+                    LOGGER.module().error('ERROR: [/repository/model module (update_metadata_record/get_mods)] Unable to terminate session');
+                }
             });
         }
 
