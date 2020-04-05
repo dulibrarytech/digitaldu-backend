@@ -138,12 +138,20 @@ exports.update_metadata_record = function(req, callback) {
         }
 
         DB(REPO_OBJECTS)
-            .select('mods_id')
+            .select('mods_id', 'mods')
             .where({
-                sip_uuid: obj.sip_uuid
+                sip_uuid: obj.sip_uuid,
+                object_type: 'object'
             })
             .then(function(data) {
+
+                if (data.length === 0) {
+                    LOGGER.module().info('INFO: no record found for ' + obj.sip_uuid);
+                    return false;
+                }
+
                 obj.mods_id = data[0].mods_id;
+                obj.prev_mods = data[0].mods;
                 callback(null, obj);
             })
             .catch(function(error) {
@@ -169,6 +177,18 @@ exports.update_metadata_record = function(req, callback) {
                 return false;
             }
 
+            if (obj.prev_mods === data.mods) {
+                LOGGER.module().info('INFO: no update required for record ' + obj.sip_uuid);
+
+                ARCHIVESSPACE.destroy_session_token(obj.session, function(result) {
+                    LOGGER.module().info('INFO: ArchivesSpace session terminated.');
+                });
+
+                obj.session = null;
+                callback(null, obj);
+                return false;
+            }
+
             obj.mods = data.mods;
             callback(null, obj);
         });
@@ -177,7 +197,7 @@ exports.update_metadata_record = function(req, callback) {
     // 4.)
     function update_mods(obj, callback) {
 
-        if (obj.session === null) {
+        if (obj.session === null || obj.error === true) {
             callback(null, obj);
             return false;
         }
@@ -208,7 +228,7 @@ exports.update_metadata_record = function(req, callback) {
     // 5.)
     function update_display_record(obj, callback) {
 
-        if (obj.session === null || obj.updated === false) {
+        if (obj.session === null || obj.updated === false || obj.error === true) {
             callback(null, obj);
             return false;
         }
@@ -266,8 +286,8 @@ exports.update_metadata_record = function(req, callback) {
                         delete tmp.compound;
 
                         if (currentCompoundParts !== undefined) {
-                            tmp.display_record.parts = updatedParts; // currentCompoundParts;
-                            tmp.compound = updatedParts; // currentCompoundParts;
+                            tmp.display_record.parts = updatedParts;
+                            tmp.compound = updatedParts;
                         }
 
                         obj.display_record = JSON.stringify(tmp);
@@ -278,8 +298,29 @@ exports.update_metadata_record = function(req, callback) {
 
                     }
 
-                    obj.is_published = recordObj.is_published;
-                    callback(null, obj);
+                    DB(REPO_OBJECTS)
+                        .where({
+                            sip_uuid: obj.sip_uuid
+                        })
+                        .update({
+                            display_record: obj.display_record
+                        })
+                        .then(function(data) {
+
+                            if (data === 1) {
+                                obj.is_published = recordObj.is_published;
+                                callback(null, obj);
+                            } else {
+                                obj.updated = false;
+                                callback(null, obj);
+                            }
+
+                        })
+                        .catch(function(error) {
+                            LOGGER.module().error('ERROR: [/repository/model module (update_metadata_record/index_admin_record)] indexer error ' + error);
+                            obj.updated = false;
+                            callback(null, obj);
+                        });
                 });
 
                 return null;
@@ -293,7 +334,7 @@ exports.update_metadata_record = function(req, callback) {
     // 6.)
     function update_admin_index(obj, callback) {
 
-        if (obj.session === null || obj.updated === false) {
+        if (obj.session === null || obj.updated === false || obj.error === true) {
             callback(null, obj);
             return false;
         }
@@ -326,7 +367,7 @@ exports.update_metadata_record = function(req, callback) {
 
     function update_public_index(obj, callback) {
 
-        if (obj.session === null || obj.updated === false || obj.admin_index === false) {
+        if (obj.session === null || obj.updated === false || obj.admin_index === false || obj.error === true) {
             callback(null, obj);
             return false;
         }
@@ -375,11 +416,15 @@ exports.update_metadata_record = function(req, callback) {
             LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/async.waterfall)] ' + error);
         }
 
-        LOGGER.module().info('INFO: [/repository/model module (update_metadata_record/async.waterfall)] record ' + results.sip_uuid + ' updated');
+        if (results.session !== null) {
+
+            ARCHIVESSPACE.destroy_session_token(results.session, function(result) {
+                LOGGER.module().info('INFO: ArchivesSpace session terminated. ' + result);
+            });
+        }
 
         callback({
-            status: 201,
-            message: 'Record updated.'
+            status: 201
         });
 
     });
@@ -389,7 +434,7 @@ exports.update_metadata_record = function(req, callback) {
  * Gets metadata updates from archivesspace update feed
  * @param req
  * @param callback
- */
+
 exports.update_metadata_cron = function (req, callback) {
 
     function get_session_token(callback) {
@@ -680,6 +725,7 @@ exports.update_metadata_cron = function (req, callback) {
         message: 'Checking for updated records'
     });
 };
+ */
 
 /**
  * Updates thumbnail

@@ -261,8 +261,138 @@ exports.get_uuids = function (req, callback) {
     });
 };
 
-// TODO: add aip locations to repository records
 /**
+ * Batch updates all metadata records in the repository via ArchivesSpace
+ * @param req
+ * @param callback
+ */
+exports.batch_update_metadata = function (req, callback) {
+
+    function reset_update_flags(callback) {
+
+        let obj = {};
+
+        knex(REPO_OBJECTS)
+            .where({
+                is_active: 1,
+                object_type: 'object'
+            })
+            .update({
+                is_updated: 0
+            })
+            .then(function(data) {
+
+                if (data > 0) {
+                    obj.total_records = data;
+                    obj.reset = true;
+                    logger.module().info('INTO: [/utils/model module (batch_update_metadata/reset_update_flags)] ' + data + ' update flags reset');
+                    callback(null, obj);
+                }
+            })
+            .catch(function(error) {
+                logger.module().error('ERROR: [/utils/model module (batch_update_metadata/reset_update_flags/async.waterfall)] ' + error);
+                throw 'ERROR: [/utils/model module (batch_update_metadata/reset_update_flags/async.waterfall)] ' + error;
+            });
+    }
+
+    function update_metadata_records(obj, callback) {
+
+        if (obj.reset === false) {
+            callback(null, obj);
+            return false;
+        }
+
+        let timer = setInterval(function() {
+
+            knex(REPO_OBJECTS)
+                .select('sip_uuid')
+                .where({
+                    is_updated: 0,
+                    object_type: 'object'
+                })
+                .limit(1)
+                .then(function(data) {
+
+                    if (data.length === 0) {
+                        logger.module().info('INFO: [/utils/model module (batch_update_metadata/update_metadata_records)] metadata updates complete');
+                        clearInterval(timer);
+                        callback(null, obj);
+                        return false;
+                    }
+
+                    let sip_uuid = data[0].sip_uuid;
+
+                    request.put({
+                        url: config.apiUrl + '/api/admin/v1/metadata?api_key=' + config.apiKey,
+                        form: {
+                            'sip_uuid': sip_uuid
+                        }
+                    }, function (error, httpResponse, body) {
+
+                        if (error) {
+                            logger.module().error('ERROR: [/utils/model module (batch_update_metadata/update_metadata_records)] unable to update record ' + error);
+                            return false;
+                        }
+
+                        if (httpResponse.statusCode === 201) {
+
+                            knex(REPO_OBJECTS)
+                                .where({
+                                    sip_uuid: sip_uuid
+                                })
+                                .update({
+                                    is_updated: 1
+                                })
+                                .then(function(data) {
+
+                                    if (data === 1) {
+                                        logger.module().info('INFO: [/utils/model module (batch_update_metadata/reset_update_flags)] reset update flag for record ' + sip_uuid + '. update complete.');
+                                        return false;
+                                    }
+
+                                })
+                                .catch(function(error) {
+                                    logger.module().error('ERROR: [/utils/model module (batch_update_metadata/update_metadata_records)] unable to update metadata record ' + sip_uuid + ' ' + error);
+                                    throw 'ERROR: [/utils/model module (batch_update_metadata/update_metadata_records)] unable to update metadata record ' + sip_uuid + ' ' + error;
+                                });
+
+                            return false;
+
+                        } else {
+                            logger.module().error('ERROR: [/utils/model module (batch_update_metadata/update_metadata_records)] http error ' + httpResponse.statusCode + '/' + body);
+                            return false;
+                        }
+                    });
+                })
+                .catch(function(error) {
+                    logger.module().error('ERROR: [/utils/model module (batch_update_metadata/update_metadata_records)] unable to get sip_uuid ' + error);
+                    throw 'ERROR: [/utils/model module (batch_update_metadata/update_metadata_records)] unable to get sip_uuid ' + error;
+                });
+
+        }, 1000);
+    }
+
+    async.waterfall([
+        reset_update_flags,
+        update_metadata_records
+    ], function (error, results) {
+
+        if (error) {
+            logger.module().error('ERROR: [/utils/model module (batch_update_metadata/async.waterfall)] ' + error);
+            throw 'ERROR: [/utils/model module (batch_update_metadata/async.waterfall)] ' + error;
+        }
+
+        logger.module().info('INFO: [/utils/model module (batch_update_metadata/async.waterfall)] ' + results.total_records + ' metadata records updated');
+    });
+
+    callback({
+        status: 201,
+        message: 'Batch updating metadata records...'
+    });
+
+};
+
+/** // TODO: add aip locations to repository records
  * confirms that repository files exist on Archivematica service
  * @param req
  * @param callback

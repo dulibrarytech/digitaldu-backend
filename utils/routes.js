@@ -23,14 +23,20 @@ const Utils = require('../utils/controller'),
 
 module.exports = function (app) {
 
-    app.route('/api/admin/v1/utils/objects')
-        .get(token.verify, Utils.check_objects);
+    app.route('/api/admin/v1/utils/batch/update/metadata')
+        .post(token.verify, Utils.batch_update_metadata);
+
+    app.route('/api/admin/v1/utils/reindex')
+        .post(token.verify, Utils.reindex);
 
     app.route('/api/admin/v1/utils/reindex')
         .post(token.verify, Utils.reindex);
 
     app.route('/api/admin/v1/utils/uuids')
         .get(token.verify, Utils.get_uuids);
+
+    app.route('/api/admin/v1/utils/objects')
+        .get(token.verify, Utils.check_objects);
 
     app.route('/api/admin/v1/utils/objects/ids')
         .get(token.verify, Utils.get_archivesspace_ids);
