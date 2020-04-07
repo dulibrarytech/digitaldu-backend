@@ -323,7 +323,7 @@ exports.batch_update_metadata = function (req, callback) {
                     let sip_uuid = data[0].sip_uuid;
 
                     request.put({
-                        url: config.apiUrl + '/api/admin/v1/metadata?api_key=' + config.apiKey,
+                        url: config.apiUrl + '/api/admin/v1/repo/metadata?api_key=' + config.apiKey,
                         form: {
                             'sip_uuid': sip_uuid
                         }
@@ -369,7 +369,7 @@ exports.batch_update_metadata = function (req, callback) {
                     throw 'ERROR: [/utils/model module (batch_update_metadata/update_metadata_records)] unable to get sip_uuid ' + error;
                 });
 
-        }, 15000);
+        }, 14000);
     }
 
     async.waterfall([

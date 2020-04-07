@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# set env var - export API_KEY="<api-key>"
+
+curl -X POST \
+  'http://localhost:8000/api/admin/v1/utils/batch/update/metadata?api_key='${API_KEY} \
+  -H 'Accept: */*' \
+  -H 'Accept-Encoding: gzip, deflate' \
+  -H 'Cache-Control: no-cache' \
+  -H 'Connection: keep-alive' \
+  -H 'Content-Length: 0' \
+  -H 'Host: localhost:8000' \
+  -H 'cache-control: no-cache'

@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# set env var - export API_KEY="<api-key>"
+
+curl -X PUT \
+  'http://localhost:8000/api/admin/v1/repo/metadata?api_key='${API_KEY} \
+  -H 'Accept: */*' \
+  -H 'Accept-Encoding: gzip, deflate' \
+  -H 'Cache-Control: no-cache' \
+  -H 'Connection: keep-alive' \
+  -H 'Content-Length: 45' \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -H 'Host: localhost:8000' \
+  -H 'Postman-Token: eeafc6db-a037-48f6-b32d-d4c645a1a4f5,9ed0b2dc-37ac-4d06-8831-cf446c6ae037' \
+  -H 'User-Agent: PostmanRuntime/7.17.1' \
+  -H 'cache-control: no-cache' \
+  -d sip_uuid=821b5750-74fb-4157-91f1-6dff21b0544c

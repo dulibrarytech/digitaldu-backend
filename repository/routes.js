@@ -31,7 +31,7 @@ module.exports = function (app) {
         .post(TOKEN.verify, REPO.create_collection_object)
         .put(TOKEN.verify, REPO.update_metadata_cron);
 
-    app.route('/api/admin/v1/metadata')
+    app.route('/api/admin/v1/repo/metadata')
         .put(TOKEN.verify, REPO.update_metadata_record);
 
     app.route('/api/admin/v1/repo/object/unpublished')
