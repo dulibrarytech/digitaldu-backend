@@ -46,8 +46,8 @@ exports.update_metadata_record = function (req, res) {
     });
 };
 
-exports.update_metadata_cron = function (req, res) {
-    REPO.update_metadata_cron(req, function (data) {
+exports.update_collection_metadata_record = function (req, res) {
+    REPO.update_collection_metadata_record (req, function (data) {
         res.status(data.status).send(data.data);
     });
 };

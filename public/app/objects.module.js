@@ -372,7 +372,6 @@ const objectsModule = (function () {
     const batchUpdateMetadata = function() {
 
         let pid = helperModule.getParameterByName('pid');
-        console.log(pid);
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
         let obj = {};
