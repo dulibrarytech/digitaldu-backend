@@ -262,21 +262,32 @@ exports.get_uuids = function (req, callback) {
 };
 
 /**
- * Batch updates all metadata records in the repository via ArchivesSpace
+ * Batch updates all or a collection's metadata records in the repository via ArchivesSpace
  * @param req
  * @param callback
  */
 exports.batch_update_metadata = function (req, callback) {
 
+    let pid;
+
+    if (req.query.pid !== undefined) {
+        pid = req.query.pid;
+    }
+
     function reset_update_flags(callback) {
 
         let obj = {};
+        let whereObj = {};
+
+        if (pid !== undefined) {
+            whereObj.is_member_of_collection = pid;
+        }
+
+        whereObj.is_active = 1;
+        whereObj.object_type = 'object';
 
         knex(REPO_OBJECTS)
-            .where({
-                is_active: 1,
-                object_type: 'object'
-            })
+            .where(whereObj)
             .update({
                 is_updated: 0
             })
@@ -302,14 +313,20 @@ exports.batch_update_metadata = function (req, callback) {
             return false;
         }
 
+        let whereObj = {};
+
+        if (pid !== undefined) {
+            whereObj.is_member_of_collection = pid;
+        }
+
+        whereObj.is_updated = 0;
+        whereObj.object_type = 'object';
+
         let timer = setInterval(function() {
 
             knex(REPO_OBJECTS)
                 .select('sip_uuid')
-                .where({
-                    is_updated: 0,
-                    object_type: 'object'
-                })
+                .where(whereObj)
                 .limit(1)
                 .then(function(data) {
 

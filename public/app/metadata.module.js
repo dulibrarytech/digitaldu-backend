@@ -149,7 +149,7 @@ const metadataModule = (function () {
                 menu += '<p><a href="#" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(record.pid) + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
             }
 
-            menu += '<p><a href="#" onclick="objectsModule.updateMetadata(\'' + DOMPurify.sanitize(record.pid) + '\', \'object\'); return false;"><i class="fa fa-file-code-o"></i>&nbsp;Update Metadata</a></p>';
+            menu += '<p><a href="#" onclick="objectsModule.updateMetadata(\'' + DOMPurify.sanitize(record.pid) + '\', \'object\'); return false;"><i class="fa fa-code"></i>&nbsp;Update Metadata</a></p>';
         }
 
         return menu;

@@ -356,8 +356,66 @@ const objectsModule = (function () {
         };
 
         httpModule.req(request, callback);
+        return false;
+    };
+
+    /**
+     * Binds click event to defined selector
+     */
+    obj.batchUpdateMetadataListener = function() {
+        domModule.getElement('#batch-update-metadata').addEventListener('click', batchUpdateMetadata);
+    };
+
+    /**
+     *  Updates all metadata records for current collection
+     */
+    const batchUpdateMetadata = function() {
+
+        let pid = helperModule.getParameterByName('pid');
+        console.log(pid);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        let obj = {};
+        let url = api + '/api/admin/v1/utils/batch/update/metadata?pid=' + pid,
+            token = userModule.getUserToken(),
+            request = new Request(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                body: JSON.stringify(obj),
+                mode: 'cors'
+            });
+
+        const callback = function (response) {
+
+            if (response.status === 201) {
+
+                domModule.html('#message', '<div class="alert alert-success"><i class="fa fa-exclamation-circle"></i>  The metadata records in this collection are being updated.  The process may take awhile depending on the size of the collection.    </div>');
+
+                setTimeout(function () {
+                    domModule.html('#message', null);
+                }, 5000);
 
 
+            } else if (response.status === 401) {
+
+                response.json().then(function (response) {
+
+                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
+
+                    setTimeout(function () {
+                        window.location.replace('/login');
+                    }, 4000);
+                });
+
+            } else {
+                helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to update metadata.');
+            }
+        };
+
+        httpModule.req(request, callback);
         return false;
     };
 

@@ -200,6 +200,15 @@ const domModule = (function () {
         return true;
     };
 
+    /**
+     * Gets element reference by selector
+     * @param selector
+     * @returns {Element}
+     */
+    obj.getElement = function(selector) {
+        return document.querySelector(selector);
+    };
+
     return obj;
 
 }());
