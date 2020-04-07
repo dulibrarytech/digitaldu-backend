@@ -231,6 +231,63 @@ const collectionsModule = (function () {
         });
     };
 
+    /**
+     * Updates collection metadata
+     * @param pid
+     * @returns {boolean}
+     */
+    obj.updateCollectionMetadata = function(pid) {
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> Updating...</div>');
+
+        let obj = {};
+        obj.sip_uuid = pid;
+
+        let url = api + '/api/admin/v1/repo/metadata/collection',
+            token = userModule.getUserToken(),
+            request = new Request(url, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                body: JSON.stringify(obj),
+                mode: 'cors'
+            });
+
+        const callback = function (response) {
+
+            if (response.status === 201) {
+
+                domModule.html('#message', '<div class="alert alert-success"><i class="fa fa-exclamation-circle"></i> Collection Metadata Updated.</div>');
+
+                setTimeout(function () {
+                    domModule.html('#message', null);
+                    objectsModule.getObjects();
+                }, 4000);
+
+
+            } else if (response.status === 401) {
+
+                response.json().then(function (response) {
+
+                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
+
+                    setTimeout(function () {
+                        window.location.replace('/login');
+                    }, 4000);
+                });
+
+            } else {
+                helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to update collection metadata.');
+            }
+        };
+
+        httpModule.req(request, callback);
+        return false;
+    };
+
     return obj;
 
 }());
