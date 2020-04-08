@@ -44,6 +44,12 @@ exports.batch_update_metadata = function(req, res) {
     });
 };
 
+exports.batch_update_collection_metadata  = function(req, res) {
+    Utils.batch_update_collection_metadata (req, function(data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
 exports.get_archivesspace_ids = function (req, res) {
     Utils.get_archivesspace_ids(req, function (data) {
         res.status(data.status).send(data.data);

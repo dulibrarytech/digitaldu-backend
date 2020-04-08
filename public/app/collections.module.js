@@ -288,6 +288,64 @@ const collectionsModule = (function () {
         return false;
     };
 
+    /**
+     * Binds click event to defined selector
+     */
+    obj.batchUpdateCollectionMetadataListener = function() {
+        domModule.getElement('#batch-update-collection-metadata').addEventListener('click', batchUpdateCollectionMetadata);
+    };
+
+    /**
+     * Batch updates all collection metadata records
+     */
+    const batchUpdateCollectionMetadata = function () {
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        let obj = {};
+        let url = api + '/api/admin/v1/utils/batch/update/metadata/collection',
+            token = userModule.getUserToken(),
+            request = new Request(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                body: JSON.stringify(obj),
+                mode: 'cors'
+            });
+
+        const callback = function (response) {
+
+            if (response.status === 201) {
+
+                domModule.html('#message', '<div class="alert alert-success"><i class="fa fa-exclamation-circle"></i>  The collection metadata records are being updated.  The process may take awhile depending on the number of collections.</div>');
+
+                setTimeout(function () {
+                    domModule.html('#message', null);
+                }, 5000);
+
+
+            } else if (response.status === 401) {
+
+                response.json().then(function (response) {
+
+                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
+
+                    setTimeout(function () {
+                        window.location.replace('/login');
+                    }, 4000);
+                });
+
+            } else {
+                helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to update collection metadata.');
+            }
+        };
+
+        httpModule.req(request, callback);
+        return false;
+    };
+
     return obj;
 
 }());
