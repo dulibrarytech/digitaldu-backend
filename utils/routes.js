@@ -32,9 +32,6 @@ module.exports = function (app) {
     app.route('/api/admin/v1/utils/reindex')
         .post(token.verify, Utils.reindex);
 
-    app.route('/api/admin/v1/utils/reindex')
-        .post(token.verify, Utils.reindex);
-
     app.route('/api/admin/v1/utils/uuids')
         .get(token.verify, Utils.get_uuids);
 
@@ -46,4 +43,7 @@ module.exports = function (app) {
 
     app.route('/api/admin/v1/utils/objects/fix-compounds')
         .get(token.verify, Utils.fix_compound_objects);
+
+    app.route('/api/admin/v1/utils/objects/delete')
+        .delete(token.verify, Utils.batch_delete_objects);
 };

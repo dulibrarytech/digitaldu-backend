@@ -33,6 +33,12 @@ exports.unindex_record = function (req, res) {
     });
 };
 
+exports.unindex_admin_record = function (req, res) {
+    MODEL.unindex_admin_record(req, function (data) {
+        res.status(data.status).send(data);
+    });
+};
+
 exports.index_records = function (req, res) {
     MODEL.index_records(req, function (data) {
         res.status(data.status).send(data);

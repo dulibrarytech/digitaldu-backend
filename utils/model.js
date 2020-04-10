@@ -543,274 +543,6 @@ exports.batch_update_collection_metadata = function (req, callback) {
 
 };
 
-/** // TODO: add aip locations to repository records
- * confirms that repository files exist on Archivematica service
- * @param req
- * @param callback
- */
-exports.check_objects = function (req, callback) {
-
-    let apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + 'dip-store/',
-        mime_type = 'image/tiff';
-    // 'image/tiff',
-    // 'application/pdf',
-    // 'video/mp4',
-    // 'audio/x-wav'
-
-    knex(REPO_OBJECTS)
-        .select('sip_uuid', 'object_type', 'mods', 'thumbnail', 'file_name', 'file_size', 'mime_type', 'is_compound', 'created')
-        .where({
-            object_type: 'object',
-            mime_type: mime_type,
-            is_active: 1
-        })
-        .then(function (data) {
-
-            let timer = setInterval(function () {
-
-                if (data.length === 0) {
-                    console.log('done');
-                    clearInterval(timer);
-                    return false;
-                }
-
-                let record = data.pop();
-                let mods = JSON.parse(record.mods);
-                var call_number = 'none';
-
-                if (mods === null && mods.parts === null) {
-                    return false;
-                }
-
-                if (mods.parts.length > 1) {
-
-                    let partsArr = [];
-                    for (let i=0;i<mods.parts.length;i++) {
-                        partsArr.push(mods.parts[i].title);
-                    }
-
-                    call_number = partsArr.toString();
-
-                } else if (mods.parts.length === 1) {
-                    call_number = mods.parts[0].title;
-                } else {
-                    call_number = 'call number not found';
-                }
-
-                if (record.file_name === null) {
-                    console.log('sip_uuid: ', record.sip_uuid);
-                    console.log('No path associated with object');
-                }
-
-                request.head({
-                    url: apiUrl + record.file_name,
-                    timeout: 25000
-                }, function (error, httpResponse, body) {
-
-                    if (httpResponse !== undefined) {
-                        console.log(httpResponse.statusCode);
-                    }
-
-                    if (error) {
-                        logger.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud object ' + error);
-
-
-                        let obj = {
-                            sip_uuid: record.sip_uuid,
-                            object: record.file_name,
-                            type: 'master',
-                            call_number: call_number,
-                            mime_type: record.mime_type,
-                            status_code: 0
-                        };
-
-                        // save data for incomplete record
-                        knexQ('tbl_incomplete_queue')
-                            .insert(obj)
-                            .then(function (data) {
-                                return null;
-                            })
-                            .catch(function (error) {
-                                logger.module().fatal('FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save incomplete record data ' + error);
-                                throw 'FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save incomplete record data ' + error;
-                            });
-
-                        return false;
-                    }
-
-                    if (httpResponse !== undefined && httpResponse.statusCode === 200) {
-
-                        console.log('sip_uuid: ', record.sip_uuid);
-                        console.log('Master record exists');
-                        console.log('--------------------------');
-                        return false;
-
-                    } else {
-
-                        logger.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud object ' + 'sip_uuid: ' + record.sip_uuid + '--- (' + record.file_size + ') ' + httpResponse.statusCode + '/' + body);
-                        console.log('--------------------------');
-
-                        let obj = {
-                            sip_uuid: record.sip_uuid,
-                            object: record.file_name,
-                            type: 'master',
-                            mime_type: record.mime_type,
-                            status_code: httpResponse.statusCode
-                        };
-
-                        knexQ('tbl_incomplete_queue')
-                            .insert(obj)
-                            .then(function (data) {
-                                // update incomplete record in main repo DB
-                                knex(REPO_OBJECTS)
-                                    .where({
-                                        sip_uuid: record.sip_uuid
-                                    })
-                                    .update({
-                                        is_active: 0,
-                                        is_complete: 0
-                                    })
-                                    .then(function (data) {
-                                        console.log(data);
-                                    })
-                                    .catch(function (error) {
-                                        logger.module().fatal('FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to update incomplete record data ' + error);
-                                        throw 'FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to update incomplete record data ' + error;
-                                    });
-                                return null;
-                            })
-                            .catch(function (error) {
-                                logger.module().fatal('FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save incomplete record data ' + error);
-                                throw 'FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save incomplete record data ' + error;
-                            });
-
-                        return false;
-                    }
-                });
-
-                if (record.mime_type !== 'image/tiff') {
-                    return false;
-                }
-
-                request.head({
-                    url: apiUrl + record.thumbnail,
-                    timeout: 25000
-                }, function (error, httpResponse, body) {
-
-                    if (error) {
-                        logger.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud thumbnail ' + error);
-                    }
-
-                    if (httpResponse !== undefined && httpResponse.statusCode === 200) {
-
-                        console.log('sip_uuid: ', record.sip_uuid);
-                        console.log('Thumbnail record exists');
-                        console.log('--------------------------');
-                        return false;
-
-                    } else if (httpResponse !== undefined && httpResponse.statusCode !== undefined) {
-
-                        logger.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud thumbnail ' + 'sip_uuid: ' + record.sip_uuid + '--- (' + record.file_size + ') ' + httpResponse.statusCode + '/' + body);
-                        console.log('--------------------------');
-
-                        let obj = {
-                            sip_uuid: record.sip_uuid,
-                            object: record.thumbnail,
-                            type: 'thumbnail',
-                            mime_type: record.mime_type,
-                            status_code: httpResponse.statusCode
-                            // message: JSON.stringify(body)
-                        };
-
-                        knexQ('tbl_incomplete_queue')
-                            .insert(obj)
-                            .then(function (data) {
-                                return null;
-                            })
-                            .catch(function (error) {
-                                logger.module().fatal('FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save incomplete record data ' + error);
-                                throw 'FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save incomplete record data ' + error;
-                            });
-
-                        return false;
-                    }
-                });
-
-            }, 450);
-
-            callback({
-                status: 200,
-                message: 'Checking objects.',
-                data: data
-            });
-        })
-        .catch(function (error) {
-            logger.module().fatal('FATAL: [/utils/model module (check_objects)] Unable to get objects ' + error);
-            throw 'FATAL: [/utils/model module (check_objects)] Unable to check objects ' + error;
-        });
-};
-
-/**
- *  gets archivesspace ids for incomplete records
- */
-exports.get_archivesspace_ids = function (req, callback) {
-
-    knexQ('tbl_incomplete_queue')
-        .distinct('sip_uuid', 'call_number')
-        .then(function (data) {
-
-            let timer = setInterval(function () {
-
-                if (data.length === 0) {
-                    clearInterval(timer);
-                    return false;
-                }
-
-                let record = data.pop();
-
-                knex(REPO_OBJECTS)
-                    .select('uri')
-                    .where({
-                        sip_uuid: record.sip_uuid
-                    })
-                    .then(function (data) {
-
-                        let obj = {};
-                        obj.sip_uuid = record.sip_uuid.trim();
-                        obj.uri = data[0].uri.trim();
-                        obj.call_number = record.call_number.trim();
-
-                        knexQ('broken_tiffs')
-                            .insert(obj)
-                            .then(function (data) {
-                                console.log(data);
-                                return null;
-                            })
-                            .catch(function (error) {
-                                logger.module().fatal('FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save incomplete record data ' + error);
-                                throw 'FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save incomplete record data ' + error;
-                            });
-                    })
-                    .catch(function (error) {
-                        logger.module().fatal('FATAL: [/utils/model module (check_objects)] Unable to get objects ' + error);
-                        throw 'FATAL: [/utils/model module (check_objects)] Unable to check objects ' + error;
-                    });
-
-            }, 150);
-
-        })
-        .catch(function (error) {
-            logger.module().fatal('FATAL: [/utils/model module (check_objects)] Unable to get objects ' + error);
-            throw 'FATAL: [/utils/model module (check_objects)] Unable to check objects ' + error;
-        });
-
-    callback({
-        status: 200,
-        message: 'Getting archivesspace ids.'
-    });
-};
-
-
 /**
  * reindexes all repository records
  * @param req
@@ -1372,5 +1104,399 @@ exports.fix_compound_objects = function (req, callback) {
     callback({
         status: 200,
         message: 'fixing compound object mime types'
+    });
+};
+
+////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Batch deletes records
+ * @param req
+ * @param callback
+ */
+exports.batch_delete_objects = function (req, callback) {
+
+    function get_sip_uuids(callback) {
+
+        let obj = {};
+
+        knexQ('broken_tiffs')
+            .then(function(data) {
+                console.log(data.length);
+                if (data.length > 0) {
+                    obj.sip_uuids = data;
+                    callback(null, obj);
+                }
+
+            })
+            .catch(function(error) {
+                console.log(error);
+            });
+    }
+
+    function delete_from_db(obj, callback) {
+
+        obj.sip_uuid_index = [];
+
+        let timer = setInterval(function() {
+
+            if (obj.sip_uuids.length === 0) {
+                console.log('complete.');
+                clearInterval(timer);
+                callback(null, obj);
+                return false;
+            }
+
+            let record = obj.sip_uuids.pop();
+            obj.sip_uuid_index.push(record);
+
+            if (record.sip_uuid === undefined) {
+                console.log(record.sip_uuid + ' does not exist.');
+                return false;
+            }
+
+            console.log('deleting ', record.sip_uuid + ' from DB.');
+
+            knex(REPO_OBJECTS)
+                .where({
+                    sip_uuid: record.sip_uuid
+                })
+                .del()
+                .then(function(data) {
+                    console.log(data);
+                    logger.module().info('INFO: [/repository/model module (update_metadata_cron/async.waterfall)] ' + record.sip_uuid + ' removed from database ');
+                })
+                .catch(function(error) {
+                    console.log(error);
+                });
+
+        }, 550);
+    }
+
+    function delete_from_index(obj, callback) {
+        console.log(obj);
+        let timer = setInterval(function() {
+
+            if (obj.sip_uuid_index.length === 0) {
+                console.log('complete.');
+                clearInterval(timer);
+                callback(null, obj);
+                return false;
+            }
+
+            let record = obj.sip_uuid_index.pop();
+
+            if (record.sip_uuid === undefined) {
+                console.log(record.sip_uuid + ' does not exist.');
+                return false;
+            }
+
+            console.log('Deleting ' + record.sip_uuid + ' from index.');
+
+            request.delete({
+                url: config.apiUrl + '/api/admin/v1/indexer/delete?api_key=' + config.apiKey + '&pid=' + record.sip_uuid
+            }, function (error, httpResponse, body) {
+
+                if (error) {
+                    logger.module().error('ERROR: [/import/utils module (batch_delete_objects/delete_from_index)] indexer error ' + error);
+                    return false;
+                }
+
+                if (httpResponse.statusCode === 204) {
+                    logger.module().info('INFO: [/repository/model module (batch_delete_objects/delete_from_index)] ' + record.sip_uuid + ' removed from index ');
+                    return false;
+                } else {
+                    logger.module().error('ERROR: [/import/utils module (batch_delete_objects/delete_from_index)] http error ' + httpResponse.statusCode + '/' + body);
+                    return false;
+                }
+            });
+
+        }, 550);
+    }
+
+    async.waterfall([
+        get_sip_uuids,
+        delete_from_db,
+        delete_from_index
+    ], function (error, results) {
+
+        if (error) {
+            logger.module().error('ERROR: [/repository/model module (update_metadata_cron/async.waterfall)] ' + error);
+            throw 'ERROR: [/repository/model module (update_metadata_cron/async.waterfall)] ' + error;
+        }
+
+        logger.module().info('INFO: [/repository/model module (update_metadata_cron/async.waterfall)] records deleted');
+    });
+
+    callback({
+        status: 204,
+        message: 'deleting records...'
+    });
+};
+
+/** // TODO: add aip locations to repository records
+ * confirms that repository files exist on Archivematica service
+ * @param req
+ * @param callback
+ */
+exports.check_objects = function (req, callback) {
+
+    let apiUrl = 'https://' + config.duraCloudUser + ':' + config.duraCloudPwd + '@' + config.duraCloudApi + 'dip-store/',
+        mime_type = 'image/tiff';
+    // 'image/tiff',
+    // 'application/pdf',
+    // 'video/mp4',
+    // 'audio/x-wav'
+
+    knex(REPO_OBJECTS)
+        .select('sip_uuid', 'object_type', 'mods', 'thumbnail', 'file_name', 'file_size', 'mime_type', 'is_compound', 'created')
+        .where({
+            object_type: 'object',
+            mime_type: mime_type,
+            is_active: 1
+        })
+        .then(function (data) {
+
+            let timer = setInterval(function () {
+
+                if (data.length === 0) {
+                    console.log('done');
+                    clearInterval(timer);
+                    return false;
+                }
+
+                let record = data.pop();
+                let mods = JSON.parse(record.mods);
+                var call_number = 'none';
+
+                if (mods === null && mods.parts === null) {
+                    return false;
+                }
+
+                if (mods.parts.length > 1) {
+
+                    let partsArr = [];
+                    for (let i=0;i<mods.parts.length;i++) {
+                        partsArr.push(mods.parts[i].title);
+                    }
+
+                    call_number = partsArr.toString();
+
+                } else if (mods.parts.length === 1) {
+                    call_number = mods.parts[0].title;
+                } else {
+                    call_number = 'call number not found';
+                }
+
+                if (record.file_name === null) {
+                    console.log('sip_uuid: ', record.sip_uuid);
+                    console.log('No path associated with object');
+                }
+
+                request.head({
+                    url: apiUrl + record.file_name,
+                    timeout: 25000
+                }, function (error, httpResponse, body) {
+
+                    if (httpResponse !== undefined) {
+                        console.log(httpResponse.statusCode);
+                    }
+
+                    if (error) {
+                        logger.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud object ' + error);
+
+
+                        let obj = {
+                            sip_uuid: record.sip_uuid,
+                            object: record.file_name,
+                            type: 'master',
+                            call_number: call_number,
+                            mime_type: record.mime_type,
+                            status_code: 0
+                        };
+
+                        // save data for incomplete record
+                        knexQ('tbl_incomplete_queue')
+                            .insert(obj)
+                            .then(function (data) {
+                                return null;
+                            })
+                            .catch(function (error) {
+                                logger.module().fatal('FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save incomplete record data ' + error);
+                                throw 'FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save incomplete record data ' + error;
+                            });
+
+                        return false;
+                    }
+
+                    if (httpResponse !== undefined && httpResponse.statusCode === 200) {
+
+                        console.log('sip_uuid: ', record.sip_uuid);
+                        console.log('Master record exists');
+                        console.log('--------------------------');
+                        return false;
+
+                    } else {
+
+                        logger.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud object ' + 'sip_uuid: ' + record.sip_uuid + '--- (' + record.file_size + ') ' + httpResponse.statusCode + '/' + body);
+                        console.log('--------------------------');
+
+                        let obj = {
+                            sip_uuid: record.sip_uuid,
+                            object: record.file_name,
+                            type: 'master',
+                            mime_type: record.mime_type,
+                            status_code: httpResponse.statusCode
+                        };
+
+                        knexQ('tbl_incomplete_queue')
+                            .insert(obj)
+                            .then(function (data) {
+                                // update incomplete record in main repo DB
+                                knex(REPO_OBJECTS)
+                                    .where({
+                                        sip_uuid: record.sip_uuid
+                                    })
+                                    .update({
+                                        is_active: 0,
+                                        is_complete: 0
+                                    })
+                                    .then(function (data) {
+                                        console.log(data);
+                                    })
+                                    .catch(function (error) {
+                                        logger.module().fatal('FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to update incomplete record data ' + error);
+                                        throw 'FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to update incomplete record data ' + error;
+                                    });
+                                return null;
+                            })
+                            .catch(function (error) {
+                                logger.module().fatal('FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save incomplete record data ' + error);
+                                throw 'FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save incomplete record data ' + error;
+                            });
+
+                        return false;
+                    }
+                });
+
+                if (record.mime_type !== 'image/tiff') {
+                    return false;
+                }
+
+                request.head({
+                    url: apiUrl + record.thumbnail,
+                    timeout: 25000
+                }, function (error, httpResponse, body) {
+
+                    if (error) {
+                        logger.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud thumbnail ' + error);
+                    }
+
+                    if (httpResponse !== undefined && httpResponse.statusCode === 200) {
+
+                        console.log('sip_uuid: ', record.sip_uuid);
+                        console.log('Thumbnail record exists');
+                        console.log('--------------------------');
+                        return false;
+
+                    } else if (httpResponse !== undefined && httpResponse.statusCode !== undefined) {
+
+                        logger.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud thumbnail ' + 'sip_uuid: ' + record.sip_uuid + '--- (' + record.file_size + ') ' + httpResponse.statusCode + '/' + body);
+                        console.log('--------------------------');
+
+                        let obj = {
+                            sip_uuid: record.sip_uuid,
+                            object: record.thumbnail,
+                            type: 'thumbnail',
+                            mime_type: record.mime_type,
+                            status_code: httpResponse.statusCode
+                            // message: JSON.stringify(body)
+                        };
+
+                        knexQ('tbl_incomplete_queue')
+                            .insert(obj)
+                            .then(function (data) {
+                                return null;
+                            })
+                            .catch(function (error) {
+                                logger.module().fatal('FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save incomplete record data ' + error);
+                                throw 'FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save incomplete record data ' + error;
+                            });
+
+                        return false;
+                    }
+                });
+
+            }, 450);
+
+            callback({
+                status: 200,
+                message: 'Checking objects.',
+                data: data
+            });
+        })
+        .catch(function (error) {
+            logger.module().fatal('FATAL: [/utils/model module (check_objects)] Unable to get objects ' + error);
+            throw 'FATAL: [/utils/model module (check_objects)] Unable to check objects ' + error;
+        });
+};
+
+/**
+ *  gets archivesspace ids for incomplete records
+ */
+exports.get_archivesspace_ids = function (req, callback) {
+
+    knexQ('tbl_incomplete_queue')
+        .distinct('sip_uuid', 'call_number')
+        .then(function (data) {
+
+            let timer = setInterval(function () {
+
+                if (data.length === 0) {
+                    clearInterval(timer);
+                    return false;
+                }
+
+                let record = data.pop();
+
+                knex(REPO_OBJECTS)
+                    .select('uri')
+                    .where({
+                        sip_uuid: record.sip_uuid
+                    })
+                    .then(function (data) {
+
+                        let obj = {};
+                        obj.sip_uuid = record.sip_uuid.trim();
+                        obj.uri = data[0].uri.trim();
+                        obj.call_number = record.call_number.trim();
+
+                        knexQ('broken_tiffs')
+                            .insert(obj)
+                            .then(function (data) {
+                                console.log(data);
+                                return null;
+                            })
+                            .catch(function (error) {
+                                logger.module().fatal('FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save incomplete record data ' + error);
+                                throw 'FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save incomplete record data ' + error;
+                            });
+                    })
+                    .catch(function (error) {
+                        logger.module().fatal('FATAL: [/utils/model module (check_objects)] Unable to get objects ' + error);
+                        throw 'FATAL: [/utils/model module (check_objects)] Unable to check objects ' + error;
+                    });
+
+            }, 150);
+
+        })
+        .catch(function (error) {
+            logger.module().fatal('FATAL: [/utils/model module (check_objects)] Unable to get objects ' + error);
+            throw 'FATAL: [/utils/model module (check_objects)] Unable to check objects ' + error;
+        });
+
+    callback({
+        status: 200,
+        message: 'Getting archivesspace ids.'
     });
 };

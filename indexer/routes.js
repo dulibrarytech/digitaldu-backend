@@ -43,4 +43,7 @@ module.exports = function (app) {
 
     app.route('/api/admin/v1/indexer/')
         .delete(TOKEN.verify, INDEXER.unindex_record);
+
+    app.route('/api/admin/v1/indexer/delete')
+        .delete(TOKEN.verify, INDEXER.unindex_admin_record);
 };

@@ -26,12 +26,6 @@ exports.get_uuids = function (req, res) {
     });
 };
 
-exports.check_objects = function (req, res) {
-    Utils.check_objects(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
 exports.reindex = function (req, res) {
     Utils.reindex(req, function (data) {
         res.status(data.status).send(data.data);
@@ -50,6 +44,8 @@ exports.batch_update_collection_metadata  = function(req, res) {
     });
 };
 
+////////////////////////////////////////////////////////
+
 exports.get_archivesspace_ids = function (req, res) {
     Utils.get_archivesspace_ids(req, function (data) {
         res.status(data.status).send(data.data);
@@ -58,6 +54,18 @@ exports.get_archivesspace_ids = function (req, res) {
 
 exports.fix_compound_objects = function (req, res) {
     Utils.fix_compound_objects(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.check_objects = function (req, res) {
+    Utils.check_objects(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.batch_delete_objects = function (req, res) {
+    Utils.batch_delete_objects(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };

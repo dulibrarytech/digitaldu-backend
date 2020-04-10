@@ -416,3 +416,45 @@ exports.unindex_record = function (req, callback) {
         }
     });
 };
+
+/**
+ * Removes record from admin index
+ * @param req
+ * @param callback
+ */
+exports.unindex_admin_record = function (req, callback) {
+
+    let pid = req.query.pid;
+
+    if (pid === undefined || pid.length === 0) {
+
+        callback({
+            status: 400,
+            message: 'Bad request.'
+        });
+
+        return false;
+    }
+
+    SERVICE.unindex_record({
+        index: CONFIG.elasticSearchBackIndex,
+        type: 'data',
+        id: pid.replace('codu:', '')
+    }, function (response) {
+
+        if (response.result === 'deleted') {
+
+            callback({
+                status: 204,
+                message: 'record admin unindexed'
+            });
+
+        } else {
+
+            callback({
+                status: 500,
+                data: 'unable to remove admin record from index'
+            });
+        }
+    });
+};
