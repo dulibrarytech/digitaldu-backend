@@ -1130,7 +1130,7 @@ exports.batch_delete_objects = function (req, callback) {
 
             })
             .catch(function(error) {
-                console.log(error);
+                logger.module().error('ERROR: [/repository/model module (batch_delete_objects/get_sip_uuids)] Unable to get uuids ' + error);
             });
     }
 
@@ -1161,6 +1161,25 @@ exports.batch_delete_objects = function (req, callback) {
                 .where({
                     sip_uuid: record.sip_uuid
                 })
+                .update({
+                    is_indexed: 0,
+                    is_active: 0,
+                    is_published: 0
+                })
+                .then(function(data) {
+                    console.log(data);
+                    logger.module().info('INFO: [/repository/model module (update_metadata_cron/async.waterfall)] ' + record.sip_uuid + ' set to inactive in database ');
+                })
+                .catch(function(error) {
+                    logger.module().error('ERROR: [/repository/model module (batch_delete_objects/get_sip_uuids)] Unable to get uuids ' + error);
+
+                });
+
+            /*
+            knex(REPO_OBJECTS)
+                .where({
+                    sip_uuid: record.sip_uuid
+                })
                 .del()
                 .then(function(data) {
                     console.log(data);
@@ -1169,12 +1188,13 @@ exports.batch_delete_objects = function (req, callback) {
                 .catch(function(error) {
                     console.log(error);
                 });
+                */
 
         }, 550);
     }
 
     function delete_from_index(obj, callback) {
-        console.log(obj);
+
         let timer = setInterval(function() {
 
             if (obj.sip_uuid_index.length === 0) {
@@ -1193,6 +1213,26 @@ exports.batch_delete_objects = function (req, callback) {
 
             console.log('Deleting ' + record.sip_uuid + ' from index.');
 
+            // deletes from public index
+            request.delete({
+                url: config.apiUrl + '/api/admin/v1/indexer?api_key=' + config.apiKey + '&pid=' + record.sip_uuid
+            }, function (error, httpResponse, body) {
+
+                if (error) {
+                    logger.module().error('ERROR: [/import/utils module (batch_delete_objects/delete_from_index)] indexer error ' + error);
+                    return false;
+                }
+
+                if (httpResponse.statusCode === 204) {
+                    logger.module().info('INFO: [/repository/model module (batch_delete_objects/delete_from_index)] ' + record.sip_uuid + ' removed from index ');
+                    return false;
+                } else {
+                    logger.module().error('ERROR: [/import/utils module (batch_delete_objects/delete_from_index)] http error ' + httpResponse.statusCode + '/' + body);
+                    return false;
+                }
+            });
+
+            // deletes from admin index
             request.delete({
                 url: config.apiUrl + '/api/admin/v1/indexer/delete?api_key=' + config.apiKey + '&pid=' + record.sip_uuid
             }, function (error, httpResponse, body) {
@@ -1211,7 +1251,7 @@ exports.batch_delete_objects = function (req, callback) {
                 }
             });
 
-        }, 550);
+        }, 600);
     }
 
     async.waterfall([
