@@ -86,8 +86,6 @@ const importModule = (function () {
                     } else if (collection !== null && data.list[i].name.length < 30) {
                         domModule.html('#import-objects', '<div class="alert alert-info"><strong>There are no collections available to import.</strong></div>');
                     }
-
-                    return false;
                 }
 
                 html += '</tr>';
