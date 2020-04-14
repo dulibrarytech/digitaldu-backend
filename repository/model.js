@@ -1305,7 +1305,13 @@ exports.create_collection_object = function (req, callback) {
             LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/async.waterfall)] ' + error);
         }
 
-        if (results.dupe === false) {
+        if (results.dupe !== undefined && results.dupe === true) {
+
+            callback({
+                status: 200,
+                message: 'Cannot create duplicate collection object.'
+            });
+        } else {
 
             LOGGER.module().info('INFO: [/repository/model module (create_collection_object/async.waterfall)] collection record saved');
 
@@ -1313,21 +1319,6 @@ exports.create_collection_object = function (req, callback) {
                 status: 201,
                 message: 'Object created.',
                 data: [{'pid': results.pid}]
-            });
-
-        } else if (results.dupe === true) {
-
-            callback({
-                status: 200,
-                message: 'Cannot create duplicate collection object.'
-            });
-
-        } else {
-
-            callback({
-                status: 500,
-                message: 'A database error occurred. ' + error,
-                data: [{'pid': 'no pid'}]
             });
         }
     });
