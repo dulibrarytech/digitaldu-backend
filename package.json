@@ -24,7 +24,7 @@
     "install": "^0.12.2",
     "jsdom": "^16.2.2",
     "jsonwebtoken": "^8.5.1",
-    "knex": "^0.19.5",
+    "knex": "^0.20.14",
     "lodash": "^4.17.15",
     "log4js": "^4.5.1",
     "method-override": "^2.3.10",
