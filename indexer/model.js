@@ -52,7 +52,7 @@ exports.get_index_record = function (req, callback) {
     }
 
     DB(REPO_OBJECTS)
-        .select('pid', 'is_member_of_collection', 'uri', 'handle', 'thumbnail', 'object_type', 'display_record', 'is_published', 'created')
+        .select('*')
         .where({
             sip_uuid: sip_uuid,
             is_active: 1
@@ -93,7 +93,6 @@ exports.get_index_record = function (req, callback) {
                 record = collection_record;
 
             } else {
-
                 record.display_record.t_language = record.display_record.language;
                 delete record.display_record.language;
             }
