@@ -119,6 +119,7 @@ exports.queue_objects = function (req, callback) {
 
     let transfer_data = req.body;
 
+
     /*
      Checks if collection exists
      function called by async
@@ -175,7 +176,7 @@ exports.queue_objects = function (req, callback) {
              Send request to start transfer
              */
             REQUEST.post({
-                url: CONFIG.apiUrl + '/api/admin/v1/import/start_transfer',
+                url: CONFIG.apiUrl + '/api/admin/v1/import/start_transfer?api_key=' + CONFIG.apiKey,
                 form: {
                     'collection': transfer_data.collection
                 }
@@ -300,7 +301,7 @@ exports.start_transfer = function (req, callback) {
                  Send request to approve transfer
                  */
                 REQUEST.post({
-                    url: CONFIG.apiUrl + '/api/admin/v1/import/approve_transfer',
+                    url: CONFIG.apiUrl + '/api/admin/v1/import/approve_transfer?api_key=' + CONFIG.apiKey,
                     form: {
                         'collection': collection
                     }
@@ -388,7 +389,7 @@ exports.approve_transfer = function (req, callback) {
                  Send request to begin transfer status checks
                  */
                 REQUEST.get({
-                    url: CONFIG.apiUrl + '/api/admin/v1/import/transfer_status?collection=' + result.is_member_of_collection + '&transfer_uuid=' + result.transfer_uuid
+                    url: CONFIG.apiUrl + '/api/admin/v1/import/transfer_status?collection=' + result.is_member_of_collection + '&transfer_uuid=' + result.transfer_uuid + '&api_key=' + CONFIG.apiKey
                 }, function (error, httpResponse, body) {
 
                     if (error) {
@@ -469,7 +470,7 @@ exports.get_transfer_status = function (req, callback) {
 
                     // Send request to begin ingest status checks
                     REQUEST.get({
-                        url: CONFIG.apiUrl + '/api/admin/v1/import/ingest_status?sip_uuid=' + result.sip_uuid
+                        url: CONFIG.apiUrl + '/api/admin/v1/import/ingest_status?sip_uuid=' + result.sip_uuid + '&api_key=' + CONFIG.apiKey
                     }, function (error, httpResponse, body) {
 
                         if (error) {
@@ -555,7 +556,7 @@ exports.get_ingest_status = function (req, callback) {
                      Send request to import DIP data
                      */
                     REQUEST.get({
-                        url: CONFIG.apiUrl + '/api/admin/v1/import/import_dip?sip_uuid=' + result.sip_uuid
+                        url: CONFIG.apiUrl + '/api/admin/v1/import/import_dip?sip_uuid=' + result.sip_uuid + '&api_key=' + CONFIG.apiKey
                     }, function (error, httpResponse, body) {
 
                         if (error) {
@@ -655,7 +656,7 @@ exports.import_dip = function (req, callback) {
                      Send request to create repository record
                      */
                     REQUEST.get({
-                        url: CONFIG.apiUrl + '/api/admin/v1/import/create_repo_record?sip_uuid=' + sip_uuid
+                        url: CONFIG.apiUrl + '/api/admin/v1/import/create_repo_record?sip_uuid=' + sip_uuid + '&api_key=' + CONFIG.apiKey
                     }, function (error, httpResponse, body) {
 
                         if (error) {
@@ -1259,7 +1260,7 @@ exports.create_repo_record = function (req, callback) {
              Send request to begin next transfer
              */
             REQUEST.post({
-                url: CONFIG.apiUrl + '/api/admin/v1/import/start_transfer',
+                url: CONFIG.apiUrl + '/api/admin/v1/import/start_transfer?api_key=' + CONFIG.apiKey,
                 form: {
                     'collection': collection
                 }
