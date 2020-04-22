@@ -270,7 +270,7 @@ const importModule = (function () {
 
         const callback = function (response) {
 
-            if (response.status === 201) {
+            if (response.status === 200) {
 
                 domModule.hide('.import-button');
                 domModule.html('#message', '<p>Import process starting...</p>');

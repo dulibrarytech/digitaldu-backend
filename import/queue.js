@@ -119,7 +119,6 @@ exports.queue_objects = function (req, callback) {
 
     let transfer_data = req.body;
 
-
     /*
      Checks if collection exists
      function called by async
