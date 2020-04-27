@@ -275,6 +275,22 @@ const helperModule = (function () {
         return DOMPurify.sanitize(html);
     };
 
+    /**
+     * checks file size before upload
+     */
+    obj.checkFileSize = function () {
+
+        const file = document.querySelector('#file');
+
+        if (file.files[0].size > 1000000) { // ~1MB
+            domModule.html('#message', '<div class="alert alert-warning"><strong>The file is too big. Thumbnails must be under 1MB.</strong></div>');
+            document.querySelector('#upload-button').disabled = true;
+        } else {
+            domModule.html('#message', '');
+            document.querySelector('#upload-button').disabled = false;
+        }
+    };
+
     obj.init = function () {
         npProgress();
     };

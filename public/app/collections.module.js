@@ -142,6 +142,30 @@ const collectionsModule = (function () {
     };
 
     /**
+     *  Sets upload menu item link
+     */
+    obj.setToUploadMenuItem = function () {
+
+        let pid = helperModule.getParameterByName('pid');
+        let menu_item = '<a href="/dashboard/object/thumbnail/upload?pid=' + pid + '"><i class="fa fa-plus"></i>&nbsp;Upload custom thumbnail</a>';
+        domModule.html('#to-upload-menu-item', menu_item);
+    };
+
+    /**
+     * Sets collection information in upload form
+     */
+    obj.setCollectionInformation = function () {
+
+        const form = document.querySelector('form');
+        let pid = helperModule.getParameterByName('pid');
+        let input = '<input name="sip_uuid" type="hidden" value="' + pid + '">';
+        let token = userModule.getUserToken();
+        collectionsModule.getCollectionName(pid);
+        domModule.html('#sip-uuid-input', input);
+        form.setAttribute('action', '/repo/tn/upload?t=' + token);
+    };
+
+    /**
      * Gets collection form data
      * @returns {string}
      */

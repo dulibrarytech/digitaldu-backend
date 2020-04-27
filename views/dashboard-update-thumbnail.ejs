@@ -39,10 +39,11 @@
                     <div class="title_left">
                         <h3> Thumbnail Update <span id="object-type"></span></h3>
                     </div>
-
+                    <!--
                     <div class="title_right">
                         <% include partials/search.ejs %>
                     </div>
+                    -->
                 </div>
 
                 <div class="clearfix"></div>
@@ -52,7 +53,13 @@
                         <div class="x_panel">
                             <div class="x_title">
                                 <h2 id="is-member-of-collection"></h2>
-                                <ul class="nav navbar-right">
+                                <ul class="nav navbar-right panel_toolbox"><!-- panel_toolbox -->
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-bars"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li id="to-upload-menu-item"></li>
+                                        </ul>
+                                    </li>
                                 </ul>
                                 <div class="clearfix"></div>
                             </div>
@@ -67,6 +74,7 @@
 
                                     <br>
                                     <button type="button" class="btn btn-primary" id="update-thumbnail-button" onclick="collectionsModule.updateThumbnail();"><i class="fa fa-save"></i>&nbsp;Save</button>
+                                    <!--<span id="to-upload-button"></span>-->
                                 </form>
                             </div>
                         </div>
@@ -96,6 +104,7 @@
     <script src="../../app/collections.module.js"></script>
     <script>
         objectsModule.init();
+        collectionsModule.setToUploadMenuItem();
     </script>
 </body>
 </html>

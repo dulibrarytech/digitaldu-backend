@@ -75,5 +75,6 @@ module.exports = {
     transferStatusCheckInterval: process.env.TRANSFER_STATUS_CHECK_INTERVAL,
     ingestStatusCheckInterval: process.env.INGEST_STATUS_CHECK_INTERVAL,
     tnService: process.env.TN_SERVICE,
-    tnServiceApiKey: process.env.TN_SERVICE_API_KEY
+    tnServiceApiKey: process.env.TN_SERVICE_API_KEY,
+    tnUploadPath: process.env.TN_UPLOAD_PATH
 };

@@ -129,6 +129,14 @@ exports.get_dashboard_metadata = function (req, res) {
     });
 };
 
+exports.get_dashboard_upload = function (req, res) {
+    res.render('dashboard-upload', {
+        host: CONFIG.host,
+        message: '',
+        error: ''
+    });
+};
+
 exports.get_dashboard_error = function (req, res) {
     res.render('error', {
         host: CONFIG.host

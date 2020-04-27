@@ -61,4 +61,5 @@ module.exports = function() {
     require('../import/routes.js')(APP);
     require('../search/routes.js')(APP);
     require('../utils/routes.js')(APP);
+    require('../uploads/index.js')(APP);
 };
