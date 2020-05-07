@@ -282,8 +282,8 @@ const helperModule = (function () {
 
         const file = document.querySelector('#file');
 
-        if (file.files[0].size > 1000000) { // ~1MB
-            domModule.html('#message', '<div class="alert alert-warning"><strong>The file is too big. Thumbnails must be under 1MB.</strong></div>');
+        if (file.files[0].size > 500000) { // ~500kb
+            domModule.html('#message', '<div class="alert alert-warning"><strong>The file is too big. Thumbnails must be under 500kb.</strong></div>');
             document.querySelector('#upload-button').disabled = true;
         } else {
             domModule.html('#message', '');
