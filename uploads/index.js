@@ -23,7 +23,7 @@ const CONFIG = require('../config/config'),
     REQUEST = require('request'),
     LOGGER = require('../libs/log4'),
     TOKEN = require('../libs/tokens'),
-    LIMIT = 1000000; // ~1MB
+    LIMIT = 500000; // ~500kb
 
 module.exports = function (app) {
 

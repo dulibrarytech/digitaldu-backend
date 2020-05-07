@@ -58,6 +58,12 @@ exports.fix_compound_objects = function (req, res) {
     });
 };
 
+exports.fix_display_records = function (req, res) {
+    Utils.fix_display_records(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
 exports.check_objects = function (req, res) {
     Utils.check_objects(req, function (data) {
         res.status(data.status).send(data.data);

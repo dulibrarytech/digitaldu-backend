@@ -1540,3 +1540,120 @@ exports.get_archivesspace_ids = function (req, callback) {
         message: 'Getting archivesspace ids.'
     });
 };
+
+/**
+ * flags display records that are missing thumbnail and object paths
+ * @param req
+ * @param res
+ */
+exports.fix_display_records = function (req, callback) {
+
+    knex(REPO_OBJECTS)
+        .select('*')
+        .where({
+            object_type: 'object',
+            is_active: 1,
+            is_compound: 1
+            // sip_uuid: 'f2f3ca92-9b8f-4b35-954a-a5b8600ab234'
+        })
+        .then(function (data) {
+
+            let timer = setInterval(function () {
+
+                if (data.length === 0) {
+                    console.log('done');
+                    clearInterval(timer);
+                    return false;
+                }
+
+                let doc = data.pop();
+
+                console.log(data.length);
+                console.log(doc.sip_uuid);
+                // console.log(doc.thumbnail);
+                // console.log(doc.file_name);
+
+                let apiUrl = 'http://lib-es01-vlp.du.edu:9200/repo_admin/data/';
+
+                request.get({
+                    url: apiUrl + doc.sip_uuid,
+                    timeout: 25000
+                }, function (error, httpResponse, body) {
+
+                    if (error) {
+                        logger.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud thumbnail ' + error);
+                    }
+
+                    if (httpResponse !== undefined && httpResponse.statusCode === 200) {
+
+                        let tmp = JSON.parse(body);
+
+                        for (let i=0;i<tmp._source.display_record.parts.length;i++) {
+
+                            if (tmp._source.display_record.parts[i].thumbnail === undefined || tmp._source.display_record.parts[i].object === undefined) {
+
+                                console.log('missing properties');
+
+                                let record = tmp._source.display_record;
+                                let obj = {};
+                                obj.sip_uuid = doc.sip_uuid;
+                                obj.display_record = JSON.stringify(record);
+                                obj.is_compound = doc.is_compound;
+
+                                knexQ('broken_display_records')
+                                    .insert(obj)
+                                    .then(function (data) {
+                                        return null;
+                                    })
+                                    .catch(function (error) {
+                                        logger.module().fatal('FATAL: unable to save broken record data ' + error);
+                                        throw 'FATAL: unable to save broken record data ' + error;
+                                    });
+                            }
+                        }
+
+                        // console.log('Thumbnail record exists');
+                        console.log('--------------------------');
+
+                        return false;
+
+                    } else if (httpResponse !== undefined && httpResponse.statusCode !== undefined) {
+
+                        // logger.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud thumbnail ' + 'sip_uuid: ' + doc.sip_uuid + '--- (' + doc.file_size + ') ' + httpResponse.statusCode + '/' + body);
+                        console.log('Doc not found on server');
+                        console.log('--------------------------');
+                    }
+                });
+
+                /*
+                if (doc.thumbnail === null || doc.file_name === null) {
+
+                    let obj = {};
+                    obj.sip_uuid = doc.sip_uuid;
+                    obj.display_record = doc.display_record;
+
+                    knexQ('broken_tn_file_name')
+                        .insert(obj)
+                        .then(function (data) {
+                            return null;
+                        })
+                        .catch(function (error) {
+                            logger.module().fatal('FATAL: unable to save broken record data ' + error);
+                            throw 'FATAL: unable to save broken record data ' + error;
+                        });
+                }
+                */
+
+            }, 100);
+
+        })
+        .catch(function (error) {
+            logger.module().fatal('FATAL: [/utils/model module (fix_display_records)] Unable to get objects ' + error);
+            throw 'FATAL: [/utils/model module (fix_display_records)] Unable to check objects ' + error;
+        });
+
+    callback({
+        status: 200,
+        message: 'Checking display records.'
+    });
+};

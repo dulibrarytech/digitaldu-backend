@@ -44,6 +44,9 @@ module.exports = function (app) {
     app.route('/api/admin/v1/utils/objects/fix-compounds')
         .get(token.verify, Utils.fix_compound_objects);
 
+    app.route('/api/admin/v1/utils/objects/fix-display-records')
+        .post(token.verify, Utils.fix_display_records);
+
     app.route('/api/admin/v1/utils/objects/delete')
-        .delete(token.verify, Utils.batch_delete_objects);
+        .post(token.verify, Utils.batch_delete_objects);
 };
