@@ -162,7 +162,28 @@ const collectionsModule = (function () {
         let token = userModule.getUserToken();
         collectionsModule.getCollectionName(pid);
         domModule.html('#sip-uuid-input', input);
-        form.setAttribute('action', '/repo/tn/upload?t=' + token);
+        form.setAttribute('action', '/repo/tn/upload?pid=' + pid + '&t=' + token);
+    };
+
+    /**
+     * Handles upload success process
+     */
+    obj.collectionUploadSuccess = function () {
+
+        let t = helperModule.getParameterByName('t');
+        let pid = helperModule.getParameterByName('pid');
+        let tn = location.protocol + '//' + document.domain + ':' + location.port + '/tn/' + pid + '.jpg';
+        let redirect = location.protocol + '//' + document.domain + ':' + location.port + '/dashboard/object/thumbnail/upload?pid=' + pid;
+
+        if (t !== null) {
+
+            let html = '<img src="' + tn + '" alt="thumbnail">';
+            domModule.html('#collection-thumbnail-upload-form', html);
+
+            setTimeout(function() {
+                window.location.replace(redirect);
+            }, 5000);
+        }
     };
 
     /**
