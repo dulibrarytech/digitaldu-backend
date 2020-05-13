@@ -2232,7 +2232,7 @@ exports.unpublish_objects = function (req, callback) {
  */
 exports.reset_display_record = function (req, callback) {
 
-    if (req.body === undefined) {
+    if (req.body.pid === undefined) {
 
         callback({
             status: 400,
