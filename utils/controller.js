@@ -75,3 +75,9 @@ exports.batch_delete_objects = function (req, res) {
         res.status(data.status).send(data.data);
     });
 };
+
+exports.default = function (req, res) {
+    res.status(403).send({
+        info: 'University of Denver Libraries'
+    });
+};

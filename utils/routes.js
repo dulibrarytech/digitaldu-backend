@@ -49,4 +49,12 @@ module.exports = function (app) {
 
     app.route('/api/admin/v1/utils/objects/delete')
         .post(token.verify, Utils.batch_delete_objects);
+
+    app.route('/')
+        .get(Utils.default);
+
+    app.get('/robots.txt', function (req, res) {
+        res.type('text/plain');
+        res.send('User-agent: *\nDisallow: /');
+    });
 };
