@@ -23,6 +23,9 @@ const REPO = require('../repository/controller'),
 
 module.exports = function (app) {
 
+    app.route('/')
+        .get(REPO.default);
+
     app.route('/api/admin/v1/repo/objects')
         .get(TOKEN.verify, REPO.get_admin_objects);
 

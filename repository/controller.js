@@ -123,3 +123,10 @@ exports.get_unpublished_admin_objects = function (req, res) {
         res.status(data.status).send(data.data);
     });
 };
+
+exports.default = function (req, res) {
+    res.status(403).send({
+        info: 'University of Denver Libraries'
+    });
+};
+
