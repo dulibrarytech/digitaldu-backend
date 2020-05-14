@@ -22,7 +22,7 @@ const CONFIG = require('../config/config'),
     ARCHIVEMATICA = require('../libs/archivematica'),
     ARCHIVESSPACE = require('../libs/archivespace'),
     DURACLOUD = require('../libs/duracloud'),
-    OBJECT_SERVICE = require('../libs/object-service'),
+    REQUEST = require('request'),
     LOGGER = require('../libs/log4'),
     ASYNC = require('async'),
     ES = require('elasticsearch'),
@@ -118,9 +118,8 @@ exports.get_thumbnail = function (req, callback) {
 
 /**
  * Gets thumbnail from TN service
- * @param req
+ * @param tn
  * @param callback
- * @returns {boolean}
  */
 exports.get_tn = function (req, callback) {
 
@@ -137,8 +136,54 @@ exports.get_tn = function (req, callback) {
         return false;
     }
 
-    OBJECT_SERVICE.get_tn(uuid, type, function (response) {
-        callback(response);
+    let apiUrl = CONFIG.tnService + 'datastream/' + uuid + '/tn?key=' + CONFIG.tnServiceApiKey;
+
+    REQUEST.get({
+        url: apiUrl,
+        encoding: null,
+        timeout: 45000,
+        headers: {
+            'x-api-key': CONFIG.tnServiceApiKey
+        }
+    }, function (error, httpResponse, body) {
+
+        let missing_tn = '/images/image-tn.png';
+
+        if (error) {
+
+            LOGGER.module().error('ERROR: [/libs/tn-service lib (get_tn)] Unable to get thumbnail from TN service' + error);
+
+            callback({
+                error: true,
+                status: 200,
+                data: missing_tn
+            });
+
+            return false;
+        }
+
+        if (httpResponse.statusCode === 200) {
+
+            callback({
+                error: false,
+                status: 200,
+                data: body
+            });
+
+            return false;
+
+        } else {
+
+            LOGGER.module().error('ERROR: [/libs/tn-service lib (get_tn)] Unable to get thumbnail from TN service ' + httpResponse.statusCode + '/' + body);
+
+            callback({
+                error: true,
+                status: 200,
+                data: missing_tn
+            });
+
+            return false;
+        }
     });
 };
 
@@ -161,7 +206,7 @@ exports.get_viewer = function (req, callback) {
         return false;
     }
 
-    let apiUrl = CONFIG.tnService + 'discovery/viewer/' + uuid + '?key=' + CONFIG.tnServiceApiKey;
+    let apiUrl = CONFIG.tnService + 'viewer/' + uuid + '?key=' + CONFIG.tnServiceApiKey;
 
     callback({
         status: 200,
