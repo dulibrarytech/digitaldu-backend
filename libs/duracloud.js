@@ -327,3 +327,100 @@ exports.get_thumbnail = function (tn, callback) {
         }
     });
 };
+
+/**
+ * Confirms that file exists in duracloud storage
+ * @param file
+ */
+exports.confirm_dip_file = function (file, callback) {
+
+    'use strict';
+
+    let apiUrl = 'https://' + CONFIG.duraCloudUser + ':' + CONFIG.duraCloudPwd + '@' + CONFIG.duraCloudApi + 'dip-store/' + file;
+
+    REQUEST.head({
+        url: apiUrl,
+        timeout: 45000
+    }, function (error, httpResponse, body) {
+
+        if (error) {
+
+            LOGGER.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud object ' + error);
+
+            callback({
+                error: true,
+                error_message: error
+            });
+        }
+
+        if (httpResponse.statusCode === 200) {
+
+            callback({
+                error: false,
+                error_message: ''
+            });
+
+            return false;
+
+        } else {
+
+            LOGGER.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud object ' + httpResponse.statusCode + '/' + body);
+
+            callback({
+                error: true,
+                error_message: body
+            });
+
+            return false;
+        }
+    });
+};
+
+/**
+ * Deletes dip file
+ * @param file
+ * @param callback
+ */
+exports.delete_dip_file = function (file, callback) {
+
+    'use strict';
+
+    let apiUrl = 'https://' + CONFIG.duraCloudUser + ':' + CONFIG.duraCloudPwd + '@' + CONFIG.duraCloudApi + 'dip-store/' + file;
+
+    REQUEST.delete({
+        url: apiUrl,
+        timeout: 25000
+    }, function (error, httpResponse, body) {
+
+        if (error) {
+
+            LOGGER.module().error('ERROR: [/libs/duracloud lib  (delete_dip_file)] unable to delete dip file ' + error);
+
+            callback({
+                error: true,
+                error_message: error
+            });
+
+            return false;
+        }
+
+        if (httpResponse.statusCode === 204) {
+
+            callback({
+                error: false,
+                error_message: ''
+            });
+
+            return false;
+
+        } else {
+
+            LOGGER.module().error('ERROR: [/libs/duracloud lib (delete_dip_file)] unable to delete dip file ' + httpResponse.statusCode + '/' + body);
+
+            callback({
+                error: true,
+                error_message: error
+            });
+        }
+    });
+};

@@ -26,6 +26,7 @@ const CONFIG = require('../config/config'),
     HANDLES = require('../libs/handles'),
     MODS = require('../libs/display-record'),
     ARCHIVESSPACE = require('../libs/archivespace'),
+    DELETE = require('../libs/delete-dip'),
     LOGGER = require('../libs/log4'),
     DB = require('../config/db')(),
     DBQ = require('../config/dbqueue')(),
@@ -2375,3 +2376,141 @@ exports.reset_display_record = function (req, callback) {
         message: 'updating display record(s).'
     });
 };
+
+/**
+ * Deletes repository object
+ * @param req
+ * @param callback
+ */
+exports.delete_object = function (req, callback) {
+
+    let pid = req.query.pid;
+
+    function check_if_published(callback) {
+
+        let obj = {};
+        obj.pid = pid;
+
+        DB(REPO_OBJECTS)
+            .count('is_published')
+            .where({
+                pid: obj.pid,
+                is_active: 1,
+                is_published: 1
+            })
+            .then(function (data) {
+                // delete only if object is not published
+                if (data[0].is_published === 0) {
+                    obj.is_published = false;
+                } else {
+                    obj.is_published = true;
+                }
+
+                callback(null, obj);
+            })
+            .catch(function (error) {
+                LOGGER.module().fatal('FATAL: [/repository/model module (delete_object/check_if_published)] Unable to delete record ' + error);
+                throw 'FATAL: [/repository/model module (delete_object/check_if_published)] Unable to delete record ' + error;
+            });
+    }
+
+    function delete_record(obj, callback) {
+
+        if (obj.is_published === true) {
+            callback(null, obj);
+            return false;
+        }
+
+        DB(REPO_OBJECTS)
+            .where({
+                pid: obj.pid
+            })
+            .update({
+                is_active: 0
+            })
+            .then(function (data) {
+
+                if (data === 1) {
+                    callback(null, obj);
+                }
+            })
+            .catch(function (error) {
+                LOGGER.module().fatal('FATAL: [/repository/model module (delete_object)] unable to delete record ' + error);
+                throw 'FATAL: [/repository/model module (delete_object)] unable to delete record ' + error;
+            });
+    }
+
+    function unindex_record(obj, callback) {
+
+        if (obj.is_published === true) {
+            callback(null, obj);
+            return false;
+        }
+
+        REQUEST.delete({
+            url: CONFIG.apiUrl + '/api/admin/v1/indexer/delete?pid=' + obj.pid + '&api_key=' + CONFIG.apiKey,
+            timeout: 25000
+        }, function (error, httpResponse, body) {
+
+            if (error) {
+                LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/unindex_objects)] unable to remove published record from index ' + error);
+                obj.status = 'failed';
+                callback(null, obj);
+                return false;
+            }
+
+            if (httpResponse.statusCode === 204) {
+                callback(null, obj);
+                return false;
+            } else {
+                LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/unindex_objects)] unable to remove published record from index ' + httpResponse.statusCode + '/' + body);
+                obj.status = 'failed';
+                callback(null, obj);
+            }
+        });
+    }
+
+    function delete_dip(obj, callback) {
+
+        if (obj.is_published === true) {
+            callback(null, obj);
+            return false;
+        }
+
+        DELETE.delete_dip(obj, function (result) {
+            callback(null, result);
+        });
+    }
+
+    ASYNC.waterfall([
+        check_if_published,
+        delete_record,
+        unindex_record,
+        delete_dip
+    ], function (error, results) {
+
+        console.log(results);
+
+        if (error) {
+            LOGGER.module().error('ERROR: [/repository/model module (delete_object/async.waterfall)] ' + error);
+        }
+
+        if (results.is_published === true) {
+            callback({
+                status: 200,
+                message: 'Cannot delete published object.'
+            });
+
+            return false;
+        }
+
+        LOGGER.module().info('INFO: [/repository/model module (delete_object/async.waterfall)] object deleted');
+
+        callback({
+            status: 204,
+            message: 'Object deleted.',
+            data: results
+        });
+    });
+};
+

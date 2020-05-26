@@ -1,0 +1,73 @@
+<% include partials/header.ejs  %>
+
+<body class="nav-md">
+<div class="container body">
+    <div class="main_container">
+        <div class="col-md-3 left_col">
+            <div class="left_col scroll-view">
+                <div class="navbar nav_title" style="border: 0;">
+                    <a href="index.html" class="site_title"><i class="fa fa-archive"></i> <span>DU Repository</span></a>
+                </div>
+                <div class="clearfix"></div>
+                <% include partials/menu-profile.ejs %>
+                <br>
+                <% include partials/nav.ejs %>
+                <% include partials/sidebar-footer.ejs %>
+            </div>
+        </div>
+        <% include partials/top-nav.ejs %>
+        <div class="right_col" role="main">
+            <div class="">
+                <div class="page-title">
+                    <div class="title_left">
+                        <h3>Delete Object</h3>
+                    </div>
+                </div>
+                <div class="clearfix"></div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2></h2>
+                                <ul class="nav navbar-right"></ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                                <div id="message"></div>
+                                <div class="row" id="delete-object">
+                                    <div class="col-xs-12">
+                                        <div class="alert alert-warning"><i class="fa fa-info-circle"></i> <strong>You are about to permanently delete this object from the repository and DuraCloud.  The object record will need to be manually deleted from the <a href="https://denver.archivesdirect.archivematica.org/administration/accounts/login/" target="_blank">Archivematica dashboard</a> and <a href="https://denver.archivesdirect.archivematica.org:8000/login/" target="_blank">Archivematica storage service</a>.</strong></div>
+                                        // DEV note: add archivematica delete instructions here?
+                                        <form name="user-form" id="delete-form">
+                                            <div class="form-group">
+                                                <label for="du_id">PID:</label>
+                                                <input type="text" class="form-control" id="pid" name="pid" required>
+                                            </div>
+                                            <br>
+                                            <button type="submit" class="btn btn-danger"><i class="fa fa-remove"></i>&nbsp; Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <% include partials/footer.ejs %>
+    </div>
+    <script src="../../vendors/jquery/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.17.0/dist/jquery.validate.js"></script>
+    <script src="../../vendors/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="../../assets/js/theme_sidebar.js"></script>
+    <script src="../../vendors/nprogress/nprogress.js"></script>
+    <script src="../../js/dompurify/purify.min.js"></script>
+    <script src="../../app/dom.module.js"></script>
+    <script src="../../app/config.module.js"></script>
+    <script src="../../app/helper.module.js"></script>
+    <script src="../../app/http.module.js"></script>
+    <script src="../../app/user.module.js"></script>
+    <script src="../../app/objects.module.js"></script>
+    <script>// objectModule.userFormValidation();</script>
+</body>
+</html>

@@ -315,7 +315,7 @@ const objectsModule = (function () {
         let obj = {};
         obj.sip_uuid = pid;
 
-        let url = api + '/api/admin/v1/repo/metadata',
+        let url = api + '/api/admin/v1/repo/metadata/object',
             token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'PUT',
@@ -416,6 +416,17 @@ const objectsModule = (function () {
 
         httpModule.req(request, callback);
         return false;
+    };
+
+    /**
+     *
+     * @param pid
+     */
+    obj.deleteObject = function(pid) {
+        console.log(pid);
+
+        // /api/admin/v1/repo/object
+        // delete verb
     };
 
     obj.init = function () {

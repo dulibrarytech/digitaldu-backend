@@ -77,6 +77,12 @@ exports.reset_display_record = function (req, res) {
     });
 };
 
+exports.delete_object = function (req, res) {
+    REPO.delete_object(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
 exports.get_tn = function (req, res) {
 
     SERVICE.get_tn(req, function (data) {

@@ -50,6 +50,12 @@ exports.get_dashboard_unpublished_objects = function (req, res) {
     });
 };
 
+exports.delete_dashboard_object = function (req, res) {
+    res.render('dashboard-delete', {
+        host: CONFIG.host
+    });
+};
+
 exports.update_dashboard_thumbnail = function (req, res) {
     res.render('dashboard-update-thumbnail', {
         host: CONFIG.host

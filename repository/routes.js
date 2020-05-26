@@ -28,21 +28,22 @@ module.exports = function (app) {
 
     app.route('/api/admin/v1/repo/object')
         .get(TOKEN.verify, REPO.get_display_record)
-        .post(TOKEN.verify, REPO.create_collection_object);
+        .post(TOKEN.verify, REPO.create_collection_object)
+        .delete(TOKEN.verify, REPO.delete_object);
 
-    app.route('/api/admin/v1/repo/metadata')
+    app.route('/api/admin/v1/repo/metadata/object')
         .put(TOKEN.verify, REPO.update_metadata_record);
 
     app.route('/api/admin/v1/repo/metadata/collection')
         .put(TOKEN.verify, REPO.update_collection_metadata_record);
+        //.delete(TOKEN.verify, REPO.delete_collection);
 
-    app.route('/api/admin/v1/repo/object/unpublished')
-        .get(TOKEN.verify, REPO.get_unpublished_admin_objects);
-
+    // gets thumbnails from duracloud
     app.route('/api/admin/v1/repo/object/thumbnail')
         .get(TOKEN.verify, REPO.get_thumbnail)
         .post(TOKEN.verify, REPO.update_thumbnail);
 
+    // gets thumbnails from TN service
     app.route('/api/admin/v1/repo/object/tn')
         .get(TOKEN.verify, REPO.get_tn);
 
@@ -55,9 +56,12 @@ module.exports = function (app) {
     app.route('/api/admin/v1/repo/unpublish')
         .post(TOKEN.verify, REPO.unpublish_objects);
 
-    app.route('/api/admin/v1/repo/ping/services')
-        .get(TOKEN.verify, REPO.ping);
+    app.route('/api/admin/v1/repo/object/unpublished')
+        .get(TOKEN.verify, REPO.get_unpublished_admin_objects);
 
     app.route('/api/admin/v1/repo/reset')
         .post(TOKEN.verify, REPO.reset_display_record);
+
+    app.route('/api/admin/v1/repo/ping/services')
+        .get(TOKEN.verify, REPO.ping);
 };

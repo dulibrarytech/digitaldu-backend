@@ -46,6 +46,9 @@ module.exports = function (app) {
     app.route('/dashboard/object/thumbnail/upload')
         .get(DASHBOARD.get_dashboard_upload);
 
+    app.route('/dashboard/object/delete')
+        .get(DASHBOARD.delete_dashboard_object);
+
     app.route('/dashboard/import')
         .get(DASHBOARD.get_dashboard_import);
 
