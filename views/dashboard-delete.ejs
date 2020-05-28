@@ -36,15 +36,14 @@
                                 <div id="message"></div>
                                 <div class="row" id="delete-object">
                                     <div class="col-xs-12">
-                                        <div class="alert alert-warning"><i class="fa fa-info-circle"></i> <strong>You are about to permanently delete this object from the repository and DuraCloud.  The object record will need to be manually deleted from the <a href="https://denver.archivesdirect.archivematica.org/administration/accounts/login/" target="_blank">Archivematica dashboard</a> and <a href="https://denver.archivesdirect.archivematica.org:8000/login/" target="_blank">Archivematica storage service</a>.</strong></div>
-                                        // DEV note: add archivematica delete instructions here?
+                                        <div class="alert alert-warning"><i class="fa fa-warning"></i> <strong>You are about to permanently delete this object and its associated metatdata from the Repository, Archivematica, and DuraCloud systems.  <!--The object record will need to be manually deleted from the <a href="https://denver.archivesdirect.archivematica.org/administration/accounts/login/" target="_blank">Archivematica dashboard</a> and <a href="https://denver.archivesdirect.archivematica.org:8000/login/" target="_blank">Archivematica storage service</a>.--></strong></div>
                                         <form name="user-form" id="delete-form">
                                             <div class="form-group">
-                                                <label for="du_id">PID:</label>
-                                                <input type="text" class="form-control" id="pid" name="pid" required>
+                                                <label for="delete-reason">* Reason for deletion:</label>
+                                                <textarea class="form-control" id="delete-reason" name="delete_reason" required></textarea>
                                             </div>
                                             <br>
-                                            <button type="submit" class="btn btn-danger"><i class="fa fa-remove"></i>&nbsp; Delete</button>
+                                            <button type="button" class="btn btn-danger" onclick="objectsModule.deleteObject(); return false;"><i class="fa fa-remove"></i>&nbsp; Delete</button>
                                         </form>
                                     </div>
                                 </div>
@@ -68,6 +67,5 @@
     <script src="../../app/http.module.js"></script>
     <script src="../../app/user.module.js"></script>
     <script src="../../app/objects.module.js"></script>
-    <script>// objectModule.userFormValidation();</script>
 </body>
 </html>

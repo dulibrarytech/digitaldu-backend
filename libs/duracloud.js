@@ -340,7 +340,7 @@ exports.confirm_dip_file = function (file, callback) {
 
     REQUEST.head({
         url: apiUrl,
-        timeout: 45000
+        timeout: 25000
     }, function (error, httpResponse, body) {
 
         if (error) {
@@ -389,7 +389,7 @@ exports.delete_dip_file = function (file, callback) {
 
     REQUEST.delete({
         url: apiUrl,
-        timeout: 25000
+        timeout: 45000
     }, function (error, httpResponse, body) {
 
         if (error) {

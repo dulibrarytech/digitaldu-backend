@@ -26,7 +26,8 @@ const CONFIG = require('../config/config'),
     HANDLES = require('../libs/handles'),
     MODS = require('../libs/display-record'),
     ARCHIVESSPACE = require('../libs/archivespace'),
-    DELETE = require('../libs/delete-dip'),
+    DELETEDIP = require('../libs/delete-dip'),
+    DELETEAIP = require('../libs/delete-aip'),
     LOGGER = require('../libs/log4'),
     DB = require('../config/db')(),
     DBQ = require('../config/dbqueue')(),
@@ -2384,12 +2385,14 @@ exports.reset_display_record = function (req, callback) {
  */
 exports.delete_object = function (req, callback) {
 
-    let pid = req.query.pid;
+    let pid = req.body.pid;
+    let delete_reason = req.body.delete_reason;
 
     function check_if_published(callback) {
 
         let obj = {};
         obj.pid = pid;
+        obj.delete_reason = delete_reason;
 
         DB(REPO_OBJECTS)
             .count('is_published')
@@ -2477,7 +2480,19 @@ exports.delete_object = function (req, callback) {
             return false;
         }
 
-        DELETE.delete_dip(obj, function (result) {
+        DELETEDIP.delete_dip(obj, function(result) {
+            callback(null, result);
+        });
+    }
+
+    function delete_aip(obj, callback) {
+
+        if (obj.is_published === true) {
+            callback(null, obj);
+            return false;
+        }
+
+        DELETEAIP.delete_aip(obj, function(result) {
             callback(null, result);
         });
     }
@@ -2486,16 +2501,19 @@ exports.delete_object = function (req, callback) {
         check_if_published,
         delete_record,
         unindex_record,
-        delete_dip
+        delete_dip,
+        delete_aip
     ], function (error, results) {
-
-        console.log(results);
 
         if (error) {
             LOGGER.module().error('ERROR: [/repository/model module (delete_object/async.waterfall)] ' + error);
         }
 
+        // delete link only appears when record is unpublished
         if (results.is_published === true) {
+
+            LOGGER.module().error('ERROR: [/repository/model module (delete_object/async.waterfall)] Cannot delete published object. ');
+
             callback({
                 status: 200,
                 message: 'Cannot delete published object.'
@@ -2504,13 +2522,11 @@ exports.delete_object = function (req, callback) {
             return false;
         }
 
-        LOGGER.module().info('INFO: [/repository/model module (delete_object/async.waterfall)] object deleted');
+        LOGGER.module().info('INFO: [/repository/model module (delete_object/async.waterfall)] object deleted.');
+    });
 
-        callback({
-            status: 204,
-            message: 'Object deleted.',
-            data: results
-        });
+    callback({
+        status: 204,
+        message: 'Delete object.'
     });
 };
-

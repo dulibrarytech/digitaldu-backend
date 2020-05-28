@@ -22,8 +22,7 @@ const ASYNC = require('async'),
     ARCHIVEMATICA = require('../libs/archivematica'),
     DURACLOUD = require('../libs/duracloud'),
     METS = require('../libs/mets'),
-    LOGGER = require('../libs/log4'),
-    _ = require('lodash');
+    LOGGER = require('../libs/log4');
 
 exports.delete_dip = function (data, callback) {
 

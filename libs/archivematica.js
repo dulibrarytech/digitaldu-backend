@@ -520,3 +520,60 @@ exports.download_aip = function (sip_uuid, callback) {
         });
     });
 };
+
+/**
+ * Deletes AIP from storage service
+ * @param obj
+ * @param callback
+ */
+exports.delete_aip = function (obj, callback) {
+
+    'use strict';
+
+    let apiUrl = CONFIG.archivematicaStorageApi + 'v2/file/' + obj.pid + '/delete_aip/?username=' + CONFIG.archivematicaStorageUsername + '&api_key=' + CONFIG.archivematicaStorageApiKey;
+
+    REQUEST.post({
+        url: apiUrl,
+        form: {
+            'event_reason': obj.delete_reason,
+            'pipeline': CONFIG.archivematicaPipeline,
+            'user_id': CONFIG.archivematicaUserId,
+            'user_email': CONFIG.archivematicaUserEmail
+        },
+        timeout: 45000
+    }, function (error, httpResponse, body) {
+
+        if (error) {
+
+            logger.module().error('ERROR: [/libs/archivematica lib (delete_aip)] unable to delete aip ' + error);
+
+            callback({
+                error: true,
+                message: error
+            });
+
+            return false;
+        }
+
+        if (httpResponse.statusCode === 200) {
+
+            callback({
+                error: false,
+                message: ''
+            });
+
+            return false;
+
+        } else {
+
+            logger.module().error('ERROR: [/libs/archivematica lib (delete_aip)] unable to delete aip ' + httpResponse.statusCode + '/' + body);
+
+            callback({
+                error: true,
+                message: 'ERROR: [/libs/archivematica lib (delete_aip)] Unable to delete aip'
+            });
+
+            return false;
+        }
+    });
+};

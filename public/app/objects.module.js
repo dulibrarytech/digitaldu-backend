@@ -419,14 +419,62 @@ const objectsModule = (function () {
     };
 
     /**
-     *
+     * Starts delete process
      * @param pid
      */
-    obj.deleteObject = function(pid) {
-        console.log(pid);
+    obj.deleteObject = function() {
 
-        // /api/admin/v1/repo/object
-        // delete verb
+        let obj = {};
+        obj.pid = helperModule.getParameterByName('pid');
+        obj.delete_reason = domModule.val('#delete-reason', null) + '  --deleted by ' + userModule.getUserFullName();
+
+        let url = api + '/api/admin/v1/repo/object',
+            token = userModule.getUserToken(),
+            request = new Request(url, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                body: JSON.stringify(obj),
+                mode: 'cors'
+            });
+
+        const callback = function (response) {
+
+            if (response.status === 204) {
+
+                domModule.html('#message', '<div class="alert alert-success">Deleting Object...</div>');
+                domModule.hide('#delete-object');
+
+                setTimeout(function () {
+
+                    domModule.html('#message', '<div class="alert alert-success">Object Deleted</div>');
+
+                    setTimeout(function() {
+                        domModule.html('#message', null);
+                        domModule.show('#delete-object');
+                    }, 5000);
+
+                }, 10000);
+
+            } else if (response.status === 401) {
+
+                response.json().then(function (response) {
+
+                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
+
+                    setTimeout(function () {
+                        window.location.replace('/login');
+                    }, 4000);
+                });
+
+            } else {
+                helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to delete object.');
+            }
+        };
+
+        httpModule.req(request, callback);
     };
 
     obj.init = function () {
