@@ -21,7 +21,7 @@
 const CONFIG = require('../config/config'),
     ASYNC = require('async'),
     NIGHTMAREOBJ = require('nightmare'),
-    NIGHTMARE = NIGHTMAREOBJ({show: true}),
+    NIGHTMARE = NIGHTMAREOBJ({show: CONFIG.nightmareStatus}),
     ARCHIVEMATICA = require('../libs/archivematica'),
     LOGGER = require('../libs/log4');
 

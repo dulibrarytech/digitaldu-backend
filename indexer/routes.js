@@ -24,8 +24,13 @@ const INDEXER = require('../indexer/controller'),
 module.exports = function (app) {
 
     app.route('/api/admin/v1/indexer')
-        .post(TOKEN.verify, INDEXER.index_record);
+        .post(TOKEN.verify, INDEXER.index_record)
+        .delete(TOKEN.verify, INDEXER.unindex_record);
 
+    /*
+    app.route('/api/admin/v1/indexer/')
+        .delete(TOKEN.verify, INDEXER.unindex_record);
+    */
     app.route('/api/admin/v1/indexer/all')
         .post(TOKEN.verify, INDEXER.index_records);
 
@@ -40,9 +45,6 @@ module.exports = function (app) {
 
     app.route('/api/admin/v1/indexer/reindex')
         .post(TOKEN.verify, INDEXER.reindex);
-
-    app.route('/api/admin/v1/indexer/')
-        .delete(TOKEN.verify, INDEXER.unindex_record);
 
     app.route('/api/admin/v1/indexer/delete')
         .delete(TOKEN.verify, INDEXER.unindex_admin_record);
