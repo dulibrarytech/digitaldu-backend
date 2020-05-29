@@ -453,7 +453,8 @@ const objectsModule = (function () {
 
                     setTimeout(function() {
                         domModule.html('#message', null);
-                        domModule.show('#delete-object');
+                        window.location.replace('/dashboard/collections');
+                        // domModule.show('#delete-object');
                     }, 5000);
 
                 }, 10000);

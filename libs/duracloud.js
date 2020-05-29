@@ -404,7 +404,7 @@ exports.delete_dip_file = function (file, callback) {
             return false;
         }
 
-        if (httpResponse.statusCode === 204) {
+        if (httpResponse.statusCode === 200) {
 
             callback({
                 error: false,

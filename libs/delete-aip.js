@@ -29,12 +29,19 @@ exports.delete_aip = function (obj, callback) {
 
     function delete_from_dashboard(callback) {
 
+        /*
         const archivematica_dashboard_login = CONFIG.archivematicaDashboardLogin;
         const archivematcia_dashboard_aip = CONFIG.archivematicaDashboardAip + obj.pid + '/';
         const archivematica_dashboard_logout = CONFIG.archivematicaDashboardLogout;
         const archivematica_dashboard_username = CONFIG.archivematicaDashboardUsername;
         const archivematica_dashboard_password = CONFIG.archivematicaDashboardPassword;
+        */
 
+        ARCHIVEMATICA.delete_aip_request(obj, function(result) {
+            console.log(result.data);
+        });
+
+        /*
         NIGHTMARE
             .goto(archivematica_dashboard_login)
             .insert('#id_username', archivematica_dashboard_username)
@@ -48,9 +55,9 @@ exports.delete_aip = function (obj, callback) {
             .insert('#id_delete-uuid', obj.pid)
             .insert('#id_delete-reason', obj.delete_reason)
             .click('.btn-danger')
-            .wait(20000)
+            .wait(7000)
             .goto(archivematica_dashboard_logout)
-            .wait(5000)
+            .wait(3000)
             .end()
             .then(function() {
                 obj.set_delete = true;
@@ -61,10 +68,46 @@ exports.delete_aip = function (obj, callback) {
                 obj.set_delete = false;
                 callback(null, obj);
             });
+            */
     }
 
     function delete_from_storage(obj, callback) {
 
+        const archivematica_storage_dashboard_login = CONFIG.archivematicaStorageDashboardLogin;
+        const archivematica_storage_dashboard_username = CONFIG.archivematicaStorageDashboardUsername;
+        const archivematica_storage_dashboard_password = CONFIG.archivematicaStorageDashboardPassword;
+        const archivematcia_storage_dashboard_packages = CONFIG.archivematicaStorageDashboardPackages;
+        const archivematica_storage_dashboard_logout = CONFIG.archivematicaStorageDashboardLogout;
+
+        NIGHTMARE
+            .goto(archivematica_storage_dashboard_login)
+            .insert('#id_username', archivematica_storage_dashboard_username)
+            .insert('#id_password', archivematica_storage_dashboard_password)
+            .click('.btn-primary')
+            .wait(20000)
+            .goto(archivematcia_storage_dashboard_packages)
+            .wait(3000)
+            .insert('#id_delete-reason', obj.delete_reason)
+            .click('a[href="#tab-delete"]')
+            .wait(2000)
+            // .insert('#id_delete-uuid', obj.pid)
+            .insert('#id_delete-reason', obj.delete_reason)
+            .click('.btn-danger')
+
+            .wait(7000)
+            .goto(archivematica_storage_dashboard_logout)
+            .wait(3000)
+            .end()
+            .then(function() {
+                obj.set_delete = true;
+                callback(null, obj);
+            })
+            .catch(function(error)  {
+                LOGGER.module().error('ERROR: [/libs/delete_aip lib (delete_from_dashboard)] unable to delete aip ' + error);
+                obj.set_delete = false;
+                callback(null, obj);
+            });
+        /*
         if (obj.set_delete === true) {
 
             ARCHIVEMATICA.delete_aip(obj, function(result) {
@@ -74,6 +117,7 @@ exports.delete_aip = function (obj, callback) {
         } else {
             callback(null, obj);
         }
+        */
     }
 
     ASYNC.waterfall([

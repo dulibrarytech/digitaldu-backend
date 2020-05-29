@@ -19,8 +19,10 @@
 const CONFIG = require('../config/config'),
     CLIENT = require('ssh2-sftp-client'),
     REQUEST = require('request'),
+    NIGHTMAREOBJ = require('nightmare'),
+    AUTOMATE = NIGHTMAREOBJ({show: CONFIG.nightmareStatus}),
     FS = require('fs'),
-    logger = require('../libs/log4');
+    LOGGER = require('../libs/log4');
 
 /**
  * Pings archivematica api to check availability
@@ -39,7 +41,7 @@ exports.ping_api = function (callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: [/libs/archivematica lib (ping_api)] unable to ping archivematica ' + error);
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_api)] unable to ping archivematica ' + error);
 
             callback({
                 error: true,
@@ -62,7 +64,7 @@ exports.ping_api = function (callback) {
 
         } else {
 
-            logger.module().error('ERROR: [/libs/archivematica lib (ping_api)] unable to ping archivematica ' + body);
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_api)] unable to ping archivematica ' + body);
 
             callback({
                 error: true,
@@ -90,7 +92,7 @@ exports.ping_storage_api = function (callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: [/libs/archivematica lib (ping_storage_api)] unable to ping archivematica storage api ' + error);
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_storage_api)] unable to ping archivematica storage api ' + error);
 
             callback({
                 error: true,
@@ -112,7 +114,7 @@ exports.ping_storage_api = function (callback) {
 
         } else {
 
-            logger.module().error('ERROR: [/libs/archivematica lib (ping_storage_api)] unable to ping archivematica storage api ' + body);
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_storage_api)] unable to ping archivematica storage api ' + body);
 
             callback({
                 error: true,
@@ -155,7 +157,7 @@ exports.list = function (folder, callback) {
     }).then(function (data) {
         callback(data);
     }).catch(function (error) {
-        logger.module().fatal('FATAL: [/libs/archivematica lib (list)] unable to list sftp folders ' + error);
+        LOGGER.module().fatal('FATAL: [/libs/archivematica lib (list)] unable to list sftp folders ' + error);
         throw 'FATAL: [/libs/archivematica lib (list)] unable to list sftp folders ' + error;
     });
 };
@@ -188,7 +190,7 @@ exports.start_tranfser = function (transferObj, callback) {
     }, function (error, httpResponse, body) {
 
         if (error) {
-            logger.module().fatal('FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer ' + error);
+            LOGGER.module().fatal('FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer ' + error);
             return false;
         }
 
@@ -197,7 +199,7 @@ exports.start_tranfser = function (transferObj, callback) {
             return false;
         } else {
 
-            logger.module().fatal('FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer ' + httpResponse.statusCode + '/' + error);
+            LOGGER.module().fatal('FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer ' + httpResponse.statusCode + '/' + error);
 
             callback({
                 error: true,
@@ -231,7 +233,7 @@ exports.approve_transfer = function (transferFolder, callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: [/libs/archivematica lib (approve_transfer)] unable to approve transfer ' + error);
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (approve_transfer)] unable to approve transfer ' + error);
 
             callback({
                 error: true,
@@ -246,7 +248,7 @@ exports.approve_transfer = function (transferFolder, callback) {
             return false;
         } else {
 
-            logger.module().error('ERROR: [/libs/archivematica lib (approve_transfer)] unable to approve transfer ' + httpResponse.statusCode + '/' + body);
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (approve_transfer)] unable to approve transfer ' + httpResponse.statusCode + '/' + body);
 
             callback({
                 error: true,
@@ -273,7 +275,7 @@ exports.get_transfer_status = function (uuid, callback) {
     }, function (error, httpResponse, body) {
 
         if (error) {
-            logger.module().error('ERROR: [/libs/archivematica lib (get_transfer_status)] unable to get transfer status ' + error);
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_transfer_status)] unable to get transfer status ' + error);
             return false;
         }
 
@@ -283,7 +285,7 @@ exports.get_transfer_status = function (uuid, callback) {
 
         } else {
 
-            logger.module().error('ERROR: [/libs/archivematica lib (get_transfer_status)] unable to get transfer status ' + httpResponse.statusCode + '/' + body);
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_transfer_status)] unable to get transfer status ' + httpResponse.statusCode + '/' + body);
 
             callback({
                 error: true,
@@ -310,7 +312,7 @@ exports.get_ingest_status = function (uuid, callback) {
     }, function (error, httpResponse, body) {
 
         if (error) {
-            logger.module().error('ERROR: [/libs/archivematica lib (get_ingest_status)] unable to get ingest status ' + error);
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_ingest_status)] unable to get ingest status ' + error);
             return false;
         }
 
@@ -319,7 +321,7 @@ exports.get_ingest_status = function (uuid, callback) {
             return false;
         } else {
 
-            logger.module().error('ERROR: [/libs/archivematica lib (get_ingest_status)] unable to get ingest status ' + httpResponse.statusCode + '/' + error);
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_ingest_status)] unable to get ingest status ' + httpResponse.statusCode + '/' + error);
 
             callback({
                 error: true,
@@ -349,7 +351,7 @@ exports.get_dip_path = function (uuid, callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: [/libs/archivematica lib (get_dip_path)] unable to get dip path ' + error);
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_dip_path)] unable to get dip path ' + error);
 
             callback({
                 error: true,
@@ -361,7 +363,7 @@ exports.get_dip_path = function (uuid, callback) {
 
         if (httpResponse.statusCode !== 200) {
 
-            logger.module().error('ERROR: [/libs/archivematica lib (get_dip_path)] unable to get dip path ' + httpResponse.statusCode + '/' + body);
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_dip_path)] unable to get dip path ' + httpResponse.statusCode + '/' + body);
 
             callback({
                 error: true,
@@ -408,15 +410,15 @@ exports.clear_transfer = function (uuid) {
     }, function (error, httpResponse, body) {
 
         if (error) {
-            logger.module().error('ERROR: [/libs/archivematica lib (clear_transfer)] unable to clear transfer queue ' + error);
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (clear_transfer)] unable to clear transfer queue ' + error);
             return false;
         }
 
         if (httpResponse.statusCode === 200) {
-            logger.module().info('INFO: [/libs/archivematica lib (clear_transfer)] transfer ' + uuid + ' has been cleared.');
+            LOGGER.module().info('INFO: [/libs/archivematica lib (clear_transfer)] transfer ' + uuid + ' has been cleared.');
             return false;
         } else {
-            logger.module().error('ERROR: [/libs/archivematica lib (clear_transfer)] unable to clear transfer queue ' + error);
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (clear_transfer)] unable to clear transfer queue ' + error);
             return false;
         }
     });
@@ -438,15 +440,15 @@ exports.clear_ingest = function (uuid) {
     }, function (error, httpResponse, body) {
 
         if (error) {
-            logger.module().error('ERROR: [/libs/archivematica lib (clear_ingest)] unable to clear ingest ' + error);
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (clear_ingest)] unable to clear ingest ' + error);
             return false;
         }
 
         if (httpResponse.statusCode === 200) {
-            logger.module().info('INFO: [/libs/archivematica lib (clear_ingest)] ingest ' + uuid + ' has been cleared.');
+            LOGGER.module().info('INFO: [/libs/archivematica lib (clear_ingest)] ingest ' + uuid + ' has been cleared.');
             return false;
         } else {
-            logger.module().error('ERROR: [/libs/archivematica lib (clear_ingest)] unable to clear ingest ' + httpResponse.statusCode + '/' + error);
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (clear_ingest)] unable to clear ingest ' + httpResponse.statusCode + '/' + error);
             return false;
         }
     });
@@ -522,11 +524,11 @@ exports.download_aip = function (sip_uuid, callback) {
 };
 
 /**
- * Deletes AIP from storage service
+ * Generates a delete request
  * @param obj
  * @param callback
  */
-exports.delete_aip = function (obj, callback) {
+exports.delete_aip_request = function (obj, callback) {
 
     'use strict';
 
@@ -534,7 +536,7 @@ exports.delete_aip = function (obj, callback) {
 
     REQUEST.post({
         url: apiUrl,
-        form: {
+        json: {
             'event_reason': obj.delete_reason,
             'pipeline': CONFIG.archivematicaPipeline,
             'user_id': CONFIG.archivematicaUserId,
@@ -545,7 +547,7 @@ exports.delete_aip = function (obj, callback) {
 
         if (error) {
 
-            logger.module().error('ERROR: [/libs/archivematica lib (delete_aip)] unable to delete aip ' + error);
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (delete_aip)] unable to delete aip ' + error);
 
             callback({
                 error: true,
@@ -555,18 +557,30 @@ exports.delete_aip = function (obj, callback) {
             return false;
         }
 
-        if (httpResponse.statusCode === 200) {
+        if (httpResponse.statusCode === 202) {
 
             callback({
                 error: false,
-                message: ''
+                message: '',
+                data: body
             });
+
+            return false;
+
+        } else if (httpResponse.statusCode === 200) {
+
+            if (body.message === 'A deletion request already exists for this AIP.') {
+                callback({
+                    error: false,
+                    message: body.message
+                });
+            }
 
             return false;
 
         } else {
 
-            logger.module().error('ERROR: [/libs/archivematica lib (delete_aip)] unable to delete aip ' + httpResponse.statusCode + '/' + body);
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (delete_aip)] unable to delete aip ' + httpResponse.statusCode + '/' + body);
 
             callback({
                 error: true,
@@ -576,4 +590,45 @@ exports.delete_aip = function (obj, callback) {
             return false;
         }
     });
+};
+
+/**
+ * Approves delete request
+ * @param obj
+ * @param callback
+ */
+exports.delete_aip_request_approval = function (obj, callback) {
+
+    'use strict';
+
+    const archivematica_storage_dashboard_login = CONFIG.archivematicaStorageDashboardLogin;
+    const archivematica_storage_dashboard_username = CONFIG.archivematicaStorageDashboardUsername;
+    const archivematica_storage_dashboard_password = CONFIG.archivematicaStorageDashboardPassword;
+    const archivematcia_storage_dashboard_packages = CONFIG.archivematicaStorageDashboardPackages;
+    const archivematica_storage_dashboard_logout = CONFIG.archivematicaStorageDashboardLogout;
+
+    AUTOMATE
+        .goto(archivematica_storage_dashboard_login)
+        .insert('#id_username', archivematica_storage_dashboard_username)
+        .insert('#id_password', archivematica_storage_dashboard_password)
+        .click('.btn-primary')
+        .wait(7000)
+        .goto(archivematcia_storage_dashboard_packages)
+        .wait(3000)
+        .insert('#id_' + obj.delete_id + '-status_reason', obj.delete_reason)
+        .click('input[name="approve"]')
+        .wait('.alert-success')
+        .wait(3000)
+        .goto(archivematica_storage_dashboard_logout)
+        .wait(2000)
+        .end()
+        .then(function() {
+            obj.set_delete = true;
+            callback(obj);
+        })
+        .catch(function(error)  {
+            LOGGER.module().error('ERROR: [/libs/delete_aip lib (delete_from_dashboard)] unable to delete aip ' + error);
+            obj.set_delete = false;
+            callback(obj);
+        });
 };
