@@ -547,7 +547,7 @@ exports.delete_aip_request = function (obj, callback) {
 
         if (error) {
 
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (delete_aip)] unable to delete aip ' + error);
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (delete_aip)] unable to delete aip - (' + obj.pid + ') - ' + error);
 
             callback({
                 error: true,
@@ -559,6 +559,8 @@ exports.delete_aip_request = function (obj, callback) {
 
         if (httpResponse.statusCode === 202) {
 
+            LOGGER.module().info('INFO: [/libs/archivematica lib (delete_aip)] delete aip (' + obj.pid + ') request succeeded.');
+
             callback({
                 error: false,
                 message: '',
@@ -569,10 +571,15 @@ exports.delete_aip_request = function (obj, callback) {
 
         } else if (httpResponse.statusCode === 200) {
 
+            LOGGER.module().info('INFO: [/libs/archivematica lib (delete_aip)] A deletion request already exists for this AIP (' + obj.pid + ').');
+
             if (body.message === 'A deletion request already exists for this AIP.') {
                 callback({
                     error: false,
-                    message: body.message
+                    message: body.message,
+                    data: {
+                        id: 0
+                    }
                 });
             }
 

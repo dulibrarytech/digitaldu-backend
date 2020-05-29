@@ -2483,13 +2483,16 @@ exports.delete_object = function (req, callback) {
 
         ARCHIVEMATICA.delete_aip_request(obj, function(result) {
 
-            if (result.error === false || result.data.id !== undefined) {
+            if (result.error === false) {
                 obj.delete_id = result.data.id;
             } else {
+                LOGGER.module().error('ERROR: [/repository/model module (delete_object/delete_aip_request)] unable to create delete aip request');
                 obj.delete_id = false;
             }
 
-            callback(null, obj);
+            setTimeout(function() {
+                callback(null, obj);
+            }, 5000);
         });
     }
 
