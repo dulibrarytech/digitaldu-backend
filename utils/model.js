@@ -40,224 +40,249 @@ const config = require('../config/config'),
             database: config.dbQueueName
         }
     }),
-    REPO_OBJECTS = 'tbl_objects';
+    REPO_OBJECTS = 'tbl_objects',
+    DECACHE = require('decache');
 
-/** http://localhost:8000/api/v1/repo/uuids?start=2019-08-20&end=2019-09-18
- * Gets repository uuids, uris and handles by import date(s)
+/**
+ * gets sip_uuids
  * @param req
  * @param callback
  */
-exports.get_uuids = function (req, callback) {
+exports.get_sip_uuids = function(req, callback) {
 
-    let start = req.query.start,
-        end = req.query.end,
-        uri = req.query.uri,
-        sql = 'DATE(created) = CURRENT_DATE';
+    knexQ('broken_tiffs')
+        .where({
+            is_deleted: 0
+        })
+        .then(function(data) {
 
-    function get_collection_uuids(callback) {
+            console.log(data.length);
 
-        if (start !== undefined && end !== undefined) {
+            let timer = setInterval(function() {
 
-            sql = '(created BETWEEN ? AND ?)';
+                if (data.length === 0) {
+                    clearInterval(timer);
+                    return false;
+                }
 
-            knex(REPO_OBJECTS)
-                .select('sip_uuid', 'handle', 'uri', 'object_type')
-                .where({
-                    object_type: 'collection',
-                    is_active: 1
-                })
-                .andWhereRaw(sql, [start, end])
-                .orderBy('created', 'desc')
-                .then(function (data) {
+                let record = data.pop();
 
-                    if (data.length === 0) {
-                        data.status = false;
+                request.post({
+                    url: config.apiUrl + '/api/admin/v1/utils/object/delete?api_key=' + config.apiKey,
+                    form: {
+                        'pid': record.sip_uuid,
+                        'delete_reason': 'Master image (tiff) is broken.  Derivatives cannot be generated from master file.'
                     }
+                }, function (error, httpResponse, body) {
 
-                    callback(null, data);
-                })
-                .catch(function (error) {
-                    logger.module().fatal('FATAL: [/repository/model module (get_pids/get_collection_pids)] repository database error ' + error);
-
-                    callback({
-                        status: 500,
-                        error: 'FATAL: [/repository/model module (get_pids/get_collection_pids)] repository database error ' + error,
-                        data: []
-                    });
-                });
-
-        } else if (start !== undefined && end === undefined) {
-
-            sql = 'DATE(created) = ?';
-
-            knex(REPO_OBJECTS)
-                .select('sip_uuid', 'handle', 'uri', 'object_type')
-                .where({
-                    object_type: 'collection',
-                    is_active: 1
-                })
-                .andWhereRaw(sql, [start])
-                .orderBy('created', 'desc')
-                .then(function (data) {
-
-                    if (data.length === 0) {
-                        data.status = false;
-                    }
-
-                    callback(null, data);
-                })
-                .catch(function (error) {
-                    logger.module().fatal('FATAL: [/repository/model module (get_pids/get_collection_pids)] repository database error ' + error);
-
-                    callback({
-                        status: 500,
-                        error: 'FATAL: [/repository/model module (get_pids/get_collection_pids)] repository database error ' + error,
-                        data: []
-                    });
-                });
-
-        } else {
-
-            sql = 'DATE(created) = CURRENT_DATE';
-
-            knex(REPO_OBJECTS)
-                .select('sip_uuid', 'handle', 'uri', 'object_type')
-                .where({
-                    object_type: 'collection',
-                    is_active: 1
-                })
-                .andWhereRaw(sql)
-                .orderBy('created', 'desc')
-                .then(function (data) {
-
-                    if (data.length === 0) {
-                        data.status = false;
-                    }
-
-                    callback(null, data);
-                })
-                .catch(function (error) {
-                    logger.module().fatal('FATAL: [/repository/model module (get_pids/get_collection_pids)] repository database error ' + error);
-
-                    callback({
-                        status: 500,
-                        error: 'FATAL: [/repository/model module (get_pids/get_collection_pids)] repository database error ' + error,
-                        data: []
-                    });
-                });
-        }
-    }
-
-    function get_object_uuids(data, callback) {
-
-        if (data.status !== undefined && data.status === false) {
-            callback(null, data);
-            return false;
-        }
-
-        let records = [];
-        let timer = setInterval(function () {
-
-            let record = data.pop(),
-                params = {};
-
-            if (data.length === 0) {
-                params.object_type = 'object';
-                params.is_member_of_collection = 0;
-            } else {
-                params.object_type = 'object';
-                params.is_member_of_collection = record.sip_uuid;
-            }
-
-            knex(REPO_OBJECTS)
-                .select('sip_uuid', 'handle', 'uri', 'object_type')
-                .where(params)
-                .then(function (objects) {
-
-                    if (data.length > 0) {
-                        record.objects = objects;
-                        records.push(record);
-                    } else if (data.length === 0) {
-                        clearInterval(timer);
-                        callback(null, records);
+                    if (error) {
+                        logger.module().error('ERROR: [/utils/model module (batch_update_metadata/update_metadata_records)] unable to delete object ' + error);
                         return false;
                     }
 
-                })
-                .catch(function (error) {
-                    logger.module().fatal('FATAL: [/repository/model module (get_pids/get_object_pids)] repository database error ' + error);
+                    if (httpResponse.statusCode === 200) {
 
-                    callback({
-                        status: 500,
-                        error: 'FATAL: [/repository/model module (get_pids/get_object_pids)] repository database error ' + error,
-                        data: []
-                    });
+                        knexQ('broken_tiffs')
+                            .where({
+                                sip_uuid: record.sip_uuid
+                            })
+                            .update({
+                                is_deleted: 1
+                            })
+                            .then(function(data) {
+
+                                if (data === 1) {
+                                    logger.module().info('INFO: [/utils/model module (delete_object) ' + record.sip_uuid + '. delete complete.');
+                                    return false;
+                                }
+
+                            })
+                            .catch(function(error) {
+                                logger.module().error('ERROR: [/utils/model module (delete_object)] unable to delete object ' + record.sip_uuid + ' ' + error);
+                                throw 'ERROR: [/utils/model module (delete_object)] unable to delete object ' + record.sip_uuid + ' ' + error;
+                            });
+
+                        return false;
+
+                    } else {
+                        logger.module().error('ERROR: [/utils/model module (delete_object)] http error ' + httpResponse.statusCode + '/' + body);
+                        return false;
+                    }
                 });
 
-        }, 100);
+            }, 45000);
+        })
+        .catch(function(error) {
+            logger.module().error('ERROR: [/repository/model module (batch_delete_objects/get_sip_uuids)] Unable to get uuids ' + error);
+        });
+
+    callback({
+        status: 200,
+        message: 'uuids.',
+        data: []
+    });
+};
+
+/**
+ * Gets delete ids to batch delete objects from archivematica/duracloud
+ * @param req
+ * @param callback
+ */
+exports.delete_objects = function(req, callback) {
+
+    let is_member_of_collection = req.body.is_member_of_collection;
+    let delete_reason = req.body.delete_reason;
+
+    knex(REPO_OBJECTS)
+        .select('delete_id')
+        .whereRaw('delete_id <> ""')
+        .where({
+            is_member_of_collection: is_member_of_collection
+        })
+        .then(function(data) {
+
+            let timer = setInterval(function() {
+
+                if (data.length === 0) {
+                    clearInterval(timer);
+                    console.log('done.');
+                    return false;
+                }
+
+                let record = data.pop();
+
+                request.post({
+                    url: config.apiUrl + '/api/admin/v1/utils/object/delete?api_key=' + config.apiKey,
+                    form: {
+                        'pid': record.sip_uuid,
+                        'delete_reason': delete_reason
+                    }
+                }, function (error, httpResponse, body) {
+
+                    if (error) {
+                        logger.module().error('ERROR: [/utils/model module (delete_objects)] unable to delete object ' + error);
+                        return false;
+                    }
+
+                    if (httpResponse.statusCode === 200) {
+                        console.log(body);
+                        return false;
+
+                    } else {
+                        logger.module().error('ERROR: [/utils/model module (delete_objects)] http error ' + httpResponse.statusCode + '/' + body);
+                        return false;
+                    }
+                });
+
+            }, 45000); // nightmare/electron needs time to process each delete process
+        })
+        .catch(function(error) {
+            logger.module().error('ERROR: [/repository/model module (delete_objects)] Unable to get delete ids ' + error);
+        });
+
+    callback({
+        status: 200,
+        message: 'Deleting objects...',
+        data: []
+    });
+};
+
+/**
+ * Deletes archivematica objects
+ * @param req
+ * @param callback
+ */
+exports.delete_object = function(req, callback) {
+
+    if (req.body.pid === undefined || req.body.delete_reason === undefined) {
+
+        callback({
+            status: 400,
+            message: 'Bad request.'
+        });
     }
 
-    // return single object based on Archivespace uri
-    if (uri !== undefined && uri.length !== 0) {
+    let pid = req.body.pid;
+    let delete_reason = req.body.delete_reason;
 
-        knex(REPO_OBJECTS)
-            .select('sip_uuid', 'handle', 'uri', 'object_type')
-            .where({
-                uri: uri,
-                is_active: 1
-            })
-            .then(function (objects) {
+    function delete_aip_request(callback) {
 
-                callback({
-                    status: 200,
-                    data: objects
-                });
-            })
-            .catch(function (error) {
-                logger.module().fatal('FATAL: [/repository/model module (get_pids/get_object_pids)] repository database error ' + error);
+        console.log('requesting delete...');
 
-                callback({
-                    status: 500,
-                    error: 'FATAL: [/repository/model module (get_pids/get_object_pids)] repository database error ' + error,
-                    data: []
-                });
+        let obj = {};
+        obj.pid = pid;
+        obj.delete_reason = delete_reason;
+
+        archivematica.delete_aip_request(obj, function(result) {
+
+            if (result.error === false) {
+                obj.delete_id = result.data.id;
+
+                knex(REPO_OBJECTS)
+                    .where({
+                        pid: obj.pid
+                    })
+                    .update({
+                        delete_id: obj.delete_id
+                    })
+                    .then(function (data) {
+
+                        if (data === 1) {
+                            console.log(obj.delete_id);
+                        }
+                    })
+                    .catch(function (error) {
+                        LOGGER.module().fatal('FATAL: [/repository/model module (delete_object)] unable to delete record ' + error);
+                        throw 'FATAL: [/repository/model module (delete_object)] unable to delete record ' + error;
+                    });
+
+            } else {
+                logger.module().error('ERROR: [/repository/model module (delete_object/delete_aip_request)] unable to create delete aip request');
+                obj.delete_id = false;
+            }
+
+            setTimeout(function() {
+                callback(null, obj);
+            }, 5000);
+        });
+    }
+
+    function delete_aip_request_approval(obj, callback) {
+
+        console.log('Approving delete...');
+        console.log('Delete id: ', obj.delete_id);
+
+        if (obj.delete_id !== false) {
+            archivematica.delete_aip_request_approval(obj, function(result) {
+                console.log(result);
+                callback(null, obj);
             });
-
-        return false;
+        } else {
+            logger.module().error('ERROR: [/utils/model module (delete_object/delete_aip_request)] aip delete approval failed.');
+        }
     }
 
     async.waterfall([
-        get_collection_uuids,
-        get_object_uuids
-    ], function (error, results) {
+        delete_aip_request,
+        delete_aip_request_approval
+    ], function(error, results) {
+
+        console.log('results: ', results);
+        // delete require.cache[require.resolve('nightmare')];
+        DECACHE('nightmare');
 
         if (error) {
-
-            logger.module().error('ERROR: [/repository/model module (get_pids/async.waterfall)] ' + error);
-
-            callback({
-                status: 500,
-                error: 'ERROR: [/repository/model module (get_pids/async.waterfall)] ' + error,
-                data: []
-            });
-
+            logger.module().error('ERROR: [/utils/model module (delete_object/delete_aip_request)] unable to create delete aip request');
             return false;
         }
 
-        if (results.status === false) {
+        logger.module().info('INFO: [/utils/model module (delete_object/delete_aip_request)] aip deleted');
+    });
 
-            callback({
-                status: 200,
-                data: []
-            });
-
-        } else {
-
-            callback({
-                status: 200,
-                data: results
-            });
-        }
+    callback({
+        status: 200,
+        message: 'Deleting objects...',
+        data: []
     });
 };
 
@@ -406,7 +431,6 @@ exports.batch_update_metadata = function (req, callback) {
         status: 201,
         message: 'Batch updating metadata records...'
     });
-
 };
 
 /**
@@ -540,7 +564,6 @@ exports.batch_update_collection_metadata = function (req, callback) {
         status: 201,
         message: 'Batch updating collection metadata records...'
     });
-
 };
 
 /**
@@ -802,315 +825,10 @@ const republish = function () {
         });
 };
 
-// TODO: rebuild display records after archivesspace plugin changes (compound objects are affected)
-// 1.) query all compound objects
-// 2.) get mods record from archivesspace
-// 3.) update local mods and display records
-exports.fix_compound_objects = function (req, callback) {
-
-    function get_session_token(callback) {
-
-        archivespace.get_session_token(function (response) {
-
-            let result = response.data,
-                obj = {},
-                token;
-
-            try {
-
-                token = JSON.parse(result);
-
-                if (token.session === undefined) {
-                    logger.module().error('ERROR: [/repository/model module (update_metadata_cron/get_session_token/archivespace.get_session_token)] session token is undefined');
-                    obj.session = null;
-                    callback(null, obj);
-                    return false;
-                }
-
-                if (token.error === true) {
-                    logger.module().error('ERROR: [/repository/model module (update_metadata_cron/get_session_token/archivespace.get_session_token)] session token error' + token.error_message);
-                    obj.session = null;
-                    callback(null, obj);
-                    return false;
-                }
-
-                obj.session = token.session;
-                callback(null, obj);
-                return false;
-
-            } catch (error) {
-                logger.module().fatal('FATAL: [/repository/model module (update_metadata_cron/get_session_token/archivespace.get_session_token)] session token error ' + error);
-                throw 'FATAL: [/repository/model module (update_metadata_cron/get_session_token/archivespace.get_session_token)] session token error ' + error;
-            }
-        });
-    }
-
-    function update_broken_records(obj, callback) {
-
-        if (obj.session === null) {
-            callback(null, obj);
-            return false;
-        }
-
-        function get_broken_compound_records(callback) {
-
-            knex(REPO_OBJECTS)
-                .select('*')
-                .where({
-                    is_compound: 1,
-                    is_active: 1
-                })
-                .then(function (data) {
-                    obj.data = data;
-                    callback(null, obj);
-                })
-                .catch(function (error) {
-                    logger.module().fatal('FATAL: [/import/utils module (get_broken_compound_records)] Unable to get broken compound records ' + error);
-                    throw 'FATAL: [/import/utils module (get_broken_compound_records)] Unable to get broken compound records ' + error;
-                });
-        }
-
-        function get_updated_mods_records(obj, callback) {
-
-            let data = obj.data;
-                delete obj.data;
-
-            let timer = setInterval(function () {
-
-                if (data.length === 0) {
-                    clearInterval(timer);
-                    archivespace.destroy_session_token(obj.session, function (data) {
-                        console.log(data);
-                        callback(null, obj);
-                    });
-
-                    return false;
-                }
-
-                let record = data.pop();
-
-                function get_mods(callback) {
-
-                    archivespace.get_mods(record.mods_id, obj.session, function (data) {
-
-                        let recordObj = {};
-                        recordObj.pid = record.pid;
-                        recordObj.is_member_of_collection = record.is_member_of_collection;
-                        recordObj.object_type = record.object_type;
-                        recordObj.sip_uuid = record.sip_uuid;
-                        recordObj.handle = record.handle;
-                        recordObj.entry_id = record.entry_id;
-                        recordObj.thumbnail = record.thumbnail;
-                        recordObj.object = record.file_name;
-                        recordObj.mime_type = record.mime_type;
-                        recordObj.is_published = record.is_published;
-                        recordObj.mods = data.mods;
-
-                        obj.recordObj = recordObj;
-                        callback(null, obj);
-                    });
-                }
-
-                function create_display_record(obj, callback) {
-
-                    let recordObj = obj.recordObj;
-
-                    modslibdisplay.create_display_record(recordObj, function (result) {
-                        obj.display_record = JSON.parse(result);
-                        // obj.display_record_parts = obj.display_record.display_record.parts;
-                        callback(null, obj);
-                    });
-                }
-
-                function get_mets(obj, callback) {
-
-                    archivematica.get_dip_path(obj.recordObj.sip_uuid, function (dip_path) {
-
-                        obj.dip_path = dip_path;
-                        obj.sip_uuid = obj.recordObj.sip_uuid;
-
-                        duracloud.get_mets(obj, function (response) {
-
-                            if (response.error !== undefined && response.error === true) {
-                                logger.module().error('ERROR: [/import/queue module (import_dip/archivematica.get_dip_path/duracloud.get_mets)] unable to get mets');
-                            }
-
-                            let metsResults = metslib.process_mets(obj.sip_uuid, obj.dip_path, response.mets);
-
-                             importlib.save_mets_data(metsResults, function (result) {
-                                 callback(null, obj);
-                             });
-                        });
-                    });
-                }
-
-                function construct_parts (obj, callback) {
-
-                    let parts = [];
-
-                    for (let i = 0; i < obj.display_record.display_record.parts.length; i++) {
-
-                        knexQ('tbl_duracloud_queue')
-                            .select('uuid')
-                            .where({
-                                file: obj.display_record.display_record.parts[i].title.trim(),
-                                sip_uuid: obj.sip_uuid
-                            })
-                            .then(function (data) {
-
-                                if (data[0] !== undefined && data[0].uuid === undefined) {
-                                    console.log('no uuid found for ' + obj.sip_uuid);
-                                    return false;
-                                }
-
-                                console.log(data[0].uuid);
-
-                                obj.display_record.display_record.parts[i].object = obj.dip_path + '/objects/' + data[0].uuid + '-' + obj.display_record.display_record.parts[i].title.replace('tif', 'jp2');
-                                obj.display_record.display_record.parts[i].thumbnail = obj.dip_path + '/thumbnails/' + data[0].uuid + '.jpg';
-                                // parts.push(obj.display_record.display_record.parts[i]);
-
-                                if ((i + 1) === obj.display_record.display_record.parts.length) {
-
-                                    setTimeout(function () {
-
-                                        knex(REPO_OBJECTS)
-                                            .where({
-                                                sip_uuid: obj.sip_uuid,
-                                                is_active: 1
-                                            })
-                                            .update({
-                                                mods: obj.recordObj.mods,
-                                                display_record: JSON.stringify(obj.display_record)
-                                            })
-                                            .then(function (data) {
-
-                                                request.post({
-                                                    url: config.apiUrl + '/api/admin/v1/indexer?api_key=' + config.apiKey,
-                                                    form: {
-                                                        'sip_uuid': obj.sip_uuid
-                                                    }
-                                                }, function (error, httpResponse, body) {
-
-                                                    if (error) {
-                                                        logger.module().fatal('FATAL: [/repository/model module (update_metadata_cron/update_records/update_mods)] indexer error ' + error);
-                                                        return false;
-                                                    }
-
-                                                    if (httpResponse.statusCode === 200) {
-                                                        console.log(obj.sip_uuid + ' indexed.');
-                                                        // return false;
-                                                    } else {
-                                                        logger.module().fatal('FATAL: [/repository/model module (update_metadata_cron/update_records/update_mods)] http error ' + httpResponse.statusCode + '/' + body);
-                                                        return false;
-                                                    }
-                                                });
-
-                                                if (obj.recordObj.is_published === 1) {
-
-                                                    request.post({
-                                                        url: config.apiUrl + '/api/admin/v1/repo/publish',
-                                                        form: {
-                                                            'pid': obj.recordObj.pid,
-                                                            'type': obj.recordObj.object_type
-                                                        }
-                                                    }, function (error, httpResponse, body) {
-
-                                                        if (error) {
-                                                            logger.module().error('ERROR: [/import/utils module (republish/publish)] indexer error ' + error);
-                                                            return false;
-                                                        }
-
-                                                        if (httpResponse.statusCode === 201) {
-                                                            // console.log('Published ' + recordObj.pid);
-                                                            // logger.module().info('INFO: [/import/utils module (republish/publish)] published ' + sip_uuid + '.');
-                                                            // return false;
-                                                        } else {
-                                                            logger.module().error('ERROR: [/import/utils module (republish/publish)] http error ' + httpResponse.statusCode + '/' + body);
-                                                            return false;
-                                                        }
-                                                    });
-                                                }
-
-                                                return null;
-                                            })
-                                            .catch(function (error) {
-                                                logger.module().fatal('FATAL: [/repository/model module (update_mods)] unable to update mods records ' + error);
-                                                throw 'FATAL: [/repository/model module (update_mods)] unable to update mods records ' + error;
-                                            });
-
-
-                                    }, 2000);
-
-                                    return false;
-                                }
-                            })
-                            .catch(function (error) {
-                                logger.module().fatal('FATAL: [/import/utils module (get_broken_compound_records)] Unable to get broken compound records ' + error);
-                                throw 'FATAL: [/import/utils module (get_broken_compound_records)] Unable to get broken compound records ' + error;
-                            });
-                    }
-                }
-
-                // 3.)
-                async.waterfall([
-                    get_mods,
-                    create_display_record,
-                    get_mets,
-                    construct_parts
-                ], function (error, results) {
-
-                    // console.log('complete: ' + results);
-
-                    if (error) {
-                        logger.module().error('ERROR: [/repository/model module (update_metadata_cron/async.waterfall)] ' + error);
-                        throw 'ERROR: [/repository/model module (update_metadata_cron/async.waterfall)] ' + error;
-                    }
-
-                    logger.module().info('INFO: [/repository/model module (update_metadata_cron/async.waterfall)] records updated');
-                });
-
-            }, 15000);
-        }
-
-        // 2.)
-        async.waterfall([
-            get_broken_compound_records,
-            get_updated_mods_records
-        ], function (error, results) {
-
-            if (error) {
-                logger.module().error('ERROR: [/repository/model module (update_metadata_cron/async.waterfall)] ' + error);
-                throw 'ERROR: [/repository/model module (update_metadata_cron/async.waterfall)] ' + error;
-            }
-
-            logger.module().info('INFO: [/repository/model module (update_metadata_cron/async.waterfall)] records updated');
-        });
-    }
-
-    // 1.)
-    async.waterfall([
-        get_session_token,
-        update_broken_records
-    ], function (error, results) {
-
-        if (error) {
-            logger.module().error('ERROR: [/repository/model module (update_metadata_cron/async.waterfall)] ' + error);
-            throw 'ERROR: [/repository/model module (update_metadata_cron/async.waterfall)] ' + error;
-        }
-
-        logger.module().info('INFO: [/repository/model module (update_metadata_cron/async.waterfall)] records updated');
-    });
-
-    callback({
-        status: 200,
-        message: 'fixing compound object mime types'
-    });
-};
-
 ////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Batch deletes records
+ * Batch deletes records (repository DB and Index)
  * @param req
  * @param callback
  */
@@ -1274,8 +992,8 @@ exports.batch_delete_objects = function (req, callback) {
     });
 };
 
-/** // TODO: add aip locations to repository records
- * confirms that repository files exist on Archivematica service
+/**
+ * confirms that repository files exist on Archivematica service/duracloud service
  * @param req
  * @param callback
  */
@@ -1655,5 +1373,310 @@ exports.fix_display_records = function (req, callback) {
     callback({
         status: 200,
         message: 'Checking display records.'
+    });
+};
+
+// TODO: rebuild display records after archivesspace plugin changes (compound objects are affected)
+// 1.) query all compound objects
+// 2.) get mods record from archivesspace
+// 3.) update local mods and display records
+exports.fix_compound_objects = function (req, callback) {
+
+    function get_session_token(callback) {
+
+        archivespace.get_session_token(function (response) {
+
+            let result = response.data,
+                obj = {},
+                token;
+
+            try {
+
+                token = JSON.parse(result);
+
+                if (token.session === undefined) {
+                    logger.module().error('ERROR: [/repository/model module (update_metadata_cron/get_session_token/archivespace.get_session_token)] session token is undefined');
+                    obj.session = null;
+                    callback(null, obj);
+                    return false;
+                }
+
+                if (token.error === true) {
+                    logger.module().error('ERROR: [/repository/model module (update_metadata_cron/get_session_token/archivespace.get_session_token)] session token error' + token.error_message);
+                    obj.session = null;
+                    callback(null, obj);
+                    return false;
+                }
+
+                obj.session = token.session;
+                callback(null, obj);
+                return false;
+
+            } catch (error) {
+                logger.module().fatal('FATAL: [/repository/model module (update_metadata_cron/get_session_token/archivespace.get_session_token)] session token error ' + error);
+                throw 'FATAL: [/repository/model module (update_metadata_cron/get_session_token/archivespace.get_session_token)] session token error ' + error;
+            }
+        });
+    }
+
+    function update_broken_records(obj, callback) {
+
+        if (obj.session === null) {
+            callback(null, obj);
+            return false;
+        }
+
+        function get_broken_compound_records(callback) {
+
+            knex(REPO_OBJECTS)
+                .select('*')
+                .where({
+                    is_compound: 1,
+                    is_active: 1
+                })
+                .then(function (data) {
+                    obj.data = data;
+                    callback(null, obj);
+                })
+                .catch(function (error) {
+                    logger.module().fatal('FATAL: [/import/utils module (get_broken_compound_records)] Unable to get broken compound records ' + error);
+                    throw 'FATAL: [/import/utils module (get_broken_compound_records)] Unable to get broken compound records ' + error;
+                });
+        }
+
+        function get_updated_mods_records(obj, callback) {
+
+            let data = obj.data;
+            delete obj.data;
+
+            let timer = setInterval(function () {
+
+                if (data.length === 0) {
+                    clearInterval(timer);
+                    archivespace.destroy_session_token(obj.session, function (data) {
+                        console.log(data);
+                        callback(null, obj);
+                    });
+
+                    return false;
+                }
+
+                let record = data.pop();
+
+                function get_mods(callback) {
+
+                    archivespace.get_mods(record.mods_id, obj.session, function (data) {
+
+                        let recordObj = {};
+                        recordObj.pid = record.pid;
+                        recordObj.is_member_of_collection = record.is_member_of_collection;
+                        recordObj.object_type = record.object_type;
+                        recordObj.sip_uuid = record.sip_uuid;
+                        recordObj.handle = record.handle;
+                        recordObj.entry_id = record.entry_id;
+                        recordObj.thumbnail = record.thumbnail;
+                        recordObj.object = record.file_name;
+                        recordObj.mime_type = record.mime_type;
+                        recordObj.is_published = record.is_published;
+                        recordObj.mods = data.mods;
+
+                        obj.recordObj = recordObj;
+                        callback(null, obj);
+                    });
+                }
+
+                function create_display_record(obj, callback) {
+
+                    let recordObj = obj.recordObj;
+
+                    modslibdisplay.create_display_record(recordObj, function (result) {
+                        obj.display_record = JSON.parse(result);
+                        // obj.display_record_parts = obj.display_record.display_record.parts;
+                        callback(null, obj);
+                    });
+                }
+
+                function get_mets(obj, callback) {
+
+                    archivematica.get_dip_path(obj.recordObj.sip_uuid, function (dip_path) {
+
+                        obj.dip_path = dip_path;
+                        obj.sip_uuid = obj.recordObj.sip_uuid;
+
+                        duracloud.get_mets(obj, function (response) {
+
+                            if (response.error !== undefined && response.error === true) {
+                                logger.module().error('ERROR: [/import/queue module (import_dip/archivematica.get_dip_path/duracloud.get_mets)] unable to get mets');
+                            }
+
+                            let metsResults = metslib.process_mets(obj.sip_uuid, obj.dip_path, response.mets);
+
+                            importlib.save_mets_data(metsResults, function (result) {
+                                callback(null, obj);
+                            });
+                        });
+                    });
+                }
+
+                function construct_parts (obj, callback) {
+
+                    let parts = [];
+
+                    for (let i = 0; i < obj.display_record.display_record.parts.length; i++) {
+
+                        knexQ('tbl_duracloud_queue')
+                            .select('uuid')
+                            .where({
+                                file: obj.display_record.display_record.parts[i].title.trim(),
+                                sip_uuid: obj.sip_uuid
+                            })
+                            .then(function (data) {
+
+                                if (data[0] !== undefined && data[0].uuid === undefined) {
+                                    console.log('no uuid found for ' + obj.sip_uuid);
+                                    return false;
+                                }
+
+                                console.log(data[0].uuid);
+
+                                obj.display_record.display_record.parts[i].object = obj.dip_path + '/objects/' + data[0].uuid + '-' + obj.display_record.display_record.parts[i].title.replace('tif', 'jp2');
+                                obj.display_record.display_record.parts[i].thumbnail = obj.dip_path + '/thumbnails/' + data[0].uuid + '.jpg';
+                                // parts.push(obj.display_record.display_record.parts[i]);
+
+                                if ((i + 1) === obj.display_record.display_record.parts.length) {
+
+                                    setTimeout(function () {
+
+                                        knex(REPO_OBJECTS)
+                                            .where({
+                                                sip_uuid: obj.sip_uuid,
+                                                is_active: 1
+                                            })
+                                            .update({
+                                                mods: obj.recordObj.mods,
+                                                display_record: JSON.stringify(obj.display_record)
+                                            })
+                                            .then(function (data) {
+
+                                                request.post({
+                                                    url: config.apiUrl + '/api/admin/v1/indexer?api_key=' + config.apiKey,
+                                                    form: {
+                                                        'sip_uuid': obj.sip_uuid
+                                                    }
+                                                }, function (error, httpResponse, body) {
+
+                                                    if (error) {
+                                                        logger.module().fatal('FATAL: [/repository/model module (update_metadata_cron/update_records/update_mods)] indexer error ' + error);
+                                                        return false;
+                                                    }
+
+                                                    if (httpResponse.statusCode === 200) {
+                                                        console.log(obj.sip_uuid + ' indexed.');
+                                                        // return false;
+                                                    } else {
+                                                        logger.module().fatal('FATAL: [/repository/model module (update_metadata_cron/update_records/update_mods)] http error ' + httpResponse.statusCode + '/' + body);
+                                                        return false;
+                                                    }
+                                                });
+
+                                                if (obj.recordObj.is_published === 1) {
+
+                                                    request.post({
+                                                        url: config.apiUrl + '/api/admin/v1/repo/publish',
+                                                        form: {
+                                                            'pid': obj.recordObj.pid,
+                                                            'type': obj.recordObj.object_type
+                                                        }
+                                                    }, function (error, httpResponse, body) {
+
+                                                        if (error) {
+                                                            logger.module().error('ERROR: [/import/utils module (republish/publish)] indexer error ' + error);
+                                                            return false;
+                                                        }
+
+                                                        if (httpResponse.statusCode === 201) {
+                                                            // console.log('Published ' + recordObj.pid);
+                                                            // logger.module().info('INFO: [/import/utils module (republish/publish)] published ' + sip_uuid + '.');
+                                                            // return false;
+                                                        } else {
+                                                            logger.module().error('ERROR: [/import/utils module (republish/publish)] http error ' + httpResponse.statusCode + '/' + body);
+                                                            return false;
+                                                        }
+                                                    });
+                                                }
+
+                                                return null;
+                                            })
+                                            .catch(function (error) {
+                                                logger.module().fatal('FATAL: [/repository/model module (update_mods)] unable to update mods records ' + error);
+                                                throw 'FATAL: [/repository/model module (update_mods)] unable to update mods records ' + error;
+                                            });
+
+
+                                    }, 2000);
+
+                                    return false;
+                                }
+                            })
+                            .catch(function (error) {
+                                logger.module().fatal('FATAL: [/import/utils module (get_broken_compound_records)] Unable to get broken compound records ' + error);
+                                throw 'FATAL: [/import/utils module (get_broken_compound_records)] Unable to get broken compound records ' + error;
+                            });
+                    }
+                }
+
+                // 3.)
+                async.waterfall([
+                    get_mods,
+                    create_display_record,
+                    get_mets,
+                    construct_parts
+                ], function (error, results) {
+
+                    // console.log('complete: ' + results);
+
+                    if (error) {
+                        logger.module().error('ERROR: [/repository/model module (update_metadata_cron/async.waterfall)] ' + error);
+                        throw 'ERROR: [/repository/model module (update_metadata_cron/async.waterfall)] ' + error;
+                    }
+
+                    logger.module().info('INFO: [/repository/model module (update_metadata_cron/async.waterfall)] records updated');
+                });
+
+            }, 15000);
+        }
+
+        // 2.)
+        async.waterfall([
+            get_broken_compound_records,
+            get_updated_mods_records
+        ], function (error, results) {
+
+            if (error) {
+                logger.module().error('ERROR: [/repository/model module (update_metadata_cron/async.waterfall)] ' + error);
+                throw 'ERROR: [/repository/model module (update_metadata_cron/async.waterfall)] ' + error;
+            }
+
+            logger.module().info('INFO: [/repository/model module (update_metadata_cron/async.waterfall)] records updated');
+        });
+    }
+
+    // 1.)
+    async.waterfall([
+        get_session_token,
+        update_broken_records
+    ], function (error, results) {
+
+        if (error) {
+            logger.module().error('ERROR: [/repository/model module (update_metadata_cron/async.waterfall)] ' + error);
+            throw 'ERROR: [/repository/model module (update_metadata_cron/async.waterfall)] ' + error;
+        }
+
+        logger.module().info('INFO: [/repository/model module (update_metadata_cron/async.waterfall)] records updated');
+    });
+
+    callback({
+        status: 200,
+        message: 'fixing compound object mime types'
     });
 };

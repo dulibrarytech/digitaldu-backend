@@ -2380,7 +2380,7 @@ exports.reset_display_record = function (req, callback) {
 };
 
 /**
- * Deletes repository object
+ * Deletes repository object (DB, Index, and creates archivematica delete request)
  * @param req
  * @param callback
  */
@@ -2484,18 +2484,38 @@ exports.delete_object = function (req, callback) {
         ARCHIVEMATICA.delete_aip_request(obj, function(result) {
 
             if (result.error === false) {
+
                 obj.delete_id = result.data.id;
+
+                DB(REPO_OBJECTS)
+                    .where({
+                        pid: obj.pid
+                    })
+                    .update({
+                        delete_id: obj.delete_id
+                    })
+                    .then(function (data) {
+
+                        if (data === 1) {
+                            LOGGER.module().info('INFO: [/repository/model module (delete_object/delete_aip_request)] delete id ' + obj.delete_id + ' saved');
+                            callback(null, obj);
+                        }
+                    })
+                    .catch(function (error) {
+                        LOGGER.module().fatal('FATAL: [/repository/model module (delete_object)] unable to save delete id ' + error);
+                        throw 'FATAL: [/repository/model module (delete_object)] unable to save delete id ' + error;
+                    });
+
             } else {
                 LOGGER.module().error('ERROR: [/repository/model module (delete_object/delete_aip_request)] unable to create delete aip request');
                 obj.delete_id = false;
             }
 
-            setTimeout(function() {
-                callback(null, obj);
-            }, 5000);
+            // callback(null, obj);
         });
     }
 
+    // TODO: doesn't work
     function delete_aip_request_approval(obj, callback) {
 
         if (obj.is_published === true) {
@@ -2510,6 +2530,7 @@ exports.delete_object = function (req, callback) {
         }
     }
 
+    // TODO: remove
     function delete_dip(obj, callback) {
 
         if (obj.is_published === true) {
@@ -2526,9 +2547,9 @@ exports.delete_object = function (req, callback) {
         check_if_published,
         delete_record,
         unindex_record,
-        delete_aip_request,
-        delete_aip_request_approval
-        // delete_dip
+        delete_aip_request
+        // delete_aip_request_approval // approval not working (nightmare/electron dependency issue)
+        // delete_dip  // occurs automatically when delete is approved in storage service
     ], function (error, results) {
 
         if (error) {
@@ -2539,14 +2560,6 @@ exports.delete_object = function (req, callback) {
         if (results.is_published === true) {
 
             LOGGER.module().error('ERROR: [/repository/model module (delete_object/async.waterfall)] Cannot delete published object. ');
-
-            /*
-            callback({
-                status: 200,
-                message: 'Cannot delete published object.'
-            });
-            */
-
             return false;
         }
 

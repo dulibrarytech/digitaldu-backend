@@ -614,12 +614,14 @@ exports.delete_aip_request_approval = function (obj, callback) {
     const archivematcia_storage_dashboard_packages = CONFIG.archivematicaStorageDashboardPackages;
     const archivematica_storage_dashboard_logout = CONFIG.archivematicaStorageDashboardLogout;
 
+    console.log('#id_' + obj.delete_id + '-status_reason');
+
     AUTOMATE
         .goto(archivematica_storage_dashboard_login)
         .insert('#id_username', archivematica_storage_dashboard_username)
         .insert('#id_password', archivematica_storage_dashboard_password)
         .click('.btn-primary')
-        .wait(7000)
+        .wait(5000)
         .goto(archivematcia_storage_dashboard_packages)
         .wait(3000)
         .insert('#id_' + obj.delete_id + '-status_reason', obj.delete_reason)
@@ -628,8 +630,9 @@ exports.delete_aip_request_approval = function (obj, callback) {
         .wait(3000)
         .goto(archivematica_storage_dashboard_logout)
         .wait(2000)
-        .end()
+        // .end()
         .then(function() {
+            LOGGER.module().info('INFO: [/libs/archivematica lib (delete_aip)] aip deleted (' + obj.pid + ')');
             obj.set_delete = true;
             callback(obj);
         })

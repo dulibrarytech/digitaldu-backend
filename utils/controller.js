@@ -20,9 +20,9 @@
 
 const Utils = require('../utils/model');
 
-exports.get_uuids = function (req, res) {
-    Utils.get_uuids(req, function (data) {
-        res.status(data.status).send(data.data);
+exports.default = function (req, res) {
+    res.status(403).send({
+        info: 'University of Denver Libraries'
     });
 };
 
@@ -46,6 +46,30 @@ exports.batch_update_collection_metadata  = function(req, res) {
 
 ////////////////////////////////////////////////////////
 
+exports.delete_objects = function (req, res) {
+    Utils.delete_objects(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.delete_object = function (req, res) {
+    Utils.delete_object(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.get_sip_uuids = function (req, res) {
+    Utils.get_sip_uuids(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.batch_delete_objects = function (req, res) {
+    Utils.batch_delete_objects(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
 exports.get_archivesspace_ids = function (req, res) {
     Utils.get_archivesspace_ids(req, function (data) {
         res.status(data.status).send(data.data);
@@ -67,17 +91,5 @@ exports.fix_display_records = function (req, res) {
 exports.check_objects = function (req, res) {
     Utils.check_objects(req, function (data) {
         res.status(data.status).send(data.data);
-    });
-};
-
-exports.batch_delete_objects = function (req, res) {
-    Utils.batch_delete_objects(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.default = function (req, res) {
-    res.status(403).send({
-        info: 'University of Denver Libraries'
     });
 };

@@ -2,14 +2,14 @@
 
 # set env var - export API_KEY="<api-key>"
 
-curl -X PUT \
-  'http://localhost:8000/api/admin/v1/repo/metadata/object?api_key='${API_KEY} \
+curl -X POST \
+  'http://localhost:8000/api/admin/v1/utils/objects/delete?api_key='${API_KEY} \
   -H 'Accept: */*' \
   -H 'Accept-Encoding: gzip, deflate' \
   -H 'Cache-Control: no-cache' \
   -H 'Connection: keep-alive' \
-  -H 'Content-Length: 45' \
+  -H 'Content-Length: 184' \
   -H 'Content-Type: application/x-www-form-urlencoded' \
   -H 'Host: localhost:8000' \
   -H 'cache-control: no-cache' \
-  -d sip_uuid=821b5750-74fb-4157-91f1-6dff21b0544c
+  -d 'is_member_of_collection=<pid>&delete_reason=<reason>'

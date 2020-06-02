@@ -23,18 +23,43 @@ const Utils = require('../utils/controller'),
 
 module.exports = function (app) {
 
-    app.route('/api/admin/v1/utils/batch/update/metadata')
+    app.route('/')
+        .get(Utils.default);
+
+    app.get('/robots.txt', function (req, res) {
+        res.type('text/plain');
+        res.send('User-agent: *\nDisallow: /');
+    });
+
+    //--- Updates metadata ---//
+    app.route('/api/admin/v1/utils/batch/update/metadata/object')
         .post(token.verify, Utils.batch_update_metadata);
 
     app.route('/api/admin/v1/utils/batch/update/metadata/collection')
         .post(token.verify, Utils.batch_update_collection_metadata);
 
+    //--- Re-index repository data ---//
     app.route('/api/admin/v1/utils/reindex')
         .post(token.verify, Utils.reindex);
 
-    app.route('/api/admin/v1/utils/uuids')
-        .get(token.verify, Utils.get_uuids);
+    //--- Delete tasks ---//
+    app.route('/api/admin/v1/utils/objects/delete')
+        .post(token.verify, Utils.delete_objects);
 
+    app.route('/api/admin/v1/utils/object/delete')
+        .post(token.verify, Utils.delete_object);
+
+    /*
+    app.route('/api/admin/v1/utils/objects/delete')
+        .post(token.verify, Utils.batch_delete_objects);
+    */
+    // temporary
+    /*
+    app.route('/api/admin/v1/utils/objects/uuids/delete')
+        .post(token.verify, Utils.get_sip_uuids);
+    */
+
+    //--- misc. tasks ---//
     app.route('/api/admin/v1/utils/objects')
         .get(token.verify, Utils.check_objects);
 
@@ -46,15 +71,4 @@ module.exports = function (app) {
 
     app.route('/api/admin/v1/utils/objects/fix-display-records')
         .post(token.verify, Utils.fix_display_records);
-
-    app.route('/api/admin/v1/utils/objects/delete')
-        .post(token.verify, Utils.batch_delete_objects);
-
-    app.route('/')
-        .get(Utils.default);
-
-    app.get('/robots.txt', function (req, res) {
-        res.type('text/plain');
-        res.send('User-agent: *\nDisallow: /');
-    });
 };
