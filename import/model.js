@@ -31,6 +31,39 @@ const CONFIG = require('../config/config'),
     DB = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects';
 
+/** TODO: REMOVE
+ * Gets metadata updates
+ * @param req
+ * @param callback
+ */
+exports.get_metadata_updates = function (req, callback) {
+
+    let session = req.body.session;
+
+    ARCHIVESSPACE.get_record_updates(session, function(result) {
+
+        let updates = JSON.parse(result.updates);
+
+        for (let i=0;i<updates.length;i++) {
+
+            console.log(updates[i].record.jsonmodel_type);
+            console.log(updates[i].record.uri);
+            if (updates[i].record.jsonmodel_type === 'archival_object' || updates[i].record.jsonmodel_type === 'resource') {
+                console.log(updates[i].record.uri);
+                console.log(updates[i].record);
+            }
+        }
+
+        // TODO: save sip uuids to update table?
+
+        callback({
+            status: 200,
+            message: 'record updates',
+            data: JSON.parse(result.updates)
+        });
+    });
+};
+
 /** TODO: refactor to check null fields
  * Gets incomplete records in repo
  * @param req
@@ -63,7 +96,7 @@ exports.get_import_incomplete = function (req, callback) {
         });
 };
 
-/**
+/** TODO: REMOVE
  * Gets daily completed records list
  * @param req
  * @param callback

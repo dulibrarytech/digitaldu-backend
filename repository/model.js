@@ -127,7 +127,7 @@ exports.update_metadata_record = function (req, callback) {
 
             } catch (error) {
                 LOGGER.module().fatal('FATAL: [/repository/model module (update_metadata_record/get_session_token/ARCHIVESSPACE.get_session_token)] session token error ' + error);
-                throw 'FATAL: [/repository/model module (update_metadata_record/get_session_token/ARCHIVESSPACE.get_session_token)] session token error ' + error;
+                return false;
             }
         });
     }
@@ -174,14 +174,63 @@ exports.update_metadata_record = function (req, callback) {
         ARCHIVESSPACE.get_mods(obj.mods_id, obj.session, function (data) {
 
             if (data.error === true) {
+
                 LOGGER.module().error('ERROR: [/repository/model module (update_metadata_record/get_mods)] Unable to get mods');
                 obj.error = true;
+                obj.session = null;
+
+                /*
+                DB(REPO_OBJECTS)
+                    .where({
+                        sip_uuid: obj.sip_uuid
+                    })
+                    .update({
+                        is_updated: 1
+                    })
+                    .then(function(data) {
+
+                        if (data === 1) {
+                            // LOGGER.module().info('INFO: [/utils/model module (batch_update_metadata/reset_update_flags)] reset update flag for record ' + obj.sip_uuid + '.');
+                            callback(null, obj);
+                            return false;
+                        }
+
+                    })
+                    .catch(function(error) {
+                        LOGGER.module().error('ERROR: [/utils/model module (batch_update_metadata/update_metadata_records)] unable to update metadata record ' + obj.sip_uuid + ' ' + error);
+                        throw 'ERROR: [/utils/model module (batch_update_metadata/update_metadata_records)] unable to update metadata record ' + obj.sip_uuid + ' ' + error;
+                    });
+                    */
+
                 callback(null, obj);
                 return false;
             }
 
             if (obj.prev_mods === data.mods) {
+
                 LOGGER.module().info('INFO: no update required for record ' + obj.sip_uuid);
+
+                /*
+                DB(REPO_OBJECTS)
+                    .where({
+                        sip_uuid: obj.sip_uuid
+                    })
+                    .update({
+                        is_updated: 1
+                    })
+                    .then(function(data) {
+
+                        if (data === 1) {
+                            LOGGER.module().info('INFO: [/utils/model module (batch_update_metadata/reset_update_flags)] reset update flag for record ' + obj.sip_uuid + '.');
+                            return false;
+                        }
+
+                    })
+                    .catch(function(error) {
+                        LOGGER.module().error('ERROR: [/utils/model module (batch_update_metadata/update_metadata_records)] unable to update metadata record ' + obj.sip_uuid + ' ' + error);
+                        throw 'ERROR: [/utils/model module (batch_update_metadata/update_metadata_records)] unable to update metadata record ' + obj.sip_uuid + ' ' + error;
+                    });
+                   */
 
                 ARCHIVESSPACE.destroy_session_token(obj.session, function (result) {
 
@@ -312,7 +361,8 @@ exports.update_metadata_record = function (req, callback) {
                             sip_uuid: obj.sip_uuid
                         })
                         .update({
-                            display_record: obj.display_record
+                            display_record: obj.display_record,
+                            is_updated: 1
                         })
                         .then(function (data) {
 
@@ -442,6 +492,12 @@ exports.update_metadata_record = function (req, callback) {
         });
 
     });
+
+    /*
+    callback({
+        status: 201
+    });
+    */
 };
 
 /**

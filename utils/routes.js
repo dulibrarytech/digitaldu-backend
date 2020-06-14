@@ -32,11 +32,15 @@ module.exports = function (app) {
     });
 
     //--- Updates metadata ---//
-    app.route('/api/admin/v1/utils/batch/update/metadata/object')
+    // updates all metadata
+    app.route('/api/admin/v1/utils/batch/update/metadata')
         .post(token.verify, Utils.batch_update_metadata);
 
     app.route('/api/admin/v1/utils/batch/update/metadata/collection')
         .post(token.verify, Utils.batch_update_collection_metadata);
+
+    app.route('/api/v1/utils/metadata/update')
+        .put(token.verify, Utils.update_metadata_record);
 
     //--- Re-index repository data ---//
     app.route('/api/admin/v1/utils/reindex')
@@ -71,4 +75,7 @@ module.exports = function (app) {
 
     app.route('/api/admin/v1/utils/objects/fix-display-records')
         .post(token.verify, Utils.fix_display_records);
+
+    app.route('/api/admin/v1/utils/confirm-dip')
+        .get(token.verify, Utils.confirm_dip_file);
 };

@@ -24,7 +24,7 @@ const ASYNC = require('async'),
     METS = require('../libs/mets'),
     LOGGER = require('../libs/log4');
 
-exports.delete_dip = function (data, callback) {
+exports.confirm_dip = function (data, callback) {
 
     function get_dip_path(callback) {
 
@@ -105,6 +105,7 @@ exports.delete_dip = function (data, callback) {
                         return false;
                     }
 
+                    /*
                     DURACLOUD.delete_dip_file(file, function(result) {
 
                         if (result.error === true) {
@@ -113,6 +114,7 @@ exports.delete_dip = function (data, callback) {
                         }
 
                     });
+                    */
                 });
             }
 

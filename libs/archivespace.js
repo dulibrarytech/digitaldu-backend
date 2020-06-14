@@ -98,7 +98,7 @@ exports.get_mods = function (id, session, callback) {
         headers: {
             'X-ArchivesSpace-Session': session
         },
-        timeout: 45000
+        timeout: 55000
     }, function(error, httpResponse, body) {
 
         if (error) {
@@ -205,7 +205,7 @@ exports.get_session_token = function (callback) {
         headers: {
             'Content-Type': 'application/json'
         },
-        timeout: 45000
+        timeout: 55000
     }, function(error, httpResponse, body) {
 
         if (error) {

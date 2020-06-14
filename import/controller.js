@@ -140,3 +140,9 @@ exports.poll_fail_queue = function (req, res) {
         res.status(data.status).send(data.data);
     });
 };
+
+exports.get_metadata_updates = function (req, res) {
+    MODEL.get_metadata_updates(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};

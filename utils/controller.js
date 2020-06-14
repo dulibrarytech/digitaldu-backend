@@ -39,7 +39,13 @@ exports.batch_update_metadata = function(req, res) {
 };
 
 exports.batch_update_collection_metadata  = function(req, res) {
-    Utils.batch_update_collection_metadata (req, function(data) {
+    Utils.batch_update_collection_metadata(req, function(data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.update_metadata_record = function(req, res) {
+    Utils.update_metadata_record(req, function(data) {
         res.status(data.status).send(data.data);
     });
 };
@@ -90,6 +96,12 @@ exports.fix_display_records = function (req, res) {
 
 exports.check_objects = function (req, res) {
     Utils.check_objects(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.confirm_dip_file = function (req, res) {
+    Utils.confirm_dip_file(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };

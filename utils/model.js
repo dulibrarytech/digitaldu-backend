@@ -29,6 +29,7 @@ const config = require('../config/config'),
     modslibdisplay = require('../libs/display-record'),
     metslib = require('../libs/mets'),
     importlib = require('../libs/transfer-ingest'),
+    dip = require('../libs/delete-dip'),
     logger = require('../libs/log4'),
     knex = require('../config/db')(),
     knexQ = require('knex')({
@@ -48,17 +49,17 @@ const config = require('../config/config'),
  * @param req
  * @param callback
  */
-exports.get_sip_uuids = function(req, callback) {
+exports.get_sip_uuids = function (req, callback) {
 
     knexQ('broken_tiffs')
         .where({
             is_deleted: 0
         })
-        .then(function(data) {
+        .then(function (data) {
 
             console.log(data.length);
 
-            let timer = setInterval(function() {
+            let timer = setInterval(function () {
 
                 if (data.length === 0) {
                     clearInterval(timer);
@@ -89,7 +90,7 @@ exports.get_sip_uuids = function(req, callback) {
                             .update({
                                 is_deleted: 1
                             })
-                            .then(function(data) {
+                            .then(function (data) {
 
                                 if (data === 1) {
                                     logger.module().info('INFO: [/utils/model module (delete_object) ' + record.sip_uuid + '. delete complete.');
@@ -97,7 +98,7 @@ exports.get_sip_uuids = function(req, callback) {
                                 }
 
                             })
-                            .catch(function(error) {
+                            .catch(function (error) {
                                 logger.module().error('ERROR: [/utils/model module (delete_object)] unable to delete object ' + record.sip_uuid + ' ' + error);
                                 throw 'ERROR: [/utils/model module (delete_object)] unable to delete object ' + record.sip_uuid + ' ' + error;
                             });
@@ -112,7 +113,7 @@ exports.get_sip_uuids = function(req, callback) {
 
             }, 45000);
         })
-        .catch(function(error) {
+        .catch(function (error) {
             logger.module().error('ERROR: [/repository/model module (batch_delete_objects/get_sip_uuids)] Unable to get uuids ' + error);
         });
 
@@ -128,7 +129,7 @@ exports.get_sip_uuids = function(req, callback) {
  * @param req
  * @param callback
  */
-exports.delete_objects = function(req, callback) {
+exports.delete_objects = function (req, callback) {
 
     let is_member_of_collection = req.body.is_member_of_collection;
     let delete_reason = req.body.delete_reason;
@@ -139,9 +140,9 @@ exports.delete_objects = function(req, callback) {
         .where({
             is_member_of_collection: is_member_of_collection
         })
-        .then(function(data) {
+        .then(function (data) {
 
-            let timer = setInterval(function() {
+            let timer = setInterval(function () {
 
                 if (data.length === 0) {
                     clearInterval(timer);
@@ -176,7 +177,7 @@ exports.delete_objects = function(req, callback) {
 
             }, 45000); // nightmare/electron needs time to process each delete process
         })
-        .catch(function(error) {
+        .catch(function (error) {
             logger.module().error('ERROR: [/repository/model module (delete_objects)] Unable to get delete ids ' + error);
         });
 
@@ -192,7 +193,7 @@ exports.delete_objects = function(req, callback) {
  * @param req
  * @param callback
  */
-exports.delete_object = function(req, callback) {
+exports.delete_object = function (req, callback) {
 
     if (req.body.pid === undefined || req.body.delete_reason === undefined) {
 
@@ -213,7 +214,7 @@ exports.delete_object = function(req, callback) {
         obj.pid = pid;
         obj.delete_reason = delete_reason;
 
-        archivematica.delete_aip_request(obj, function(result) {
+        archivematica.delete_aip_request(obj, function (result) {
 
             if (result.error === false) {
                 obj.delete_id = result.data.id;
@@ -241,7 +242,7 @@ exports.delete_object = function(req, callback) {
                 obj.delete_id = false;
             }
 
-            setTimeout(function() {
+            setTimeout(function () {
                 callback(null, obj);
             }, 5000);
         });
@@ -253,7 +254,7 @@ exports.delete_object = function(req, callback) {
         console.log('Delete id: ', obj.delete_id);
 
         if (obj.delete_id !== false) {
-            archivematica.delete_aip_request_approval(obj, function(result) {
+            archivematica.delete_aip_request_approval(obj, function (result) {
                 console.log(result);
                 callback(null, obj);
             });
@@ -265,10 +266,9 @@ exports.delete_object = function(req, callback) {
     async.waterfall([
         delete_aip_request,
         delete_aip_request_approval
-    ], function(error, results) {
+    ], function (error, results) {
 
         console.log('results: ', results);
-        // delete require.cache[require.resolve('nightmare')];
         DECACHE('nightmare');
 
         if (error) {
@@ -286,7 +286,8 @@ exports.delete_object = function(req, callback) {
     });
 };
 
-/**
+/** TODO: adjust form collections updates from UI i.e. account for pid
+ * // TODO: move to import module
  * Batch updates all or a collection's metadata records in the repository via ArchivesSpace
  * @param req
  * @param callback
@@ -304,6 +305,9 @@ exports.batch_update_metadata = function (req, callback) {
         let obj = {};
         let whereObj = {};
 
+        // size of collection
+        obj.size = req.query.size;
+
         if (pid !== undefined) {
             whereObj.is_member_of_collection = pid;
         }
@@ -316,7 +320,7 @@ exports.batch_update_metadata = function (req, callback) {
             .update({
                 is_updated: 0
             })
-            .then(function(data) {
+            .then(function (data) {
 
                 if (data > 0) {
                     obj.total_records = data;
@@ -325,97 +329,255 @@ exports.batch_update_metadata = function (req, callback) {
                     callback(null, obj);
                 }
             })
-            .catch(function(error) {
+            .catch(function (error) {
                 logger.module().error('ERROR: [/utils/model module (batch_update_metadata/reset_update_flags/async.waterfall)] ' + error);
                 throw 'ERROR: [/utils/model module (batch_update_metadata/reset_update_flags/async.waterfall)] ' + error;
             });
     }
 
+    function get_token(obj, callback) {
+
+        archivespace.get_session_token(function (response) {
+
+            let result = response.data,
+                token;
+
+            try {
+
+                token = JSON.parse(result);
+
+                if (token.session === undefined) {
+                    logger.module().error('ERROR: [/repository/model module (update_metadata_record/get_session_token/ARCHIVESSPACE.get_session_token)] session token is undefined');
+                    obj.session = null;
+                    callback(null, obj);
+                    return false;
+                }
+
+                if (token.error === true) {
+                    logger.module().error('ERROR: [/repository/model module (update_metadata_record/get_session_token/ARCHIVESSPACE.get_session_token)] session token error' + token.error_message);
+                    obj.session = null;
+                    callback(null, obj);
+                    return false;
+                }
+
+                obj.session = token.session;
+                callback(null, obj);
+                return false;
+
+            } catch (error) {
+                logger.module().fatal('FATAL: [/repository/model module (update_metadata_record/get_session_token/ARCHIVESSPACE.get_session_token)] session token error ' + error);
+                obj.session = null;
+                callback(null, obj);
+                return false;
+            }
+        });
+    }
+
+    function get_collection_counts(obj, callback) {
+
+        knex(REPO_OBJECTS)
+            .select('sip_uuid')
+            .where({
+                object_type: 'collection'
+            })
+            .then(async function (data) {
+
+                let counts = [];
+
+                for (let i = 0; i < data.length; i++) {
+
+                    counts.push({
+                        'sip_uuid': data[i].sip_uuid, 'count': await knex(REPO_OBJECTS)
+                            .count('id as count', 'sip_uuid')
+                            .where({
+                                is_member_of_collection: data[i].sip_uuid,
+                                is_active: 1,
+                                object_type: 'object',
+                                is_updated: 0
+                            })
+                    });
+                }
+
+                let collections = counts.filter(function (value) {
+
+                    let object_count = value.count.pop().count;
+                    let max_count;
+                    let min_count;
+                    let object_timer = 8000; // 8 sec per object
+
+                    switch (obj.size) {
+                        case 's':
+                            max_count = 600;
+                            min_count = 0;
+                            break;
+                        case 'm':
+                            max_count = 1300;
+                            min_count = 600;
+                            break;
+                        case 'l':
+                            max_count = 5000;
+                            min_count = 1300;
+                            break;
+                    }
+
+                    if (object_count < max_count && object_count > min_count) {
+                        delete value.count;
+                        value.collection_timer = object_count * object_timer;
+                        return value;
+                    }
+                });
+
+                let collection_timers = [];
+
+                for (let i=0;i<collections.length;i++) {
+                    collection_timers.push(collections[i].collection_timer);
+                    delete collections[i].collection_timer;
+                }
+
+                obj.collection_timer = Math.max.apply(Math, collection_timers);
+                obj.object_timer = 8000;
+                obj.collections = collections;
+                callback(null, obj);
+            });
+
+        return false;
+    }
+
     function update_metadata_records(obj, callback) {
 
-        if (obj.reset === false) {
+        if (obj.reset === false || obj.session === null) {
             callback(null, obj);
             return false;
         }
 
-        let whereObj = {};
+        let collection_timer = obj.collection_timer;
+        let object_timer = obj.object_timer;
+        let outer_timer;
 
-        if (pid !== undefined) {
-            whereObj.is_member_of_collection = pid;
-        }
-
-        whereObj.is_updated = 0;
-        whereObj.object_type = 'object';
-
-        let timer = setInterval(function() {
+        const reset_update_flag = function (sip_uuid) {
 
             knex(REPO_OBJECTS)
-                .select('sip_uuid')
-                .where(whereObj)
-                .limit(1)
-                .then(function(data) {
+                .where({
+                    sip_uuid: sip_uuid
+                })
+                .update({
+                    is_updated: 1
+                })
+                .then(function (data) {
 
-                    if (data.length === 0) {
-                        logger.module().info('INFO: [/utils/model module (batch_update_metadata/update_metadata_records)] metadata updates complete');
-                        clearInterval(timer);
-                        callback(null, obj);
+                    if (data === 1) {
                         return false;
                     }
 
-                    let sip_uuid = data[0].sip_uuid;
-
-                    request.put({
-                        url: config.apiUrl + '/api/admin/v1/repo/metadata?api_key=' + config.apiKey,
-                        form: {
-                            'sip_uuid': sip_uuid
-                        }
-                    }, function (error, httpResponse, body) {
-
-                        if (error) {
-                            logger.module().error('ERROR: [/utils/model module (batch_update_metadata/update_metadata_records)] unable to update record ' + error);
-                            return false;
-                        }
-
-                        if (httpResponse.statusCode === 201) {
-
-                            knex(REPO_OBJECTS)
-                                .where({
-                                    sip_uuid: sip_uuid
-                                })
-                                .update({
-                                    is_updated: 1
-                                })
-                                .then(function(data) {
-
-                                    if (data === 1) {
-                                        logger.module().info('INFO: [/utils/model module (batch_update_metadata/reset_update_flags)] reset update flag for record ' + sip_uuid + '. update complete.');
-                                        return false;
-                                    }
-
-                                })
-                                .catch(function(error) {
-                                    logger.module().error('ERROR: [/utils/model module (batch_update_metadata/update_metadata_records)] unable to update metadata record ' + sip_uuid + ' ' + error);
-                                    throw 'ERROR: [/utils/model module (batch_update_metadata/update_metadata_records)] unable to update metadata record ' + sip_uuid + ' ' + error;
-                                });
-
-                            return false;
-
-                        } else {
-                            logger.module().error('ERROR: [/utils/model module (batch_update_metadata/update_metadata_records)] http error ' + httpResponse.statusCode + '/' + body);
-                            return false;
-                        }
-                    });
+                    return null;
                 })
-                .catch(function(error) {
-                    logger.module().error('ERROR: [/utils/model module (batch_update_metadata/update_metadata_records)] unable to get sip_uuid ' + error);
-                    throw 'ERROR: [/utils/model module (batch_update_metadata/update_metadata_records)] unable to get sip_uuid ' + error;
+                .catch(function (error) {
+                    logger.module().error('ERROR: [/utils/model module (batch_update_metadata/update_metadata_records)] unable to update metadata record ' + obj.sip_uuid + ' ' + error);
+                    throw 'ERROR: [/utils/model module (batch_update_metadata/update_metadata_records)] unable to update metadata record ' + obj.sip_uuid + ' ' + error;
                 });
+        };
 
-        }, 14000);
+        const request_update = function (obj, sip_uuid) {
+
+            request.put({
+                url: config.apiUrl + '/api/v1/utils/metadata/update?api_key=' + config.apiKey,
+                form: {
+                    'sip_uuid': sip_uuid,
+                    'session': obj.session
+                },
+                timeout: 55000
+            }, function (error, httpResponse, body) {
+
+                if (error) {
+                    logger.module().error('ERROR: [/utils/model module (batch_update_metadata/update_metadata_records)] unable to update record ' + error);
+                    return false;
+                }
+
+                if (httpResponse.statusCode === 201) {
+                    return false;
+
+                } else {
+                    logger.module().error('ERROR: [/utils/model module (batch_update_metadata/update_metadata_records)] http error ' + httpResponse.statusCode + '/' + body);
+                    return false;
+                }
+            });
+        };
+
+        // begin processing immediately
+        console.log('collection timer: ', collection_timer);
+        collections();
+
+        // processes updates for objects in collections - reference passed into interval function
+        function collections() {
+
+            let collection = obj.collections.pop();
+            let inner_timer;
+
+            console.log('obj.collections total count: ', obj.collections.length);
+
+            if (obj.collections.length === 0) {
+                logger.module().info('INFO: [/utils/model module (batch_update_metadata/update_metadata_records)] metadata updates complete');
+                clearInterval(outer_timer);
+                callback(null, obj);
+                return false;
+            }
+
+            // TODO: update collection (resource) metadata
+            // request_update(obj, collection.sip_uuid);
+            reset_update_flag(collection.sip_uuid);
+
+            // processes objects - passed into interval function
+            function objects() {
+
+                if (obj.collections.length === 0) {
+                    clearInterval(outer_timer);
+                    clearInterval(inner_timer);
+                    return false;
+                }
+
+                knex(REPO_OBJECTS)
+                    .select('sip_uuid')
+                    .where({
+                        is_member_of_collection: collection.sip_uuid,
+                        is_active: 1,
+                        object_type: 'object',
+                        is_updated: 0
+                    })
+                    .limit(1)
+                    // .orderBy('id', 'desc')
+                    .then(function (data) {
+
+                        if (data.length === 0) {
+                            console.log('done.');
+                            clearInterval(inner_timer);
+                            return false;
+                        }
+
+                        let sip_uuid = data[0].sip_uuid;
+                        request_update(obj, sip_uuid);
+                        reset_update_flag(sip_uuid);
+                        return null;
+                    })
+                    .catch(function (error) {
+                        logger.module().error('ERROR: [/utils/model module (batch_update_metadata/update_metadata_records)] unable to get sip_uuid ' + error);
+                        throw 'ERROR: [/utils/model module (batch_update_metadata/update_metadata_records)] unable to get sip_uuid ' + error;
+                    });
+
+                return false; // end objects
+            }
+
+            inner_timer = setInterval(objects, object_timer);
+
+            return false; // end collections
+        }
+
+        outer_timer = setInterval(collections, collection_timer);
     }
 
     async.waterfall([
         reset_update_flags,
+        get_token,
+        get_collection_counts,
         update_metadata_records
     ], function (error, results) {
 
@@ -424,7 +586,20 @@ exports.batch_update_metadata = function (req, callback) {
             throw 'ERROR: [/utils/model module (batch_update_metadata/async.waterfall)] ' + error;
         }
 
-        logger.module().info('INFO: [/utils/model module (batch_update_metadata/async.waterfall)] ' + results.total_records + ' metadata records updated');
+        if (results.session !== null) {
+
+            archivespace.destroy_session_token(results.session, function (result) {
+
+                if (result.error === false) {
+                    logger.module().info('INFO: ArchivesSpace session terminated. ' + result.data);
+                } else {
+                    logger.module().error('ERROR: [/utils/model module (update_metadata_record/get_mods)] Unable to terminate session');
+                }
+
+            });
+        }
+
+        logger.module().info('INFO: [/utils/model module (batch_update_metadata/async.waterfall)] metadata records updated');
     });
 
     callback({
@@ -434,6 +609,331 @@ exports.batch_update_metadata = function (req, callback) {
 };
 
 /**
+ * updates single metadata record
+ * @param req
+ * @param callback
+ */
+exports.update_metadata_record = function (req, callback) {
+
+    if (req.body.sip_uuid === undefined) {
+
+        callback({
+            status: 400,
+            message: 'Bad Request.'
+        });
+
+        return false;
+    }
+
+    let sip_uuid = req.body.sip_uuid;
+    let session = req.body.session;
+
+    // 1.)
+    function get_mods_id(callback) {
+
+        let obj = {};
+        obj.sip_uuid = sip_uuid;
+        obj.session = session;
+
+        if (obj.session === null) {
+            callback(null, obj);
+            return false;
+        }
+
+        knex(REPO_OBJECTS)
+            .select('mods_id', 'mods')
+            .where({
+                sip_uuid: obj.sip_uuid,
+                object_type: 'object'
+            })
+            .then(function (data) {
+
+                if (data.length === 0) {
+                    logger.module().info('INFO: no record found for ' + obj.sip_uuid);
+                    return false;
+                }
+
+                obj.mods_id = data[0].mods_id;
+                obj.prev_mods = data[0].mods;
+                callback(null, obj);
+            })
+            .catch(function (error) {
+                logger.module().fatal('FATAL: [/repository/model module (update_metadata_record/get_session_token/ARCHIVESSPACE.get_session_token)] session token error ' + error);
+                throw 'FATAL: [/repository/model module (update_metadata_record/get_session_token/ARCHIVESSPACE.get_session_token)] session token error ' + error;
+            });
+    }
+
+    // 2.)
+    function get_mods(obj, callback) {
+
+        if (obj.session === null) {
+            callback(null, obj);
+            return false;
+        }
+
+        archivespace.get_mods(obj.mods_id, obj.session, function (data) {
+
+            if (data.error === true) {
+
+                logger.module().error('ERROR: [/repository/model module (update_metadata_record/get_mods)] Unable to get mods');
+
+                obj.error = true;
+                obj.session = null;
+
+                callback(null, obj);
+                return false;
+            }
+
+            if (obj.prev_mods === data.mods) {
+
+                logger.module().info('INFO: no update required for record ' + obj.sip_uuid);
+
+                obj.session = null;
+                callback(null, obj);
+                return false;
+            }
+
+            obj.mods = data.mods;
+            callback(null, obj);
+        });
+    }
+
+    // 3.)
+    function update_mods(obj, callback) {
+
+        if (obj.session === null || obj.error === true) {
+            callback(null, obj);
+            return false;
+        }
+
+        knex(REPO_OBJECTS)
+            .where({
+                sip_uuid: obj.sip_uuid
+            })
+            .update({
+                mods: obj.mods
+            })
+            .then(function (data) {
+
+                if (data === 1) {
+                    logger.module().info('INFO: Record ' + obj.sip_uuid + ' updated.');
+                    // TODO: add to db for reporting?
+                    obj.updated = true;
+                } else {
+                    obj.updated = false;
+                }
+
+                callback(null, obj);
+            })
+            .catch(function (error) {
+                logger.module().fatal('FATAL: [/repository/model module (update_metadata_record/update_mods)] unable to update mods ' + error);
+                throw 'FATAL: [/repository/model module (update_metadata_record/update_mods)] unable to update mods ' + error;
+            });
+    }
+
+    // 4.)
+    function update_display_record(obj, callback) {
+
+        if (obj.session === null || obj.updated === false || obj.error === true) {
+            callback(null, obj);
+            return false;
+        }
+
+        knex(REPO_OBJECTS)
+            .select('*')
+            .where({
+                mods_id: obj.mods_id,
+                is_active: 1
+            })
+            .then(function (data) {
+
+                if (data.length === 0) {
+                    logger.module().info('INFO: [/repository/model module (update_metadata_record/update_display_record)] unable to update display record');
+                    return false;
+                }
+
+                let recordObj = {};
+                recordObj.pid = data[0].pid;
+                recordObj.is_member_of_collection = data[0].is_member_of_collection;
+                recordObj.object_type = data[0].object_type;
+                recordObj.sip_uuid = data[0].sip_uuid;
+                recordObj.handle = data[0].handle;
+                recordObj.entry_id = data[0].entry_id;
+                recordObj.thumbnail = data[0].thumbnail;
+                recordObj.object = data[0].file_name;
+                recordObj.mime_type = data[0].mime_type;
+                recordObj.is_published = data[0].is_published;
+                recordObj.mods = obj.mods;
+
+                modslibdisplay.create_display_record(recordObj, function (result) {
+
+                    let tmp = JSON.parse(result);
+
+                    if (tmp.is_compound === 1 && tmp.object_type !== 'collection') {
+
+                        let currentRecord = JSON.parse(data[0].display_record),
+                            currentCompoundParts = currentRecord.display_record.parts;
+
+                        let updatedParts = tmp.display_record.parts.filter(function (elem) {
+
+                            for (let i = 0; i < currentCompoundParts.length; i++) {
+
+                                if (elem.title === currentCompoundParts[i].title) {
+                                    elem.caption = currentCompoundParts[i].caption;
+                                    elem.object = currentCompoundParts[i].object;
+                                    elem.thumbnail = currentCompoundParts[i].thumbnail;
+                                    return elem;
+                                }
+                            }
+
+                        });
+
+                        delete tmp.display_record.parts;
+                        delete tmp.compound;
+
+                        if (currentCompoundParts !== undefined) {
+                            tmp.display_record.parts = updatedParts;
+                            tmp.compound = updatedParts;
+                        }
+
+                        obj.display_record = JSON.stringify(tmp);
+
+                    } else if (tmp.is_compound === 0 || tmp.object_type === 'collection') {
+
+                        obj.display_record = result;
+
+                    }
+
+                    knex(REPO_OBJECTS)
+                        .where({
+                            sip_uuid: obj.sip_uuid
+                        })
+                        .update({
+                            display_record: obj.display_record
+                        })
+                        .then(function (data) {
+
+                            if (data === 1) {
+                                logger.module().info('INFO: [/utils/model module (update_metadata_record/update_display_record)] ' + obj.sip_uuid + ' display record updated');
+                                obj.is_published = recordObj.is_published;
+                                callback(null, obj);
+                            } else {
+                                obj.updated = false;
+                                callback(null, obj);
+                            }
+
+                            return null;
+                        })
+                        .catch(function (error) {
+                            logger.module().error('ERROR: [/repository/model module (update_metadata_record/index_admin_record)] indexer error ' + error);
+                            obj.updated = false;
+                            callback(null, obj);
+                        });
+                });
+
+                return null;
+            })
+            .catch(function (error) {
+                logger.module().fatal('FATAL: [/repository/model module (update_metadata_cron/update_records/update_mods)] Unable to get mods update records ' + error);
+                throw 'FATAL: [/repository/model module (update_metadata_cron/update_records/update_mods)] Unable to get mods update records ' + error;
+            });
+    }
+
+    // 5.)
+    function update_admin_index(obj, callback) {
+
+        if (obj.session === null || obj.updated === false || obj.error === true) {
+            callback(null, obj);
+            return false;
+        }
+
+        // update admin index
+        request.post({
+            url: config.apiUrl + '/api/admin/v1/indexer?api_key=' + config.apiKey,
+            form: {
+                'sip_uuid': obj.sip_uuid
+            }
+        }, function (error, httpResponse, body) {
+
+            if (error) {
+                logger.module().error('ERROR: [/repository/model module (update_metadata_record/index_admin_record)] indexer error ' + error);
+                return false;
+            }
+
+            if (httpResponse.statusCode === 200) {
+                logger.module().info('INFO: [/utils/model module (update_metadata_record/update_display_record)] ' + obj.sip_uuid + ' indexed');
+                obj.admin_index = true;
+                callback(null, obj);
+                return false;
+            } else {
+                logger.module().error('ERROR: [/repository/model module (update_metadata_record/index_admin_record)] http error ' + httpResponse.statusCode + '/' + body);
+                obj.admin_index = false;
+                callback(null, obj);
+                return false;
+            }
+        });
+    }
+
+    // 6.)
+    function update_public_index(obj, callback) {
+
+        if (obj.session === null || obj.updated === false || obj.admin_index === false || obj.error === true) {
+            callback(null, obj);
+            return false;
+        }
+
+        if (obj.is_published === 1) {
+
+            // update public index
+            request.post({
+                url: config.apiUrl + '/api/admin/v1/indexer?api_key=' + config.apiKey,
+                form: {
+                    'sip_uuid': obj.sip_uuid,
+                    'publish': true
+                }
+            }, function (error, httpResponse, body) {
+
+                if (error) {
+                    logger.module().error('ERROR: [/utils/model module (update_metadata_cron/update_records/update_mods)] indexer error ' + error);
+                    return false;
+                }
+
+                if (httpResponse.statusCode === 200) {
+                    logger.module().info('INFO: [/utils/model module (update_metadata_record/update_display_record)] ' + obj.sip_uuid + ' published.');
+                    obj.public_index = true;
+                    callback(null, obj);
+                    return false;
+                } else {
+                    logger.module().error('ERROR: [/repository/model module (update_metadata_cron/update_records/update_mods)] http error ' + httpResponse.statusCode + '/' + body);
+                    obj.public_index = false;
+                    callback(null, obj);
+                    return false;
+                }
+            });
+        }
+    }
+
+    async.waterfall([
+        get_mods_id,
+        get_mods,
+        update_mods,
+        update_display_record,
+        update_admin_index,
+        update_public_index
+    ], function (error, results) {
+
+        if (error) {
+            logger.module().error('ERROR: [/repository/model module (create_collection_object/async.waterfall)] ' + error);
+        }
+
+    });
+
+    callback({
+        status: 201
+    });
+};
+
+/** TODO:
  * Batch updates collection metadata records in the repository via ArchivesSpace
  * @param req
  * @param callback
@@ -453,7 +953,7 @@ exports.batch_update_collection_metadata = function (req, callback) {
             .update({
                 is_updated: 0
             })
-            .then(function(data) {
+            .then(function (data) {
 
                 if (data > 0) {
                     obj.total_records = data;
@@ -462,7 +962,7 @@ exports.batch_update_collection_metadata = function (req, callback) {
                     callback(null, obj);
                 }
             })
-            .catch(function(error) {
+            .catch(function (error) {
                 logger.module().error('ERROR: [/utils/model module (batch_update_collection_metadata/reset_update_flags/async.waterfall)] ' + error);
                 throw 'ERROR: [/utils/model module (batch_update_collection_metadata/reset_update_flags/async.waterfall)] ' + error;
             });
@@ -480,13 +980,13 @@ exports.batch_update_collection_metadata = function (req, callback) {
         whereObj.is_updated = 0;
         whereObj.object_type = 'collection';
 
-        let timer = setInterval(function() {
+        let timer = setInterval(function () {
 
             knex(REPO_OBJECTS)
                 .select('sip_uuid')
                 .where(whereObj)
                 .limit(1)
-                .then(function(data) {
+                .then(function (data) {
 
                     if (data.length === 0) {
                         logger.module().info('INFO: [/utils/model module (batch_update_collection_metadata/update_metadata_records)] metadata updates complete');
@@ -518,7 +1018,7 @@ exports.batch_update_collection_metadata = function (req, callback) {
                                 .update({
                                     is_updated: 1
                                 })
-                                .then(function(data) {
+                                .then(function (data) {
 
                                     if (data === 1) {
                                         logger.module().info('INFO: [/utils/model module (batch_update_collection_metadata/reset_update_flags)] reset update flag for collection record ' + sip_uuid + '. update complete.');
@@ -526,7 +1026,7 @@ exports.batch_update_collection_metadata = function (req, callback) {
                                     }
 
                                 })
-                                .catch(function(error) {
+                                .catch(function (error) {
                                     logger.module().error('ERROR: [/utils/model module (batch_update_collection_metadata/update_metadata_records)] unable to update metadata record ' + sip_uuid + ' ' + error);
                                     throw 'ERROR: [/utils/model module (batch_update_collection_metadata/update_metadata_records)] unable to update metadata record ' + sip_uuid + ' ' + error;
                                 });
@@ -539,7 +1039,7 @@ exports.batch_update_collection_metadata = function (req, callback) {
                         }
                     });
                 })
-                .catch(function(error) {
+                .catch(function (error) {
                     logger.module().error('ERROR: [/utils/model module (batch_update_collection_metadata/update_metadata_records)] unable to get sip_uuid ' + error);
                     throw 'ERROR: [/utils/model module (batch_update_collection_metadata/update_metadata_records)] unable to get sip_uuid ' + error;
                 });
@@ -566,6 +1066,17 @@ exports.batch_update_collection_metadata = function (req, callback) {
     });
 };
 
+
+exports.confirm_dip_file = function(req, callback) {
+
+    let obj = {};
+    obj.pid = req.query.pid;
+    dip.confirm_dip(obj, function(result) {
+        console.log(result);
+    })
+
+};
+
 /**
  * reindexes all repository records
  * @param req
@@ -573,7 +1084,7 @@ exports.batch_update_collection_metadata = function (req, callback) {
  */
 exports.reindex = function (req, callback) {
 
-    function delete_index (callback) {
+    function delete_index(callback) {
 
         let obj = {};
         obj.delete_indexes = [config.elasticSearchBackIndex, config.elasticSearchFrontIndex];
@@ -616,7 +1127,7 @@ exports.reindex = function (req, callback) {
         }, 500);
     }
 
-    function create_index (obj, callback) {
+    function create_index(obj, callback) {
 
         if (obj.delete_indexes.length !== 0) {
             obj.delete = false;
@@ -664,7 +1175,7 @@ exports.reindex = function (req, callback) {
         }, 5000);
     }
 
-    function index (obj, callback) {
+    function index(obj, callback) {
 
         if (obj.create_indexes.length !== 0) {
             obj.create = false;
@@ -672,7 +1183,7 @@ exports.reindex = function (req, callback) {
             return false;
         }
 
-        function reindex (index_name) {
+        function reindex(index_name) {
 
             request.post({
                 url: config.apiUrl + '/api/admin/v1/indexer/all?api_key=' + config.apiKey,
@@ -702,9 +1213,9 @@ exports.reindex = function (req, callback) {
         reindex(config.elasticSearchBackIndex);
     }
 
-    function monitor_index_progress (obj, callback) {
+    function monitor_index_progress(obj, callback) {
 
-        function monitor () {
+        function monitor() {
 
             knex(REPO_OBJECTS)
                 .count('is_indexed as is_indexed_count')
@@ -771,7 +1282,7 @@ exports.reindex = function (req, callback) {
  */
 const republish = function () {
 
-    function publish (sip_uuid) {
+    function publish(sip_uuid) {
 
         request.post({
             url: config.apiUrl + '/api/admin/v1/repo/publish?api_key=' + config.apiKey,
@@ -839,7 +1350,7 @@ exports.batch_delete_objects = function (req, callback) {
         let obj = {};
 
         knexQ('broken_tiffs')
-            .then(function(data) {
+            .then(function (data) {
                 console.log(data.length);
                 if (data.length > 0) {
                     obj.sip_uuids = data;
@@ -847,7 +1358,7 @@ exports.batch_delete_objects = function (req, callback) {
                 }
 
             })
-            .catch(function(error) {
+            .catch(function (error) {
                 logger.module().error('ERROR: [/repository/model module (batch_delete_objects/get_sip_uuids)] Unable to get uuids ' + error);
             });
     }
@@ -856,7 +1367,7 @@ exports.batch_delete_objects = function (req, callback) {
 
         obj.sip_uuid_index = [];
 
-        let timer = setInterval(function() {
+        let timer = setInterval(function () {
 
             if (obj.sip_uuids.length === 0) {
                 console.log('complete.');
@@ -884,36 +1395,36 @@ exports.batch_delete_objects = function (req, callback) {
                     is_active: 0,
                     is_published: 0
                 })
-                .then(function(data) {
+                .then(function (data) {
                     console.log(data);
                     logger.module().info('INFO: [/repository/model module (update_metadata_cron/async.waterfall)] ' + record.sip_uuid + ' set to inactive in database ');
                 })
-                .catch(function(error) {
+                .catch(function (error) {
                     logger.module().error('ERROR: [/repository/model module (batch_delete_objects/get_sip_uuids)] Unable to get uuids ' + error);
 
                 });
 
             /*
-            knex(REPO_OBJECTS)
-                .where({
-                    sip_uuid: record.sip_uuid
-                })
-                .del()
-                .then(function(data) {
-                    console.log(data);
-                    logger.module().info('INFO: [/repository/model module (update_metadata_cron/async.waterfall)] ' + record.sip_uuid + ' removed from database ');
-                })
-                .catch(function(error) {
-                    console.log(error);
-                });
-                */
+             knex(REPO_OBJECTS)
+             .where({
+             sip_uuid: record.sip_uuid
+             })
+             .del()
+             .then(function(data) {
+             console.log(data);
+             logger.module().info('INFO: [/repository/model module (update_metadata_cron/async.waterfall)] ' + record.sip_uuid + ' removed from database ');
+             })
+             .catch(function(error) {
+             console.log(error);
+             });
+             */
 
         }, 550);
     }
 
     function delete_from_index(obj, callback) {
 
-        let timer = setInterval(function() {
+        let timer = setInterval(function () {
 
             if (obj.sip_uuid_index.length === 0) {
                 console.log('complete.');
@@ -1034,7 +1545,7 @@ exports.check_objects = function (req, callback) {
                 if (mods.parts.length > 1) {
 
                     let partsArr = [];
-                    for (let i=0;i<mods.parts.length;i++) {
+                    for (let i = 0; i < mods.parts.length; i++) {
                         partsArr.push(mods.parts[i].title);
                     }
 
@@ -1306,7 +1817,7 @@ exports.fix_display_records = function (req, callback) {
 
                         let tmp = JSON.parse(body);
 
-                        for (let i=0;i<tmp._source.display_record.parts.length;i++) {
+                        for (let i = 0; i < tmp._source.display_record.parts.length; i++) {
 
                             if (tmp._source.display_record.parts[i].thumbnail === undefined || tmp._source.display_record.parts[i].object === undefined) {
 
@@ -1344,23 +1855,23 @@ exports.fix_display_records = function (req, callback) {
                 });
 
                 /*
-                if (doc.thumbnail === null || doc.file_name === null) {
+                 if (doc.thumbnail === null || doc.file_name === null) {
 
-                    let obj = {};
-                    obj.sip_uuid = doc.sip_uuid;
-                    obj.display_record = doc.display_record;
+                 let obj = {};
+                 obj.sip_uuid = doc.sip_uuid;
+                 obj.display_record = doc.display_record;
 
-                    knexQ('broken_tn_file_name')
-                        .insert(obj)
-                        .then(function (data) {
-                            return null;
-                        })
-                        .catch(function (error) {
-                            logger.module().fatal('FATAL: unable to save broken record data ' + error);
-                            throw 'FATAL: unable to save broken record data ' + error;
-                        });
-                }
-                */
+                 knexQ('broken_tn_file_name')
+                 .insert(obj)
+                 .then(function (data) {
+                 return null;
+                 })
+                 .catch(function (error) {
+                 logger.module().fatal('FATAL: unable to save broken record data ' + error);
+                 throw 'FATAL: unable to save broken record data ' + error;
+                 });
+                 }
+                 */
 
             }, 100);
 
@@ -1518,7 +2029,7 @@ exports.fix_compound_objects = function (req, callback) {
                     });
                 }
 
-                function construct_parts (obj, callback) {
+                function construct_parts(obj, callback) {
 
                     let parts = [];
 
