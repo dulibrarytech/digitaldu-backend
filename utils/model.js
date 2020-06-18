@@ -291,7 +291,7 @@ exports.delete_object = function (req, callback) {
  * Batch updates all or a collection's metadata records in the repository via ArchivesSpace
  * @param req
  * @param callback
- */
+
 exports.batch_update_metadata = function (req, callback) {
 
     let pid;
@@ -607,12 +607,13 @@ exports.batch_update_metadata = function (req, callback) {
         message: 'Batch updating metadata records...'
     });
 };
+ */
 
 /**
  * updates single metadata record
  * @param req
  * @param callback
- */
+
 exports.update_metadata_record = function (req, callback) {
 
     if (req.body.sip_uuid === undefined) {
@@ -932,8 +933,9 @@ exports.update_metadata_record = function (req, callback) {
         status: 201
     });
 };
+ */
 
-/** TODO:
+/** TODO: MOVE to import module
  * Batch updates collection metadata records in the repository via ArchivesSpace
  * @param req
  * @param callback

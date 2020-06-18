@@ -315,7 +315,7 @@ const objectsModule = (function () {
         let obj = {};
         obj.sip_uuid = pid;
 
-        let url = api + '/api/admin/v1/repo/metadata/object',
+        let url = api + '/api/admin/v1/import/metadata/object',
             token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'PUT',
@@ -366,7 +366,7 @@ const objectsModule = (function () {
         domModule.getElement('#batch-update-metadata').addEventListener('click', batchUpdateMetadata);
     };
 
-    /**
+    /** TODO:
      *  Updates all metadata records for current collection
      */
     const batchUpdateMetadata = function() {
@@ -374,8 +374,8 @@ const objectsModule = (function () {
         let pid = helperModule.getParameterByName('pid');
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        let obj = {};
-        let url = api + '/api/admin/v1/utils/batch/update/metadata?pid=' + pid,
+        let obj = {}; // TODO: change endpoint
+        let url = api + '/api/admin/v1/import/batch/update/metadata?pid=' + pid,
             token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'POST',

@@ -19,7 +19,8 @@
 'use strict';
 
 const IMPORT = require('../import/queue'),
-    MODEL = require('../import/model');
+    MODEL = require('../import/model'),
+    SERVICE = require('../import/service');
 
 exports.list = function (req, res) {
     IMPORT.list(req, function (data) {
@@ -87,32 +88,32 @@ exports.get_import_complete = function (req, res) {
     });
 };
 
-exports.import_mods = function (req, res) {
-    MODEL.import_mods(req, function (data) {
+exports.get_session_token = function(req, res) {
+    SERVICE.get_session_token(req, function(data) {
         res.status(data.status).send(data.data);
     });
 };
 
-exports.import_mods_id = function (req, res) {
-    MODEL.import_mods_id(req, function (data) {
+exports.destroy_session_token = function(req, res) {
+    SERVICE.destroy_session_token(req, function(data) {
         res.status(data.status).send(data.data);
     });
 };
 
-exports.import_thumbnail = function (req, res) {
-    MODEL.import_thumbnail(req, function (data) {
+exports.update_collection_metadata_record = function(req, res) {
+    MODEL.update_collection_metadata_record(req, function(data) {
         res.status(data.status).send(data.data);
     });
 };
 
-exports.import_master = function (req, res) {
-    MODEL.import_master(req, function (data) {
+exports.update_object_metadata_record = function(req, res) {
+    MODEL.update_object_metadata_record(req, function(data) {
         res.status(data.status).send(data.data);
     });
 };
 
-exports.import_checksum = function (req, res) {
-    MODEL.import_checksum(req, function (data) {
+exports.batch_update_metadata = function(req, res) {
+     MODEL.batch_update_metadata(req, function(data) {
         res.status(data.status).send(data.data);
     });
 };
@@ -141,8 +142,50 @@ exports.poll_fail_queue = function (req, res) {
     });
 };
 
+/*
+ exports.import_mods = function (req, res) {
+ MODEL.import_mods(req, function (data) {
+ res.status(data.status).send(data.data);
+ });
+ };
+ */
+
+/*
+ exports.import_mods_id = function (req, res) {
+ MODEL.import_mods_id(req, function (data) {
+ res.status(data.status).send(data.data);
+ });
+ };
+ */
+
+/*
+ exports.import_thumbnail = function (req, res) {
+ MODEL.import_thumbnail(req, function (data) {
+ res.status(data.status).send(data.data);
+ });
+ };
+ */
+
+/*
+ exports.import_master = function (req, res) {
+ MODEL.import_master(req, function (data) {
+ res.status(data.status).send(data.data);
+ });
+ };
+ */
+
+/*
+ exports.import_checksum = function (req, res) {
+ MODEL.import_checksum(req, function (data) {
+ res.status(data.status).send(data.data);
+ });
+ };
+ */
+
+/*
 exports.get_metadata_updates = function (req, res) {
     MODEL.get_metadata_updates(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
+    */

@@ -31,13 +31,13 @@ exports.reindex = function (req, res) {
         res.status(data.status).send(data.data);
     });
 };
-
+/*
 exports.batch_update_metadata = function(req, res) {
     Utils.batch_update_metadata(req, function(data) {
         res.status(data.status).send(data.data);
     });
 };
-
+*/
 exports.batch_update_collection_metadata  = function(req, res) {
     Utils.batch_update_collection_metadata(req, function(data) {
         res.status(data.status).send(data.data);

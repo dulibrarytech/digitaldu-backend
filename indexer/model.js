@@ -22,7 +22,7 @@ const CONFIG = require('../config/config'),
     SERVICE = require('../indexer/service'),
     VALIDATOR = require('validator'),
     DB = require('../config/db')(),
-    logger = require('../libs/log4'),
+    LOGGER = require('../libs/log4'),
     REPO_OBJECTS = 'tbl_objects';
 
 /**
@@ -107,24 +107,23 @@ exports.get_index_record = function (req, callback) {
                 if (response.result === 'created' || response.result === 'updated') {
 
                     callback({
-                        status: 200,
+                        status: 201,
                         message: 'record indexed'
                     });
 
                 } else {
 
-                    logger.module().error('ERROR: [/indexer/model module (get_index_record)] unable to index record');
+                    LOGGER.module().error('ERROR: [/indexer/model module (get_index_record)] unable to index record');
 
                     callback({
-                        status: 200,
+                        status: 201,
                         message: 'record not indexed'
                     });
                 }
-
             });
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/indexer/model module (get_index_record)] unable get index record ' + error);
+            LOGGER.module().fatal('FATAL: [/indexer/model module (get_index_record)] unable get index record ' + error);
             throw 'FATAL: [/indexer/model module (get_index_record)] unable get index record ' + error;
         });
 };
@@ -243,26 +242,26 @@ exports.index_records = function (req, callback) {
                                         }, CONFIG.indexTimer);
 
                                     } else {
-                                        logger.module().error('ERROR: [/indexer/model module (index_records)] more than one record was updated');
+                                        LOGGER.module().error('ERROR: [/indexer/model module (index_records)] more than one record was updated');
                                     }
 
                                 })
                                 .catch(function (error) {
-                                    logger.module().fatal('FATAL: [/indexer/model module (index_records)] unable to update is_indexed field ' + error);
+                                    LOGGER.module().fatal('FATAL: [/indexer/model module (index_records)] unable to update is_indexed field ' + error);
                                     throw 'FATAL: [/indexer/model module (index_records)] unable to update is_indexed field ' + error;
                                 });
 
                         } else {
-                            logger.module().error('ERROR: [/indexer/model module (index_records)] unable to index record');
+                            LOGGER.module().error('ERROR: [/indexer/model module (index_records)] unable to index record');
                         }
                     });
 
                 } else {
-                    logger.module().info('INFO: [/indexer/model module (index_records)] indexing complete');
+                    LOGGER.module().info('INFO: [/indexer/model module (index_records)] indexing complete');
                 }
             })
             .catch(function (error) {
-                logger.module().error('ERROR: [/indexer/model module (index_records)] unable to get record ' + error);
+                LOGGER.module().error('ERROR: [/indexer/model module (index_records)] unable to get record ' + error);
                 throw error;
             });
     }
@@ -281,12 +280,12 @@ exports.index_records = function (req, callback) {
             index(index_name);
         })
         .catch(function (error) {
-            logger.module().error('ERROR: [/indexer/model module (index_records)] unable to reset is_indexed fields ' + error);
+            LOGGER.module().error('ERROR: [/indexer/model module (index_records)] unable to reset is_indexed fields ' + error);
             throw error;
         });
 
     callback({
-        status: 200,
+        status: 201,
         message: 'Indexing repository records...'
     });
 };
@@ -320,15 +319,15 @@ exports.update_fragment = function (req, callback) {
 
         if (response.result === 'updated') {
             callback({
-                status: 200,
+                status: 201,
                 message: 'fragment updated'
             });
         } else {
 
-            logger.module().error('ERROR: [/indexer/model module (update_fragment)] unable to update record fragment ' + response);
+            LOGGER.module().error('ERROR: [/indexer/model module (update_fragment)] unable to update record fragment ' + response);
 
             callback({
-                status: 200,
+                status: 201,
                 message: 'fragment update failed'
             });
         }
@@ -368,7 +367,7 @@ exports.reindex = function (req, callback) {
     }, function (response) {
 
         callback({
-            status: 200,
+            status: 201,
             message: 'records reindexed'
         });
     });

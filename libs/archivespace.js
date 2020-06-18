@@ -17,7 +17,7 @@
  */
 
 const CONFIG = require('../config/config'),
-    REQUEST = require('request'),
+    HTTP = require('axios'),
     LOGGER = require('../libs/log4');
 
 /**
@@ -30,51 +30,43 @@ exports.ping = function (callback) {
 
     let apiUrl = CONFIG.archivespaceHost;
 
-    REQUEST.get({
-        url: apiUrl,
-        timeout: 45000
-    }, function(error, httpResponse, body) {
+    (async() => {
 
-        if (error) {
+        let response = await HTTP.get(apiUrl, {
+            timeout: 35000,
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
 
-            LOGGER.module().error('ERROR: [/libs/archivesspace lib (ping)] request to archivesspace failed ' + error);
+        if (response.error === true) {
+
+            LOGGER.module().error('ERROR: [/libs/archivesspace lib (ping)] request to archivesspace failed');
 
             callback({
                 error: true,
                 status: 'down',
-                message: error
-            });
-
-            return false;
-        }
-
-        if (httpResponse.statusCode === 200) {
-
-            callback({
-                error: false,
-                status: 'up',
-                message: 'Archivespace service is available'
+                message: response
             });
 
             return false;
 
         } else {
 
-            LOGGER.module().error('ERROR: [/libs/archivesspace lib (ping)] request to archivesspace failed ' + error);
-
             callback({
-                error: true,
-                status: 'down',
-                message: error
+                error: false,
+                status: 'up',
+                message: 'Archivespace service is available'
             });
-
-            return false;
         }
-    });
+
+        return false;
+
+    })();
 };
 
 /**
- * Gets JSON representation of mods record from archivespace
+ * Gets JSON representation of mods record from archivesspace
  * @param id
  * @param session
  * @param callback
@@ -93,101 +85,38 @@ exports.get_mods = function (id, session, callback) {
         apiUrl = CONFIG.archivespaceHost + id;
     }
 
-    REQUEST.get({
-        url: apiUrl,
-        headers: {
-            'X-ArchivesSpace-Session': session
-        },
-        timeout: 55000
-    }, function(error, httpResponse, body) {
+    (async() => {
 
-        if (error) {
+        let response = await HTTP.get(apiUrl, {
+            timeout: 35000,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-ArchivesSpace-Session': session
+            }
+        });
 
-            LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed ' + error);
+        if (response.error === true) {
+
+            LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed');
 
             callback({
                 error: true,
-                error_message: error
-            });
-
-            return false;
-        }
-
-        if (httpResponse.statusCode === 200) {
-
-            callback({
-                error: false,
-                mods: body
+                error_message: 'ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed'
             });
 
             return false;
 
         } else {
 
-            LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed ' + httpResponse.statusCode + '/' + error);
-
-            callback({
-                error: true,
-                error_message: body
-            });
-
-            return false;
-        }
-    });
-};
-
-/**
- * Gets record updates that have occurred in archivesspace
- * @param session
- * @param callback
- */
-exports.get_record_updates = function (session, callback) {
-
-    'use strict';
-
-    let apiUrl = CONFIG.archivespaceHost + '/update-feed';
-
-    REQUEST.get({
-        url: apiUrl,
-        headers: {
-            'X-ArchivesSpace-Session': session
-        },
-        timeout: 45000
-    }, function(error, httpResponse, body) {
-
-        if (error) {
-
-            LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_record_updates)] request to archivesspace failed ' + error);
-
-            callback({
-                error: true,
-                error_message: error
-            });
-
-            return false;
-        }
-
-        if (httpResponse.statusCode === 200) {
-
             callback({
                 error: false,
-                updates: body
-            });
-
-            return false;
-
-        } else {
-
-            LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_record_updates)] unable to fetch record updates ' + error);
-
-            callback({
-                error: true,
-                error_message: body
+                mods: response
             });
 
             return false;
         }
-    });
+
+    })();
 };
 
 /**
@@ -200,47 +129,42 @@ exports.get_session_token = function (callback) {
 
     let apiUrl = CONFIG.archivespaceHost + '/users/' + CONFIG.archivespaceUser + '/login?password=' + CONFIG.archivespacePassword + '&expiring=false';
 
-    REQUEST.post({
-        url: apiUrl,
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        timeout: 55000
-    }, function(error, httpResponse, body) {
+    (async () => {
 
-        if (error) {
+        let response = await HTTP.post(apiUrl, {
+            timeout: 35000,
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
 
-            LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_session_token)] unable get archivesspace session token ' + error);
+        if (response.error === true) {
+
+            LOGGER.module().error('ERROR: [/import/model module (update_metadata_record/get_mods)] Unable to get session token');
 
             callback({
                 error: true,
-                error_message: error
+                error_message: ''
+            });
+
+            return false;
+
+        } else {
+
+            callback({
+                error: false,
+                data: JSON.stringify(response.data)
             });
 
             return false;
         }
 
-        if (httpResponse.statusCode === 200) {
-
-            callback({
-                error: false,
-                data: body
-            });
-
-        } else {
-
-            LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_session_token)] unable get archivesspace session token ' + httpResponse.statusCode + '/' + error);
-
-            callback({
-                error: true,
-                error_message: body
-            });
-        }
-    });
+    })();
 };
 
 /**
- * Terminates current session
+ *  Terminates current session
+ * @param session
  * @param callback
  */
 exports.destroy_session_token = function (session, callback) {
@@ -249,42 +173,36 @@ exports.destroy_session_token = function (session, callback) {
 
     let apiUrl = CONFIG.archivespaceHost + '/logout';
 
-    REQUEST.post({
-        url: apiUrl,
-        headers: {
-            'Content-Type': 'application/json',
-            'X-ArchivesSpace-Session': session
-        },
-        timeout: 45000
-    }, function(error, httpResponse, body) {
+    (async () => {
 
-        if (error) {
+        let response = await HTTP.post(apiUrl, {
+            timeout: 35000,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-ArchivesSpace-Session': session
+            }
+        });
 
-            LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_session_token)] unable get archivesspace session token ' + error);
+        if (response.error === true) {
+
+            LOGGER.module().error('ERROR: [/import/model module (update_metadata_record/get_mods)] Unable to terminate session');
 
             callback({
                 error: true,
-                error_message: error
+                error_message: ''
+            });
+
+            return false;
+
+        } else {
+
+            callback({
+                error: false,
+                data: response.data
             });
 
             return false;
         }
 
-        if (httpResponse.statusCode === 200) {
-
-            callback({
-                error: false,
-                data: body
-            });
-
-        } else {
-
-            LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_session_token)] unable get archivesspace session token ' + httpResponse.statusCode + '/' + error);
-
-            callback({
-                error: true,
-                error_message: body
-            });
-        }
-    });
+    })();
 };

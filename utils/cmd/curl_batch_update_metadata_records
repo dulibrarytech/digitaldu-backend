@@ -3,7 +3,7 @@
 # set env var - export API_KEY="<api-key>"
 
 curl -X POST \
-  'http://localhost:8000/api/admin/v1/utils/batch/update/metadata?size=s&api_key='${API_KEY} \
+  'http://localhost:8000/api/admin/v1/import/metadata/batch?size=s&api_key='${API_KEY} \
   -H 'Accept: */*' \
   -H 'Accept-Encoding: gzip, deflate' \
   -H 'Cache-Control: no-cache' \

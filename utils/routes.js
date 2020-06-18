@@ -33,9 +33,10 @@ module.exports = function (app) {
 
     //--- Updates metadata ---//
     // updates all metadata
+    /*
     app.route('/api/admin/v1/utils/batch/update/metadata')
         .post(token.verify, Utils.batch_update_metadata);
-
+    */
     app.route('/api/admin/v1/utils/batch/update/metadata/collection')
         .post(token.verify, Utils.batch_update_collection_metadata);
 

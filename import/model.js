@@ -18,53 +18,1231 @@
 
 'use strict';
 
-const CONFIG = require('../config/config'),
-    ARCHIVEMATICA = require('../libs/archivematica'),
-    ARCHIVESSPACE = require('../libs/archivespace'),
-    DURACLOUD = require('../libs/duracloud'),
+const // CONFIG = require('../config/config'),
+    // ARCHIVESSPACE = require('../libs/archivespace'),
     MODS = require('../libs/display-record'),
-    METS = require('../libs/mets'),
+    SERVICE = require('../import/service'),
     LOGGER = require('../libs/log4'),
     ASYNC = require('async'),
-    REQUEST = require('request'),
+    // REQUEST = require('request'),
+    HTTP = require('../libs/http'),
     VALIDATOR = require('validator'),
     DB = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects';
 
-/** TODO: REMOVE
- * Gets metadata updates
+/**
+ * Batch updates all or a collection's metadata records in the repository via ArchivesSpace
  * @param req
  * @param callback
  */
-exports.get_metadata_updates = function (req, callback) {
+exports.batch_update_metadata = function (req, callback) {
 
-    let session = req.body.session;
+    let pid;
 
-    ARCHIVESSPACE.get_record_updates(session, function(result) {
+    if (req.query.pid !== undefined) {
+        pid = req.query.pid;
+    }
 
-        let updates = JSON.parse(result.updates);
+    function reset_update_flags(callback) {
 
-        for (let i=0;i<updates.length;i++) {
+        let obj = {};
+        let whereObj = {};
 
-            console.log(updates[i].record.jsonmodel_type);
-            console.log(updates[i].record.uri);
-            if (updates[i].record.jsonmodel_type === 'archival_object' || updates[i].record.jsonmodel_type === 'resource') {
-                console.log(updates[i].record.uri);
-                console.log(updates[i].record);
-            }
+        // size of collection
+        obj.size = req.query.size;
+
+        if (pid !== undefined) {
+            whereObj.is_member_of_collection = pid;
         }
 
-        // TODO: save sip uuids to update table?
+        whereObj.is_active = 1;
+        whereObj.object_type = 'object';
+
+        DB(REPO_OBJECTS)
+            .where(whereObj)
+            .update({
+                is_updated: 0
+            })
+            .then(function (data) {
+
+                if (data > 0) {
+                    obj.total_records = data;
+                    obj.reset = true;
+                    LOGGER.module().info('INTO: [/import/model module (batch_update_metadata/reset_update_flags)] ' + data + ' update flags reset');
+                    callback(null, obj);
+                }
+            })
+            .catch(function (error) {
+                LOGGER.module().error('ERROR: [/import/model module (batch_update_metadata/reset_update_flags/async.waterfall)] ' + error);
+                throw 'ERROR: [/import/model module (batch_update_metadata/reset_update_flags/async.waterfall)] ' + error;
+            });
+    }
+
+    function get_token(obj, callback) {
+
+        (async() => {
+
+            let response = await HTTP.get({
+                endpoint: '/api/admin/v1/import/metadata/session'
+            });
+
+            if (response.error === true) {
+                obj.session = null;
+            } else {
+                obj.session = response.data.session;
+                callback(null, obj);
+            }
+
+            return false;
+
+        })();
+    }
+
+    function get_collection_counts(obj, callback) {
+
+        DB(REPO_OBJECTS)
+            .select('sip_uuid')
+            .where({
+                object_type: 'collection'
+            })
+            .then(async function (data) {
+
+                let object_timer = 8000;
+                let counts = [];
+
+                for (let i = 0; i < data.length; i++) {
+
+                    counts.push({
+                        'sip_uuid': data[i].sip_uuid, 'count': await DB(REPO_OBJECTS)
+                            .count('id as count', 'sip_uuid')
+                            .where({
+                                is_member_of_collection: data[i].sip_uuid,
+                                is_active: 1,
+                                object_type: 'object',
+                                is_updated: 0
+                            })
+                    });
+                }
+
+                let collections = counts.filter(function (value) {
+
+                    let object_count = value.count.pop().count;
+                    let max_count;
+                    let min_count;
+
+                    switch (obj.size) {
+                        case 's':
+                            max_count = 600;
+                            min_count = 0;
+                            break;
+                        case 'm':
+                            max_count = 1300;
+                            min_count = 600;
+                            break;
+                        case 'l':
+                            max_count = 5000;
+                            min_count = 1300;
+                            break;
+                    }
+
+                    if (object_count < max_count && object_count > min_count) {
+                        delete value.count;
+                        value.collection_timer = object_count * object_timer;
+                        return value;
+                    }
+                });
+
+                let collection_timers = [];
+
+                for (let i = 0; i < collections.length; i++) {
+                    collection_timers.push(collections[i].collection_timer);
+                    delete collections[i].collection_timer;
+                }
+
+                obj.collection_timer = Math.max.apply(Math, collection_timers);
+                obj.object_timer = object_timer;
+                obj.collections = collections;
+                callback(null, obj);
+            });
+
+        return false;
+    }
+
+    function update_metadata_records(obj, callback) {
+
+        if (obj.reset === false || obj.session === null) {
+            callback(null, obj);
+            return false;
+        }
+
+        let collection_timer = obj.collection_timer;
+        let object_timer = obj.object_timer;
+        let outer_timer;
+
+        const reset_update_flag = function (sip_uuid) {
+
+            DB(REPO_OBJECTS)
+                .where({
+                    sip_uuid: sip_uuid
+                })
+                .update({
+                    is_updated: 1
+                })
+                .then(function (data) {
+
+                    if (data === 1) {
+                        return false;
+                    }
+
+                    return null;
+                })
+                .catch(function (error) {
+                    LOGGER.module().error('ERROR: [/import/model module (batch_update_metadata/update_metadata_records)] unable to update metadata record ' + obj.sip_uuid + ' ' + error);
+                    throw 'ERROR: [/import/model module (batch_update_metadata/update_metadata_records)] unable to update metadata record ' + obj.sip_uuid + ' ' + error;
+                });
+        };
+
+        const request_collection_update = function (obj, sip_uuid) {
+
+            LOGGER.module().info('INFO: [/import/model module (batch_update_metadata/update_metadata_records)] updating collection ' + sip_uuid);
+
+            (async() => {
+
+                let data = {
+                    'sip_uuid': sip_uuid,
+                    'session': obj.session
+                };
+
+                let response = await HTTP.put({
+                    endpoint: '/api/admin/v1/import/metadata/collection',
+                    data: data
+                });
+
+                if (response.error === true) {
+                    LOGGER.module().error('ERROR: [/import/model module (batch_update_metadata/update_metadata_records)] unable to update record');
+                }
+
+                return false;
+
+            })();
+
+            /*
+             REQUEST.put({
+             url: CONFIG.apiUrl + '/api/admin/v1/import/metadata/collection?api_key=' + CONFIG.apiKey,
+             form: {
+             'sip_uuid': sip_uuid,
+             'session': obj.session
+             },
+             timeout: 55000
+             }, function (error, httpResponse, body) {
+
+             if (error) {
+             LOGGER.module().error('ERROR: [/import/model module (batch_update_metadata/update_metadata_records)] unable to update record ' + error);
+             return false;
+             }
+
+             if (httpResponse.statusCode === 201) {
+             return false;
+
+             } else {
+             LOGGER.module().error('ERROR: [/import/model module (batch_update_metadata/update_metadata_records)] http error ' + httpResponse.statusCode + '/' + body);
+             return false;
+             }
+             });
+             */
+        };
+
+        const request_object_update = function (obj, sip_uuid) {
+
+            LOGGER.module().info('INFO: [/import/model module (batch_update_metadata/update_metadata_records)] updating object ' + sip_uuid);
+
+            (async() => {
+
+                let data = {
+                    'sip_uuid': sip_uuid,
+                    'session': obj.session
+                };
+
+                let response = await HTTP.put({
+                    endpoint: '/api/admin/v1/import/metadata/object',
+                    data: data
+                });
+
+                if (response.error === true) {
+                    LOGGER.module().error('ERROR: [/import/model module (batch_update_metadata/update_metadata_records)] unable to update record');
+                }
+
+                return false;
+
+            })();
+
+            /*
+             REQUEST.put({
+             url: CONFIG.apiUrl + '/api/admin/v1/import/metadata/object?api_key=' + CONFIG.apiKey,
+             form: {
+             'sip_uuid': sip_uuid,
+             'session': obj.session
+             },
+             timeout: 55000
+             }, function (error, httpResponse, body) {
+
+             if (error) {
+             LOGGER.module().error('ERROR: [/import/model module (batch_update_metadata/update_metadata_records)] unable to update record ' + error);
+             return false;
+             }
+
+             if (httpResponse.statusCode === 201) {
+             return false;
+
+             } else {
+             LOGGER.module().error('ERROR: [/import/model module (batch_update_metadata/update_metadata_records)] http error ' + httpResponse.statusCode + '/' + body);
+             return false;
+             }
+             });
+             */
+        };
+
+        // begin processing immediately
+        collections();
+
+        // processes updates for objects in collections - reference passed into interval function
+        function collections() {
+
+            let collection = obj.collections.pop();
+            let inner_timer;
+
+            if (obj.collections.length === 0) {
+                LOGGER.module().info('INFO: [/import/model module (batch_update_metadata/update_metadata_records)] metadata updates complete');
+                clearInterval(outer_timer);
+                callback(null, obj);
+                return false;
+            }
+
+            request_collection_update(obj, collection.sip_uuid);
+            reset_update_flag(collection.sip_uuid);
+
+            // processes objects - passed into interval function
+            function objects() {
+
+                if (obj.collections.length === 0) {
+                    clearInterval(outer_timer);
+                    clearInterval(inner_timer);
+                    return false;
+                }
+
+                DB(REPO_OBJECTS)
+                    .select('sip_uuid')
+                    .where({
+                        is_member_of_collection: collection.sip_uuid,
+                        is_active: 1,
+                        object_type: 'object',
+                        is_updated: 0
+                    })
+                    .limit(1)
+                    // .orderBy('id', 'desc')
+                    .then(function (data) {
+
+                        if (data.length === 0) {
+                            clearInterval(inner_timer);
+                            return false;
+                        }
+
+                        let sip_uuid = data[0].sip_uuid;
+                        request_object_update(obj, sip_uuid);
+                        reset_update_flag(sip_uuid);
+                        return null;
+                    })
+                    .catch(function (error) {
+                        LOGGER.module().error('ERROR: [/utils/model module (batch_update_metadata/update_metadata_records)] unable to get sip_uuid ' + error);
+                        throw 'ERROR: [/import/model module (batch_update_metadata/update_metadata_records)] unable to get sip_uuid ' + error;
+                    });
+
+                return false; // end objects
+            }
+
+            inner_timer = setInterval(objects, object_timer);
+
+            return false; // end collections
+        }
+
+        outer_timer = setInterval(collections, collection_timer);
+    }
+
+    ASYNC.waterfall([
+        reset_update_flags,
+        get_token,
+        get_collection_counts,
+        update_metadata_records
+    ], function (error, results) {
+
+        if (error) {
+            LOGGER.module().error('ERROR: [/import/model module (batch_update_metadata/async.waterfall)] ' + error);
+            throw 'ERROR: [/import/model module (batch_update_metadata/async.waterfall)] ' + error;
+        }
+
+        if (results.session !== null) {
+
+            (async() => {
+
+                let response = await HTTP.post({
+                    endpoint: '/api/admin/v1/import/metadata/session/destroy'
+                });
+
+                if (response.error === true) {
+                    LOGGER.module().error('ERROR: [/import/model module (update_metadata_record/get_mods)] Unable to terminate session');
+                } else {
+                    LOGGER.module().info('INFO: ArchivesSpace session terminated.');
+                }
+
+                return false;
+
+            })();
+
+            /*
+             REQUEST.post({
+             url: CONFIG.apiUrl + '/api/admin/v1/import/metadata/session/destroy?api_key=' + CONFIG.apiKey,
+             form: {
+             'session': results.session
+             },
+             timeout: 55000
+             }, function (error, httpResponse, body) {
+
+             if (error) {
+             LOGGER.module().error('ERROR: [/import/model module (update_metadata_record/get_mods)] Unable to terminate session');
+             return false;
+             }
+
+             if (httpResponse.statusCode === 204) {
+             LOGGER.module().info('INFO: ArchivesSpace session terminated.');
+             return false;
+
+             } else {
+             LOGGER.module().error('ERROR: [/import/model module (update_metadata_record/get_mods)] Unable to terminate session');
+             return false;
+             }
+             });
+             */
+        }
+
+        LOGGER.module().info('INFO: [/import/model module (batch_update_metadata/async.waterfall)] metadata records updated');
+    });
+
+    callback({
+        status: 201,
+        message: 'Batch updating metadata records...'
+    });
+};
+
+/**
+ * updates single metadata record
+ * @param req
+ * @param callback
+ */
+exports.update_object_metadata_record = function (req, callback) {
+
+    if (req.body.sip_uuid === undefined) {
 
         callback({
-            status: 200,
-            message: 'record updates',
-            data: JSON.parse(result.updates)
+            status: 400,
+            message: 'Bad Request.'
+        });
+
+        return false;
+    }
+
+    let sip_uuid = req.body.sip_uuid;
+    let session = req.body.session;
+
+    function get_token(callback) {
+
+        let obj = {};
+        obj.sip_uuid = sip_uuid;
+
+        if (session === undefined) {
+
+            (async() => {
+
+                let response = await HTTP.get({
+                    endpoint: '/api/admin/v1/import/metadata/session'
+                });
+
+                if (response.error === true) {
+                    obj.session = null;
+                } else {
+                    obj.single_record = true;
+                    obj.session = response.data.session;
+                    callback(null, obj);
+                }
+
+                return false;
+
+            })();
+
+        } else {
+            obj.session = session;
+            callback(null, obj);
+        }
+    }
+
+    // 1.)
+    function get_mods_id(obj, callback) {
+
+        if (obj.session === null) {
+            callback(null, obj);
+            return false;
+        }
+
+        DB(REPO_OBJECTS)
+            .select('mods_id', 'mods')
+            .where({
+                sip_uuid: obj.sip_uuid,
+                object_type: 'object'
+            })
+            .then(function (data) {
+
+                if (data.length === 0) {
+                    LOGGER.module().info('INFO: no record found for ' + obj.sip_uuid);
+                    return false;
+                }
+
+                obj.mods_id = data[0].mods_id;
+                obj.prev_mods = data[0].mods;
+                callback(null, obj);
+            })
+            .catch(function (error) {
+                LOGGER.module().fatal('FATAL: [/import/model module (update_object_metadata_record/get_mods_id)] unable to get mods id ' + error);
+                throw 'FATAL: [/import/model module (update_object_metadata_record/get_mods_id)] unable to get mods id ' + error
+            });
+    }
+
+    // 2.)
+    function get_mods(obj, callback) {
+
+        if (obj.session === null) {
+            callback(null, obj);
+            return false;
+        }
+
+        SERVICE.get_mods(obj, function (data) {
+
+            if (data.error === true) {
+                obj.session = null;
+                callback(null, obj);
+                return false;
+            }
+
+            // move to local helper
+            if (obj.prev_mods === data.mods) {
+
+                LOGGER.module().info('INFO: no update required for record ' + obj.sip_uuid);
+
+                if (obj.single_record !== undefined && obj.single_record === true) {
+
+                    (async() => {
+
+                        let data = {
+                            'session': obj.session
+                        };
+
+                        let response = await HTTP.post({
+                            endpoint: '/api/admin/v1/import/metadata/session/destroy',
+                            data: data
+                        });
+
+                        if (response.error === true) {
+                            LOGGER.module().error('ERROR: [/import/model module (update_object_metadata_record/get_mods)] Unable to terminate session');
+                        } else {
+                            LOGGER.module().info('INFO: [/import/model module (update_object_metadata_record/get_mods)] ArchivesSpace session terminated.');
+                        }
+
+                        obj.session = null;
+                        callback(null, obj);
+                        return false;
+
+                    })();
+                }
+            }
+
+            obj.mods = data.mods;
+            callback(null, obj);
+        });
+
+        return false;
+    }
+
+    // 3.)
+    function update_mods(obj, callback) {
+
+        if (obj.session === null || obj.error === true) {
+            callback(null, obj);
+            return false;
+        }
+
+        let mods = obj.mods;
+
+        update_db_mods(obj.sip_uuid, mods, function (result) {
+            obj.updated = result;
+            callback(null, obj);
+        });
+    }
+
+    // 4.)
+    function update_display_record(obj, callback) {
+
+        if (obj.session === null || obj.updated === false || obj.error === true) {
+            callback(null, obj);
+            return false;
+        }
+
+        DB(REPO_OBJECTS)
+            .select('*')
+            .where({
+                mods_id: obj.mods_id,
+                is_active: 1
+            })
+            .then(function (data) {
+
+                if (data.length === 0) {
+                    LOGGER.module().info('INFO: [/import/model module (update_object_metadata_record/update_display_record)] unable to update display record');
+                    return false;
+                }
+
+                // TODO: move to lib
+                let recordObj = {};
+                recordObj.pid = data[0].pid;
+                recordObj.is_member_of_collection = data[0].is_member_of_collection;
+                recordObj.object_type = data[0].object_type;
+                recordObj.sip_uuid = data[0].sip_uuid;
+                recordObj.handle = data[0].handle;
+                recordObj.entry_id = data[0].entry_id;
+                recordObj.thumbnail = data[0].thumbnail;
+                recordObj.object = data[0].file_name;
+                recordObj.mime_type = data[0].mime_type;
+                recordObj.is_published = data[0].is_published;
+                recordObj.mods = obj.mods;
+
+                MODS.create_display_record(recordObj, function (result) {
+
+                    let tmp = JSON.parse(result);
+
+                    if (tmp.is_compound === 1 && tmp.object_type !== 'collection') {
+
+                        let currentRecord = JSON.parse(data[0].display_record),
+                            currentCompoundParts = currentRecord.display_record.parts;
+
+                        let updatedParts = tmp.display_record.parts.filter(function (elem) {
+
+                            for (let i = 0; i < currentCompoundParts.length; i++) {
+
+                                if (elem.title === currentCompoundParts[i].title) {
+                                    elem.caption = currentCompoundParts[i].caption;
+                                    elem.object = currentCompoundParts[i].object;
+                                    elem.thumbnail = currentCompoundParts[i].thumbnail;
+                                    return elem;
+                                }
+                            }
+
+                        });
+
+                        delete tmp.display_record.parts;
+                        delete tmp.compound;
+
+                        if (currentCompoundParts !== undefined) {
+                            tmp.display_record.parts = updatedParts;
+                            tmp.compound = updatedParts;
+                        }
+
+                        obj.display_record = JSON.stringify(tmp);
+
+                    } else if (tmp.is_compound === 0 || tmp.object_type === 'collection') {
+
+                        obj.display_record = result;
+
+                    }
+
+                    DB(REPO_OBJECTS)
+                        .where({
+                            sip_uuid: obj.sip_uuid
+                        })
+                        .update({
+                            display_record: obj.display_record
+                        })
+                        .then(function (data) {
+
+                            if (data === 1) {
+                                LOGGER.module().info('INFO: [/import/model module (update_object_metadata_record/update_display_record)] ' + obj.sip_uuid + ' display record updated');
+                                obj.is_published = recordObj.is_published;
+                                callback(null, obj);
+                            } else {
+                                obj.updated = false;
+                                callback(null, obj);
+                            }
+
+                            return null;
+                        })
+                        .catch(function (error) {
+                            LOGGER.module().error('ERROR: [/import/model module (update_object_metadata_record/update_display_record)] unable to update display record ' + error);
+                            obj.updated = false;
+                            callback(null, obj);
+                        });
+                });
+
+                return null;
+            })
+            .catch(function (error) {
+                LOGGER.module().fatal('FATAL: [/import/model module (update_object_metadata_record/update_display_record)] Unable to get display record ' + error);
+                throw 'FATAL: [/import/model module (update_object_metadata_record/update_display_record)] Unable to get display record ' + error;
+            });
+    }
+
+    // 5.)
+    function update_admin_index(obj, callback) {
+
+        if (obj.session === null || obj.updated === false || obj.error === true) {
+            callback(null, obj);
+            return false;
+        }
+
+        // update admin index
+        (async() => {
+
+            let data = {
+                'sip_uuid': obj.sip_uuid
+            };
+
+            let response = await HTTP.post({
+                endpoint: '/api/admin/v1/indexer',
+                data: data
+            });
+
+            if (response.error === true) {
+                LOGGER.module().error('ERROR: [/import/model module (update_object_metadata_record/update_admin_index)] indexer error');
+            } else {
+                LOGGER.module().info('INFO: [/import/model module (update_object_metadata_record/update_admin_index)] ' + obj.sip_uuid + ' indexed');
+                obj.admin_index = true;
+                callback(null, obj);
+            }
+
+            return false;
+
+        })();
+    }
+
+    // 6.)
+    function update_public_index(obj, callback) {
+
+        if (obj.session === null || obj.updated === false || obj.admin_index === false || obj.error === true) {
+            callback(null, obj);
+            return false;
+        }
+
+        if (obj.is_published === 1) {
+
+            // update public index
+            (async() => {
+
+                let data = {
+                    'sip_uuid': obj.sip_uuid,
+                    'publish': true
+                };
+
+                let response = await HTTP.post({
+                    endpoint: '/api/admin/v1/indexer',
+                    data: data
+                });
+
+                if (response.error === true) {
+                    LOGGER.module().error('ERROR: [/import/model module (update_object_metadata_record/update_public_index)] indexer error');
+                } else {
+                    LOGGER.module().info('INFO: [/import/model module (update_object_metadata_record/update_public_index)] ' + obj.sip_uuid + ' indexed');
+                    obj.admin_index = true;
+                    callback(null, obj);
+                }
+
+                return false;
+
+            })();
+        }
+    }
+
+    ASYNC.waterfall([
+        get_token,
+        get_mods_id,
+        get_mods,
+        update_mods,
+        update_display_record,
+        update_admin_index,
+        update_public_index
+    ], function (error, results) {
+
+        if (error) {
+            LOGGER.module().error('ERROR: [/import/model module (update_object_metadata_record/async.waterfall)] ' + error);
+        }
+
+    });
+
+    callback({
+        status: 201
+    });
+};
+
+/**
+ * Updates collection metadata record
+ * @param req
+ * @param callback
+ * @returns {boolean}
+ */
+exports.update_collection_metadata_record = function (req, callback) {
+
+    if (req.body.sip_uuid === undefined) {
+
+        callback({
+            status: 400,
+            message: 'Bad Request.'
+        });
+
+        return false;
+    }
+
+    let sip_uuid = req.body.sip_uuid;
+    let session = req.body.session;
+
+    // 1.)
+    function get_token(callback) {
+
+        let obj = {};
+        obj.sip_uuid = sip_uuid;
+
+        if (session === undefined) {
+
+            (async() => {
+
+                let response = await HTTP.get({
+                    endpoint: '/api/admin/v1/import/metadata/session'
+                });
+
+                if (response.error === true) {
+                    obj.session = null;
+                } else {
+                    obj.single_record = true;
+                    obj.session = response.data.session;
+                    callback(null, obj);
+                }
+
+                return false;
+
+            })();
+        }
+
+        obj.session = session;
+        callback(null, obj);
+    }
+
+    // 2.)
+    function get_uri(obj, callback) {
+
+        if (obj.session === null) {
+            callback(null, obj);
+            return false;
+        }
+
+        DB(REPO_OBJECTS)
+            .select('uri', 'mods')
+            .where({
+                sip_uuid: obj.sip_uuid,
+                object_type: 'collection'
+            })
+            .then(function (data) {
+
+                if (data.length === 0) {
+                    LOGGER.module().info('INFO: no record found for ' + obj.sip_uuid);
+                    return false;
+                }
+
+                obj.uri = data[0].uri;
+                obj.prev_mods = data[0].mods;
+                callback(null, obj);
+            })
+            .catch(function (error) {
+                LOGGER.module().fatal('FATAL: [/import/model module (update_collection_metadata_record/get_uri)] unable to get uri ' + error);
+                throw 'FATAL: [/import/model module (update_collection_metadata_record/get_uri)] unable to get uri ' + error;
+            });
+    }
+
+    // 3.)
+    function get_mods(obj, callback) {
+
+        if (obj.session === null) {
+            callback(null, obj);
+            return false;
+        }
+
+        obj.mods_id = obj.uri;
+
+        SERVICE.get_mods(obj, function (data) {
+
+            if (data.error === true) {
+                obj.session = null;
+                callback(null, obj);
+                return false;
+            }
+
+            if (obj.prev_mods === data.mods) {
+
+                LOGGER.module().info('INFO: no update required for record ' + obj.sip_uuid);
+
+                /*
+                if (obj.single_record !== undefined && obj.single_record === true) {
+
+                    (async() => {
+
+                        let data = {
+                            'session': obj.session
+                        };
+
+                        let response = await HTTP.post({
+                            endpoint: '/api/admin/v1/import/metadata/session/destroy',
+                            data: data
+                        });
+
+                        if (response.error === true) {
+                            LOGGER.module().error('ERROR: [/import/model module (update_metadata_record/get_mods)] Unable to terminate session');
+                        }
+
+                        obj.session = null;
+                        callback(null, obj);
+                        return false;
+
+                    })();
+                }
+                */
+            }
+
+            obj.mods = data.mods;
+            callback(null, obj);
+        });
+    }
+
+    // 4.)
+    function update_mods(obj, callback) {
+
+        if (obj.session === null || obj.error === true) {
+            callback(null, obj);
+            return false;
+        }
+
+        let mods = obj.mods;
+
+        update_db_mods(obj.sip_uuid, mods, function (result) {
+            obj.updated = result;
+            callback(null, obj);
+        });
+
+    }
+
+    // 5.)
+    function update_display_record(obj, callback) {
+
+        if (obj.session === null || obj.updated === false || obj.error === true) {
+            callback(null, obj);
+            return false;
+        }
+
+        DB(REPO_OBJECTS)
+            .select('*')
+            .where({
+                uri: obj.uri,
+                is_active: 1
+            })
+            .then(function (data) {
+
+                if (data.length === 0) {
+                    LOGGER.module().info('INFO: [/import/model module (update_collection_metadata_record/update_display_record)] unable to update display record');
+                    return false;
+                }
+
+                let recordObj = {};
+                recordObj.pid = VALIDATOR.escape(data[0].pid);
+                recordObj.is_member_of_collection = VALIDATOR.escape(data[0].is_member_of_collection);
+                recordObj.object_type = data[0].object_type;
+                recordObj.sip_uuid = data[0].sip_uuid;
+                recordObj.handle = data[0].handle;
+                recordObj.entry_id = data[0].entry_id;
+                recordObj.thumbnail = data[0].thumbnail;
+                recordObj.object = data[0].file_name;
+                recordObj.mime_type = data[0].mime_type;
+                recordObj.is_published = data[0].is_published;
+                recordObj.mods = obj.mods;
+
+                MODS.create_display_record(recordObj, function (result) {
+
+                    let tmp = JSON.parse(result);
+
+                    if (tmp.is_compound === 1 && tmp.object_type !== 'collection') {
+
+                        let currentRecord = JSON.parse(data[0].display_record),
+                            currentCompoundParts = currentRecord.display_record.parts;
+
+                        let updatedParts = tmp.display_record.parts.filter(function (elem) {
+
+                            for (let i = 0; i < currentCompoundParts.length; i++) {
+
+                                if (elem.title === currentCompoundParts[i].title) {
+                                    elem.caption = currentCompoundParts[i].caption;
+                                    elem.object = currentCompoundParts[i].object;
+                                    elem.thumbnail = currentCompoundParts[i].thumbnail;
+                                    return elem;
+                                }
+                            }
+
+                        });
+
+                        delete tmp.display_record.parts;
+                        delete tmp.compound;
+
+                        if (currentCompoundParts !== undefined) {
+                            tmp.display_record.parts = updatedParts;
+                            tmp.compound = updatedParts;
+                        }
+
+                        obj.display_record = JSON.stringify(tmp);
+
+                    } else if (tmp.is_compound === 0 || tmp.object_type === 'collection') {
+
+                        obj.display_record = result;
+
+                    }
+
+                    DB(REPO_OBJECTS)
+                        .where({
+                            sip_uuid: obj.sip_uuid
+                        })
+                        .update({
+                            display_record: obj.display_record
+                        })
+                        .then(function (data) {
+
+                            if (data === 1) {
+                                obj.is_published = recordObj.is_published;
+                                callback(null, obj);
+                            } else {
+                                obj.updated = false;
+                                callback(null, obj);
+                            }
+
+                        })
+                        .catch(function (error) {
+                            LOGGER.module().error('ERROR: [/import/model module (update_collection_metadata_record/update_display_record)] Unable to update display record ' + error);
+                            obj.updated = false;
+                            callback(null, obj);
+                        });
+                });
+
+                return null;
+            })
+            .catch(function (error) {
+                LOGGER.module().fatal('FATAL: [/import/model module (update_collection_metadata_record/update_display_record)] Unable to get mods ' + error);
+                throw 'FATAL: [/import/model module (update_collection_metadata_record/update_display_record)] Unable to get mods ' + error;
+            });
+    }
+
+    // 6.)
+    function update_admin_index(obj, callback) {
+
+        if (obj.session === null || obj.updated === false || obj.error === true) {
+            callback(null, obj);
+            return false;
+        }
+
+        // update admin index
+        (async() => {
+
+            let data = {
+                'sip_uuid': obj.sip_uuid
+            };
+
+            let response = await HTTP.post({
+                endpoint: '/api/admin/v1/indexer',
+                data: data
+            });
+
+            if (response.error === true) {
+                LOGGER.module().error('ERROR: [/import/model module (update_collection_metadata_record/update_admin_index)] http error');
+                obj.public_index = false;
+            } else {
+                obj.admin_index = true;
+            }
+
+            callback(null, obj);
+            return false;
+
+        })();
+    }
+
+    function update_public_index(obj, callback) {
+
+        if (obj.session === null || obj.updated === false || obj.admin_index === false || obj.error === true) {
+            callback(null, obj);
+            return false;
+        }
+
+        if (obj.is_published === 1) {
+
+            // update public index
+            (async() => {
+
+                let data = {
+                    'sip_uuid': obj.sip_uuid,
+                    'publish': true
+                };
+
+                let response = await HTTP.post({
+                    endpoint: '/api/admin/v1/indexer',
+                    data: data
+                });
+
+                if (response.error === true) {
+                    LOGGER.module().error('ERROR: [/import/model module (update_collection_metadata_record/update_public_index)] http error');
+                    obj.public_index = false;
+                } else {
+                    obj.public_index = true;
+                }
+
+                callback(null, obj);
+                return false;
+
+            })();
+        }
+    }
+
+    ASYNC.waterfall([
+        get_token,
+        get_uri,
+        get_mods,
+        update_mods,
+        update_display_record,
+        update_admin_index,
+        update_public_index
+    ], function (error, results) {
+
+        if (error) {
+            LOGGER.module().error('ERROR: [/import/model module (update_collection_metadata_record/async.waterfall)] ' + error);
+        }
+
+        // TODO: test with single record
+        if (results.session !== null && results.single_record !== undefined && results.single_record === true) {
+
+            console.log(results.session);
+
+            (async() => {
+
+                let data = {
+                    'session': results.session
+                };
+
+                let response = await HTTP.post({
+                    endpoint: '/api/admin/v1/import/metadata/session/destroy',
+                    data: data
+                });
+
+                if (response.error === true) {
+                    LOGGER.module().error('ERROR: [/import/model module (update_collection_metadata_record/async.waterfall)] Unable to terminate session');
+                }
+
+                return false;
+
+            })();
+
+            /*
+            (async() => {
+
+                let data = {
+                    'session': results.session
+                };
+
+                let response = await HTTP.post({
+                    endpoint: '/api/admin/v1/import/metadata/session/destroy',
+                    data: data
+                });
+
+                if (response.error === true) {
+                    LOGGER.module().error('ERROR: [/import/model module (update_metadata_record/get_mods)] Unable to terminate session');
+                } else {
+                    LOGGER.module().info('INFO: ArchivesSpace session terminated.');
+                }
+
+                return false;
+
+            })();
+            */
+
+            /*
+
+            /*
+             REQUEST.post({
+             url: CONFIG.apiUrl + '/api/admin/v1/import/metadata/session/destroy?api_key=' + CONFIG.apiKey,
+             form: {
+             'session': results.session
+             },
+             timeout: 55000
+             }, function (error, httpResponse, body) {
+
+             if (error) {
+             LOGGER.module().error('ERROR: [/import/model module (update_metadata_record/get_mods)] Unable to terminate session');
+             return false;
+             }
+
+             if (httpResponse.statusCode === 201) {
+             LOGGER.module().info('INFO: ArchivesSpace session terminated.');
+             return false;
+
+             } else {
+             LOGGER.module().error('ERROR: [/import/model module (update_metadata_record/get_mods)] Unable to terminate session');
+             return false;
+             }
+             });
+        */
+        }
+
+        callback({
+            status: 201
         });
     });
 };
 
-/** TODO: refactor to check null fields
+/**
+ * Updates mods
+ * @param sip_uuid
+ * @param mods
+ * @param callback
+ */
+const update_db_mods = function (sip_uuid, mods, callback) {
+
+    DB(REPO_OBJECTS)
+        .where({
+            sip_uuid: sip_uuid
+        })
+        .update({
+            mods: mods
+        })
+        .then(function (data) {
+
+            let updated = false;
+
+            if (data === 1) {
+                updated = true;
+            }
+
+            callback(updated);
+            return null;
+        })
+        .catch(function (error) {
+            LOGGER.module().fatal('FATAL: [/import/model module (update_db_mods)] unable to update mods ' + error);
+            throw 'FATAL: [/import/model module (update_db_mods)] unable to update mods ' + error;
+        });
+};
+
+/**
  * Gets incomplete records in repo
  * @param req
  * @param callback
@@ -96,7 +1274,7 @@ exports.get_import_incomplete = function (req, callback) {
         });
 };
 
-/** TODO: REMOVE
+/**
  * Gets daily completed records list
  * @param req
  * @param callback
@@ -130,8 +1308,8 @@ exports.get_import_complete = function (req, callback) {
  * Saves missing mods id to repository record
  * @param req
  * @param callback
- */
-exports.import_mods_id = function (req, callback) {
+
+ exports.import_mods_id = function (req, callback) {
 
     let sip_uuid = req.body.sip_uuid,
         mods_id = req.body.mods_id;
@@ -177,13 +1355,14 @@ exports.import_mods_id = function (req, callback) {
             throw 'FATAL: [/import/model module (import_mods_id)] unable to save mods id ' + error;
         });
 };
+ */
 
 /**
  * Imports mods record from Archivesspace
  * @param req
  * @param callback
- */
-exports.import_mods = function (req, callback) {
+
+ exports.import_mods = function (req, callback) {
 
     let mods_id = req.body.mods_id,
         sip_uuid = req.body.sip_uuid;
@@ -375,13 +1554,14 @@ exports.import_mods = function (req, callback) {
         });
     });
 };
+ */
 
 /**
  * Imports missing thumbnail path
  * @param req
  * @param callback
- */
-exports.import_thumbnail = function (req, callback) {
+
+ exports.import_thumbnail = function (req, callback) {
 
     let sip_uuid = req.body.sip_uuid;
 
@@ -400,13 +1580,14 @@ exports.import_thumbnail = function (req, callback) {
 
     return false;
 };
+ */
 
 /**
  * Imports missing master path
  * @param req
  * @param callback
- */
-exports.import_master = function (req, callback) {
+
+ exports.import_master = function (req, callback) {
 
     let sip_uuid = req.body.sip_uuid;
 
@@ -425,13 +1606,14 @@ exports.import_master = function (req, callback) {
 
     return false;
 };
+ */
 
 /**
  * Adds missing component data to repository record
  * @param sip_uuid
  * @param type
- */
-const update_missing_component = function (sip_uuid, type, callback) {
+
+ const update_missing_component = function (sip_uuid, type, callback) {
 
     ARCHIVEMATICA.get_dip_path(sip_uuid, function (dip_path) {
 
@@ -482,9 +1664,9 @@ const update_missing_component = function (sip_uuid, type, callback) {
                 .update(record)
                 .then(function (data) {
 
-                    /*
-                     rebuild display record
-                     */
+
+                     // rebuild display record
+
                     REQUEST.post({
                         url: CONFIG.apiUrl + '/api/admin/v1/repo/reset?api_key=' + CONFIG.apiKey,
                         form: {
@@ -503,9 +1685,9 @@ const update_missing_component = function (sip_uuid, type, callback) {
 
                             setTimeout(function () {
 
-                                /*
-                                 reindex record
-                                 */
+
+                                // reindex record
+
                                 REQUEST.post({
                                     url: CONFIG.apiUrl + '/api/admin/v1/indexer?api_key=' + CONFIG.apiKey,
                                     form: {
@@ -554,3 +1736,4 @@ const update_missing_component = function (sip_uuid, type, callback) {
         });
     });
 };
+ */

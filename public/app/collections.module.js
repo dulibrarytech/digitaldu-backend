@@ -289,7 +289,7 @@ const collectionsModule = (function () {
         let obj = {};
         obj.sip_uuid = pid;
 
-        let url = api + '/api/admin/v1/repo/metadata/collection',
+        let url = api + '/api/admin/v1/import/metadata/collection',
             token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'PUT',
@@ -347,7 +347,7 @@ const collectionsModule = (function () {
         
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        let obj = {};
+        let obj = {}; // TODO: change endpoint
         let url = api + '/api/admin/v1/utils/batch/update/metadata/collection',
             token = userModule.getUserToken(),
             request = new Request(url, {

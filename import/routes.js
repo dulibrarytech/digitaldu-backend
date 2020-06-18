@@ -35,9 +35,11 @@ module.exports = function (app) {
     app.route('/api/admin/v1/import/approve_transfer')
         .post(TOKEN.verify, IMPORT.approve_transfer);
 
+    // initiates transfer status checks
     app.route('/api/admin/v1/import/transfer_status')
         .get(TOKEN.verify, IMPORT.get_transfer_status);
 
+    // initiates ingest status checks
     app.route('/api/admin/v1/import/ingest_status')
         .get(TOKEN.verify, IMPORT.get_ingest_status);
 
@@ -56,21 +58,27 @@ module.exports = function (app) {
     app.route('/api/admin/v1/import/complete')
         .get(TOKEN.verify, IMPORT.get_import_complete);
 
-    app.route('/api/admin/v1/import/mods')
-        .post(TOKEN.verify, IMPORT.import_mods);
+    // gets archivesspace session token
+    app.route('/api/admin/v1/import/metadata/session')
+        .get(TOKEN.verify, IMPORT.get_session_token);
 
-    app.route('/api/admin/v1/import/mods_id')
-        .post(TOKEN.verify, IMPORT.import_mods_id);
+    // destroys archivesspace session token
+    app.route('/api/admin/v1/import/metadata/session/destroy')
+        .post(TOKEN.verify, IMPORT.destroy_session_token);
 
-    app.route('/api/admin/v1/import/thumbnail')
-        .post(TOKEN.verify, IMPORT.import_thumbnail);
+    // updates single collection metadata record
+    app.route('/api/admin/v1/import/metadata/collection')
+        .put(TOKEN.verify, IMPORT.update_collection_metadata_record);
 
-    app.route('/api/admin/v1/import/master')
-        .post(TOKEN.verify, IMPORT.import_master);
+    // updates single object metadata record
+    app.route('/api/admin/v1/import/metadata/object')
+        .put(TOKEN.verify, IMPORT.update_object_metadata_record);
 
-    app.route('/api/admin/v1/import/checksum')
-        .post(TOKEN.verify, IMPORT.import_checksum);
+    // batch updates all metadata records (collections and objects)
+    app.route('/api/admin/v1/import/metadata/batch')
+        .post(TOKEN.verify, IMPORT.batch_update_metadata);
 
+    // transfer/import status checks
     app.route('/api/admin/v1/import/poll/transfer_status')
         .get(TOKEN.verify, IMPORT.poll_transfer_status);
 
@@ -83,6 +91,33 @@ module.exports = function (app) {
     app.route('/api/admin/v1/import/poll/fail_queue')
         .get(TOKEN.verify, IMPORT.poll_fail_queue);
 
+
+
+    /* TODO: remove?
+     app.route('/api/admin/v1/import/mods')
+     .post(TOKEN.verify, IMPORT.import_mods);
+     */
+
+    /*
+     // TODO: remove?
+     app.route('/api/admin/v1/import/mods_id')
+     .post(TOKEN.verify, IMPORT.import_mods_id);
+
+     // TODO: remove
+     app.route('/api/admin/v1/import/thumbnail')
+     .post(TOKEN.verify, IMPORT.import_thumbnail);
+
+     // TODO: remove
+     app.route('/api/admin/v1/import/master')
+     .post(TOKEN.verify, IMPORT.import_master);
+
+     // TODO: remove
+     app.route('/api/admin/v1/import/checksum')
+     .post(TOKEN.verify, IMPORT.import_checksum);
+     */
+
+    /*
     app.route('/api/admin/v1/import/metadata/updates')
         .post(TOKEN.verify, IMPORT.get_metadata_updates);
+    */
 };
