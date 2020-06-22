@@ -32,32 +32,46 @@ exports.ping = function (callback) {
 
     (async() => {
 
-        let response = await HTTP.get(apiUrl, {
-            timeout: 35000,
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
+        try {
 
-        if (response.error === true) {
+            let response = await HTTP.get(apiUrl, {
+                timeout: 35000,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.error === true) {
+
+                LOGGER.module().error('ERROR: [/libs/archivesspace lib (ping)] request to archivesspace failed');
+
+                callback({
+                    error: true,
+                    status: 'down',
+                    message: response
+                });
+
+                return false;
+
+            } else {
+
+                callback({
+                    error: false,
+                    status: 'up',
+                    message: 'Archivespace service is available'
+                });
+            }
+
+        } catch (error) {
 
             LOGGER.module().error('ERROR: [/libs/archivesspace lib (ping)] request to archivesspace failed');
 
             callback({
                 error: true,
                 status: 'down',
-                message: response
+                message: error
             });
 
-            return false;
-
-        } else {
-
-            callback({
-                error: false,
-                status: 'up',
-                message: 'Archivespace service is available'
-            });
         }
 
         return false;
@@ -87,30 +101,44 @@ exports.get_mods = function (id, session, callback) {
 
     (async() => {
 
-        let response = await HTTP.get(apiUrl, {
-            timeout: 35000,
-            headers: {
-                'Content-Type': 'application/json',
-                'X-ArchivesSpace-Session': session
-            }
-        });
+        try {
 
-        if (response.error === true) {
+            let response = await HTTP.get(apiUrl, {
+                timeout: 35000,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-ArchivesSpace-Session': session
+                }
+            });
+
+            if (response.error === true) {
+
+                LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed');
+
+                callback({
+                    error: true,
+                    error_message: 'ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed'
+                });
+
+                return false;
+
+            } else {
+
+                callback({
+                    error: false,
+                    mods: response
+                });
+
+                return false;
+            }
+
+        } catch (error) {
 
             LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed');
 
             callback({
                 error: true,
-                error_message: 'ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed'
-            });
-
-            return false;
-
-        } else {
-
-            callback({
-                error: false,
-                mods: response
+                error_message: 'ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed ' + error
             });
 
             return false;
@@ -129,31 +157,45 @@ exports.get_session_token = function (callback) {
 
     let apiUrl = CONFIG.archivespaceHost + '/users/' + CONFIG.archivespaceUser + '/login?password=' + CONFIG.archivespacePassword + '&expiring=false';
 
-    (async () => {
+    (async() => {
 
-        let response = await HTTP.post(apiUrl, {
-            timeout: 35000,
-            headers: {
-                'Content-Type': 'application/json'
+        try {
+
+            let response = await HTTP.post(apiUrl, {
+                timeout: 35000,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.error === true) {
+
+                LOGGER.module().error('ERROR: [/import/model module (update_metadata_record/get_mods)] Unable to get session token');
+
+                callback({
+                    error: true,
+                    error_message: 'Unable to get session token'
+                });
+
+                return false;
+
+            } else {
+
+                callback({
+                    error: false,
+                    data: JSON.stringify(response.data)
+                });
+
+                return false;
             }
-        });
 
-        if (response.error === true) {
+        } catch(error) {
 
             LOGGER.module().error('ERROR: [/import/model module (update_metadata_record/get_mods)] Unable to get session token');
 
             callback({
                 error: true,
-                error_message: ''
-            });
-
-            return false;
-
-        } else {
-
-            callback({
-                error: false,
-                data: JSON.stringify(response.data)
+                error_message: error
             });
 
             return false;
@@ -173,35 +215,47 @@ exports.destroy_session_token = function (session, callback) {
 
     let apiUrl = CONFIG.archivespaceHost + '/logout';
 
-    (async () => {
+    (async() => {
 
-        let response = await HTTP.post(apiUrl, {
-            timeout: 35000,
-            headers: {
-                'Content-Type': 'application/json',
-                'X-ArchivesSpace-Session': session
+        try {
+
+            let response = await HTTP.post(apiUrl, {
+                timeout: 35000,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-ArchivesSpace-Session': session
+                }
+            });
+
+            if (response.error === true) {
+
+                LOGGER.module().error('ERROR: [/import/model module (update_metadata_record/get_mods)] Unable to terminate session');
+
+                callback({
+                    error: true,
+                    error_message: 'Unable to terminate session'
+                });
+
+                return false;
+
+            } else {
+
+                callback({
+                    error: false,
+                    data: response.data
+                });
+
+                return false;
             }
-        });
 
-        if (response.error === true) {
+        } catch(error) {
 
             LOGGER.module().error('ERROR: [/import/model module (update_metadata_record/get_mods)] Unable to terminate session');
 
             callback({
                 error: true,
-                error_message: ''
+                error_message: error
             });
-
-            return false;
-
-        } else {
-
-            callback({
-                error: false,
-                data: response.data
-            });
-
-            return false;
         }
 
     })();
