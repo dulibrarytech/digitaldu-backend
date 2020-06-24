@@ -22,6 +22,8 @@ const CONFIG = require('../config/config'),
     LOGGER = require('../libs/log4'),
     ASYNC = require('async'),
     ES = require('elasticsearch'),
+    FS = require('fs'),
+    ES_MAPPINGS = './indexer/mappings.json',
     CLIENT = new ES.Client({
         host: CONFIG.elasticSearch
     });
@@ -116,7 +118,7 @@ exports.create_repo_index = function (req, callback) {
     });
 
     callback({
-        status: 200,
+        status: 201,
         data: 'Creating index...'
     });
 };
@@ -151,7 +153,7 @@ exports.delete_repo_index = function (req, callback) {
         }
 
         callback({
-            status: 200,
+            status: 201,
             message: message
         });
 
@@ -257,7 +259,14 @@ exports.unindex_record = function (obj, callback) {
 /**
  *  Returns field mappings
  */
-function get_mapping () {
+function get_mapping() {
+    return JSON.parse(FS.readFileSync(ES_MAPPINGS, 'utf8'));
+}
+
+/** TODO: remove
+ *  Returns field mappings
+
+function get_mapping_ () {
 
     return {
         "abstract": {
@@ -1188,3 +1197,4 @@ function get_mapping () {
         }
     };
 }
+ */

@@ -127,7 +127,7 @@ exports.get = function(request_obj) {
 exports.post = function(request_obj) {
 
     if (request_obj === undefined) {
-        LOGGER.module().error('ERROR: [HTTP libs (get)] Missing request object.');
+        LOGGER.module().error('ERROR: [HTTP libs (post)] Missing request object.');
         return false;
     }
 
@@ -144,7 +144,7 @@ exports.post = function(request_obj) {
 
             let response = await HTTP.post(url, data, request_obj);
 
-            if (response.status === 201) {
+            if (response.status === 201 || response.status === 200) {
 
                 return {
                     error: false,
@@ -186,7 +186,7 @@ exports.post = function(request_obj) {
 exports.put = function(request_obj) {
 
     if (request_obj === undefined) {
-        LOGGER.module().error('ERROR: [HTTP libs (get)] Missing request object.');
+        LOGGER.module().error('ERROR: [HTTP libs (put)] Missing request object.');
         return false;
     }
 
@@ -203,7 +203,7 @@ exports.put = function(request_obj) {
 
             let response = await HTTP.put(url, data, request_obj);
 
-            if (response.status === 201) {
+            if (response.status === 201 || response.status === 200) {
 
                 return {
                     error: false,
@@ -213,7 +213,7 @@ exports.put = function(request_obj) {
 
             } else {
 
-                LOGGER.module().error('ERROR: [HTTP libs (post)] HTTP PUT request failed.');
+                LOGGER.module().error('ERROR: [HTTP libs (put)] HTTP PUT request failed.');
 
                 return {
                     error: true,
@@ -224,7 +224,7 @@ exports.put = function(request_obj) {
 
         } catch (error) {
 
-            LOGGER.module().error('ERROR: [HTTP libs (post)] HTTP PUT request failed. ' + error);
+            LOGGER.module().error('ERROR: [HTTP libs (put)] HTTP PUT request failed. ' + error);
 
             return {
                 error: true,

@@ -189,7 +189,7 @@ exports.get_session_token = function (callback) {
                 return false;
             }
 
-        } catch(error) {
+        } catch (error) {
 
             LOGGER.module().error('ERROR: [/import/model module (update_metadata_record/get_mods)] Unable to get session token');
 
@@ -219,17 +219,19 @@ exports.destroy_session_token = function (session, callback) {
 
         try {
 
-            let response = await HTTP.post(apiUrl, {
+            let response = await HTTP({
+                method: 'post',
+                url: apiUrl,
                 timeout: 35000,
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-ArchivesSpace-Session': session
+                    'X-ArchivesSpace-Session': session,
+                    'Content-Type': 'application/json'
                 }
             });
 
             if (response.error === true) {
 
-                LOGGER.module().error('ERROR: [/import/model module (update_metadata_record/get_mods)] Unable to terminate session');
+                LOGGER.module().error('ERROR: [archivesspace lib (destroy_session_token)] Unable to terminate session');
 
                 callback({
                     error: true,
@@ -248,9 +250,9 @@ exports.destroy_session_token = function (session, callback) {
                 return false;
             }
 
-        } catch(error) {
+        } catch (error) {
 
-            LOGGER.module().error('ERROR: [/import/model module (update_metadata_record/get_mods)] Unable to terminate session');
+            LOGGER.module().error('ERROR: [archivesspace lib (destroy_session_token)] Unable to terminate session');
 
             callback({
                 error: true,

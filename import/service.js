@@ -85,13 +85,11 @@ exports.destroy_session_token = function(req, callback) {
             status: 201
         };
 
-        console.log('line 88 ', result);
-
         if (result.error === false) {
             LOGGER.module().info('INFO: ArchivesSpace session terminated. ' + result.data);
             callback(obj);
         } else {
-            LOGGER.module().error('ERROR: [/import/model module (update_metadata_record/get_mods)] Unable to terminate session');
+            LOGGER.module().error('ERROR: [/import/service module (destroy_session_token)] Unable to terminate session');
             callback(obj);
         }
 

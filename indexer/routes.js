@@ -27,10 +27,6 @@ module.exports = function (app) {
         .post(TOKEN.verify, INDEXER.index_record)
         .delete(TOKEN.verify, INDEXER.unindex_record);
 
-    /*
-    app.route('/api/admin/v1/indexer/')
-        .delete(TOKEN.verify, INDEXER.unindex_record);
-    */
     app.route('/api/admin/v1/indexer/all')
         .post(TOKEN.verify, INDEXER.index_records);
 

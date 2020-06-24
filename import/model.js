@@ -538,6 +538,9 @@ exports.update_object_metadata_record = function (req, callback) {
 
                 if (obj.single_record !== undefined && obj.single_record === true) {
 
+                    console.log('single record, teminate session here');
+                    console.log(obj.session);
+
                     (async() => {
 
                         let data = {
@@ -555,19 +558,19 @@ exports.update_object_metadata_record = function (req, callback) {
                             LOGGER.module().info('INFO: [/import/model module (update_object_metadata_record/get_mods)] ArchivesSpace session terminated.');
                         }
 
-                        obj.session = null;
-                        callback(null, obj);
-                        return false;
-
                     })();
+
+
+                    obj.session = null;
+                    callback(null, obj);
+                    return false;
                 }
             }
 
             obj.mods = data.mods;
             callback(null, obj);
+            return false;
         });
-
-        return false;
     }
 
     // 3.)
@@ -1129,10 +1132,7 @@ exports.update_collection_metadata_record = function (req, callback) {
             LOGGER.module().error('ERROR: [/import/model module (update_collection_metadata_record/async.waterfall)] ' + error);
         }
 
-        // TODO: test with single record
         if (results.session !== null && results.single_record !== undefined && results.single_record === true) {
-
-            console.log(results.session);
 
             (async() => {
 

@@ -1105,7 +1105,7 @@ exports.reindex = function (req, callback) {
                     return false;
                 }
 
-                if (httpResponse.statusCode === 200) {
+                if (httpResponse.statusCode === 201) {
                     logger.module().info('INFO: [/import/utils module (reindex/delete_index/del)] ' + index_name + ' deleted.');
                     return false;
                 } else {
@@ -1153,7 +1153,7 @@ exports.reindex = function (req, callback) {
                     return false;
                 }
 
-                if (httpResponse.statusCode === 200) {
+                if (httpResponse.statusCode === 201) {
                     logger.module().info('INFO: [/import/utils module (reindex/create_index/create)] ' + index_name + ' created.');
                     return false;
                 } else {
@@ -1200,7 +1200,7 @@ exports.reindex = function (req, callback) {
                     return false;
                 }
 
-                if (httpResponse.statusCode === 200) {
+                if (httpResponse.statusCode === 201) {
                     logger.module().info('INFO: [/import/utils module (reindex/index/reindex)] reindexing ' + index_name + '.');
                     obj.reindexed = true;
                     callback(null, obj);
