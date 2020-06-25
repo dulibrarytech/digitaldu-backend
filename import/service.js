@@ -86,7 +86,7 @@ exports.destroy_session_token = function(req, callback) {
         };
 
         if (result.error === false) {
-            LOGGER.module().info('INFO: ArchivesSpace session terminated. ' + result.data);
+            LOGGER.module().info('INFO: ArchivesSpace session terminated.');
             callback(obj);
         } else {
             LOGGER.module().error('ERROR: [/import/service module (destroy_session_token)] Unable to terminate session');

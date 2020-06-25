@@ -204,7 +204,7 @@ exports.batch_update_metadata = function (req, callback) {
 
         const request_collection_update = function (obj, sip_uuid) {
 
-            LOGGER.module().info('INFO: [/import/model module (batch_update_metadata/update_metadata_records)] updating collection ' + sip_uuid);
+            LOGGER.module().info('INFO: [/import/model module (batch_update_metadata/request_collection_update)] updating collection ' + sip_uuid);
 
             (async() => {
 
@@ -219,7 +219,7 @@ exports.batch_update_metadata = function (req, callback) {
                 });
 
                 if (response.error === true) {
-                    LOGGER.module().error('ERROR: [/import/model module (batch_update_metadata/update_metadata_records)] unable to update record');
+                    LOGGER.module().error('ERROR: [/import/model module (batch_update_metadata/request_collection_update)] unable to update record');
                 }
 
                 return false;
@@ -254,7 +254,7 @@ exports.batch_update_metadata = function (req, callback) {
 
         const request_object_update = function (obj, sip_uuid) {
 
-            LOGGER.module().info('INFO: [/import/model module (batch_update_metadata/update_metadata_records)] updating object ' + sip_uuid);
+            LOGGER.module().info('INFO: [/import/model module (batch_update_metadata/request_object_update)] updating object ' + sip_uuid);
 
             (async() => {
 
@@ -269,7 +269,7 @@ exports.batch_update_metadata = function (req, callback) {
                 });
 
                 if (response.error === true) {
-                    LOGGER.module().error('ERROR: [/import/model module (batch_update_metadata/update_metadata_records)] unable to update record');
+                    LOGGER.module().error('ERROR: [/import/model module (batch_update_metadata/request_object_update)] unable to update record');
                 }
 
                 return false;
@@ -537,9 +537,6 @@ exports.update_object_metadata_record = function (req, callback) {
                 LOGGER.module().info('INFO: no update required for record ' + obj.sip_uuid);
 
                 if (obj.single_record !== undefined && obj.single_record === true) {
-
-                    console.log('single record, teminate session here');
-                    console.log(obj.session);
 
                     (async() => {
 
@@ -829,16 +826,17 @@ exports.update_collection_metadata_record = function (req, callback) {
                 } else {
                     obj.single_record = true;
                     obj.session = response.data.session;
-                    callback(null, obj);
                 }
 
+                callback(null, obj);
                 return false;
 
             })();
-        }
 
-        obj.session = session;
-        callback(null, obj);
+        } else {
+            obj.session = session;
+            callback(null, obj);
+        }
     }
 
     // 2.)
@@ -865,6 +863,7 @@ exports.update_collection_metadata_record = function (req, callback) {
                 obj.uri = data[0].uri;
                 obj.prev_mods = data[0].mods;
                 callback(null, obj);
+                return null;
             })
             .catch(function (error) {
                 LOGGER.module().fatal('FATAL: [/import/model module (update_collection_metadata_record/get_uri)] unable to get uri ' + error);
@@ -894,7 +893,6 @@ exports.update_collection_metadata_record = function (req, callback) {
 
                 LOGGER.module().info('INFO: no update required for record ' + obj.sip_uuid);
 
-                /*
                 if (obj.single_record !== undefined && obj.single_record === true) {
 
                     (async() => {
@@ -917,12 +915,19 @@ exports.update_collection_metadata_record = function (req, callback) {
                         return false;
 
                     })();
-                }
-                */
-            }
 
-            obj.mods = data.mods;
-            callback(null, obj);
+                } else {
+                    // no update needed, but we still need the session for the batch to proceed
+                    obj.session = null;
+                    callback(null, obj);
+                    return false;
+                }
+
+            } else {
+                // record needs to be updated
+                obj.mods = data.mods;
+                callback(null, obj);
+            }
         });
     }
 
@@ -1132,7 +1137,7 @@ exports.update_collection_metadata_record = function (req, callback) {
             LOGGER.module().error('ERROR: [/import/model module (update_collection_metadata_record/async.waterfall)] ' + error);
         }
 
-        if (results.session !== null && results.single_record !== undefined && results.single_record === true) {
+        if (results.session !== null) {
 
             (async() => {
 
@@ -1149,59 +1154,7 @@ exports.update_collection_metadata_record = function (req, callback) {
                     LOGGER.module().error('ERROR: [/import/model module (update_collection_metadata_record/async.waterfall)] Unable to terminate session');
                 }
 
-                return false;
-
             })();
-
-            /*
-            (async() => {
-
-                let data = {
-                    'session': results.session
-                };
-
-                let response = await HTTP.post({
-                    endpoint: '/api/admin/v1/import/metadata/session/destroy',
-                    data: data
-                });
-
-                if (response.error === true) {
-                    LOGGER.module().error('ERROR: [/import/model module (update_metadata_record/get_mods)] Unable to terminate session');
-                } else {
-                    LOGGER.module().info('INFO: ArchivesSpace session terminated.');
-                }
-
-                return false;
-
-            })();
-            */
-
-            /*
-
-            /*
-             REQUEST.post({
-             url: CONFIG.apiUrl + '/api/admin/v1/import/metadata/session/destroy?api_key=' + CONFIG.apiKey,
-             form: {
-             'session': results.session
-             },
-             timeout: 55000
-             }, function (error, httpResponse, body) {
-
-             if (error) {
-             LOGGER.module().error('ERROR: [/import/model module (update_metadata_record/get_mods)] Unable to terminate session');
-             return false;
-             }
-
-             if (httpResponse.statusCode === 201) {
-             LOGGER.module().info('INFO: ArchivesSpace session terminated.');
-             return false;
-
-             } else {
-             LOGGER.module().error('ERROR: [/import/model module (update_metadata_record/get_mods)] Unable to terminate session');
-             return false;
-             }
-             });
-        */
         }
 
         callback({
