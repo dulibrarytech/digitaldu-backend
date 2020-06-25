@@ -40,6 +40,7 @@ module.exports = {
     elasticSearchShards: process.env.ELASTIC_SEARCH_SHARDS,
     elasticSearchReplicas: process.env.ELASTIC_SEARCH_REPLICAS,
     indexTimer: process.env.INDEX_TIMER,
+    archivesSpaceTimer: process.env.METADATA_UPDATE_TIMER,
     apiUrl: process.env.API_URL,
     uuidDomain: process.env.UUID_DOMAIN,
     namespace: process.env.REPO_NAMESPACE,

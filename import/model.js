@@ -18,13 +18,11 @@
 
 'use strict';
 
-const // CONFIG = require('../config/config'),
-    // ARCHIVESSPACE = require('../libs/archivespace'),
+const CONFIG = require('../config/config'),
     MODS = require('../libs/display-record'),
     SERVICE = require('../import/service'),
     LOGGER = require('../libs/log4'),
     ASYNC = require('async'),
-    // REQUEST = require('request'),
     HTTP = require('../libs/http'),
     VALIDATOR = require('validator'),
     DB = require('../config/db')(),
@@ -107,7 +105,7 @@ exports.batch_update_metadata = function (req, callback) {
             })
             .then(async function (data) {
 
-                let object_timer = 8000;
+                let object_timer = CONFIG.archivesSpaceTimer;
                 let counts = [];
 
                 for (let i = 0; i < data.length; i++) {
