@@ -335,14 +335,14 @@ const collectionsModule = (function () {
 
     /**
      * Binds click event to defined selector
-     */
+
     obj.batchUpdateCollectionMetadataListener = function() {
         domModule.getElement('#batch-update-collection-metadata').addEventListener('click', batchUpdateCollectionMetadata);
     };
-
+     */
     /**
      * Batch updates all collection metadata records
-     */
+
     const batchUpdateCollectionMetadata = function () {
         
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -390,6 +390,7 @@ const collectionsModule = (function () {
         httpModule.req(request, callback);
         return false;
     };
+     */
 
     return obj;
 

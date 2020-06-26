@@ -20,6 +20,7 @@
 
 const CONFIG = require('../config/config'),
     REQUEST = require('request'),
+    HTTP = require('../libs/http'),
     ASYNC = require('async'),
     UUID = require('node-uuid'),
     VALIDATOR = require('validator'),
@@ -28,7 +29,8 @@ const CONFIG = require('../config/config'),
     ARCHIVESSPACE = require('../libs/archivespace'),
     ARCHIVEMATICA = require('../libs/archivematica'),
     DELETEDIP = require('../libs/delete-dip'),
-    DELETEAIP = require('../libs/delete-aip'),
+    SERVICE = require('../repository/service'),
+    // DELETEAIP = require('../libs/delete-aip'),
     LOGGER = require('../libs/log4'),
     DB = require('../config/db')(),
     DBQ = require('../config/dbqueue')(),
@@ -91,15 +93,6 @@ exports.update_thumbnail = function (req, callback) {
     }
 
     let pid = req.body.pid;
-
-    /*
-     if (req.body.thumbnail_url.indexOf('http') === -1 || req.body.thumbnail_url.indexOf('https') === -1) {
-     thumbnail = pid;
-     } else {
-     thumbnail = req.body.thumbnail_url;
-     }
-     */
-
     let thumbnail = req.body.thumbnail_url;
     let obj = {};
     obj.pid = pid;
@@ -357,7 +350,6 @@ exports.create_collection_object = function (req, callback) {
             });
     }
 
-    // TODO: get from import module endpoint
     function get_session_token(obj, callback) {
 
         if (obj.dupe === true) {
@@ -366,54 +358,28 @@ exports.create_collection_object = function (req, callback) {
             return false;
         }
 
-        ARCHIVESSPACE.get_session_token(function (response) {
+        (async() => {
 
-            let result = response.data,
-                obj = {},
-                token;
+            let uriArr = data.uri.split('/');
+            let response = await HTTP.get({
+                endpoint: '/api/admin/v1/import/metadata/session'
+            });
 
-            if (result === undefined) {
+            if (response.error === true) {
                 obj.session = null;
                 callback(null, obj);
-                return false;
-            }
-
-            try {
-
-                token = JSON.parse(result);
-
-                if (token.session === undefined) {
-                    LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/get_session_token/ARCHIVESSPACE.get_session_token)] session token is undefined');
-                    obj.session = null;
-                    callback(null, obj);
-                    return false;
-                }
-
-                if (token.error === true) {
-                    LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/get_session_token/ARCHIVESSPACE.get_session_token)] session token error' + token.error_message);
-                    obj.session = null;
-                    callback(null, obj);
-                    return false;
-                }
-
-                let uriArr = data.uri.split('/'),
-                    mods_id = uriArr[uriArr.length - 1];
-
-                obj.mods_id = mods_id;
+            } else {
+                obj.mods_id = uriArr[uriArr.length - 1];
                 obj.uri = data.uri;
-                obj.session = token.session;
-
+                obj.session = response.data.session;
                 callback(null, obj);
-                return false;
-
-            } catch (error) {
-                LOGGER.module().fatal('FATAL: [/repository/model module (create_collection_object/get_session_token/ARCHIVESSPACE.get_session_token)] session token error ' + error);
             }
-        });
 
+            return false;
+
+        })();
     }
 
-    // TODO: move to service?
     function get_mods(obj, callback) {
 
         if (obj.session === null || obj.dupe === true) {
@@ -421,28 +387,22 @@ exports.create_collection_object = function (req, callback) {
             return false;
         }
 
-        setTimeout(function () {
+        SERVICE.get_mods(obj, function(response) {
 
-            ARCHIVESSPACE.get_mods(obj.uri, obj.session, function (response) {
+            if (response.error !== undefined && response.error === true) {
 
-                if (response.error !== undefined && response.error === true) {
+                LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/get_mods)] unable to get mods ' + response.error_message);
 
-                    LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/get_mods)] unable to get mods ' + response.error_message);
-
-                    obj.mods = null;
-                    callback(null, obj);
-                    return false;
-                }
-
-                obj.object_type = 'collection';
-                obj.mods = response.mods;
-                obj.is_member_of_collection = data.is_member_of_collection;
-
-                delete obj.session;
+                obj.mods = null;
                 callback(null, obj);
-            });
+                return false;
+            }
 
-        }, 2000);
+            obj.object_type = 'collection';
+            obj.is_member_of_collection = data.is_member_of_collection;
+            delete obj.session;
+            callback(null, obj);
+        });
     }
 
     function get_pid(obj, callback) {
@@ -507,8 +467,18 @@ exports.create_collection_object = function (req, callback) {
             return false;
         }
 
+        let record = {};
+            record.mods_id = obj.mods_id;
+            record.uri = obj.uri;
+            record.mods = obj.mods;
+            record.object_type = obj.object_type;
+            record.is_member_of_collection = obj.is_member_of_collection;
+            record.pid = obj.pid;
+            record.sip_uuid = obj.sip_uuid;
+            record.display_record = obj.display_record;
+
         DB(REPO_OBJECTS)
-            .insert(obj)
+            .insert(record)
             .then(function (data) {
                 callback(null, obj);
             })
@@ -572,6 +542,7 @@ exports.create_collection_object = function (req, callback) {
                 status: 200,
                 message: 'Cannot create duplicate collection object.'
             });
+
         } else {
 
             LOGGER.module().info('INFO: [/repository/model module (create_collection_object/async.waterfall)] collection record saved');

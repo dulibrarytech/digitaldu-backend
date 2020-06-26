@@ -350,3 +350,74 @@ exports.get_unpublished_admin_objects = function (req, callback) {
         callback(error);
     });
 };
+
+/**
+ * Gets session token
+ * @param req
+ * @param callback
+
+exports.get_session_token = function(req, callback) {
+
+    ARCHIVESSPACE.get_session_token(function (response) {
+
+        let result = response.data,
+            token,
+            obj = {
+                status: 200,
+                data: {
+                    session: null
+                }
+            };
+
+        try {
+
+            token = JSON.parse(result);
+
+            if (token.session === undefined) {
+                LOGGER.module().error('ERROR: [/import/service module (get_session_token/ARCHIVESSPACE.get_session_token)] session token is undefined');
+                obj.message = 'Unable to get session token';
+                callback(obj);
+                return false;
+            }
+
+            if (token.error === true) {
+                LOGGER.module().error('ERROR: [/import/service module (get_session_token/ARCHIVESSPACE.get_session_token)] session token error' + token.error_message);
+                obj.message = 'Session token error ' + token.error_message;
+                callback(obj);
+                return false;
+            }
+
+            obj.data.session = token.session;
+            callback(obj);
+            return false;
+
+        } catch (error) {
+            LOGGER.module().fatal('FATAL: [/import/service module (get_session_token/ARCHIVESSPACE.get_session_token)] session token error ' + error);
+            obj.message = 'Session token error ' + error;
+            callback(obj);
+            return false;
+        }
+    });
+};
+ */
+
+/**
+ * Gets mods record
+ * @param obj
+ * @param callback
+ */
+exports.get_mods = function(obj, callback) {
+
+    ARCHIVESSPACE.get_mods(obj.mods_id, obj.session, function (result) {
+
+        if (result.error === false) {
+            obj.error = result.error;
+            obj.mods = JSON.stringify(result.mods.data);
+        } else {
+            obj.error = result.error;
+            obj.mods = null;
+        }
+
+        callback(obj);
+    });
+};
