@@ -204,6 +204,12 @@ const importModule = (function () {
 
         for (let i = 0; i < data.length; i++) {
 
+            let mods = JSON.parse(data[i].mods);
+            let title = mods.title;
+            let identifier = mods.identifiers[0].identifier;
+            let display_record = JSON.parse(data[i].display_record);
+
+            /*
             html += '<tr>';
 
             let tn = helperModule.getTn(DOMPurify.sanitize(data[i].thumbnail), DOMPurify.sanitize(data[i].mime_type), DOMPurify.sanitize(data[i].pid));
@@ -213,22 +219,62 @@ const importModule = (function () {
             } else {
                 html += '<td ' + alignTd + '><img style="border: solid 1px;" src="' + tn + '" width="75" height="75"></td>';
             }
+            */
 
-            html += '<td ' + alignTd + '><a href="/dashboard/objects/?pid=' + DOMPurify.sanitize(data[i].is_member_of_collection) + '">' + DOMPurify.sanitize(data[i].is_member_of_collection) + '</a></td>';
+            if (data[i].mime_type === null || data[i].thumbnail === null) {
+                html += '<tr style="background-color:#ffcdd2">';
+                html += '<td ' + alignTd + '><i class="fa fa-exclamation fa-lg" style="color:red"></i></td>';
+            } else {
+                html += '<tr>';
+                html += '<td ' + alignTd + '><i class="fa fa-check fa-lg" style="color:green"></i></td>';
+            }
+
+            html += '<td ' + alignTd + '><a href="/dashboard/objects/?pid=' + DOMPurify.sanitize(data[i].is_member_of_collection) + '"><i class="fa fa-archive fa-lg"></i></a></td>';
 
             if (data[i].sip_uuid !== null) {
+
+                let compound = '';
+
+                if (display_record.is_compound === 1) {
+                    compound = '&nbsp;&nbsp;<i class="fa fa-cubes"></i>';
+                }
+
                 let token = userModule.getUserToken();
-                html += '<td ' + alignTd + '><a href="' + api + '/api/admin/v1/repo/object/viewer?uuid=' + DOMPurify.sanitize(data[i].sip_uuid) + '&t=' + token + '" target="_blank">' + DOMPurify.sanitize(data[i].sip_uuid) + '</a></td>';
+                html += '<td ' + alignTd + '><a href="' + api + '/api/admin/v1/repo/object/viewer?uuid=' + DOMPurify.sanitize(data[i].sip_uuid) + '&t=' + token + '" target="_blank">' + DOMPurify.sanitize(title) + compound + '</a></td>';
             }
 
             if (data[i].mods_id !== null) {
-                html += '<td ' + alignTd + '><a href="' + configModule.getASpace() + configModule.getUriPath() + DOMPurify.sanitize(data[i].mods_id) + '" target="_blank">' + configModule.getUriPath() + DOMPurify.sanitize(data[i].mods_id) + '</a></i></td>';
+                html += '<td ' + alignTd + '><a href="' + configModule.getASpace() + configModule.getUriPath() + DOMPurify.sanitize(data[i].mods_id) + '" target="_blank">' + identifier + '</a></i></td>';
             }
 
             if (data[i].mime_type !== null) {
-                html += '<td ' + alignTd + '>' + DOMPurify.sanitize(data[i].mime_type) + '</td>';
+
+                switch (data[i].mime_type) {
+                    case 'application/pdf':
+                        html += '<td ' + alignTd + ' title="' + DOMPurify.sanitize(data[i].mime_type) + '"><i class="fa fa-file-pdf-o fa-lg"></i></td>';
+                        break;
+                    case 'video/mov':
+                        html += '<td ' + alignTd + ' title="' + DOMPurify.sanitize(data[i].mime_type) + '"><i class="fa fa-file-video-o fa-lg"></i></td>';
+                        break;
+                    case 'video/mp4':
+                        html += '<td ' + alignTd + ' title="' + DOMPurify.sanitize(data[i].mime_type) + '"><i class="fa fa-file-video-o fa-lg"></i></td>';
+                        break;
+                    case 'image/tiff':
+                        html += '<td ' + alignTd + ' title="' + DOMPurify.sanitize(data[i].mime_type) + '"><i class="fa fa-file-image-o fa-lg"></i></td>';
+                        break;
+                    case 'audio/x-wav':
+                        html += '<td ' + alignTd + ' title="' + DOMPurify.sanitize(data[i].mime_type) + '"><i class="fa fa-file-audio-o fa-lg"></i></td>';
+                        break;
+                    case 'audio/mpeg':
+                        html += '<td ' + alignTd + ' title="' + DOMPurify.sanitize(data[i].mime_type) + '"><i class="fa fa-file-audio-o fa-lg"></i></td>';
+                        break;
+
+                    default:
+                        html += '<td ' + alignTd + '><i class="fa fa-exclamation fa-lg"></i> Unknown mime-type</td>';
+                }
+
             } else {
-                html += '<td ' + alignTd + '>Missing mime-type</td>';
+                html += '<td ' + alignTd + '><i class="fa fa-exclamation fa-lg"></i></td>';
             }
 
             html += '<td ' + alignTd + '>' + DOMPurify.sanitize(moment(data[i].created).tz('America/Denver').format('MM-DD-YYYY, h:mm:ss a')) + '</td>';

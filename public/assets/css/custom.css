@@ -871,25 +871,6 @@ footer {
     }
 }
 
-/*
-.tile-stats.sparkline {
-    padding: 10px;
-    text-align: center
-}
-*/
-/*
-.jqstooltip {
-    background: #34495E !important;
-    width: 30px !important;
-    height: 22px !important;
-    text-decoration: none
-}
-
-.tooltip {
-    display: block !important
-}
-*/
-
 .tiles {
     border-top: 1px solid #ccc;
     margin-top: 15px;
@@ -1241,6 +1222,7 @@ td span {
 
 /* Tables */
 
+/*
 table.countries_list {
     width: 100%
 }
@@ -1256,6 +1238,7 @@ table.countries_list td {
     background: #ddd !important;
     border-color: #ddd !important
 }
+*/
 
 button.DTTT_button,
 div.DTTT_button,
@@ -1301,6 +1284,7 @@ table.display thead td:active {
     outline: none
 }
 
+/*
 .dataTables_scroll {
     clear: both
 }
@@ -1313,14 +1297,17 @@ table.display thead td:active {
 .top .dataTables_info {
     float: none
 }
+*/
 
 .clear {
     clear: both
 }
 
+/*
 .dataTables_empty {
     text-align: center
 }
+*/
 
 tfoot input {
     margin: 0.5em 0;
@@ -1343,9 +1330,11 @@ td.details {
     border: 2px solid #A19B9E
 }
 
+/*
 .example_alt_pagination div.dataTables_info {
     width: 40%
 }
+*/
 
 .paging_full_numbers {
     width: 400px;
@@ -1570,6 +1559,7 @@ ul.quick-list li i {
     width: 55%
 }
 
+/*
 h5.graph_title {
     text-align: left;
     margin-left: 10px
@@ -1579,6 +1569,7 @@ h5.graph_title i {
     margin-right: 10px;
     font-size: 17px
 }
+*/
 
 span.right {
     float: right;
@@ -1690,6 +1681,7 @@ span.right {
     width: 12px
 }
 
+/*
 .dashboard_graph {
     background: #fff;
     padding: 7px 10px
@@ -1699,6 +1691,7 @@ span.right {
 .dashboard_graph .col-md-3 {
     padding: 0
 }
+*/
 
 a.user-profile {
     color: #5E6974 !important
@@ -1769,10 +1762,12 @@ ul.top_profiles li:nth-child(odd) {
     margin-bottom: 0
 }
 
+/*
 h4.graph_title {
     margin: 7px;
     text-align: center
 }
+*/
 
 .fontawesome-icon-list .fa-hover a:hover {
     background-color: #ddd;
@@ -2877,6 +2872,7 @@ fieldset {
     padding: 0
 }
 
+/*
 .cropper .img-container,
 .cropper .img-preview {
     background-color: #f7f7f7;
@@ -2989,8 +2985,11 @@ fieldset {
     margin: -6px;
     padding: 6px
 }
+*/
 
+/*
 @media (max-width: 400px) {
+
     .cropper .btn-group-crop {
         margin-right: -15px !important
     }
@@ -3040,6 +3039,7 @@ fieldset {
 .cropper .docs-cropped canvas {
     max-width: 100%
 }
+*/
 
 .progress {
     border-radius: 0
@@ -3127,21 +3127,26 @@ fieldset {
     border-color: rgba(231, 76, 60, 0.88)
 }
 
-.fc-state-default {
-    background: #f5f5f5;
-    color: #73879C
-}
 
-.fc-state-down,
-.fc-state-active {
-    color: #333;
-    background: #ccc
-}
+    /*
+    .fc-state-default {
+        background: #f5f5f5;
+        color: #73879C
+    }
 
+    .fc-state-down,
+    .fc-state-active {
+        color: #333;
+        background: #ccc
+    }
+    */
+
+/*
 .dropzone {
     min-height: 300px;
     border: 1px solid #e5e5e5
 }
+*/
 
 /*
 .x_content {
@@ -3154,6 +3159,7 @@ fieldset {
     margin-top: 4px;
 }
 
+/*
 @media (max-width: 460px) {
     .dataTables_wrapper .col-sm-6 {
         width: 100%;
@@ -3170,14 +3176,19 @@ fieldset {
         float: none;
     }
 }
+*/
 
+    /*
 .daterangepicker.xdisplay {
     width: 228px;
 }
+*/
 
+/*
 .dataTables_wrapper > .row {
-    overflow: auto !important; /*prevent datatables overflowing its container*/
+    overflow: auto !important; /*prevent datatables overflowing its container*
 }
+*/
 
 /** bootstrap-datetimepicker **/
 .input-group.date .input-group-addon {
