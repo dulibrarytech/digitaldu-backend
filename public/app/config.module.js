@@ -68,6 +68,13 @@ const configModule = (function () {
         return '/repositories/2/archival_objects/';
     };
 
+    /**
+     *
+     */
+    obj.getASpace = function() {
+       return 'https://duarchives.coalliance.org';
+    };
+
     return obj;
 
 }());

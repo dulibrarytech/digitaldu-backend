@@ -214,18 +214,21 @@ const importModule = (function () {
                 html += '<td ' + alignTd + '><img style="border: solid 1px;" src="' + tn + '" width="75" height="75"></td>';
             }
 
-            html += '<td ' + alignTd + '>' + DOMPurify.sanitize(data[i].is_member_of_collection) + '</td>';
+            html += '<td ' + alignTd + '><a href="/dashboard/objects/?pid=' + DOMPurify.sanitize(data[i].is_member_of_collection) + '">' + DOMPurify.sanitize(data[i].is_member_of_collection) + '</a></td>';
 
             if (data[i].sip_uuid !== null) {
-                html += '<td ' + alignTd + '>' + DOMPurify.sanitize(data[i].sip_uuid) + '</td>';
+                let token = userModule.getUserToken();
+                html += '<td ' + alignTd + '><a href="' + api + '/api/admin/v1/repo/object/viewer?uuid=' + DOMPurify.sanitize(data[i].sip_uuid) + '&t=' + token + '" target="_blank">' + DOMPurify.sanitize(data[i].sip_uuid) + '</a></td>';
             }
 
             if (data[i].mods_id !== null) {
-                html += '<td ' + alignTd + '>' + helperModule.getUriPath() + DOMPurify.sanitize(data[i].mods_id) + '</i></td>';
+                html += '<td ' + alignTd + '><a href="' + configModule.getASpace() + configModule.getUriPath() + DOMPurify.sanitize(data[i].mods_id) + '" target="_blank">' + configModule.getUriPath() + DOMPurify.sanitize(data[i].mods_id) + '</a></i></td>';
             }
 
             if (data[i].mime_type !== null) {
                 html += '<td ' + alignTd + '>' + DOMPurify.sanitize(data[i].mime_type) + '</td>';
+            } else {
+                html += '<td ' + alignTd + '>Missing mime-type</td>';
             }
 
             html += '<td ' + alignTd + '>' + DOMPurify.sanitize(moment(data[i].created).tz('America/Denver').format('MM-DD-YYYY, h:mm:ss a')) + '</td>';

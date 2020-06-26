@@ -1231,10 +1231,11 @@ exports.get_import_incomplete = function (req, callback) {
  * @param callback
  */
 exports.get_import_complete = function (req, callback) {
-
+    // create_date BETWEEN NOW() - INTERVAL 30 DAY AND NOW()
     DB(REPO_OBJECTS)
         .select('id', 'sip_uuid', 'is_member_of_collection', 'pid', 'handle', 'mods_id', 'mods', 'display_record', 'thumbnail', 'file_name', 'mime_type', 'created')
-        .whereRaw('DATE(created) = CURRENT_DATE')
+        // .whereRaw('DATE(created) = CURRENT_DATE')
+        .whereRaw('DATE(created) BETWEEN NOW() - INTERVAL 30 DAY AND NOW()')
         .where({
             is_complete: 1,
             object_type: 'object'
