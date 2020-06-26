@@ -53,7 +53,7 @@ exports.ping = function (callback) {
 
                 return false;
 
-            } else {
+            } else if (response.status === 200) {
 
                 callback({
                     error: false,
@@ -111,18 +111,18 @@ exports.get_mods = function (id, session, callback) {
                 }
             });
 
-            if (response.error === true) {
+            if (response.status === 404) {
 
-                LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed');
+                LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed (http status - ' + response.status + ')');
 
                 callback({
                     error: true,
-                    error_message: 'ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed'
+                    error_message: 'ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed (http status - ' + response.status + ')'
                 });
 
                 return false;
 
-            } else {
+            } else if (response.status === 200) {
 
                 callback({
                     error: false,
@@ -134,7 +134,7 @@ exports.get_mods = function (id, session, callback) {
 
         } catch (error) {
 
-            LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed');
+            LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed ' + error);
 
             callback({
                 error: true,
@@ -170,7 +170,7 @@ exports.get_session_token = function (callback) {
 
             if (response.error === true) {
 
-                LOGGER.module().error('ERROR: [/import/model module (update_metadata_record/get_mods)] Unable to get session token');
+                LOGGER.module().error('ERROR: [/libs/archivesspace (get_session_tokens)] Unable to get session token');
 
                 callback({
                     error: true,
@@ -179,7 +179,7 @@ exports.get_session_token = function (callback) {
 
                 return false;
 
-            } else {
+            } else if (response.status === 200) {
 
                 callback({
                     error: false,
@@ -191,7 +191,7 @@ exports.get_session_token = function (callback) {
 
         } catch (error) {
 
-            LOGGER.module().error('ERROR: [/import/model module (update_metadata_record/get_mods)] Unable to get session token');
+            LOGGER.module().error('ERROR: [/libs/archivesspace (get_session_tokens)] Unable to get session token');
 
             callback({
                 error: true,
@@ -231,7 +231,7 @@ exports.destroy_session_token = function (session, callback) {
 
             if (response.error === true) {
 
-                LOGGER.module().error('ERROR: [archivesspace lib (destroy_session_token)] Unable to terminate session');
+                LOGGER.module().error('ERROR: [/libs/archivesspace (destroy_session_token)] Unable to terminate session');
 
                 callback({
                     error: true,
@@ -240,7 +240,7 @@ exports.destroy_session_token = function (session, callback) {
 
                 return false;
 
-            } else {
+            } else if (response.status === 200) {
 
                 callback({
                     error: false,
@@ -252,7 +252,7 @@ exports.destroy_session_token = function (session, callback) {
 
         } catch (error) {
 
-            LOGGER.module().error('ERROR: [archivesspace lib (destroy_session_token)] Unable to terminate session');
+            LOGGER.module().error('ERROR: [/libs/archivesspace (destroy_session_token)] Unable to terminate session');
 
             callback({
                 error: true,
