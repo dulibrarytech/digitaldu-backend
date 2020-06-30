@@ -132,7 +132,7 @@ exports.get_object_info = function (data, callback) {
     let dip_path = data.dip_path;
 
     // change extension from tif to jp2 (There are no direct references to jp2 files in Duracloud)
-    if (data.file.indexOf('tif') !== -1) {
+    if (data.file.indexOf('tif') !== -1 || data.file.indexOf('tiff') !== -1) {
         data.file = data.file.replace('tif', 'jp2');
     }
 

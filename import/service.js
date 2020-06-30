@@ -109,6 +109,7 @@ exports.get_mods = function(obj, callback) {
             obj.error = result.error;
             obj.mods = JSON.stringify(result.mods.data);
         } else {
+            LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/get_mods)] unable to get mods');
             obj.error = result.error;
             obj.mods = null;
         }

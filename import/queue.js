@@ -33,7 +33,9 @@ const CONFIG = require('../config/config'),
     ASYNC = require('async'),
     MOMENT = require('moment'),
     REQUEST = require('request'),
+    HTTP = require('../libs/http'),
     DBQ = require('../config/dbqueue')(),
+    SERVICE = require('../import/service'),
     TRANSFER_APPROVAL_TIMER = CONFIG.transferApprovalTimer,
     TRANSFER_STATUS_CHECK_INTERVAL = CONFIG.transferStatusCheckInterval,
     INGEST_STATUS_CHECK_INTERVAL = CONFIG.ingestStatusCheckInterval,
@@ -836,7 +838,8 @@ exports.create_repo_record = function (req, callback) {
              */
             if (response.error !== undefined && response.error === true) {
 
-                LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_manifest)] unable to get manifest or manifest does not exist ' + response.error_message);
+                LOGGER.module().info('INFO: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_manifest)] object does not have a manifest');
+
                 obj.manifest = false;
                 callback(null, obj);
                 return false;
@@ -960,59 +963,56 @@ exports.create_repo_record = function (req, callback) {
          */
         function new_token() {
 
-            ARCHIVESSPACE.get_session_token(function (response) {
+            (async() => {
 
-                let data = response.data,
-                    token;
+                let response = await HTTP.get({
+                    endpoint: '/api/admin/v1/import/metadata/session'
+                });
 
-                if (data === undefined) {
+                if (response.error === true) {
                     obj.session = null;
                     callback(null, obj);
                     return false;
-                }
+                } else {
 
-                try {
+                    try {
 
-                    token = JSON.parse(data);
+                        let token = {
+                            session: response.data.session
+                        };
 
-                    FS.writeFile('./tmp/st.txt', token.session, function (error) {
+                        FS.writeFile('./tmp/st.txt', token.session, function (error) {
 
-                        if (error) {
-                            LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/get_token/ARCHIVESSPACE.get_session_token)] unable to save session token to file');
-                            callback({
-                                error: true,
-                                error_message: error
-                            });
-                        }
+                            if (error) {
+                                LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/get_token/ARCHIVESSPACE.get_session_token)] unable to save session token to file');
+                                callback({
+                                    error: true,
+                                    error_message: error
+                                });
+                            }
 
-                        if (token.session === undefined) {
-                            LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/get_token/ARCHIVESSPACE.get_session_token)] session token is undefined');
-                            obj.session = null;
+                            if (!FS.existsSync('./tmp/st.txt')) {
+                                LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/get_token/ARCHIVESSPACE.get_session_token)] st.txt was not created');
+                                obj.session = null;
+                                callback(null, obj);
+                                return false;
+                            }
+
+                            obj.session = token.session;
                             callback(null, obj);
                             return false;
-                        }
 
-                        if (token.error === true) {
-                            LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/get_token/ARCHIVESSPACE.get_session_token)] session token error' + token.error_message);
-                            obj.session = null;
-                            callback(null, obj);
-                            return false;
-                        }
+                        });
 
-                        if (!FS.existsSync('./tmp/st.txt')) {
-                            LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/get_token/ARCHIVESSPACE.get_session_token)] st.txt was not created');
-                        }
-
-                        obj.session = token.session;
+                    } catch (error) {
+                        LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/get_token/ARCHIVESSPACE.get_session_token)] session token error ' + error);
+                        obj.session = null;
                         callback(null, obj);
                         return false;
-
-                    });
-
-                } catch (error) {
-                    LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/get_token/ARCHIVESSPACE.get_session_token)] session token error ' + error);
+                    }
                 }
-            });
+
+            })();
         }
     }
 
@@ -1026,24 +1026,17 @@ exports.create_repo_record = function (req, callback) {
             return false;
         }
 
-        setTimeout(function () {
+        SERVICE.get_mods(obj, function(data) {
 
-            ARCHIVESSPACE.get_mods(obj.mods_id, obj.session, function (response) {
-
-                if (response.error !== undefined && response.error === true) {
-
-                    LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/get_mods)] unable to get mods ' + response.error_message);
-
-                    obj.mods = null;
-                    callback(null, obj);
-                    return false;
-                }
-
-                obj.mods = response.mods;
+            if (data.error === true) {
+                obj.mods = null;
                 callback(null, obj);
-            });
+                return false;
+            }
 
-        }, 1000);
+            obj.mods = data.mods;
+            callback(null, obj);
+        });
     }
 
     // 10.)
@@ -1131,6 +1124,8 @@ exports.create_repo_record = function (req, callback) {
 
         LOGGER.module().info('INFO: [/import/queue module (create_repo_record/create_repo_record)] saving repository record to db');
 
+        delete obj.error;
+
         TRANSFER_INGEST.create_repo_record(obj, function (result) {
             callback(null, obj);
         });
@@ -1160,7 +1155,7 @@ exports.create_repo_record = function (req, callback) {
                 return false;
             }
 
-            if (httpResponse.statusCode === 200) {
+            if (httpResponse.statusCode === 201) {
                 obj.indexed = true;
                 callback(null, obj);
                 return false;
