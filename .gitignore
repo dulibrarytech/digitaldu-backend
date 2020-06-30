@@ -93,3 +93,4 @@ tmp
 tests
 *.sql
 
+public/tn/*.*
