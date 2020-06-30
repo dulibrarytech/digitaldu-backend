@@ -1237,6 +1237,7 @@ exports.get_import_complete = function (req, callback) {
         // .whereRaw('DATE(created) = CURRENT_DATE')
         .whereRaw('DATE(created) BETWEEN NOW() - INTERVAL 30 DAY AND NOW()')
         .where({
+            is_active: 1,
             is_complete: 1,
             object_type: 'object'
         })
