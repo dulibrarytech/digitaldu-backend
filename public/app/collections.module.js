@@ -99,6 +99,12 @@ const collectionsModule = (function () {
         obj.pid = helperModule.getParameterByName('pid');
         obj.thumbnail_url = domModule.val('#thumbnail-url', null);
 
+        if (obj.thumbnail_url.length === 0 || obj.pid.length === 0) {
+            domModule.html('#message', '<div class="alert alert-danger"><i class="fa fa-exclamation"></i> Please enter a Repository PID or Thumbnail URL.</div>');
+            return false;
+        }
+
+        domModule.html('#message', '');
         let token = userModule.getUserToken();
         let url = api + '/api/admin/v1/repo/object/thumbnail',
             request = new Request(url, {
