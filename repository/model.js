@@ -593,6 +593,7 @@ exports.publish_objects = function (req, callback) {
             })
             .then(function (data) {
                 callback(null, obj);
+                return null;
             })
             .catch(function (error) {
                 LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection pid ' + error);
@@ -703,6 +704,7 @@ exports.publish_objects = function (req, callback) {
             })
             .then(function (data) {
                 callback(null, obj);
+                return null;
             })
             .catch(function (error) {
                 LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_child_objects)] unable to publish collection pid ' + error);
@@ -769,6 +771,8 @@ exports.publish_objects = function (req, callback) {
                     }
 
                 }, 150);
+
+                return null;
             })
             .catch(function (error) {
                 LOGGER.module().fatal('FATAL: [/repository/model module (publish_objects/index_objects)] unable to index published object ' + error);
@@ -846,6 +850,7 @@ exports.publish_objects = function (req, callback) {
             .then(function (data) {
                 obj.is_member_of_collection = VALIDATOR.escape(data[0].is_member_of_collection);
                 callback(null, obj);
+                return null;
             })
             .catch(function (error) {
                 LOGGER.module().fatal('FATAL: [/repository/model module (get_admin_object)] Unable to get object ' + error);
@@ -874,6 +879,7 @@ exports.publish_objects = function (req, callback) {
                 }
 
                 callback(null, obj);
+                return null;
             })
             .catch(function (error) {
                 LOGGER.module().fatal('FATAL: [/repository/model module (check_collection)] Unable to check collection ' + error);
@@ -898,6 +904,7 @@ exports.publish_objects = function (req, callback) {
             })
             .then(function (data) {
                 callback(null, obj);
+                return null;
             })
             .catch(function (error) {
                 LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection pid ' + error);
@@ -1085,7 +1092,6 @@ exports.unpublish_objects = function (req, callback) {
 
         let obj = {};
         obj.is_member_of_collection = pid;
-        // obj.api_url = CONFIG.apiUrl + '/api/admin/v1/indexer';
 
         REQUEST.delete({
             url: CONFIG.apiUrl + '/api/admin/v1/indexer?pid=' + obj.is_member_of_collection + '&api_key=' + CONFIG.apiKey,
@@ -1194,6 +1200,7 @@ exports.unpublish_objects = function (req, callback) {
 
                 }, 250);
 
+                return null;
             })
             .catch(function (error) {
                 LOGGER.module().fatal('FATAL: [/repository/model module (unpublish_objects/unindex_objects)] unable to remove published record from index ' + error);
@@ -1256,6 +1263,7 @@ exports.unpublish_objects = function (req, callback) {
             })
             .then(function (data) {
                 callback(null, obj);
+                return null;
             })
             .catch(function (error) {
                 LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection pid ' + error);
@@ -1281,6 +1289,7 @@ exports.unpublish_objects = function (req, callback) {
             })
             .then(function (data) {
                 callback(null, obj);
+                return null;
             })
             .catch(function (error) {
                 LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_child_objects)] unable to publish collection pid ' + error);
@@ -1385,6 +1394,7 @@ exports.unpublish_objects = function (req, callback) {
             })
             .then(function (data) {
                 callback(null, obj);
+                return null;
             })
             .catch(function (error) {
                 LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/update_object_record)] unable to unpublish object ' + error);

@@ -32,7 +32,11 @@
                         <div class="x_panel">
                             <div class="x_title">
                                 <h2 id="collection-name"></h2>
-                                <ul class="nav navbar-right panel_toolbox"><!-- panel_toolbox -->
+                                <ul class="nav navbar-right">
+                                    <li><a id="current-collection" href="#"><i class="fa fa-plus"></i>&nbsp;Add sub-collection</a></li>
+                                </ul>
+                                <!--
+                                <ul class="nav navbar-right panel_toolbox"><!-- panel_toolbox --
                                     <li class="dropdown">
                                         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-bars"></i></a>
                                         <ul class="dropdown-menu" role="menu">
@@ -41,6 +45,7 @@
                                         </ul>
                                     </li>
                                 </ul>
+                                -->
                                 <div class="clearfix"></div>
                             </div>
                             <div class="x_content">
@@ -75,6 +80,6 @@
 <script src="../../app/objects.module.js"></script>
 <script src="../../app/search.module.js"></script>
 <script>objectsModule.getObjects();</script>
-<script>objectsModule.batchUpdateMetadataListener();</script>
+<!--<script>objectsModule.batchUpdateMetadataListener();</script>-->
 </body>
 </html>

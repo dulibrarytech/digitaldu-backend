@@ -81,18 +81,13 @@ exports.destroy_session_token = function(req, callback) {
 
     ARCHIVESSPACE.destroy_session_token(session, function (result) {
 
-        let obj = {
-            status: 201
-        };
-
-        if (result.error === false) {
-            LOGGER.module().info('INFO: ArchivesSpace session terminated.');
-            callback(obj);
-        } else {
-            LOGGER.module().error('ERROR: [/import/service module (destroy_session_token)] Unable to terminate session');
-            callback(obj);
+        if (result.error === true) {
+            LOGGER.module().error('ERROR: [/import/service module (destroy_session_token)] unable to destroy session ' + result);
         }
 
+        callback({
+            status: 201
+        });
     });
 };
 
@@ -109,7 +104,7 @@ exports.get_mods = function(obj, callback) {
             obj.error = result.error;
             obj.mods = JSON.stringify(result.mods.data);
         } else {
-            LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/get_mods)] unable to get mods');
+            LOGGER.module().error('ERROR: [/import/service module (get_mods)] unable to get mods');
             obj.error = result.error;
             obj.mods = null;
         }

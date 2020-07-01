@@ -35,22 +35,16 @@ const CONFIG = require('../config/config'),
  */
 exports.batch_update_metadata = function (req, callback) {
 
-    let pid;
-
-    if (req.query.pid !== undefined) {
-        pid = req.query.pid;
-    }
-
     function reset_update_flags(callback) {
 
         let obj = {};
         let whereObj = {};
 
         // size of collection
-        obj.size = req.query.size;
-
-        if (pid !== undefined) {
-            whereObj.is_member_of_collection = pid;
+        if (req.query.size === undefined) {
+            obj.size = 's';
+        } else {
+            obj.size = req.query.size;
         }
 
         whereObj.is_active = 1;
@@ -69,6 +63,8 @@ exports.batch_update_metadata = function (req, callback) {
                     LOGGER.module().info('INTO: [/import/model module (batch_update_metadata/reset_update_flags)] ' + data + ' update flags reset');
                     callback(null, obj);
                 }
+
+                return false;
             })
             .catch(function (error) {
                 LOGGER.module().error('ERROR: [/import/model module (batch_update_metadata/reset_update_flags/async.waterfall)] ' + error);
@@ -140,6 +136,10 @@ exports.batch_update_metadata = function (req, callback) {
                         case 'l':
                             max_count = 5000;
                             min_count = 1300;
+                            break;
+                        default:
+                            max_count = 600;
+                            min_count = 0;
                             break;
                     }
 
@@ -223,31 +223,6 @@ exports.batch_update_metadata = function (req, callback) {
                 return false;
 
             })();
-
-            /*
-             REQUEST.put({
-             url: CONFIG.apiUrl + '/api/admin/v1/import/metadata/collection?api_key=' + CONFIG.apiKey,
-             form: {
-             'sip_uuid': sip_uuid,
-             'session': obj.session
-             },
-             timeout: 55000
-             }, function (error, httpResponse, body) {
-
-             if (error) {
-             LOGGER.module().error('ERROR: [/import/model module (batch_update_metadata/update_metadata_records)] unable to update record ' + error);
-             return false;
-             }
-
-             if (httpResponse.statusCode === 201) {
-             return false;
-
-             } else {
-             LOGGER.module().error('ERROR: [/import/model module (batch_update_metadata/update_metadata_records)] http error ' + httpResponse.statusCode + '/' + body);
-             return false;
-             }
-             });
-             */
         };
 
         const request_object_update = function (obj, sip_uuid) {
@@ -273,31 +248,6 @@ exports.batch_update_metadata = function (req, callback) {
                 return false;
 
             })();
-
-            /*
-             REQUEST.put({
-             url: CONFIG.apiUrl + '/api/admin/v1/import/metadata/object?api_key=' + CONFIG.apiKey,
-             form: {
-             'sip_uuid': sip_uuid,
-             'session': obj.session
-             },
-             timeout: 55000
-             }, function (error, httpResponse, body) {
-
-             if (error) {
-             LOGGER.module().error('ERROR: [/import/model module (batch_update_metadata/update_metadata_records)] unable to update record ' + error);
-             return false;
-             }
-
-             if (httpResponse.statusCode === 201) {
-             return false;
-
-             } else {
-             LOGGER.module().error('ERROR: [/import/model module (batch_update_metadata/update_metadata_records)] http error ' + httpResponse.statusCode + '/' + body);
-             return false;
-             }
-             });
-             */
         };
 
         // begin processing immediately

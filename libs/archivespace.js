@@ -89,6 +89,16 @@ exports.get_mods = function (id, session, callback) {
 
     'use strict';
 
+    if (id === undefined || session === undefined) {
+
+        callback({
+            error: true,
+            error_message: 'ERROR: [/libs/archivesspace lib (get_mods)] id and session params missing'
+        });
+
+        return false;
+    }
+
     // TODO: refactor to make use of full uri by default for both resources and archival_objects
     let apiUrl = CONFIG.archivespaceHost + '/repositories/' + CONFIG.archivespaceRepositoryid + '/archival_objects/' + id + '/repository';
 
@@ -212,6 +222,16 @@ exports.get_session_token = function (callback) {
 exports.destroy_session_token = function (session, callback) {
 
     'use strict';
+
+    if (session === undefined) {
+
+        callback({
+            error: true,
+            error_message: 'Missing session'
+        });
+
+        return false;
+    }
 
     let apiUrl = CONFIG.archivespaceHost + '/logout';
 

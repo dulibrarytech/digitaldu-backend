@@ -359,23 +359,24 @@ const objectsModule = (function () {
         return false;
     };
 
-    /**
+    /** TODO: remove
      * Binds click event to defined selector
-     */
+
     obj.batchUpdateMetadataListener = function() {
         domModule.getElement('#batch-update-metadata').addEventListener('click', batchUpdateMetadata);
     };
-
-    /** TODO:
-     *  Updates all metadata records for current collection
      */
+
+    /** TODO: remove
+     *  Updates all metadata records for current collection
+
     const batchUpdateMetadata = function() {
 
         let pid = helperModule.getParameterByName('pid');
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        let obj = {}; // TODO: change endpoint
-        let url = api + '/api/admin/v1/import/batch/update/metadata?pid=' + pid,
+        let obj = {};
+        let url = api + '/api/admin/v1/import/metadata/batch?pid=' + pid,
             token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'POST',
@@ -417,6 +418,7 @@ const objectsModule = (function () {
         httpModule.req(request, callback);
         return false;
     };
+     */
 
     /**
      * Starts delete process
