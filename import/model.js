@@ -1183,9 +1183,6 @@ exports.get_import_complete = function (req, callback) {
 
     DB(REPO_OBJECTS)
         .select('id', 'sip_uuid', 'is_member_of_collection', 'pid', 'handle', 'mods_id', 'mods', 'display_record', 'thumbnail', 'file_name', 'mime_type', 'created')
-        // .whereRaw('DATE(created) = CURRENT_DATE')
-        // .whereRaw('created BETWEEN NOW() - INTERVAL 30 DAY AND NOW()')
-        // .whereRaw('created > DATE_ADD(Now(), INTERVAL - 30 DAY)')
         .whereRaw('DATE(created) BETWEEN NOW() - INTERVAL 30 DAY AND NOW()')
         .where({
             is_active: 1,
