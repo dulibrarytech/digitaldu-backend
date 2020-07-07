@@ -385,6 +385,8 @@ exports.create_collection_object = function (req, callback) {
             return false;
         }
 
+        obj.mods_id = obj.uri;
+
         SERVICE.get_mods(obj, function(response) {
 
             if (response.error !== undefined && response.error === true) {
@@ -451,6 +453,9 @@ exports.create_collection_object = function (req, callback) {
             callback(null, obj);
             return false;
         }
+
+        let uriArr = obj.mods_id.split('/');
+        obj.mods_id = uriArr[uriArr.length - 1];
 
         MODS.create_display_record(obj, function (result) {
             obj.display_record = result;
@@ -524,7 +529,7 @@ exports.create_collection_object = function (req, callback) {
         get_session_token,
         get_mods,
         get_pid,
-        get_handle,
+        // get_handle,
         create_display_record,
         save_record,
         index_collection
