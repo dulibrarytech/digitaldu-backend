@@ -204,6 +204,10 @@ const importModule = (function () {
 
         for (let i = 0; i < data.length; i++) {
 
+            if (data[i].mods === null) {
+                continue;
+            }
+
             let mods = JSON.parse(data[i].mods);
             let title = mods.title;
             let identifier = mods.identifiers[0].identifier;

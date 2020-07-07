@@ -19,6 +19,8 @@
 'use strict';
 
 const ARCHIVESSPACE = require('../libs/archivespace'),
+    HTTP = require('../libs/http'),
+    SERVICE = require('../import/service'),
     LOGGER = require('../libs/log4');
 
 /**
@@ -101,14 +103,56 @@ exports.get_mods = function(obj, callback) {
     ARCHIVESSPACE.get_mods(obj.mods_id, obj.session, function (result) {
 
         if (result.error === false) {
+
             obj.error = result.error;
             obj.mods = JSON.stringify(result.mods.data);
+            callback(obj);
+            return false;
+
+        } else if (result.error === true && result.status === 412) {
+
+            LOGGER.module().info('INFO: [/import/service module (get_mods)] a new session token is required ' + result.message);
+
+            (async() => {
+
+                let response = await HTTP.get({
+                    endpoint: '/api/admin/v1/import/metadata/session'
+                });
+
+                if (response.error === true) {
+                    obj.session = null;
+                    callback(null, obj);
+                } else {
+
+                    obj.session = response.data.session;
+                    console.log('new session token: ', obj.session);
+
+                    ARCHIVESSPACE.get_mods(obj.mods_id, obj.session, function(result) {
+
+                        if (result.error === false) {
+                            obj.error = result.error;
+                            obj.mods = JSON.stringify(result.mods.data);
+                            callback(null, obj);
+                        } else {
+                            LOGGER.module().error('ERROR: [/import/service module (get_mods)] unable to get mods');
+                            obj.error = result.error;
+                            obj.mods = null;
+                            callback(obj);
+                        }
+
+                    });
+                }
+
+            })();
+
+            return false;
+
         } else {
             LOGGER.module().error('ERROR: [/import/service module (get_mods)] unable to get mods');
             obj.error = result.error;
             obj.mods = null;
+            callback(obj);
+            return false;
         }
-
-        callback(obj);
     });
 };
