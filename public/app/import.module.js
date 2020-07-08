@@ -272,6 +272,9 @@ const importModule = (function () {
                     case 'audio/mpeg':
                         html += '<td ' + alignTd + ' title="' + DOMPurify.sanitize(data[i].mime_type) + '"><i class="fa fa-file-audio-o fa-lg"></i></td>';
                         break;
+                    case 'image/jpeg':
+                        html += '<td ' + alignTd + ' title="' + DOMPurify.sanitize(data[i].mime_type) + '"><i class="fa fa-file-image-o fa-lg"></i></td>';
+                        break;
 
                     default:
                         html += '<td ' + alignTd + '><i class="fa fa-exclamation fa-lg"></i> Unknown mime-type</td>';
