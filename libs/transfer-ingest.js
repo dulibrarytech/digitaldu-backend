@@ -966,9 +966,11 @@ exports.get_compound_object_parts = function (sip_uuid, parts, callback) {
                     file = file.replace('tif', 'jp2');
                 }
 
+                /*
                 if (file.indexOf('wav') !== -1) {
                     file = file.replace('wav', 'mp3');
                 }
+                */
 
                 for (let j=0;j<parts.length;j++) {
                     if (parts[j].title === data[i].file) {

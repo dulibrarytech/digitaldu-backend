@@ -647,6 +647,12 @@ exports.import_dip = function (req, callback) {
                 throw 'ERROR: [/import/queue module (import_dip/archivematica.get_dip_path/duracloud.get_mets)] unable to get mets';
             }
 
+            /*
+            FS.writeFile('./tmp/mets.xml', response.mets, function (error) {
+                console.log('mets saved.');
+            });
+            */
+
             let metsResults = METS.process_mets(sip_uuid, dip_path, response.mets);
 
             TRANSFER_INGEST.save_mets_data(metsResults, function (result) {
@@ -803,7 +809,13 @@ exports.create_repo_record = function (req, callback) {
             obj.dip_path = dc_data.dip_path;
             obj.file = dc_data.file;
             obj.uuid = dc_data.uuid;
-            obj.mime_type = dc_data.mime_type;
+
+            if (dc_data.mime_type === undefined || dc_data.mime_type === null) {
+                obj.mime_type = MIME_TYPE.get_mime_type(obj.file);
+            } else {
+                obj.mime_type = dc_data.mime_type;
+            }
+
             callback(null, obj);
         });
     }

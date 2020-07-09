@@ -41,6 +41,7 @@ exports.process_mets = function (sip_uuid, dip_path, xml) {
                 premisObjectCharacteristicsExtension = premisObjectCharacteristics.childNamed('premis:objectCharacteristicsExtension');
 
             if (premisObjectCharacteristicsExtension !== undefined && premisObjectCharacteristicsExtension.childNamed('rdf:RDF') !== undefined) {
+
                 let rdfDescription = premisObjectCharacteristicsExtension.childNamed('rdf:RDF').childNamed('rdf:Description');
                 mime_type = rdfDescription.childNamed('File:MIMEType').val;
             }
@@ -60,7 +61,7 @@ exports.process_mets = function (sip_uuid, dip_path, xml) {
             }
         }
 
-        // gets file information TODO: refactor to make use of xmldoc methods
+        // gets file information
         if (array[index].name === 'mets:fileSec') {
 
             if (array[index].children[1].name === 'mets:fileGrp') {
