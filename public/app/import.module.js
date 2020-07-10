@@ -107,9 +107,10 @@ const importModule = (function () {
 
         domModule.html('#import-objects', html);
         domModule.html('#message', null);
+        domModule.html('.loading', null);
     };
 
-    /**
+    /** REMOVE
      * Renders incomplete imported records
      * @param data
      */
@@ -298,6 +299,7 @@ const importModule = (function () {
 
         domModule.html('#complete-records', html);
         domModule.html('#message', null);
+        domModule.html('.loading', null);
     };
 
     /**
@@ -365,8 +367,6 @@ const importModule = (function () {
      */
     obj.getImportObjects = function () {
 
-        domModule.html('#message', '<p><strong>Loading...</strong></p>');
-
         let folder = helperModule.getParameterByName('collection'),
             url = api + '/api/admin/v1/import/list?collection=' + null;
 
@@ -415,8 +415,6 @@ const importModule = (function () {
      */
     obj.getIncompleteImportRecords = function () {
 
-        domModule.html('#message', '<p><strong>Loading...</strong></p>');
-
         let url = api + '/api/admin/v1/import/incomplete',
             token = userModule.getUserToken(),
             request = new Request(url, {
@@ -463,8 +461,6 @@ const importModule = (function () {
      * Gets completed import records for current day
      */
     obj.getCompleteImportRecords = function () {
-
-        domModule.html('#message', '<p><strong>Loading...</strong></p>');
 
         let url = api + '/api/admin/v1/import/complete',
             token = userModule.getUserToken(),
@@ -570,7 +566,7 @@ const importModule = (function () {
         });
     };
 
-    /**
+    /** TODO: remove
      * saves missing mods id to repository record
      * @param sip_uuid
      * @param mods_id
