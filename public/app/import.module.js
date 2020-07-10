@@ -31,6 +31,7 @@ const importModule = (function () {
 
         let collection = helperModule.getParameterByName('collection'),
             collectionObjects = [],
+            uuids = [],
             html = '';
 
         if (collection !== null && data.list.length === 0) {
@@ -75,21 +76,28 @@ const importModule = (function () {
                     }
 
                     // list collection folders only
-                    if (collection === null && data.list[i].name.length > 30) {
+                    if (collection === null && validator.isUUID(data.list[i].name) === true) {
                         html += '<td>';
                         html += '&nbsp;&nbsp;&nbsp;<a href="/dashboard/import?collection=' + DOMPurify.sanitize(data.list[i].name) + '"><i class="fa fa-folder"></i>&nbsp;&nbsp;' + DOMPurify.sanitize(data.list[i].name) + '</a>';
                         html += '</td>';
+                        uuids.push(DOMPurify.sanitize(data.list[i].name));
                     } else if (collection !== null) {
                         html += '<td>';
                         html += '&nbsp;&nbsp;&nbsp;<i class="fa fa-folder"></i>&nbsp;&nbsp;' + DOMPurify.sanitize(data.list[i].name);
                         html += '</td>';
-                    } else if (collection !== null && data.list[i].name.length < 30) {
-                        domModule.html('#import-objects', '<div class="alert alert-info"><strong>There are no collections available to import.</strong></div>');
                     }
                 }
 
                 html += '</tr>';
             }
+        }
+
+        if (uuids.length === 0) {
+            html += '<tr>';
+            html += '<td>';
+            html += '<div class="alert alert-info"><strong>There are no collections available to import.</strong></div>';
+            html += '</td>';
+            html += '</tr>';
         }
 
         if (collection !== null && collectionObjects.length > 0) {

@@ -125,7 +125,6 @@ exports.get_mods = function(obj, callback) {
                 } else {
 
                     obj.session = response.data.session;
-                    console.log('new session token: ', obj.session);
 
                     ARCHIVESSPACE.get_mods(obj.mods_id, obj.session, function(result) {
 
