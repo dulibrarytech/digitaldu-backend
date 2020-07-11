@@ -611,7 +611,7 @@ const importModule = (function () {
         httpModule.req(request, callback);
     };
 
-    /**
+    /** TODO: remove
      * Renders form that allows users to enter archivespace id
      * @param sip_uuid
      * @returns {boolean}
@@ -687,10 +687,10 @@ const importModule = (function () {
         httpModule.req(request, callback);
     };
 
-    /**
+    /** TODO: remove
      * Imports missing thumbnail data
      * @param sip_uuid
-     */
+
     obj.importThumbnail = function (sip_uuid) {
 
         if (sip_uuid === undefined) {
@@ -735,12 +735,13 @@ const importModule = (function () {
 
         httpModule.req(request, callback);
     };
+     */
 
-    /**
+    /** TODO: remove
      * Imports missing master object data
      * @param sip_uuid
      * @returns {boolean}
-     */
+
     obj.importMaster = function (sip_uuid) {
 
         if (sip_uuid === undefined) {
@@ -785,6 +786,7 @@ const importModule = (function () {
 
         httpModule.req(request, callback);
     };
+     */
 
     /**
      * Gets transfer status
