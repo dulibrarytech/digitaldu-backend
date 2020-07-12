@@ -37,8 +37,6 @@
     "nodemailer": "^4.7.0",
     "request": "^2.88.2",
     "shelljs": "^0.7.8",
-    "socket.io": "^2.3.0",
-    "socket.io-client": "^2.3.0",
     "ssh2": "^0.6.2",
     "ssh2-sftp-client": "^3.1.0",
     "validator": "^8.2.0",
