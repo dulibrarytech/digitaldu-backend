@@ -20,6 +20,9 @@
 
 module.exports = {
     host: process.env.HOST,
+    appName: process.env.APP_NAME,
+    appVersion: process.env.APP_VERSION,
+    organization: process.env.ORGANIZATION,
     ldap: process.env.LDAP_URL,
     tokenSecret: process.env.TOKEN_SECRET,
     tokenAlgo: process.env.TOKEN_ALGO,

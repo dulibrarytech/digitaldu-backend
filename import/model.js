@@ -134,8 +134,8 @@ exports.batch_update_metadata = function (req, callback) {
                             min_count = 100;
                             break;
                         case '3':
-                            max_count = 5000;
-                            min_count = 1000;
+                            max_count = 400;
+                            min_count = 200;
                             break;
                         default:
                             max_count = 300;

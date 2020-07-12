@@ -37,8 +37,10 @@ module.exports = function (app) {
     app.route('/dashboard/objects/unpublished')
         .get(DASHBOARD.get_dashboard_unpublished_objects);
 
+    /*
     app.route('/dashboard/object')
         .get(DASHBOARD.get_dashboard_object_detail);
+    */
 
     app.route('/dashboard/object/thumbnail')
         .get(DASHBOARD.update_dashboard_thumbnail);
@@ -58,8 +60,10 @@ module.exports = function (app) {
     app.route('/dashboard/import/status')
         .get(DASHBOARD.get_dashboard_import_status);
 
+    /*
     app.route('/dashboard/import/incomplete')
         .get(DASHBOARD.get_dashboard_import_incomplete);
+    */
 
     app.route('/dashboard/import/complete')
         .get(DASHBOARD.get_dashboard_import_complete);
@@ -76,7 +80,8 @@ module.exports = function (app) {
     app.route('/dashboard/search')
         .get(DASHBOARD.get_dashboard_search);
 
+    /*
     app.route('/dashboard/error')
         .get(DASHBOARD.get_dashboard_error);
-
+    */
 };
