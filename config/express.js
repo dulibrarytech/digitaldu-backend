@@ -51,6 +51,7 @@ module.exports = function() {
     APP.use(XSS.sanitize_req_body);
     APP.set('views', './views');
     APP.set('view engine', 'ejs');
+    APP.set('view cache', true);
 
     require('../auth/routes.js')(APP);
     require('../users/routes.js')(APP);
