@@ -83,15 +83,6 @@ exports.update_dashboard_thumbnail = function (req, res) {
     });
 };
 
-/*
-exports.get_dashboard_object_detail = function (req, res) {
-    res.render('dashboard-object-detail', {
-        host: CONFIG.host,
-        pid: req.query.pid
-    });
-};
-*/
-
 exports.get_dashboard_import = function (req, res) {
     res.render('dashboard-import', {
         host: CONFIG.host,
@@ -118,14 +109,6 @@ exports.get_dashboard_import_status = function (req, res) {
         organization: CONFIG.organization
     });
 };
-
-/*
-exports.get_dashboard_import_incomplete = function (req, res) {
-    res.render('dashboard-import-incomplete', {
-        host: CONFIG.host
-    });
-};
-*/
 
 exports.get_dashboard_import_complete = function (req, res) {
     res.render('dashboard-import-complete', {
@@ -181,14 +164,6 @@ exports.get_dashboard_search = function (req, res) {
     });
 };
 
-/*
-exports.get_dashboard_metadata = function (req, res) {
-    res.render('dashboard-edit-metadata', {
-        host: CONFIG.host
-    });
-};
-*/
-
 exports.get_dashboard_upload = function (req, res) {
     res.render('dashboard-upload', {
         host: CONFIG.host,
@@ -199,13 +174,3 @@ exports.get_dashboard_upload = function (req, res) {
         error: ''
     });
 };
-
-/*
-exports.get_dashboard_error = function (req, res) {
-    res.render('error', {
-        host: CONFIG.host,
-        appname: CONFIG.appName,
-        appversion: CONFIG.appVersion
-    });
-};
-    */
