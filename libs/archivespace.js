@@ -110,49 +110,6 @@ exports.get_mods = function (id, session, callback) {
         apiUrl = CONFIG.archivespaceHost + id;
     }
 
-    /*
-    REQUEST.get({
-        url: apiUrl,
-        timeout: 55000,
-        headers: {
-            'X-ArchivesSpace-Session': session
-        }
-    }, function (error, httpResponse, body) {
-        console.log(body);
-        if (error) {
-
-            // error_message: 'ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed - error object is null ' + error
-            callback({
-                error: true,
-                message: error
-            });
-
-            return false;
-        }
-
-        if (httpResponse.statusCode === 200) {
-
-            let response = {
-                data: {
-                    mods: body
-                }
-            };
-
-            callback({
-                error: false,
-                mods: response
-            });
-
-            return false;
-        } else {
-            console.log('failed.');
-            console.log(body);
-        }
-
-
-    });
-    */
-
     (async() => {
 
         try {
@@ -208,25 +165,6 @@ exports.get_mods = function (id, session, callback) {
             }
 
             LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed - ' + error);
-
-            if (error.response.status === 412) {
-
-                callback({
-                    error: true,
-                    status: 412,
-                    message: error.response.data.error
-                });
-
-                return false;
-
-            } else {
-
-                callback({
-                    error: true,
-                    error_message: 'ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed - ' + error
-                });
-            }
-
             return false;
         }
 
