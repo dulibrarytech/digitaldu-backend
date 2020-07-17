@@ -31,13 +31,15 @@ module.exports = function() {
     const APP = EXPRESS(),
         SERVER = HTTP.createServer(APP);
 
+    let view_cache = true;
+
     SERVER.listen(process.env.APP_PORT);
 
     if (process.env.NODE_ENV === 'development') {
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
+        view_cache = false;
     } else if (process.env.NODE_ENV === 'production') {
         APP.use(COMPRESS());
-        APP.set('view cache', true);
     }
 
     APP.use(BODYPARSER.urlencoded({
@@ -52,6 +54,7 @@ module.exports = function() {
     APP.use(XSS.sanitize_req_body);
     APP.set('views', './views');
     APP.set('view engine', 'ejs');
+    APP.set('view cache', view_cache);
 
     require('../auth/routes.js')(APP);
     require('../users/routes.js')(APP);

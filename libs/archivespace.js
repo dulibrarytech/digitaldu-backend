@@ -164,7 +164,7 @@ exports.get_mods = function (id, session, callback) {
                     'X-ArchivesSpace-Session': session
                 }
             });
-            console.log(session);
+
             if (response.status === 404) {
 
                 LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed (http status - ' + response.status + ')');
