@@ -92,6 +92,7 @@ const importModule = (function () {
             }
         }
 
+        /* TODO:...
         if (uuids.length === 0) {
             html += '<tr>';
             html += '<td>';
@@ -99,6 +100,7 @@ const importModule = (function () {
             html += '</td>';
             html += '</tr>';
         }
+        */
 
         if (collection !== null && collectionObjects.length > 0) {
             let button = '<a class="btn btn-success btn-xs import-btn" onclick="importModule.queueTransferObjects(\'' + collectionObjects + '\')" href="#"><i class="fa fa-upload"></i>&nbsp;&nbsp;Import</a>';
@@ -221,18 +223,6 @@ const importModule = (function () {
             let title = mods.title;
             let identifier = mods.identifiers[0].identifier;
             let display_record = JSON.parse(data[i].display_record);
-
-            /*
-            html += '<tr>';
-
-            let tn = helperModule.getTn(DOMPurify.sanitize(data[i].thumbnail), DOMPurify.sanitize(data[i].mime_type), DOMPurify.sanitize(data[i].pid));
-
-            if (data[i].thumbnail !== null) {
-                html += '<td ' + alignTd + '><img style="border: solid 1px;" src="' + tn + '" width="75" height="75"></td>';
-            } else {
-                html += '<td ' + alignTd + '><img style="border: solid 1px;" src="' + tn + '" width="75" height="75"></td>';
-            }
-            */
 
             if (data[i].mime_type === null || data[i].thumbnail === null) {
                 html += '<tr style="background-color:#ffcdd2">';
@@ -542,9 +532,9 @@ const importModule = (function () {
         return false;
     };
 
-    /**
+    /** TODO: remove
      * Enable validation on add mods id form
-     */
+
     obj.modsIdFormValidation = function () {
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -565,6 +555,7 @@ const importModule = (function () {
             });
         });
     };
+     */
 
     /** TODO: remove
      * saves missing mods id to repository record
@@ -615,7 +606,7 @@ const importModule = (function () {
      * Renders form that allows users to enter archivespace id
      * @param sip_uuid
      * @returns {boolean}
-     */
+
     obj.createModsIdForm = function (sip_uuid) {
 
         let html;
@@ -634,13 +625,14 @@ const importModule = (function () {
 
         return false;
     };
+     */
 
     /**
      * Imports MODS metadata
      * @param mods_id
      * @param sip_uuid
      * @returns {boolean}
-     */
+
     obj.importMods = function (sip_uuid, mods_id) {
 
         if (mods_id === null || mods_id === undefined || mods_id.length === 0) {
@@ -686,6 +678,7 @@ const importModule = (function () {
 
         httpModule.req(request, callback);
     };
+     */
 
     /** TODO: remove
      * Imports missing thumbnail data
