@@ -88,10 +88,10 @@ const qaModule = (function () {
         for (let i = 0; i < data.length; i++) {
 
             html += '<tr>';
-            html += '<td style="text-align: left; vertical-align: middle; font-size: medium; ">';
+            html += '<td style="text-align: left;vertical-align: middle;">';
             html += data[i];
             html += '</td>';
-            html += '<td style="text-align: center; vertical-align: middle;"><a href="#" type="button" class="btn btn-sm btn-default" onclick="qaModule.runQAonReady(\'' + data[i] + '\')"><i class="fa fa-cogs"></i> Run QA on packages</a></td>';
+            html += '<td style="text-align: center;vertical-align: middle;"><a href="#" type="button" class="btn btn-sm btn-default" onclick="qaModule.runQAonReady(\'' + data[i] + '\')"><i class="fa fa-cogs"></i> Run QA on packages</a></td>';
             html += '</tr>';
         }
 
@@ -106,10 +106,9 @@ const qaModule = (function () {
      */
     obj.runQAonReady = function(folder) {
 
-        domModule.hide('#qa-folders-tbl');
-
-        let html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; Running QA on "' + folder + '"...</strong></div>';
+        let html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; Running QA...</strong></div>';
         domModule.html('#qa-on-ready', html);
+        domModule.hide('#qa-folders-tbl');
 
         let url = api + '/api/v1/qa/ready?folder=' + folder;
         let token = userModule.getUserToken();
@@ -165,18 +164,26 @@ const qaModule = (function () {
         let missing_uris = '';
         let errors = [];
 
+        if (data.missing_files === 'empty' && data.missing_uris === 'empty') {
+            domModule.html('#ready', '<h2>' + folder + '</h2>');
+            domModule.html('#qa-folders', null);
+            domModule.html('#qa-on-ready', '<div class="alert alert-danger"><strong>There are no packages in "' + folder + '"</strong></a></div>');
+            return false;
+        }
+
         if (data.missing_files.length === 0) {
 
             missing_files += '<h4>No missing objects in packages.</h4>';
 
         } else {
 
-            missing_files += '<h4>The following packages are missing object files.</h4>';
+            domModule.html('#qa-on-ready', null);
+            missing_files += '<h4>The following packages are missing object files:</h4>';
 
             for (let i = 0;i < data.missing_files.length; i++) {
                 missing_files += '<article class="media event">';
                 missing_files += '<div class="media-body">';
-                missing_files += '<p>' + data.missing_files[i] + '</p>';
+                missing_files += '<p><i class="fa fa-exclamation-circle"></i> ' + data.missing_files[i] + '</p>';
                 missing_files += '</div>';
                 missing_files += '</article>';
             }
@@ -190,12 +197,13 @@ const qaModule = (function () {
 
         } else {
 
-            missing_uris += '<h4>The following packages are missing uri.txt files.</h4>';
+            domModule.html('#qa-on-ready', null);
+            missing_uris += '<h4>The following packages are missing uri.txt files:</h4>';
 
             for (let i = 0;i < data.missing_uris.length; i++) {
                 missing_uris += '<article class="media event">';
                 missing_uris += '<div class="media-body">';
-                missing_uris += '<p>' + data.missing_uris[i] + '</p>';
+                missing_uris += '<p><i class="fa fa-exclamation-circle"></i> ' + data.missing_uris[i] + '</p>';
                 missing_uris += '</div>';
                 missing_uris += '</article>';
             }
@@ -211,6 +219,10 @@ const qaModule = (function () {
         domModule.show('#qa-results-missing-uris-panel');
 
         if (errors.length === 0) {
+
+            window.onbeforeunload = function() {
+                return "";
+            };
 
             let parts = folder.split('-');
             let uri_part = parts.pop().replace('_', '/');
@@ -254,7 +266,7 @@ const qaModule = (function () {
 
                         // TODO: create new collection
                         domModule.val('#resource-uri', uri);
-                        // domModule.html('#processing-message', null);
+                        domModule.html('#processing-message', null);
                         domModule.html('#qa-on-ready', null);
 
                     } else {
@@ -314,9 +326,10 @@ const qaModule = (function () {
             if (response.status === 200) {
 
                 response.json().then(function (data) {
-                    let message = '<div class="alert alert-success"><strong>' + data.message + '</strong><br>Package <strong>' + pid + '</strong> is ready to be imported.</div>';
-                    domModule.html('#processing-message', message);
-                    domModule.html('#qa-on-ready', null);
+                    window.onbeforeunload = null;
+                    let message = '<div class="alert alert-success"><strong>' + data.message + '</strong><br>Package <strong><a href="/dashboard/import?collection=' + pid + '">' + pid + '</a></strong> is ready to be imported.</div>';
+                    domModule.html('#qa-on-ready', message);
+                    domModule.html('#processing-message', '<strong>Complete.</strong>');
                 });
 
                 return false;
