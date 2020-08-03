@@ -51,6 +51,8 @@ module.exports = {
     sftpId: process.env.SFTP_ID,
     sftpPwd: process.env.SFTP_PWD,
     sftpRemotePath: process.env.SFTP_REMOTE_PATH,
+    qaApiKey: process.env.QA_API_KEY,
+    qaUrl: process.env.QA_URL,
     archivematicaApi: process.env.ARCHIVEMATICA_API,
     archivematicaUsername: process.env.ARCHIVEMATICA_USERNAME,
     archivematicaPassword: process.env.ARCHIVEMATICA_PASSWORD,

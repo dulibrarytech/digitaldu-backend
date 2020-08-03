@@ -67,4 +67,5 @@ module.exports = function() {
     require('../utils/routes.js')(APP);
     require('../api/routes.js')(APP);
     require('../uploads/index.js')(APP);
+    require('../qa/routes.js')(APP);
 };

@@ -174,3 +174,12 @@ exports.get_dashboard_upload = function (req, res) {
         error: ''
     });
 };
+
+exports.get_dashboard_qa = function (req, res) {
+    res.render('dashboard-qa', {
+        host: CONFIG.host,
+        appname: CONFIG.appName,
+        appversion: CONFIG.appVersion,
+        organization: CONFIG.organization
+    });
+};

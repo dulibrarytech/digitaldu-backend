@@ -1060,7 +1060,6 @@ exports.update_object_metadata_record = function (req, callback) {
                     return false;
                 }
 
-                // TODO: move to lib
                 let recordObj = {};
                 recordObj.pid = data[0].pid;
                 recordObj.is_member_of_collection = data[0].is_member_of_collection;

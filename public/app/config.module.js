@@ -69,7 +69,7 @@ const configModule = (function () {
     };
 
     /**
-     *
+     * Returns archivsspace public url
      */
     obj.getASpace = function() {
        return 'https://duarchives.coalliance.org';

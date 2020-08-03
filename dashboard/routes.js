@@ -69,4 +69,7 @@ module.exports = function (app) {
 
     app.route('/dashboard/search')
         .get(DASHBOARD.get_dashboard_search);
+
+    app.route('/dashboard/qa')
+        .get(DASHBOARD.get_dashboard_qa);
 };
