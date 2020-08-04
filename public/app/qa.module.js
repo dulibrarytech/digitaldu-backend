@@ -109,7 +109,7 @@ const qaModule = (function () {
      * @param folder
      * @returns {boolean}
      */
-    obj.runQAonReady = function(folder) {
+    obj.runQAonReady = function (folder) {
 
         let html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; Running QA...</strong></div>';
         domModule.html('#qa-on-ready', html);
@@ -163,10 +163,11 @@ const qaModule = (function () {
      * @param data
      * @returns {boolean}
      */
-    const renderQAresults = function(data, folder) {
+    const renderQAresults = function (data, folder) {
 
         let missing_files = '';
         let missing_uris = '';
+        let package_size;
         let errors = [];
 
         if (data.missing_files === 'empty' && data.missing_uris === 'empty') {
@@ -174,6 +175,10 @@ const qaModule = (function () {
             domModule.html('#qa-folders', null);
             domModule.html('#qa-on-ready', '<div class="alert alert-danger"><strong>There are no packages in "' + folder + '"</strong></a></div>');
             return false;
+        }
+
+        if (data.total_size !== undefined) {
+            package_size = data.total_size;
         }
 
         if (data.missing_files.length === 0) {
@@ -185,7 +190,7 @@ const qaModule = (function () {
             domModule.html('#qa-on-ready', null);
             missing_files += '<h4>The following packages are missing object files:</h4>';
 
-            for (let i = 0;i < data.missing_files.length; i++) {
+            for (let i = 0; i < data.missing_files.length; i++) {
                 missing_files += '<article class="media event">';
                 missing_files += '<div class="media-body">';
                 missing_files += '<p><i class="fa fa-exclamation-circle"></i> ' + data.missing_files[i] + '</p>';
@@ -205,7 +210,7 @@ const qaModule = (function () {
             domModule.html('#qa-on-ready', null);
             missing_uris += '<h4>The following packages are missing uri.txt files:</h4>';
 
-            for (let i = 0;i < data.missing_uris.length; i++) {
+            for (let i = 0; i < data.missing_uris.length; i++) {
                 missing_uris += '<article class="media event">';
                 missing_uris += '<div class="media-body">';
                 missing_uris += '<p><i class="fa fa-exclamation-circle"></i> ' + data.missing_uris[i] + '</p>';
@@ -216,16 +221,31 @@ const qaModule = (function () {
             errors.push('-1');
         }
 
+        function format_package_size(bytes, decimals = 2) {
+
+            if (bytes === 0) {
+                return '0 Bytes';
+            }
+
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
         domModule.html('#ready', '<h2>' + folder + '</h2>');
         domModule.html('#qa-folders', null);
         domModule.html('#qa-results-missing-files-content', missing_files);
         domModule.html('#qa-results-missing-uris-content', missing_uris);
+        domModule.html('#qa-package-size', format_package_size(package_size));
         domModule.show('#qa-results-missing-files-panel');
         domModule.show('#qa-results-missing-uris-panel');
 
         if (errors.length === 0) {
 
-            window.onbeforeunload = function() {
+            window.onbeforeunload = function () {
                 return "";
             };
 
@@ -244,7 +264,7 @@ const qaModule = (function () {
      * Checks if collection exists
      * @param uri
      */
-    const checkCollection = function(uri, folder) {
+    const checkCollection = function (uri, folder) {
 
         domModule.html('#processing-message', '<em>Checking collection...</em>');
 
@@ -311,7 +331,7 @@ const qaModule = (function () {
      * @param pid
      * @param folder
      */
-    const moveToIngest = function(pid, folder) {
+    const moveToIngest = function (pid, folder) {
 
         domModule.html('#processing-message', '<em>Preparing packages for ingest...</em>');
 
@@ -365,7 +385,7 @@ const qaModule = (function () {
 
         let obj = {};
 
-        for (let i=0;i<arr.length;i++) {
+        for (let i = 0; i < arr.length; i++) {
             let propsVal = decodeURIComponent(arr[i]).split('=');
             obj[propsVal[0]] = propsVal[1];
         }
