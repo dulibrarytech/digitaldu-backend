@@ -52,19 +52,15 @@ exports.get_list_ready = function(req, callback) {
                 });
 
                 return false;
-
-            } else {
-
-                callback({
-                    status: 200,
-                    data: response.data
-                });
-
-                return false;
             }
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/qa/service module (get_list_ready)] request to QA server failed - ' + error);
+
+            callback({
+                status: 500
+            });
+
             return false;
         }
 

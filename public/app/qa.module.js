@@ -58,10 +58,15 @@ const qaModule = (function () {
 
                 response.json().then(function (response) {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Permission denied.');
+                    domModule.html('.loading', null);
                 });
 
+            } else if (response.status === 500) {
+                helperModule.renderError('Error: (HTTP status ' + response.status + '). QA Service is unavailable.');
+                domModule.html('.loading', null);
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to get ready folders.');
+                domModule.html('.loading', null);
             }
         };
 
@@ -173,7 +178,7 @@ const qaModule = (function () {
 
         if (data.missing_files.length === 0) {
 
-            missing_files += '<h4>No missing objects in packages.</h4>';
+            missing_files += '<p><strong><i class="fa fa-check-circle"></i> No missing objects in packages.</strong></p>';
 
         } else {
 
@@ -193,7 +198,7 @@ const qaModule = (function () {
 
         if (data.missing_uris.length === 0) {
 
-            missing_uris += '<h4>No missing uri.txt files in packages.</h4>';
+            missing_uris += '<p><strong><i class="fa fa-check-circle"></i> No missing uri.txt files in packages.</strong></p>';
 
         } else {
 
