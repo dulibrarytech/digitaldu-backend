@@ -75,7 +75,7 @@ exports.get_list_ready = function(req, callback) {
 exports.get_ready_folder = function(req, callback) {
 
     let folder = req.query.folder;
-    let qaUrl = CONFIG.qaUrl + '/api/v1/qa/ready?folder=' + folder + '&api_key=' + CONFIG.qaApiKey;
+    let qaUrl = CONFIG.qaUrl + '/api/v1/qa/run-qa?folder=' + folder + '&api_key=' + CONFIG.qaApiKey;
 
     (async() => {
 

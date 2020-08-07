@@ -26,7 +26,7 @@ module.exports = function (app) {
     app.route('/api/v1/qa/list-ready')
         .get(TOKEN.verify, QA.get_list_ready);
 
-    app.route('/api/v1/qa/ready')
+    app.route('/api/v1/qa/run-qa')
         .get(TOKEN.verify, QA.get_ready_folder);
 
     app.route('/api/v1/qa/check-collection')

@@ -111,11 +111,11 @@ const qaModule = (function () {
      */
     obj.runQAonReady = function (folder) {
 
-        let html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; Running QA...</strong></div>';
+        let html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; Running QA... <em>This may take a while depending on the size of the collection</em>.</strong></div>';
         domModule.html('#qa-on-ready', html);
         domModule.hide('#qa-folders-tbl');
 
-        let url = api + '/api/v1/qa/ready?folder=' + folder;
+        let url = api + '/api/v1/qa/run-qa?folder=' + folder;
         let token = userModule.getUserToken();
         let request = new Request(url, {
             method: 'GET',
@@ -154,8 +154,6 @@ const qaModule = (function () {
         };
 
         httpModule.req(request, callback);
-
-        return false;
     };
 
     /**
@@ -177,6 +175,11 @@ const qaModule = (function () {
             return false;
         }
 
+        if (data.missing_files === undefined && data.missing_uris === undefined) {
+            domModule.html('#qa-on-ready', '<div class="alert alert-danger"><strong>' + data.message + '</strong></a></div>');
+            return false;
+        }
+
         if (data.total_size !== undefined) {
             package_size = data.total_size;
         }
@@ -188,14 +191,24 @@ const qaModule = (function () {
         } else {
 
             domModule.html('#qa-on-ready', null);
-            missing_files += '<h4>The following packages are missing object files:</h4>';
+            missing_files += '<p><strong>The following packages have problems with object files:</strong></p>';
 
             for (let i = 0; i < data.missing_files.length; i++) {
-                missing_files += '<article class="media event">';
-                missing_files += '<div class="media-body">';
-                missing_files += '<p><i class="fa fa-exclamation-circle"></i> ' + data.missing_files[i] + '</p>';
-                missing_files += '</div>';
-                missing_files += '</article>';
+
+                if (data.missing_files[i].error !== undefined && data.missing_files[i].file !== undefined) {
+                    missing_files += '<article class="media event">';
+                    missing_files += '<div class="media-body">';
+                    missing_files += '<p><i class="fa fa-exclamation-circle"></i> Error: ' + data.missing_files[i].error + '</p>';
+                    missing_files += '<p>Package: ' + data.missing_files[i].file + '</p>';
+                    missing_files += '</div>';
+                    missing_files += '</article>';
+                } else {
+                    missing_files += '<article class="media event">';
+                    missing_files += '<div class="media-body">';
+                    missing_files += '<p><i class="fa fa-exclamation-circle"></i> ' + data.missing_files[i] + '</p>';
+                    missing_files += '</div>';
+                    missing_files += '</article>';
+                }
             }
 
             errors.push('-1');
@@ -208,7 +221,7 @@ const qaModule = (function () {
         } else {
 
             domModule.html('#qa-on-ready', null);
-            missing_uris += '<h4>The following packages are missing uri.txt files:</h4>';
+            missing_uris += '<p><strong>The following packages are missing uri.txt files:</strong></p>';
 
             for (let i = 0; i < data.missing_uris.length; i++) {
                 missing_uris += '<article class="media event">';
@@ -239,7 +252,7 @@ const qaModule = (function () {
         domModule.html('#qa-folders', null);
         domModule.html('#qa-results-missing-files-content', missing_files);
         domModule.html('#qa-results-missing-uris-content', missing_uris);
-        domModule.html('#qa-package-size', format_package_size(package_size));
+        domModule.html('#qa-package-size', 'Collection size: ' + format_package_size(package_size));
         domModule.show('#qa-results-missing-files-panel');
         domModule.show('#qa-results-missing-uris-panel');
 
@@ -302,7 +315,6 @@ const qaModule = (function () {
                         // domModule.html('#message', '<div class="alert alert-success">Collection created ( <a href="' + configModule.getApi() + '/dashboard/objects/?pid=' + DOMPurify.sanitize(data[0].pid) + '">' + DOMPurify.sanitize(data[0].pid) + '</a> )');
                         // domModule.html('#processing-message', null);
                     }
-
                 });
 
                 return false;
