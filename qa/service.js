@@ -131,7 +131,7 @@ exports.move_to_ingest = function(req, callback) {
         try {
 
             let response = await HTTP.get(qaUrl, {
-                httpAgent: new KA.Agent({ keepAlive: true }),
+                // httpAgent: new KA.Agent({ keepAlive: true }),
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -157,7 +157,94 @@ exports.move_to_ingest = function(req, callback) {
             }
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/qa/service module (get_list_ready)] request to QA server failed - ' + error);
+            LOGGER.module().error('ERROR: [/qa/service module (move_to_ingest)] request to QA server failed - ' + error);
+            return false;
+        }
+
+    })();
+};
+
+/**
+ * moves packages to Archivematica sftp server
+ * @param req
+ * @param callback
+ */
+exports.move_to_sftp = function(req, callback) {
+
+    let pid = req.query.pid;
+    let folder = req.query.folder;
+    let qaUrl = CONFIG.qaUrl + '/api/v1/qa/move-to-sftp?pid=' + pid + '&folder=' + folder + '&api_key=' + CONFIG.qaApiKey;
+
+    (async() => {
+
+        try {
+
+            let response = await HTTP.get(qaUrl, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.status === 200) {
+                LOGGER.module().info('INFO: [/qa/service module (move_to_sftp)] Uploading to sftp');
+                return false;
+
+            } else {
+                LOGGER.module().info('INFO: [/qa/service module (move_to_sftp)] Request to upload sftp failed - ');
+                return false;
+            }
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/qa/service module (move_to_sftp)] request to QA server failed - ' + error);
+            return false;
+        }
+
+    })();
+
+    callback({
+        status: 200,
+        message: 'Uploading packages to sftp.',
+        data: []
+    });
+};
+
+/**
+ * Checks sftp upload status
+ * @param req
+ * @param callback
+ */
+exports.upload_status = function(req, callback) {
+
+    let pid = req.query.pid;
+    let qaUrl = CONFIG.qaUrl + '/api/v1/qa/upload-status?pid=' + pid + '&api_key=' + CONFIG.qaApiKey;
+
+    (async() => {
+
+        try {
+
+            let response = await HTTP.get(qaUrl, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.status === 200) {
+                // LOGGER.module().info('INFO: [/qa/service module (upload_status)] Uploading to sftp');
+                callback({
+                    status: 200,
+                    message: 'Checking sftp upload status.',
+                    data: []
+                });
+
+                return false;
+
+            } else {
+                LOGGER.module().info('INFO: [/qa/service module (upload_status)] Request to upload sftp failed - ');
+                return false;
+            }
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/qa/service module (upload_status)] request to QA server failed - ' + error);
             return false;
         }
 

@@ -44,3 +44,15 @@ exports.move_to_ingest = function (req, res) {
         res.status(data.status).send(data.data);
     });
 };
+
+exports.move_to_sftp = function (req, res) {
+    SERVICE.move_to_sftp(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.upload_status = function (req, res) {
+    SERVICE.upload_status(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};

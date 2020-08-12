@@ -162,20 +162,20 @@ const qaModule = (function () {
      * @returns {boolean}
      */
     const renderQAresults = function (data, folder) {
-
-        let missing_files = '';
-        let missing_uris = '';
+        // TODO: rename variables
+        let file_errors = '';
+        let uri_errors = '';
         let package_size;
         let errors = [];
 
-        if (data.missing_files === 'empty' && data.missing_uris === 'empty') {
+        if (data.file_errors === 'empty' && data.uri_errors === 'empty') {
             domModule.html('#ready', '<h2>' + folder + '</h2>');
             domModule.html('#qa-folders', null);
             domModule.html('#qa-on-ready', '<div class="alert alert-danger"><strong>There are no packages in "' + folder + '"</strong></a></div>');
             return false;
         }
 
-        if (data.missing_files === undefined && data.missing_uris === undefined) {
+        if (data.file_errors === undefined && data.uri_errors === undefined) {
             domModule.html('#qa-on-ready', '<div class="alert alert-danger"><strong>' + data.message + '</strong></a></div>');
             return false;
         }
@@ -184,51 +184,51 @@ const qaModule = (function () {
             package_size = data.total_size;
         }
 
-        if (data.missing_files.length === 0) {
+        if (data.file_errors.length === 0) {
 
-            missing_files += '<p><strong><i class="fa fa-check-circle"></i> No missing objects in packages.</strong></p>';
+            file_errors += '<p><strong><i class="fa fa-check-circle"></i> No missing objects in packages.</strong></p>';
 
         } else {
 
             domModule.html('#qa-on-ready', null);
-            missing_files += '<p><strong>The following packages have problems with object files:</strong></p>';
+            file_errors += '<p><strong>The following packages have problems with object files:</strong></p>';
 
-            for (let i = 0; i < data.missing_files.length; i++) {
+            for (let i = 0; i < data.file_errors.length; i++) {
 
-                if (data.missing_files[i].error !== undefined && data.missing_files[i].file !== undefined) {
-                    missing_files += '<article class="media event">';
-                    missing_files += '<div class="media-body">';
-                    missing_files += '<p><i class="fa fa-exclamation-circle"></i> Error: ' + data.missing_files[i].error + '</p>';
-                    missing_files += '<p>Package: ' + data.missing_files[i].file + '</p>';
-                    missing_files += '</div>';
-                    missing_files += '</article>';
+                if (data.file_errors[i].error !== undefined && data.file_errors[i].file !== undefined) {
+                    file_errors += '<article class="media event">';
+                    file_errors += '<div class="media-body">';
+                    file_errors += '<p><i class="fa fa-exclamation-circle"></i> ' + data.file_errors[i].file + '</p>';
+                    file_errors += '<p>Error: ' + data.file_errors[i].error + '</p>';
+                    file_errors += '</div>';
+                    file_errors += '</article>';
                 } else {
-                    missing_files += '<article class="media event">';
-                    missing_files += '<div class="media-body">';
-                    missing_files += '<p><i class="fa fa-exclamation-circle"></i> ' + data.missing_files[i] + '</p>';
-                    missing_files += '</div>';
-                    missing_files += '</article>';
+                    file_errors += '<article class="media event">';
+                    file_errors += '<div class="media-body">';
+                    file_errors += '<p><i class="fa fa-exclamation-circle"></i> ' + data.file_errors[i] + '</p>';
+                    file_errors += '</div>';
+                    file_errors += '</article>';
                 }
             }
 
             errors.push('-1');
         }
 
-        if (data.missing_uris.length === 0) {
+        if (data.uri_errors.length === 0) {
 
-            missing_uris += '<p><strong><i class="fa fa-check-circle"></i> No missing uri.txt files in packages.</strong></p>';
+            uri_errors += '<p><strong><i class="fa fa-check-circle"></i> No missing uri.txt files in packages.</strong></p>';
 
         } else {
 
             domModule.html('#qa-on-ready', null);
-            missing_uris += '<p><strong>The following packages are missing uri.txt files:</strong></p>';
+            uri_errors += '<p><strong>The following packages are missing uri.txt files:</strong></p>';
 
-            for (let i = 0; i < data.missing_uris.length; i++) {
-                missing_uris += '<article class="media event">';
-                missing_uris += '<div class="media-body">';
-                missing_uris += '<p><i class="fa fa-exclamation-circle"></i> ' + data.missing_uris[i] + '</p>';
-                missing_uris += '</div>';
-                missing_uris += '</article>';
+            for (let i = 0; i < data.uri_errors.length; i++) {
+                uri_errors += '<article class="media event">';
+                uri_errors += '<div class="media-body">';
+                uri_errors += '<p><i class="fa fa-exclamation-circle"></i> ' + data.uri_errors[i] + '</p>';
+                uri_errors += '</div>';
+                uri_errors += '</article>';
             }
 
             errors.push('-1');
@@ -250,8 +250,8 @@ const qaModule = (function () {
 
         domModule.html('#ready', '<h2>' + folder + '</h2>');
         domModule.html('#qa-folders', null);
-        domModule.html('#qa-results-missing-files-content', missing_files);
-        domModule.html('#qa-results-missing-uris-content', missing_uris);
+        domModule.html('#qa-results-missing-files-content', file_errors);
+        domModule.html('#qa-results-missing-uris-content', uri_errors);
         domModule.html('#qa-package-size', 'Collection size: ' + format_package_size(package_size));
         domModule.show('#qa-results-missing-files-panel');
         domModule.show('#qa-results-missing-uris-panel');
@@ -363,10 +363,116 @@ const qaModule = (function () {
             if (response.status === 200) {
 
                 response.json().then(function (data) {
-                    window.onbeforeunload = null;
-                    let message = '<div class="alert alert-success"><strong>' + data.message + '</strong><br>Package <strong><a href="/dashboard/import?collection=' + pid + '">' + pid + '</a></strong> is ready to be imported.</div>';
-                    domModule.html('#qa-on-ready', message);
-                    domModule.html('#processing-message', '<strong>Complete.</strong>');
+                    // window.onbeforeunload = null;
+                    // let message = '<div class="alert alert-success"><strong>' + data.message + '</strong><br>Package <strong><a href="/dashboard/import?collection=' + pid + '">' + pid + '</a></strong> is ready to be imported.</div>';
+                    // domModule.html('#qa-on-ready', message);
+                    moveToSftp(pid, folder);
+                    // domModule.html('#processing-message', '<strong>Complete.</strong>');
+                });
+
+                return false;
+
+            } else if (response.status === 401) {
+
+                response.json().then(function (response) {
+
+                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
+
+                    setTimeout(function () {
+                        window.location.replace('/login');
+                    }, 4000);
+                });
+
+            } else {
+                helperModule.renderError('Error: (HTTP status ' + response.status + ').  QA failed.');
+            }
+        };
+
+        httpModule.req(request, callback);
+    };
+
+    /**
+     * Moves packages to Archivematica SFTP server
+     * @param pid
+     * @param folder
+     */
+    const moveToSftp = function (pid, folder) {
+
+        domModule.html('#processing-message', '<em>Uploading to Archivematica SFTP server...</em>');
+
+        let token = userModule.getUserToken();
+        let url = api + '/api/v1/qa/move-to-sftp?pid=' + pid + '&folder=' + folder,
+            request = new Request(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                mode: 'cors'
+            });
+
+        const callback = function (response) {
+
+            if (response.status === 200) {
+
+                response.json().then(function (data) {
+                    console.log(data);
+                    let timer = setInterval(function() {
+                        checkSftpUploadStatus(pid);
+                    }, 60000);
+                });
+
+                return false;
+
+            } else if (response.status === 401) {
+
+                response.json().then(function (response) {
+
+                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
+
+                    setTimeout(function () {
+                        window.location.replace('/login');
+                    }, 4000);
+                });
+
+            } else {
+                helperModule.renderError('Error: (HTTP status ' + response.status + ').  QA failed.');
+            }
+        };
+
+        httpModule.req(request, callback);
+    };
+
+    /**
+     * Checks status of sftp upload
+     * @param pid
+     */
+    const checkSftpUploadStatus = function(pid) {
+
+        domModule.html('#processing-message', '<em>Checking SFTP Upload...</em>');
+
+        let token = userModule.getUserToken();
+        let url = api + '/api/v1/qa/upload-status?pid=' + pid,
+            request = new Request(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                mode: 'cors'
+            });
+
+        const callback = function (response) {
+
+            if (response.status === 200) {
+
+                response.json().then(function (data) {
+                    console.log(data);
+                    // window.onbeforeunload = null;
+                    // let message = '<div class="alert alert-success"><strong>' + data.message + '</strong><br>Package <strong><a href="/dashboard/import?collection=' + pid + '">' + pid + '</a></strong> is ready to be imported.</div>';
+                    // domModule.html('#qa-on-ready', message);
+                    // domModule.html('#processing-message', '<strong>Complete.</strong>');
+                    console.log('Checking upload status...');
                 });
 
                 return false;

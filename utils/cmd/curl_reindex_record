@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# set env var - export API_KEY="<api-key>"
+
+curl -X POST \
+  'http://localhost:8000/api/admin/v1/indexer?api_key='${API_KEY} \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -H 'cache-control: no-cache' \
+  -d sip_uuid=7b8d37a4-a799-429c-966f-94b25422e113
