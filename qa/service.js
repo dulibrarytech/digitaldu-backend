@@ -216,7 +216,8 @@ exports.move_to_sftp = function(req, callback) {
 exports.upload_status = function(req, callback) {
 
     let pid = req.query.pid;
-    let qaUrl = CONFIG.qaUrl + '/api/v1/qa/upload-status?pid=' + pid + '&api_key=' + CONFIG.qaApiKey;
+    let local_file_count = req.query.local_file_count;
+    let qaUrl = CONFIG.qaUrl + '/api/v1/qa/upload-status?pid=' + pid + '&local_file_count=' + local_file_count + '&api_key=' + CONFIG.qaApiKey;
 
     (async() => {
 
@@ -230,16 +231,17 @@ exports.upload_status = function(req, callback) {
 
             if (response.status === 200) {
                 // LOGGER.module().info('INFO: [/qa/service module (upload_status)] Uploading to sftp');
+
                 callback({
                     status: 200,
                     message: 'Checking sftp upload status.',
-                    data: []
+                    data: response.data
                 });
 
                 return false;
 
             } else {
-                LOGGER.module().info('INFO: [/qa/service module (upload_status)] Request to upload sftp failed - ');
+                LOGGER.module().info('INFO: [/qa/service module (upload_status)] Request to upload sftp failed');
                 return false;
             }
 

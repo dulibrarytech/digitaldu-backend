@@ -22,6 +22,7 @@ const qaModule = (function () {
 
     const api = configModule.getApi();
     let obj = {};
+    let local_file_count;
 
     /**
      * Gets ready folders
@@ -162,21 +163,25 @@ const qaModule = (function () {
      * @returns {boolean}
      */
     const renderQAresults = function (data, folder) {
-        // TODO: rename variables
+
         let file_errors = '';
         let uri_errors = '';
         let package_size;
         let errors = [];
 
-        if (data.file_errors === 'empty' && data.uri_errors === 'empty') {
-            domModule.html('#ready', '<h2>' + folder + '</h2>');
-            domModule.html('#qa-folders', null);
-            domModule.html('#qa-on-ready', '<div class="alert alert-danger"><strong>There are no packages in "' + folder + '"</strong></a></div>');
-            return false;
-        }
+        if (data.file_results.length === 0 && data.errors.length > 0) {
 
-        if (data.file_errors === undefined && data.uri_errors === undefined) {
-            domModule.html('#qa-on-ready', '<div class="alert alert-danger"><strong>' + data.message + '</strong></a></div>');
+            domModule.html('#message', '<div class="alert alert-danger"><strong>' + data.message + '</strong></a></div>');
+            domModule.html('#qa-on-ready', null);
+
+            let html = '<ul>';
+
+            for (let i=0;i<data.errors.length;i++) {
+                html += '<li>' + data.errors[i] + '</li>';
+            }
+
+            html += '</ul>';
+            domModule.html('#ready', html);
             return false;
         }
 
@@ -184,7 +189,15 @@ const qaModule = (function () {
             package_size = data.total_size;
         }
 
-        if (data.file_errors.length === 0) {
+        if (data.file_results.length === 0 || data.file_results.local_file_count === undefined) {
+            domModule.html('#message', '<div class="alert alert-danger"><strong>QA failed. Unable to get package file counts.</strong></a></div>');
+            domModule.html('#qa-on-ready', null);
+            return false;
+        } else {
+            local_file_count = data.file_results.local_file_count;
+        }
+
+        if (data.file_results.errors.length === 0) {
 
             file_errors += '<p><strong><i class="fa fa-check-circle"></i> No missing objects in packages.</strong></p>';
 
@@ -193,19 +206,19 @@ const qaModule = (function () {
             domModule.html('#qa-on-ready', null);
             file_errors += '<p><strong>The following packages have problems with object files:</strong></p>';
 
-            for (let i = 0; i < data.file_errors.length; i++) {
+            for (let i = 0; i < data.file_results.errors.length; i++) {
 
-                if (data.file_errors[i].error !== undefined && data.file_errors[i].file !== undefined) {
+                if (data.file_results.errors[i].error !== undefined && data.file_results.errors[i].file !== undefined) {
                     file_errors += '<article class="media event">';
                     file_errors += '<div class="media-body">';
-                    file_errors += '<p><i class="fa fa-exclamation-circle"></i> ' + data.file_errors[i].file + '</p>';
-                    file_errors += '<p>Error: ' + data.file_errors[i].error + '</p>';
+                    file_errors += '<p><i class="fa fa-exclamation-circle"></i> ' + data.file_results.errors[i].file + ' - Error: ' + data.file_results.errors[i].error + '</p>';
+                    file_errors += '<p></p>';
                     file_errors += '</div>';
                     file_errors += '</article>';
                 } else {
                     file_errors += '<article class="media event">';
                     file_errors += '<div class="media-body">';
-                    file_errors += '<p><i class="fa fa-exclamation-circle"></i> ' + data.file_errors[i] + '</p>';
+                    file_errors += '<p><i class="fa fa-exclamation-circle"></i> ' + data.file_results.errors[i] + '</p>';
                     file_errors += '</div>';
                     file_errors += '</article>';
                 }
@@ -252,14 +265,14 @@ const qaModule = (function () {
         domModule.html('#qa-folders', null);
         domModule.html('#qa-results-missing-files-content', file_errors);
         domModule.html('#qa-results-missing-uris-content', uri_errors);
-        domModule.html('#qa-package-size', 'Collection size: ' + format_package_size(package_size));
+        domModule.html('#qa-package-size', 'Collection size: ' + format_package_size(package_size) + ' - ' + local_file_count + ' files.');
         domModule.show('#qa-results-missing-files-panel');
         domModule.show('#qa-results-missing-uris-panel');
 
         if (errors.length === 0) {
 
             window.onbeforeunload = function () {
-                return "";
+                return '';
             };
 
             let parts = folder.split('-');
@@ -363,11 +376,11 @@ const qaModule = (function () {
             if (response.status === 200) {
 
                 response.json().then(function (data) {
-                    // window.onbeforeunload = null;
+
                     // let message = '<div class="alert alert-success"><strong>' + data.message + '</strong><br>Package <strong><a href="/dashboard/import?collection=' + pid + '">' + pid + '</a></strong> is ready to be imported.</div>';
                     // domModule.html('#qa-on-ready', message);
+                    domModule.html('#processing-message', '<strong>Packages moved to ingest folder.</strong>');
                     moveToSftp(pid, folder);
-                    // domModule.html('#processing-message', '<strong>Complete.</strong>');
                 });
 
                 return false;
@@ -416,10 +429,20 @@ const qaModule = (function () {
             if (response.status === 200) {
 
                 response.json().then(function (data) {
-                    console.log(data);
+
                     let timer = setInterval(function() {
-                        checkSftpUploadStatus(pid);
-                    }, 60000);
+                        checkSftpUploadStatus(pid, function(results) {
+                            clearInterval(timer);
+
+                            setTimeout(function() {
+                                window.onbeforeunload = null;
+                                let message = '<div class="alert alert-success">Package <strong><a href="/dashboard/import?collection=' + pid + '">' + pid + '</a></strong> is ready to be imported.</div>';
+                                domModule.html('#qa-on-ready', message);
+                                domModule.html('#processing-message', '<strong>Complete.</strong>');
+                            }, 60000);
+
+                        });
+                    }, 30000);
                 });
 
                 return false;
@@ -447,12 +470,12 @@ const qaModule = (function () {
      * Checks status of sftp upload
      * @param pid
      */
-    const checkSftpUploadStatus = function(pid) {
+    const checkSftpUploadStatus = function(pid, cb) {
 
         domModule.html('#processing-message', '<em>Checking SFTP Upload...</em>');
 
         let token = userModule.getUserToken();
-        let url = api + '/api/v1/qa/upload-status?pid=' + pid,
+        let url = api + '/api/v1/qa/upload-status?pid=' + pid + '&local_file_count=' + local_file_count,
             request = new Request(url, {
                 method: 'GET',
                 headers: {
@@ -467,12 +490,22 @@ const qaModule = (function () {
             if (response.status === 200) {
 
                 response.json().then(function (data) {
-                    console.log(data);
-                    // window.onbeforeunload = null;
-                    // let message = '<div class="alert alert-success"><strong>' + data.message + '</strong><br>Package <strong><a href="/dashboard/import?collection=' + pid + '">' + pid + '</a></strong> is ready to be imported.</div>';
-                    // domModule.html('#qa-on-ready', message);
-                    // domModule.html('#processing-message', '<strong>Complete.</strong>');
-                    console.log('Checking upload status...');
+
+                    if (data.message === 'upload_complete') {
+                        cb('complete');
+                    } else if (data.message === 'in_progress') {
+
+                        let html = '<p><em>Uploading...</em></p><ul>';
+
+                        for (let i = 0; i<data.data[0].length;i++) {
+                            let file_upload = data.data[0][i]; // .splice(0, 1)
+                            html += '<li>' + file_upload + '</li>';
+                        }
+
+                        html += '</ul>';
+
+                        domModule.html('#processing-message', html);
+                    }
                 });
 
                 return false;
