@@ -277,9 +277,6 @@ const qaModule = (function () {
 
             let parts = folder.split('-');
             let uri_part = parts.pop().replace('_', '/');
-            // TODO: render collection form here
-            // TODO: ask user if it's a top collection or a nested one
-            // TODO: use uri part to create collection
 
             checkCollection(uri_part, folder);
             domModule.show('#qa-status-panel');
@@ -311,22 +308,60 @@ const qaModule = (function () {
 
                 response.json().then(function (data) {
 
-                    domModule.html('#collection-title', data.title);
-
                     if (data.length === 0) {
 
-                        // TODO: create new collection
-                        domModule.val('#resource-uri', uri);
-                        domModule.html('#processing-message', null);
-                        domModule.html('#qa-on-ready', null);
+                        domModule.html('#collection-title', 'Creating collection...');
+                        let obj = {};
+                        obj.uri = '/repositories/2/' + uri;
+                        obj.is_member_of_collection = configModule.getRootPid();
+
+                        let token = userModule.getUserToken();
+                        let url = api + '/api/admin/v1/repo/object',
+                            request = new Request(url, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'x-access-token': token
+                                },
+                                body: JSON.stringify(obj),
+                                mode: 'cors'
+                            });
+
+                        const callback = function (response) {
+
+                            if (response.status === 201) {
+
+                                response.json().then(function (data) {
+                                    console.log(data);
+                                    domModule.html('#collection-title', 'Collection created.');
+                                    checkCollection(uri, folder);
+                                });
+
+                                return false;
+
+                            } else if (response.status === 401) {
+
+                                response.json().then(function (response) {
+
+                                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
+
+                                    setTimeout(function () {
+                                        window.location.replace('/login');
+                                    }, 4000);
+                                });
+
+                            } else {
+                                helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to add collection.');
+                            }
+                        };
+
+                        httpModule.req(request, callback);
 
                     } else {
 
-                        // domModule.html('#resource-uri-display', uri);
-                        domModule.val('#resource-uri', uri);
+                        domModule.html('#collection-title', data.title);
+                        // domModule.val('#resource-uri', uri);
                         moveToIngest(data.pid, folder);
-                        // domModule.html('#message', '<div class="alert alert-success">Collection created ( <a href="' + configModule.getApi() + '/dashboard/objects/?pid=' + DOMPurify.sanitize(data[0].pid) + '">' + DOMPurify.sanitize(data[0].pid) + '</a> )');
-                        // domModule.html('#processing-message', null);
                     }
                 });
 

@@ -529,7 +529,7 @@ exports.create_collection_object = function (req, callback) {
         get_session_token,
         get_mods,
         get_pid,
-        // get_handle,
+        get_handle,
         create_display_record,
         save_record,
         index_collection
