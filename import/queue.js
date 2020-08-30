@@ -905,6 +905,7 @@ exports.create_repo_record = function (req, callback) {
                         message: 'ERROR: [/import/queue module (create_repo_record/get_object_file_data/duracloud.get_object_info)] Unable to get duracloud object ' + response.error_message
                     };
 
+                    obj.failed = true;
                     TRANSFER_INGEST.save_to_fail_queue(failObj);
                     TRANSFER_INGEST.clear_queue_record({
                         sip_uuid: sip_uuid
@@ -931,6 +932,11 @@ exports.create_repo_record = function (req, callback) {
 
     // 8.)
     function get_token(obj, callback) {
+
+        if (obj.failed !== undefined && obj.failed === true) {
+            callback(null, obj);
+            return false;
+        }
 
         if (FS.existsSync('./tmp/st.txt')) {
 
@@ -1031,6 +1037,11 @@ exports.create_repo_record = function (req, callback) {
     // 9.)
     function get_mods(obj, callback) {
 
+        if (obj.failed !== undefined && obj.failed === true) {
+            callback(null, obj);
+            return false;
+        }
+
         // skip mods retrieval if session is not available
         if (obj.session === null) {
             obj.mods = null;
@@ -1054,6 +1065,11 @@ exports.create_repo_record = function (req, callback) {
     // 10.)
     function get_handle(obj, callback) {
 
+        if (obj.failed !== undefined && obj.failed === true) {
+            callback(null, obj);
+            return false;
+        }
+
         if (obj.pid === null) {
             obj.handle = null;
             callback(null, obj);
@@ -1076,6 +1092,11 @@ exports.create_repo_record = function (req, callback) {
 
     // 11.)
     function create_display_record(obj, callback) {
+
+        if (obj.failed !== undefined && obj.failed === true) {
+            callback(null, obj);
+            return false;
+        }
 
         if (obj.mods === null) {
             LOGGER.module().info('INFO: [/import/queue module (create_repo_record/create_display_record)] display record not created because we were not able to get MODS from archivesspace');
@@ -1111,6 +1132,11 @@ exports.create_repo_record = function (req, callback) {
 
     function delete_file(obj, callback) {
 
+        if (obj.failed !== undefined && obj.failed === true) {
+            callback(null, obj);
+            return false;
+        }
+
         if (obj.dip_path === null) {
             callback(null, obj);
             return false;
@@ -1129,6 +1155,11 @@ exports.create_repo_record = function (req, callback) {
     // 12.)
     function create_repo_record(obj, callback) {
 
+        if (obj.failed !== undefined && obj.failed === true) {
+            callback(null, obj);
+            return false;
+        }
+
         if (obj.mods === null && obj.dip_path === null) {
             callback(null, obj);
             return false;
@@ -1145,6 +1176,11 @@ exports.create_repo_record = function (req, callback) {
 
     // 13.)
     function index(obj, callback) {
+
+        if (obj.failed !== undefined && obj.failed === true) {
+            callback(null, obj);
+            return false;
+        }
 
         if (obj.mods === null) {
             LOGGER.module().info('INFO: [/import/queue module (create_repo_record/index)] display record not indexed because we were not able to get MODS from archivesspace');
