@@ -325,7 +325,7 @@ exports.batch_update_metadata = function (req, callback) {
                         LOGGER.module().info('INFO: [/import/model module (update_object_metadata_record/display_record_updates)] unable to update display record');
                         return false;
                     }
-
+                    console.log('db: ', data);
                     let recordObj = {};
                     recordObj.pid = data[0].pid;
                     recordObj.is_member_of_collection = data[0].is_member_of_collection;
@@ -338,7 +338,7 @@ exports.batch_update_metadata = function (req, callback) {
                     recordObj.mime_type = data[0].mime_type;
                     recordObj.is_published = data[0].is_published;
                     recordObj.mods = mods;
-
+                    console.log('record object: ', recordObj);
                     MODS.create_display_record(recordObj, function (result) {
 
                         let tmp = JSON.parse(result);
@@ -376,7 +376,7 @@ exports.batch_update_metadata = function (req, callback) {
                         } else if (tmp.is_compound === 0 || tmp.object_type === 'collection') {
                             display_record = result;
                         }
-
+                        console.log('display record: ', display_record);
                         DB(REPO_OBJECTS)
                             .where({
                                 sip_uuid: sip_uuid

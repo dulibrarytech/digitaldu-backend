@@ -31,6 +31,13 @@ module.exports = function (app) {
         res.send('User-agent: *\nDisallow: /');
     });
 
+    //--- QA ---//
+    app.route('/api/admin/v1/utils/batch/qa/metadata')
+        .post(token.verify, Utils.batch_qa_metadata);
+
+    app.route('/api/admin/v1/utils/batch/reset/display_records')
+        .post(token.verify, Utils.batch_reset_display_records);
+
     //--- Updates metadata ---//
     // updates all metadata
     /*

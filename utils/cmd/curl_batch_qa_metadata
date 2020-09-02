@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# set env var - export API_KEY="<api-key>"
+
+curl --location --request POST 'http://localhost:8000/api/admin/v1/utils/batch/qa/metadata?api_key='${API_KEY}

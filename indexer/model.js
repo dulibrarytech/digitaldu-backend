@@ -147,7 +147,7 @@ exports.index_records = function (req, callback) {
     function index (index_name) {
 
         DB(REPO_OBJECTS)
-            .select('pid', 'is_member_of_collection', 'uri', 'handle', 'object_type', 'display_record', 'thumbnail', 'is_published', 'created')
+            .select('pid', 'is_member_of_collection', 'uri', 'handle', 'object_type', 'display_record', 'thumbnail', 'file_name', 'is_published', 'created')
             .where({
                 is_indexed: 0,
                 is_active: 1

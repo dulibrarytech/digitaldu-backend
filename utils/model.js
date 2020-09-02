@@ -42,7 +42,294 @@ const config = require('../config/config'),
         }
     }),
     REPO_OBJECTS = 'tbl_objects',
+    REPO_QUEUE = 'tbl_metadata_qa',
+    ES = require('elasticsearch'),
+    CLIENT = new ES.Client({
+        host: config.elasticSearch
+    }),
     DECACHE = require('decache');
+
+/**
+ * Batch resets display records
+ * @param req
+ * @param callback
+ */
+exports.batch_reset_display_records = function(req, callback) {
+
+    // reset flags
+    knex(REPO_OBJECTS)
+        .update({
+            is_indexed: 0
+        })
+        .then(function (data) {
+            console.log(data);
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
+
+    let timer = setInterval(function () {
+
+        knex(REPO_OBJECTS)
+            .select('pid')
+            .where({
+                is_indexed: 0,
+                object_type: 'object'
+            })
+            .limit(1)
+            .then(function (data) {
+
+                if (data.length === 0) {
+                    clearInterval(timer);
+                    return false;
+                }
+                console.log(data[0].pid);
+
+                request.post({
+                    url: config.apiUrl + '/api/admin/v1/repo/metadata/reset?api_key=' + config.apiKey,
+                    form: {
+                        'pid': data[0].pid
+                    }
+                }, function (error, httpResponse, body) {
+
+                    if (error) {
+                        console.log(error);
+                        return false;
+                    }
+
+                    if (httpResponse.statusCode === 201) {
+
+                        knex(REPO_OBJECTS)
+                            .where({
+                                pid: data[0].pid
+                            })
+                            .update({
+                                is_indexed: 1
+                            })
+                            .then(function (data) {
+
+                                if (data === 1) {
+                                    console.log(data);
+                                    return false;
+                                }
+
+                            })
+                            .catch(function (error) {
+                                console.log(error);
+                            });
+
+                        return false;
+
+                    } else {
+                        // error
+                        console.log(body);
+                    }
+                });
+
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+
+    }, 2000);
+
+    callback({
+        status: 200
+    });
+};
+
+/**
+ * Validates JSON thumbnail and object record fields
+ * @param req
+ * @param callback
+ */
+exports.batch_qa_metadata = function (req, callback) {
+
+    // reset flags
+    knex(REPO_OBJECTS)
+        .update({
+            is_indexed: 0
+        })
+        .then(function (data) {
+            console.log(data);
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
+
+
+    function log(obj) {
+        knexQ(REPO_QUEUE)
+            .insert(obj)
+            .then(function (data) {
+                console.log(data);
+                return null;
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+    }
+
+    setInterval(function () {
+
+        knex(REPO_OBJECTS)
+            .select('pid', 'display_record', 'is_published')
+            .where({
+                is_indexed: 0,
+                object_type: 'object'
+            })
+            .limit(1)
+            .then(function (data) {
+
+                let display_record = JSON.parse(data[0].display_record);
+
+                console.log(data[0].pid);
+
+                // check records in DB
+                if (display_record !== null && display_record.thumbnail === undefined) {
+
+                    let obj = {
+                        pid: data[0].pid,
+                        message: 'missing thumbnail',
+                        location: 'DB'
+                    };
+
+                    log(obj);
+                }
+
+                if (display_record !== null && display_record.object === undefined) {
+
+                    let obj = {
+                        pid: data[0].pid,
+                        message: 'missing object',
+                        location: 'DB'
+                    };
+
+                    log(obj);
+                }
+
+                CLIENT.get({
+                    index: config.elasticSearchBackIndex,
+                    type: 'data',
+                    id: data[0].pid
+                })
+                    .then(function (body) {
+
+                        console.log('repo_admin response: ', body.found);
+                        console.log(body._source.thumbnail);
+                        console.log(body._source.object);
+
+                        if (body._source.thumbnail === undefined) {
+                            let obj = {
+                                pid: data[0].pid,
+                                message: 'missing thumbnail',
+                                location: 'repo_admin'
+                            };
+
+                            log(obj);
+                        }
+
+                        if (body._source.object === undefined) {
+                            let obj = {
+                                pid: data[0].pid,
+                                message: 'missing object',
+                                location: 'repo_admin'
+                            };
+
+                            log(obj);
+                        }
+
+                    }, function (error) {
+
+                        if (error.statusCode !== undefined && error.statusCode === 404) {
+                            let obj = {
+                                pid: data[0].pid,
+                                message: 'record not found in Index',
+                                location: 'repo_admin'
+                            }
+
+                            log(obj);
+                            return false;
+                        }
+                    });
+
+                if (data[0].is_published === 1) {
+
+                    CLIENT.get({
+                        index: config.elasticSearchFrontIndex,
+                        type: 'data',
+                        id: data[0].pid
+                    })
+                        .then(function (body) {
+
+                            console.log('repo_public response: ', body.found);
+                            console.log(body._source.thumbnail);
+                            console.log(body._source.object);
+
+                            if (body._source.thumbnail === undefined) {
+                                let obj = {
+                                    pid: data[0].pid,
+                                    message: 'missing thumbnail',
+                                    location: 'repo_public'
+                                };
+
+                                log(obj);
+                            }
+
+                            if (body._source.object === undefined) {
+                                let obj = {
+                                    pid: data[0].pid,
+                                    message: 'missing object',
+                                    location: 'repo_public'
+                                };
+
+                                log(obj);
+                            }
+
+                        }, function (error) {
+                            if (error.statusCode !== undefined && error.statusCode === 404) {
+                                let obj = {
+                                    pid: data[0].pid,
+                                    message: 'record not found in Index',
+                                    location: 'repo_public'
+                                }
+
+                                log(obj);
+                                return false;
+                            }
+                        });
+                }
+
+                knex(REPO_OBJECTS)
+                    .where({
+                        pid: data[0].pid
+                    })
+                    .update({
+                        is_indexed: 1
+                    })
+                    .then(function (data) {
+
+                        if (data === 1) {
+                            console.log(data);
+                            return false;
+                        }
+
+                    })
+                    .catch(function (error) {
+                       console.log(error);
+                    });
+
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+
+    }, 2000);
+
+    callback({
+        status: 200
+    });
+};
 
 /**
  * gets sip_uuids
@@ -286,11 +573,11 @@ exports.delete_object = function (req, callback) {
     });
 };
 
-exports.confirm_dip_file = function(req, callback) {
+exports.confirm_dip_file = function (req, callback) {
 
     let obj = {};
     obj.pid = req.query.pid;
-    dip.confirm_dip(obj, function(result) {
+    dip.confirm_dip(obj, function (result) {
         console.log(result);
     })
 

@@ -31,6 +31,19 @@ exports.reindex = function (req, res) {
         res.status(data.status).send(data.data);
     });
 };
+
+exports.batch_qa_metadata = function(req, res) {
+    Utils.batch_qa_metadata(req, function(data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.batch_reset_display_records = function(req, res) {
+    Utils.batch_reset_display_records(req, function(data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
 /*
 exports.batch_update_metadata = function(req, res) {
     Utils.batch_update_metadata(req, function(data) {
@@ -38,6 +51,7 @@ exports.batch_update_metadata = function(req, res) {
     });
 };
 */
+
 exports.batch_update_collection_metadata  = function(req, res) {
     Utils.batch_update_collection_metadata(req, function(data) {
         res.status(data.status).send(data.data);
