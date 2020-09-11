@@ -181,6 +181,7 @@ const qaModule = (function () {
             }
 
             html += '</ul>';
+            html+= '<p><br><a href="/dashboard/qa" type="button"><i class="fa fa-arrow-left"></i> Return to folder list</a></p>';
             domModule.html('#ready', html);
             return false;
         }

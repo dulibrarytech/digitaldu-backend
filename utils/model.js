@@ -131,7 +131,7 @@ exports.batch_reset_display_records = function(req, callback) {
                 console.log(error);
             });
 
-    }, 2000);
+    }, 500);
 
     callback({
         status: 200
@@ -170,7 +170,7 @@ exports.batch_qa_metadata = function (req, callback) {
             });
     }
 
-    setInterval(function () {
+    let timer = setInterval(function () {
 
         knex(REPO_OBJECTS)
             .select('pid', 'display_record', 'is_published')
@@ -180,6 +180,11 @@ exports.batch_qa_metadata = function (req, callback) {
             })
             .limit(1)
             .then(function (data) {
+
+                if (data.length === 0) {
+                    clearInterval(timer);
+                    return false;
+                }
 
                 let display_record = JSON.parse(data[0].display_record);
 
