@@ -157,7 +157,6 @@ exports.batch_qa_metadata = function (req, callback) {
             console.log(error);
         });
 
-
     function log(obj) {
         knexQ(REPO_QUEUE)
             .insert(obj)
@@ -176,7 +175,8 @@ exports.batch_qa_metadata = function (req, callback) {
             .select('pid', 'display_record', 'is_published')
             .where({
                 is_indexed: 0,
-                object_type: 'object'
+                object_type: 'object',
+                is_compound: 1
             })
             .limit(1)
             .then(function (data) {
@@ -188,9 +188,54 @@ exports.batch_qa_metadata = function (req, callback) {
 
                 let display_record = JSON.parse(data[0].display_record);
 
-                console.log(data[0].pid);
+                // console.log(data[0].pid);
+                // console.log(display_record.display_record.parts);
+
+                // check parts
+                if (display_record.display_record.parts.length > 1) {
+                    console.log('array');
+                    let parts = display_record.display_record.parts;
+
+                    if (parts === undefined) {
+                        console.log('no parts');
+                        return false;
+                    }
+
+                    for (let i=0;i<parts.length;i++) {
+
+                        console.log(parts[i].thumbnail);
+                        console.log(parts[i].object);
+
+                        if (parts[i].thumbnail === undefined) {
+                            let obj = {};
+                            obj.pid = data[0].pid;
+                            obj.message = 'missing thumbnail';
+                            log(obj);
+                        }
+
+                        if (parts[i].object === undefined) {
+                            let obj = {};
+                            obj.pid = data[0].pid;
+                            obj.message = 'missing object';
+                            log(obj);
+                        }
+
+                    }
+                }
+
+                /*
+                else {
+                    // display_record.display_record.parts
+                    console.log('string');
+                    console.log(display_record.display_record.parts[0].thumbnail);
+                    console.log(display_record.display_record.parts[0].object);
+                }
+
+                 */
+
 
                 // check records in DB
+                /*
                 if (display_record !== null && display_record.thumbnail === undefined) {
 
                     let obj = {
@@ -201,7 +246,9 @@ exports.batch_qa_metadata = function (req, callback) {
 
                     log(obj);
                 }
+                */
 
+                /*
                 if (display_record !== null && display_record.object === undefined) {
 
                     let obj = {
@@ -212,13 +259,18 @@ exports.batch_qa_metadata = function (req, callback) {
 
                     log(obj);
                 }
+                */
 
+                /*
                 CLIENT.get({
                     index: config.elasticSearchBackIndex,
                     type: 'data',
                     id: data[0].pid
                 })
                     .then(function (body) {
+
+                        console.log(body);
+
 
                         console.log('repo_admin response: ', body.found);
                         console.log(body._source.thumbnail);
@@ -243,6 +295,8 @@ exports.batch_qa_metadata = function (req, callback) {
 
                             log(obj);
                         }
+
+
 
                     }, function (error) {
 
@@ -304,6 +358,7 @@ exports.batch_qa_metadata = function (req, callback) {
                             }
                         });
                 }
+                */
 
                 knex(REPO_OBJECTS)
                     .where({
@@ -1399,7 +1454,7 @@ exports.fix_display_records = function (req, callback) {
 };
 
 // TODO: rebuild display records after archivesspace plugin changes (compound objects are affected)
-// 1.) query all compound objects
+// 1.) query all compound objects // TODO: allow to fix specific records
 // 2.) get mods record from archivesspace
 // 3.) update local mods and display records
 exports.fix_compound_objects = function (req, callback) {
@@ -1407,7 +1462,7 @@ exports.fix_compound_objects = function (req, callback) {
     function get_session_token(callback) {
 
         archivespace.get_session_token(function (response) {
-
+            console.log('getting token...');
             let result = response.data,
                 obj = {},
                 token;
@@ -1454,7 +1509,8 @@ exports.fix_compound_objects = function (req, callback) {
                 .select('*')
                 .where({
                     is_compound: 1,
-                    is_active: 1
+                    is_active: 1,
+                    pid: '5540d73a-6e50-45d5-921d-24ee281946f5' // optional
                 })
                 .then(function (data) {
                     obj.data = data;
@@ -1487,6 +1543,9 @@ exports.fix_compound_objects = function (req, callback) {
 
                 function get_mods(callback) {
 
+                    console.log('getting mods...');
+                    console.log(record.mods_id);
+
                     archivespace.get_mods(record.mods_id, obj.session, function (data) {
 
                         let recordObj = {};
@@ -1500,7 +1559,7 @@ exports.fix_compound_objects = function (req, callback) {
                         recordObj.object = record.file_name;
                         recordObj.mime_type = record.mime_type;
                         recordObj.is_published = record.is_published;
-                        recordObj.mods = data.mods;
+                        recordObj.mods = JSON.stringify(data.mods.data);
 
                         obj.recordObj = recordObj;
                         callback(null, obj);
@@ -1510,8 +1569,10 @@ exports.fix_compound_objects = function (req, callback) {
                 function create_display_record(obj, callback) {
 
                     let recordObj = obj.recordObj;
-
+                    // console.log('create display record object: ', recordObj);
+                    // console.log('create ');
                     modslibdisplay.create_display_record(recordObj, function (result) {
+                        console.log('create dislay record result: ', result);
                         obj.display_record = JSON.parse(result);
                         // obj.display_record_parts = obj.display_record.display_record.parts;
                         callback(null, obj);
@@ -1520,7 +1581,12 @@ exports.fix_compound_objects = function (req, callback) {
 
                 function get_mets(obj, callback) {
 
+                    console.log('getting mets...');
+
                     archivematica.get_dip_path(obj.recordObj.sip_uuid, function (dip_path) {
+
+                        console.log(obj.recordObj.sip_uuid);
+                        console.log('dip path: ', dip_path);
 
                         obj.dip_path = dip_path;
                         obj.sip_uuid = obj.recordObj.sip_uuid;
@@ -1592,7 +1658,7 @@ exports.fix_compound_objects = function (req, callback) {
                                                         return false;
                                                     }
 
-                                                    if (httpResponse.statusCode === 200) {
+                                                    if (httpResponse.statusCode === 201) {
                                                         console.log(obj.sip_uuid + ' indexed.');
                                                         // return false;
                                                     } else {
