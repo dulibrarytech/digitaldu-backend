@@ -80,8 +80,8 @@ exports.batch_update_metadata = function (req, callback) {
             .where({
                 object_type: 'object',
                 is_active: true,
-                is_updated: 0,
-                is_compound: 0  // TODO: temporary - remove once compound object bug is fixed.
+                is_updated: 0
+                // is_compound: 1
             })
             .then(function (data) {
 
@@ -99,7 +99,6 @@ exports.batch_update_metadata = function (req, callback) {
                 LOGGER.module().error('ERROR: [/import/model module (batch_update_metadata/get_batch_records)] ' + error);
                 throw 'ERROR: [/import/model module (batch_update_metadata/get_batch_records)] ' + error;
             });
-
     }
 
     function flag_records(obj, callback) {
@@ -138,7 +137,6 @@ exports.batch_update_metadata = function (req, callback) {
         }
 
         let modsArr = [];
-
         let timer = setInterval(function () {
 
             if (obj.batch.length === 0) {
@@ -241,6 +239,8 @@ exports.batch_update_metadata = function (req, callback) {
 
                 } else {
 
+                    LOGGER.module().info('INFO: update required for record ' + mods.sip_uuid);
+
                     let updatesObj = {
                         sip_uuid: mods.sip_uuid,
                         mods: data.mods
@@ -301,11 +301,11 @@ exports.batch_update_metadata = function (req, callback) {
         var indexArr = [];
         let timer = setInterval(function() {
 
-            var indexObj = {};
+            // var indexObj = {};
 
             if (obj.updates.length === 0) {
                 clearInterval(timer);
-                obj.index = indexArr;
+                // obj.index = indexArr;
                 callback(null, obj);
                 return false;
             }
@@ -389,9 +389,7 @@ exports.batch_update_metadata = function (req, callback) {
 
                                 if (data === 1) {
                                     LOGGER.module().info('INFO: [/import/model module (update_object_metadata_record/display_record_updates)] ' + sip_uuid + ' display record updated');
-                                    indexObj.is_published = recordObj.is_published;
-                                    indexObj.sip_uuid = sip_uuid;
-                                    indexArr.push(indexObj);
+                                    update_index(sip_uuid, recordObj.is_published);
                                 }
 
                                 return null;
@@ -411,8 +409,62 @@ exports.batch_update_metadata = function (req, callback) {
         }, 500);
     }
 
-    function update_indexes(obj, callback) {
+    function update_index(sip_uuid, is_published) {
 
+        // update admin index
+        (async() => {
+
+            let data = {
+                'sip_uuid': sip_uuid
+            };
+
+            let response = await HTTP.post({
+                endpoint: '/api/admin/v1/indexer',
+                data: data
+            });
+
+            if (response.error === true) {
+                LOGGER.module().error('ERROR: [/import/model module (update_object_metadata_record/update_admin_index)] indexer error');
+            } else {
+                LOGGER.module().info('INFO: [/import/model module (update_object_metadata_record/update_admin_index)] ' + sip_uuid + ' indexed');
+            }
+
+            return false;
+
+        })();
+
+        if (is_published === 1) {
+
+            // update public index
+            (async () => {
+
+                let data = {
+                    'sip_uuid': sip_uuid,
+                    'publish': true
+                };
+
+                let response = await HTTP.post({
+                    endpoint: '/api/admin/v1/indexer',
+                    data: data
+                });
+
+                if (response.error === true) {
+                    LOGGER.module().error('ERROR: [/import/model module (update_object_metadata_record/update_public_index)] indexer error');
+                } else {
+                    LOGGER.module().info('INFO: [/import/model module (update_object_metadata_record/update_public_index)] ' + sip_uuid + ' indexed');
+                }
+
+                return false;
+
+            })();
+        }
+    }
+
+    // TODO: index updates not working
+    // TODO: updates array is empty when it gets here
+    function reindex_records(obj, callback) {
+        console.log('reindexing records...');
+        console.log(obj);
         if (obj.status === 'COMPLETE') {
             callback(null, obj);
             return false;
@@ -444,7 +496,7 @@ exports.batch_update_metadata = function (req, callback) {
                     endpoint: '/api/admin/v1/indexer',
                     data: data
                 });
-
+                console.log('reindex: ', response);
                 if (response.error === true) {
                     LOGGER.module().error('ERROR: [/import/model module (update_object_metadata_record/update_admin_index)] indexer error');
                 } else {
@@ -469,7 +521,7 @@ exports.batch_update_metadata = function (req, callback) {
                         endpoint: '/api/admin/v1/indexer',
                         data: data
                     });
-
+                    console.log('re-publish: ', response);
                     if (response.error === true) {
                         LOGGER.module().error('ERROR: [/import/model module (update_object_metadata_record/update_public_index)] indexer error');
                     } else {
@@ -481,7 +533,7 @@ exports.batch_update_metadata = function (req, callback) {
                 })();
             }
 
-        }, 100);
+        }, 200);
     }
 
     ASYNC.waterfall([
@@ -492,8 +544,9 @@ exports.batch_update_metadata = function (req, callback) {
         get_token,
         get_as_mods,
         mods_db_updates,
-        display_record_updates,
-        update_indexes
+        display_record_updates
+        // reindex_records
+        // update_indexes
     ], function (error, results) {
 
         if (error) {
