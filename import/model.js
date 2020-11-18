@@ -298,14 +298,10 @@ exports.batch_update_metadata = function (req, callback) {
             return false;
         }
 
-        var indexArr = [];
         let timer = setInterval(function() {
-
-            // var indexObj = {};
 
             if (obj.updates.length === 0) {
                 clearInterval(timer);
-                // obj.index = indexArr;
                 callback(null, obj);
                 return false;
             }
@@ -462,6 +458,7 @@ exports.batch_update_metadata = function (req, callback) {
 
     // TODO: index updates not working
     // TODO: updates array is empty when it gets here
+    /*
     function reindex_records(obj, callback) {
         console.log('reindexing records...');
         console.log(obj);
@@ -535,6 +532,7 @@ exports.batch_update_metadata = function (req, callback) {
 
         }, 200);
     }
+    */
 
     ASYNC.waterfall([
         reset_update_flags,
@@ -545,8 +543,6 @@ exports.batch_update_metadata = function (req, callback) {
         get_as_mods,
         mods_db_updates,
         display_record_updates
-        // reindex_records
-        // update_indexes
     ], function (error, results) {
 
         if (error) {
