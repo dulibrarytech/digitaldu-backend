@@ -60,6 +60,9 @@ module.exports = function (app) {
             message = 'Upload failed.';
             res.render('dashboard-upload', {
                 host: CONFIG.host,
+                appname: CONFIG.appName,
+                organization: CONFIG.organization,
+                appversion: CONFIG.appVersion,
                 message: message,
                 error: error
             });
@@ -72,6 +75,9 @@ module.exports = function (app) {
             message = 'Upload failed. Only .jpg files are accepted.';
             res.render('dashboard-upload', {
                 host: CONFIG.host,
+                appname: CONFIG.appName,
+                organization: CONFIG.organization,
+                appversion: CONFIG.appVersion,
                 message: message,
                 error: error
             });
@@ -84,6 +90,9 @@ module.exports = function (app) {
             message = 'Upload failed. The file is too big.';
             res.render('dashboard-upload', {
                 host: CONFIG.host,
+                appname: CONFIG.appName,
+                organization: CONFIG.organization,
+                appversion: CONFIG.appVersion,
                 message: message,
                 error: error
             });
@@ -106,6 +115,9 @@ module.exports = function (app) {
 
                 res.render('dashboard-upload', {
                     host: CONFIG.host,
+                    appname: CONFIG.appName,
+                    organization: CONFIG.organization,
+                    appversion: CONFIG.appVersion,
                     message: 'File was uploaded, but the record update failed.',
                     error: true
                 });
@@ -119,6 +131,9 @@ module.exports = function (app) {
 
                 res.render('dashboard-upload', {
                     host: CONFIG.host,
+                    appname: CONFIG.appName,
+                    organization: CONFIG.organization,
+                    appversion: CONFIG.appVersion,
                     message: 'Thumbnail Updated.',
                     error: false
                 });
@@ -129,6 +144,9 @@ module.exports = function (app) {
 
                 res.render('dashboard-upload', {
                     host: CONFIG.host,
+                    appname: CONFIG.appName,
+                    organization: CONFIG.organization,
+                    appversion: CONFIG.appVersion,
                     message: 'File was uploaded, but the record update failed.',
                     error: true
                 });

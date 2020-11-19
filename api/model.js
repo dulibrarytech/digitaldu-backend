@@ -26,6 +26,10 @@ const ASYNC = require('async'),
 // http://localhost:8000/api/v1/uuids?start=2019-08-20&end=2019-09-18
 // http://localhost:8000/api/v1/uuids?uri=/repositories/2/archival_objects/112120
 
+// TODO:
+// http://localhost:8000/api/v1/transcript?uuid=26279f0d-0a32-40a2-9b09-981fd33ab649&type=text
+// http://localhost:8000/api/v1/transcript?uuid=0769f4cb-7bc6-43ad-9525-a6343168bec4&type=enhanced (transkribus)
+
 /**
  * Gets repository uuids, uris and handles
  * @param req (start end) (uri)
