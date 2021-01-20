@@ -26,6 +26,13 @@ exports.default = function (req, res) {
     });
 };
 
+exports.get_transcript = function (req, res) {
+    API.get_transcript(req, function (data) {
+        // TODO: adjust content type in response
+        res.status(data.status).send(data.data);
+    });
+};
+
 exports.get_uuids = function (req, res) {
     API.get_uuids(req, function (data) {
         res.status(data.status).send(data.data);

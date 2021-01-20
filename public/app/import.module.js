@@ -473,6 +473,7 @@ const importModule = (function () {
 
                         domModule.empty('#completed-imports-table');
                         domModule.html('#responses', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No imports have been processed today.</div>');
+                        domModule.html('.loading', null);
 
                     } else {
                         renderCompleteRecords(data);
