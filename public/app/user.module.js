@@ -36,33 +36,54 @@ const userModule = (function () {
             return false;
         }
 
-        let html = '';
+        let actives = '';
+        let inactives = '';
         let user;
+        let inactive = [];
 
         for (let i = 0; i < data.length; i++) {
 
             user = data[i];
 
-            html += '<tr>';
-            html += '<td>' + DOMPurify.sanitize(user.first_name) + '</td>';
-            html += '<td>' + DOMPurify.sanitize(user.last_name) + '</td>';
-            html += '<td>' + DOMPurify.sanitize(user.email) + '</td>';
-
             if (user.is_active === 1) {
-                html += '<td>Active</td>';
-            } else {
-                html += '<td>Inactive</td>';
+
+                actives += '<tr>';
+                actives += '<td>' + DOMPurify.sanitize(user.first_name) + '</td>';
+                actives += '<td>' + DOMPurify.sanitize(user.last_name) + '</td>';
+                actives += '<td>' + DOMPurify.sanitize(user.email) + '</td>';
+                actives += '<td>Active</td>';
+                actives += '<td>';
+                actives += '&nbsp;';
+                actives += '<a class="btn btn-xs btn-default" href="/dashboard/users/edit?id=' + DOMPurify.sanitize(user.id) + '" title="Edit User"><i class="fa fa-edit"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;';
+                actives += '</td>';
+                actives += '</tr>';
+
             }
 
-            html += '<td>';
-            html += '&nbsp;';
-            html += '<a class="btn btn-xs btn-default" href="/dashboard/users/edit?id=' + DOMPurify.sanitize(user.id) + '" title="Edit User"><i class="fa fa-edit"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;';
-            // html += '<a class="btn btn-xs btn-danger" href="/dashboard/users/delete?id=' + DOMPurify.sanitize(user.id) + '" title="Delete User"><i class="fa fa-times"></i></a>';
-            html += '</td>';
-            html += '</tr>';
+            if (user.is_active === 0) {
+                inactive.push(user);
+            }
         }
 
-        domModule.html('#users', html);
+        for (let i = 0; i < inactive.length; i++) {
+
+            user = inactive[i];
+
+            inactives += '<tr>';
+            inactives += '<td>' + DOMPurify.sanitize(user.first_name) + '</td>';
+            inactives += '<td>' + DOMPurify.sanitize(user.last_name) + '</td>';
+            inactives += '<td>' + DOMPurify.sanitize(user.email) + '</td>';
+            inactives += '<td style="background: red;color: white">Inactive</td>';
+            inactives += '<td>';
+            inactives += '&nbsp;';
+            inactives += '<a class="btn btn-xs btn-default" href="/dashboard/users/edit?id=' + DOMPurify.sanitize(user.id) + '" title="Edit User"><i class="fa fa-edit"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;';
+            inactives += '<a class="btn btn-xs btn-danger" href="/dashboard/users/delete?id=' + DOMPurify.sanitize(user.id) + '" title="Delete User"><i class="fa fa-times"></i></a>';
+            inactives += '</td>';
+            inactives += '</tr>';
+        }
+
+        domModule.html('#active-users', actives);
+        domModule.html('#inactive-users', inactives);
         domModule.html('.loading', null);
 
         return false;
