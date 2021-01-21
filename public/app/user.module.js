@@ -421,9 +421,6 @@ const userModule = (function () {
         let id = helperModule.getParameterByName('id');
         domModule.hide('#user-delete-form');
         domModule.html('#message', '<div class="alert alert-info">Deleting User...</div>');
-        console.log(id);
-
-        return false;
 
         let token = userModule.getUserToken();
         let url = api + '/api/admin/v1/users?id=' + id,

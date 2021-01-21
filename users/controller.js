@@ -32,6 +32,12 @@ exports.update_user = function (req, res) {
     });
 };
 
+exports.delete_user = function (req, res) {
+    USERS.delete_user(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
 exports.save_user = function (req, res) {
     USERS.save_user(req, function (data) {
         res.status(data.status).send(data.data);

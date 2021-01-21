@@ -26,5 +26,6 @@ module.exports = function (app) {
     app.route('/api/admin/v1/users')
         .get(TOKEN.verify, USERS.get_users)
         .put(TOKEN.verify, USERS.update_user)
-        .post(TOKEN.verify, USERS.save_user);
+        .post(TOKEN.verify, USERS.save_user)
+        .delete(TOKEN.verify, USERS.delete_user);
 };

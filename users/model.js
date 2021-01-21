@@ -261,3 +261,40 @@ exports.save_user = function (req, callback) {
 
     return false;
 };
+
+/**
+ * Deletes user data
+ * @param req
+ * @param callback
+ */
+exports.delete_user = function (req, callback) {
+
+    let id = req.query.id;
+
+    if (id === undefined || id.length === 0) {
+
+        callback({
+            status: 400,
+            message: 'Bad Request.'
+        });
+    }
+
+    DB(USERS)
+        .where({
+            id: id
+        })
+        .del()
+        .then(function (data) {
+
+            callback({
+                status: 204,
+                message: 'User deleted.'
+            });
+
+            return null;
+        })
+        .catch(function (error) {
+            LOGGER.module().fatal('FATAL: [/users/model module (delete_user)] unable to delete user record ' + error);
+            throw 'FATAL: [/users/model module (update_user)] unable to delete user record ' + error;
+        });
+};
