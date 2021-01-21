@@ -32,7 +32,7 @@
                     <div class="col-md-12">
                         <div class="x_panel">
                             <div class="x_title">
-                                <h2 id="user-name"></h2>
+                                <h3 id="user-name" style="color: red"><em><strong>Deleting the record is permanent.  It cannot be reversed.</strong></em></h3>
                                 <ul class="nav navbar-right"></ul>
                                 <div class="clearfix"></div>
                             </div>
@@ -40,29 +40,27 @@
                                 <div id="message"></div>
                                 <p class="loading"><strong><em>Loading...</em></strong></p>
                                 <div class="row" id="user-details">
-                                    <form id="user-update-form">
+                                    <form id="user-delete-form">
                                         <input type="hidden" id="id" name="id">
                                         <div class="form-group">
                                             <label for="du_id">DU ID:</label>
-                                            <input type="text" class="form-control" id="du_id" name="du_id" required>
+                                            <input type="text" class="form-control" id="du_id" name="du_id" disabled>
                                         </div>
                                         <div class="form-group">
                                             <label for="email">Email Address:</label>
-                                            <input type="email" class="form-control" id="email" name="email" required>
+                                            <input type="email" class="form-control" id="email" name="email" disabled>
                                         </div>
                                         <div class="form-group">
                                             <label for="first_name">First Name:</label>
-                                            <input type="text" class="form-control" id="first_name" name="first_name" required>
+                                            <input type="text" class="form-control" id="first_name" name="first_name" disabled>
                                         </div>
                                         <div class="form-group">
                                             <label for="last_name">Last Name:</label>
-                                            <input type="text" class="form-control" id="last_name" name="last_name" required>
+                                            <input type="text" class="form-control" id="last_name" name="last_name" disabled>
                                         </div>
                                         <br>
-                                        <label for="is_active">Active:</label>
-                                        <input type="checkbox" id="is_active" name="is_active">
-                                        <br><br>
-                                        <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i>&nbsp; Delete</button>
+                                        <br>
+                                        <button type="button" onclick="userModule.deleteUser();" class="btn btn-danger"><i class="fa fa-trash"></i>&nbsp; Delete</button>
                                         &nbsp;&nbsp;
                                         <a href="/dashboard/users" type="button" class="btn btn-default"><i class="fa fa-times"></i>&nbsp; Cancel</a>
                                     </form>
@@ -88,7 +86,8 @@
     <script src="../../app/http.module.js"></script>
     <script src="../../app/user.module.js"></script>
     <script>
-        userModule.userUpdateFormValidation();
+        // TODO: delete
+        // userModule.userUpdateFormValidation();
         userModule.getUserDetails();
     </script>
 </body>

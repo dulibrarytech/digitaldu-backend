@@ -67,6 +67,9 @@ module.exports = function (app) {
     app.route('/dashboard/users/add')
         .get(DASHBOARD.get_dashboard_user_add_form);
 
+    app.route('/dashboard/users/delete')
+        .get(DASHBOARD.get_dashboard_user_delete_form);
+
     app.route('/dashboard/search')
         .get(DASHBOARD.get_dashboard_search);
 

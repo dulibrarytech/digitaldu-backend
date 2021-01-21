@@ -155,6 +155,15 @@ exports.get_dashboard_user_edit_form = function (req, res) {
     });
 };
 
+exports.get_dashboard_user_delete_form = function (req, res) {
+    res.render('dashboard-delete-user', {
+        host: CONFIG.host,
+        appname: CONFIG.appName,
+        appversion: CONFIG.appVersion,
+        organization: CONFIG.organization
+    });
+};
+
 exports.get_dashboard_search = function (req, res) {
     res.render('dashboard-search-results', {
         host: CONFIG.host,

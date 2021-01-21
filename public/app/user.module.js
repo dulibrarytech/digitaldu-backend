@@ -414,6 +414,60 @@ const userModule = (function () {
     };
 
     /**
+     * Deletes user data
+     */
+    obj.deleteUser = function () {
+
+        let id = helperModule.getParameterByName('id');
+        domModule.hide('#user-delete-form');
+        domModule.html('#message', '<div class="alert alert-info">Deleting User...</div>');
+        console.log(id);
+
+        return false;
+
+        let token = userModule.getUserToken();
+        let url = api + '/api/admin/v1/users?id=' + id,
+            request = new Request(url, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                mode: 'cors'
+            });
+
+        const callback = function (response) {
+
+            if (response.status === 204) {
+
+                domModule.html('#message', '<div class="alert alert-success">User deleted</div>');
+                setTimeout(function () {
+                    domModule.html('#message', null);
+                    window.location.replace('/dashboard/users');
+                }, 3000);
+
+                return false;
+
+            } else if (response.status === 401) {
+
+                response.json().then(function (response) {
+
+                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
+
+                    setTimeout(function () {
+                        window.location.replace('/login');
+                    }, 4000);
+                });
+
+            } else {
+                helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to delete user.');
+            }
+        };
+
+        httpModule.req(request, callback);
+    };
+
+    /**
      * Applies user form validation when adding new user
      */
     obj.userFormValidation = function () {
