@@ -170,6 +170,64 @@ exports.update_thumbnail = function (req, callback) {
                             .then(function (data) {
 
                                 // re-index admin record
+
+                                // TODO: axios lib
+                                //======================================================//
+                                /*
+                                (async() => {
+
+                                    try {
+
+                                        let response = await HTTP.post(CONFIG.apiUrl + '/api/admin/v1/indexer?api_key=' + CONFIG.apiKey, {
+                                            timeout: 25000,
+                                            headers: {
+                                                'Content-Type': 'application/json'
+                                            },
+                                            data: {
+                                                'sip_uuid': recordObj.sip_uuid
+                                            }
+                                        });
+
+                                        if (response.error === true) {
+
+                                            // LOGGER.module().error('ERROR: [/libs/archivesspace (get_session_tokens)] Unable to get session token');
+
+                                            callback({
+                                                error: true,
+                                                error_message: ''
+                                            });
+
+                                            return false;
+
+                                        } else if (response.status === 201) {
+
+                                            console.log(response);
+
+                                            callback({
+                                                error: false,
+                                                data: JSON.stringify(response.data)
+                                            });
+
+                                            return false;
+                                        }
+
+                                    } catch (error) {
+
+                                        // LOGGER.module().error('ERROR: [/libs/archivesspace (get_session_tokens)] Unable to get session token');
+
+                                        callback({
+                                            error: true,
+                                            error_message: error
+                                        });
+
+                                        return false;
+                                    }
+
+                                })();
+                                */
+
+                                //======================================================//
+
                                 REQUEST.post({
                                     url: CONFIG.apiUrl + '/api/admin/v1/indexer?api_key=' + CONFIG.apiKey,
                                     form: {

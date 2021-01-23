@@ -18,7 +18,6 @@
 
 const CONFIG = require('../config/config'),
     HTTP = require('axios'),
-    REQUEST = require('request'),
     LOGGER = require('../libs/log4');
 
 /**
