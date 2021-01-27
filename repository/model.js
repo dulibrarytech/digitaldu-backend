@@ -153,9 +153,7 @@ exports.update_thumbnail = function (req, callback) {
                             obj.display_record = JSON.stringify(tmp);
 
                         } else if (tmp.is_compound === 0 || tmp.object_type === 'collection') {
-
                             obj.display_record = result;
-
                         }
 
                         DB(REPO_OBJECTS)
@@ -169,51 +167,76 @@ exports.update_thumbnail = function (req, callback) {
                             })
                             .then(function (data) {
 
-                                // re-index admin record
-
-                                // TODO: axios lib
-                                //======================================================//
-                                /*
                                 (async() => {
 
                                     try {
 
-                                        let response = await HTTP.post(CONFIG.apiUrl + '/api/admin/v1/indexer?api_key=' + CONFIG.apiKey, {
-                                            timeout: 25000,
-                                            headers: {
-                                                'Content-Type': 'application/json'
-                                            },
-                                            data: {
-                                                'sip_uuid': recordObj.sip_uuid
-                                            }
+                                        let data = {
+                                            'sip_uuid': recordObj.sip_uuid
+                                        };
+
+                                        let response = await HTTP.post({
+                                            endpoint: '/api/admin/v1/indexer',
+                                            data: data
                                         });
 
                                         if (response.error === true) {
 
-                                            // LOGGER.module().error('ERROR: [/libs/archivesspace (get_session_tokens)] Unable to get session token');
+                                            LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail)] ' + response.error);
 
                                             callback({
                                                 error: true,
-                                                error_message: ''
+                                                error_message: response.error
                                             });
 
                                             return false;
 
-                                        } else if (response.status === 201) {
+                                        } else if (response.data.status === 201) {
 
-                                            console.log(response);
+                                            if (recordObj.is_published === 1) {
 
-                                            callback({
-                                                error: false,
-                                                data: JSON.stringify(response.data)
-                                            });
+                                                // wait to make sure updated admin record is ready
+                                                setTimeout(function () {
+
+                                                    let reindex_url = '/api/admin/v1/indexer/reindex',
+                                                        query = {
+                                                            'bool': {
+                                                                'must': {
+                                                                    'match_phrase': {
+                                                                        'pid': recordObj.sip_uuid
+                                                                    }
+                                                                }
+                                                            }
+                                                        };
+
+                                                    (async() => {
+
+                                                        let data = {
+                                                            'query': query
+                                                        };
+
+                                                        let response = await HTTP.post({
+                                                            endpoint: reindex_url,
+                                                            data: data
+                                                        });
+
+                                                        if (response.error === true) {
+                                                            LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail ' + response.error);
+                                                        } else if (response.data.status === 201) {
+                                                            return false;
+                                                        }
+
+                                                    })();
+
+                                                }, 7000);
+                                            }
 
                                             return false;
                                         }
 
                                     } catch (error) {
 
-                                        // LOGGER.module().error('ERROR: [/libs/archivesspace (get_session_tokens)] Unable to get session token');
+                                        LOGGER.module().fatal('FATAL: [/repository/model module (update_thumbnail/create_display_record/MODS.create_display_record)] unable to update display record ' + error);
 
                                         callback({
                                             error: true,
@@ -224,73 +247,6 @@ exports.update_thumbnail = function (req, callback) {
                                     }
 
                                 })();
-                                */
-
-                                //======================================================//
-
-                                REQUEST.post({
-                                    url: CONFIG.apiUrl + '/api/admin/v1/indexer?api_key=' + CONFIG.apiKey,
-                                    form: {
-                                        'sip_uuid': recordObj.sip_uuid
-                                    }
-                                }, function (error, httpResponse, body) {
-
-                                    if (error) {
-                                        LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail)] ' + error);
-                                        return false;
-                                    }
-
-                                    if (httpResponse.statusCode === 201) {
-
-                                        // re-index record to public index if already published
-                                        if (recordObj.is_published === 1) {
-
-                                            // wait to make sure updated admin record is ready
-                                            setTimeout(function () {
-
-                                                let reindex_url = CONFIG.apiUrl + '/api/admin/v1/indexer/reindex?api_key=' + CONFIG.apiKey,
-                                                    query = {
-                                                        'bool': {
-                                                            'must': {
-                                                                'match_phrase': {
-                                                                    'pid': recordObj.sip_uuid
-                                                                }
-                                                            }
-                                                        }
-                                                    };
-
-                                                REQUEST.post({
-                                                    url: reindex_url,
-                                                    form: {
-                                                        'query': query
-                                                    },
-                                                    timeout: 25000
-                                                }, function (error, httpResponse, body) {
-
-                                                    if (error) {
-                                                        LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail ' + error);
-                                                        return false;
-                                                    }
-
-                                                    if (httpResponse.statusCode === 201) {
-                                                        return false;
-                                                    } else {
-                                                        LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail ' + httpResponse.statusCode + '/' + body);
-                                                        return false;
-                                                    }
-
-                                                });
-
-                                            }, 7000);
-                                        }
-
-                                        return false;
-                                    } else {
-                                        LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail)] http error ' + httpResponse.statusCode + '/' + body);
-                                        return false;
-                                    }
-                                });
-
                             })
                             .catch(function (error) {
                                 LOGGER.module().fatal('FATAL: [/repository/model module (update_thumbnail/create_display_record/MODS.create_display_record)] unable to update display record ' + error);
