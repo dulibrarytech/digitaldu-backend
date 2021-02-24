@@ -513,6 +513,26 @@ exports.create_collection_object = function (req, callback) {
             return false;
         }
 
+        (async() => {
+
+            let data = {
+                'sip_uuid': obj.sip_uuid
+            };
+
+            let response = await HTTP.post({
+                endpoint: '/api/admin/v1/indexer',
+                data: data
+            });
+
+            if (response.error === true) {
+                LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/index_collection)] unable to index collection record ' + response.error);
+            } else if (response.data.status === 201) {
+                return false;
+            }
+
+        })();
+
+        /*
         REQUEST.post({
             url: CONFIG.apiUrl + '/api/admin/v1/indexer?api_key=' + CONFIG.apiKey,
             form: {
@@ -536,6 +556,8 @@ exports.create_collection_object = function (req, callback) {
                 LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/index_collection)] unable to index collection record ' + body);
             }
         });
+
+         */
     }
 
     ASYNC.waterfall([
