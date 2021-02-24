@@ -531,33 +531,6 @@ exports.create_collection_object = function (req, callback) {
             }
 
         })();
-
-        /*
-        REQUEST.post({
-            url: CONFIG.apiUrl + '/api/admin/v1/indexer?api_key=' + CONFIG.apiKey,
-            form: {
-                'sip_uuid': obj.sip_uuid
-            },
-            timeout: 25000
-        }, function (error, httpResponse, body) {
-
-            if (error) {
-                LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/index_collection)] unable to index collection record ' + error);
-                obj.indexed = false;
-                return false;
-            }
-
-            if (httpResponse.statusCode === 201) {
-                obj.indexed = true;
-                callback(null, obj);
-                return false;
-            } else {
-                obj.indexed = false;
-                LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/index_collection)] unable to index collection record ' + body);
-            }
-        });
-
-         */
     }
 
     ASYNC.waterfall([
@@ -650,7 +623,7 @@ exports.publish_objects = function (req, callback) {
         }
 
         let update_doc_url = CONFIG.apiUrl + '/api/admin/v1/indexer/update_fragment?api_key=' + CONFIG.apiKey;
-
+        // TODO:
         REQUEST.put({
             url: update_doc_url,
             form: {
