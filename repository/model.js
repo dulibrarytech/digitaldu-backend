@@ -595,7 +595,6 @@ exports.publish_objects = function (req, callback) {
 
         let obj = {};
         obj.is_member_of_collection = pid;
-        //obj.api_url = CONFIG.apiUrl + '/api/admin/v1/indexer';
 
         DB(REPO_OBJECTS)
             .where({
@@ -654,17 +653,33 @@ exports.publish_objects = function (req, callback) {
             return false;
         }
 
-        let reindex_url = CONFIG.apiUrl + '/api/admin/v1/indexer/reindex?api_key=' + CONFIG.apiKey,
-            query = {
-                'bool': {
-                    'must': {
-                        'match_phrase': {
-                            'pid': obj.is_member_of_collection
+        // TODO: ... testing ...
+        (async() => {
+
+            let data = {
+                    'bool': {
+                        'must': {
+                            'match_phrase': {
+                                'pid': obj.is_member_of_collection
+                            }
                         }
                     }
-                }
-            };
+                };
 
+            let response = await HTTP.post({
+                endpoint: '/api/admin/v1/indexer/reindex',
+                data: data
+            });
+            console.log(response);
+            if (response.error === true) {
+                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection admin record ' + response.error);
+            } else if (response.data.status === 201) {
+                return false;
+            }
+
+        })();
+
+        /*
         REQUEST.post({
             url: reindex_url,
             form: {
@@ -690,6 +705,8 @@ exports.publish_objects = function (req, callback) {
             }
 
         });
+        */
+
     }
 
     function update_collection_object_records(obj, callback) {
@@ -1123,7 +1140,7 @@ exports.unpublish_objects = function (req, callback) {
 
     // unpublish objects
     function unpublish_collection_docs(obj, callback) {
-
+        console.log(obj);
         if (obj.status === 'failed') {
             callback(null, obj);
             return false;
@@ -1181,7 +1198,7 @@ exports.unpublish_objects = function (req, callback) {
                             },
                             timeout: 25000
                         }, function (error, httpResponse, body) {
-
+                            console.log('fragment update: ', httpResponse);
                             if (error) {
                                 LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + error);
                                 obj.status = 'failed';

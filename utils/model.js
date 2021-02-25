@@ -21,6 +21,7 @@
 const config = require('../config/config'),
     fs = require('fs'),
     request = require('request'),
+    HTTP = require('../libs/http'),
     async = require('async'),
     handles = require('../libs/handles'),
     archivematica = require('../libs/archivematica'),
@@ -657,6 +658,27 @@ exports.reindex = function (req, callback) {
 
         function del(index_name) {
 
+            // TODO:... Testing...
+            (async() => {
+
+                let data = {
+                    'index_name': index_name
+                };
+
+                let response = await HTTP.post({
+                    endpoint: '/api/admin/v1/indexer/index/delete',
+                    data: data
+                });
+
+                if (response.error === true) {
+                    logger.module().error('ERROR: [/import/utils module (reindex/delete_index)] indexer error ' + response.error);
+                } else if (response.data.status === 201) {
+                    return false;
+                }
+
+            })();
+
+            /*
             request.post({
                 url: config.apiUrl + '/api/admin/v1/indexer/index/delete?api_key=' + config.apiKey,
                 form: {
@@ -677,6 +699,8 @@ exports.reindex = function (req, callback) {
                     return false;
                 }
             });
+
+             */
         }
 
         let timer = setInterval(function () {
@@ -705,6 +729,26 @@ exports.reindex = function (req, callback) {
 
         function create(index_name) {
 
+            (async() => {
+
+                let data = {
+                    'index_name': index_name
+                };
+
+                let response = await HTTP.post({
+                    endpoint: '/api/admin/v1/indexer/index/create',
+                    data: data
+                });
+
+                if (response.error === true) {
+                    logger.module().error('ERROR: [/import/utils module (reindex/create_index/create)] indexer error ' + response.error);
+                } else if (response.data.status === 201) {
+                    return false;
+                }
+
+            })();
+
+            /*
             request.post({
                 url: config.apiUrl + '/api/admin/v1/indexer/index/create?api_key=' + config.apiKey,
                 form: {
@@ -725,6 +769,8 @@ exports.reindex = function (req, callback) {
                     return false;
                 }
             });
+
+             */
         }
 
         let timer = setInterval(function () {
@@ -751,6 +797,29 @@ exports.reindex = function (req, callback) {
 
         function reindex(index_name) {
 
+            (async() => {
+
+                let data = {
+                    'index_name': index_name,
+                    'reindex': true
+                };
+
+                let response = await HTTP.post({
+                    endpoint: '/api/admin/v1/indexer/all',
+                    data: data
+                });
+
+                if (response.error === true) {
+                    logger.module().error('ERROR: [/import/utils module (reindex/index/reindex)] indexer error ' + response.error);
+                } else if (response.data.status === 201) {
+                    obj.reindexed = true;
+                    callback(null, obj);
+                    return false;
+                }
+
+            })();
+
+            /*
             request.post({
                 url: config.apiUrl + '/api/admin/v1/indexer/all?api_key=' + config.apiKey,
                 form: {
@@ -774,12 +843,16 @@ exports.reindex = function (req, callback) {
                     return false;
                 }
             });
+
+             */
         }
 
         reindex(config.elasticSearchBackIndex);
     }
 
     function monitor_index_progress(obj, callback) {
+
+        console.log('Starting monitor...');
 
         function monitor() {
 
@@ -810,7 +883,7 @@ exports.reindex = function (req, callback) {
 
         var timer = setInterval(function () {
             monitor();
-        }, 30000);  // 60000
+        }, 10000);  // TODO: testing... dist 60000
     }
 
     async.waterfall([
@@ -844,12 +917,33 @@ exports.reindex = function (req, callback) {
 };
 
 /**
- * Republishes collections
+ * Republishes collections after full reindex
  */
 const republish = function () {
 
     function publish(sip_uuid) {
 
+        (async() => {
+
+            let data = {
+                'pid': sip_uuid,
+                'type': 'collection'
+            };
+
+            let response = await HTTP.post({
+                endpoint: '/api/admin/v1/repo/publish',
+                data: data
+            });
+
+            if (response.error === true) {
+                logger.module().error('ERROR: [/import/utils module (republish/publish)] indexer error ' + response.error);
+            } else if (response.data.status === 201) {
+                return false;
+            }
+
+        })();
+
+        /*
         request.post({
             url: config.apiUrl + '/api/admin/v1/repo/publish?api_key=' + config.apiKey,
             form: {
@@ -871,6 +965,8 @@ const republish = function () {
                 return false;
             }
         });
+
+         */
     }
 
     knex(REPO_OBJECTS)
@@ -892,7 +988,7 @@ const republish = function () {
                 let record = data.pop();
                 publish(record.pid);
 
-            }, 10000);
+            }, 8000); // TODO: testing
 
             return null;
         })
