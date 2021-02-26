@@ -219,7 +219,7 @@ exports.index_records = function (req, callback) {
                     SERVICE.index_record({
                         index: index_name,
                         type: 'data',
-                        id: record.pid.replace('codu:', ''),
+                        id: record.pid.replace('codu:', ''), // TODO: remove replace
                         body: record
                     }, function (response) {
 
@@ -454,5 +454,175 @@ exports.unindex_admin_record = function (req, callback) {
                 data: 'unable to remove admin record from index'
             });
         }
+    });
+};
+
+/**
+ * indexes all published records to public index after full reindex
+ * @param req
+ * @param callback
+ * @returns {boolean}
+ */
+exports.republish_records = function (req, callback) {
+
+    let sip_uuid = req.body.sip_uuid;
+
+    if (sip_uuid === undefined || sip_uuid.length === 0) {
+
+        callback({
+            status: 400,
+            message: 'Bad request.'
+        });
+
+        return false;
+    }
+
+    let index_name = CONFIG.elasticSearchFrontIndex;
+
+    function index (index_name) {
+
+        DB(REPO_OBJECTS)
+            .select('pid', 'is_member_of_collection', 'uri', 'handle', 'object_type', 'display_record', 'thumbnail', 'file_name', 'is_published', 'created')
+            .where({
+                is_indexed: 0,
+                is_active: 1,
+                is_published: 1
+            })
+            .whereNot({
+                display_record: null
+            })
+            .limit(1)
+            .then(function (data) {
+
+                if (data.length > 0) {
+
+                    let record = JSON.parse(data[0].display_record);
+
+                    // collection record
+                    if (record.display_record.jsonmodel_type !== undefined && record.display_record.jsonmodel_type === 'resource') {
+
+                        let collection_record = {};
+                        collection_record.pid = VALIDATOR.escape(data[0].pid);
+                        collection_record.uri = data[0].uri;
+                        collection_record.is_member_of_collection = VALIDATOR.escape(data[0].is_member_of_collection);
+                        collection_record.handle = data[0].handle;
+                        collection_record.object_type = VALIDATOR.escape(data[0].object_type);
+                        collection_record.title = record.display_record.title;
+                        collection_record.thumbnail = data[0].thumbnail;
+                        collection_record.is_published = data[0].is_published;
+                        collection_record.date = data[0].created;
+
+                        // get collection abstract
+                        if (record.display_record.notes !== undefined) {
+
+                            for (let i=0;i<record.display_record.notes.length;i++) {
+
+                                if (record.display_record.notes[i].type === 'abstract') {
+                                    collection_record.abstract = record.display_record.notes[i].content.toString();
+                                }
+                            }
+                        }
+
+                        collection_record.display_record = {
+                            title: record.display_record.title,
+                            abstract: collection_record.abstract
+                        };
+
+                        record = collection_record;
+
+                    } else {
+
+                        if (record.display_record.language !== undefined) {
+
+                            if (typeof record.display_record.language !== 'object') {
+
+                                let language = {
+                                    language: record.display_record.language
+                                };
+
+                                record.display_record.t_language = language;
+                                delete record.display_record.language;
+
+                            } else {
+                                record.display_record.t_language = record.display_record.language;
+                                delete record.display_record.language;
+                            }
+                        }
+
+                        record.created = data[0].created;
+                    }
+
+                    SERVICE.index_record({
+                        index: index_name,
+                        type: 'data',
+                        id: record.sip_uuid,
+                        body: record
+                    }, function (response) {
+
+                        if (response.result === 'created' || response.result === 'updated') {
+
+                            DB(REPO_OBJECTS)
+                                .where({
+                                    sip_uuid: record.sip_uuid
+                                })
+                                .update({
+                                    is_indexed: 1
+                                })
+                                .then(function (data) {
+
+                                    if (data === 1) {
+
+                                        setTimeout(function () {
+                                            // index next record
+                                            index(index_name);
+                                        }, CONFIG.indexTimer);
+
+                                    } else {
+                                        LOGGER.module().error('ERROR: [/indexer/model module (publish_records)] more than one record was updated');
+                                    }
+
+                                })
+                                .catch(function (error) {
+                                    LOGGER.module().fatal('FATAL: [/indexer/model module (publish_records)] unable to update is_indexed field ' + error);
+                                    throw 'FATAL: [/indexer/model module (index_records)] unable to update is_indexed field ' + error;
+                                });
+
+                        } else {
+                            LOGGER.module().error('ERROR: [/indexer/model module (publish_records)] unable to index record');
+                        }
+                    });
+
+                } else {
+                    LOGGER.module().info('INFO: [/indexer/model module (publish_records)] indexing complete');
+                }
+            })
+            .catch(function (error) {
+                LOGGER.module().error('ERROR: [/indexer/model module (publish_records)] unable to get record ' + error);
+                throw error;
+            });
+    }
+
+    // reset is_indexed fields
+    DB(REPO_OBJECTS)
+        .where({
+            is_indexed: 1,
+            is_active: 1,
+            is_published: 1
+        })
+        .update({
+            is_indexed: 0,
+            is_active: 1
+        })
+        .then(function (data) {
+            index(index_name);
+        })
+        .catch(function (error) {
+            LOGGER.module().error('ERROR: [/indexer/model module (publish_records)] unable to reset is_indexed fields ' + error);
+            throw error;
+        });
+
+    callback({
+        status: 201,
+        message: 'reindexing (publishing) repository records...'
     });
 };

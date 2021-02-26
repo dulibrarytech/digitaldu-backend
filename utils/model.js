@@ -658,7 +658,6 @@ exports.reindex = function (req, callback) {
 
         function del(index_name) {
 
-            // TODO:... Testing...
             (async() => {
 
                 let data = {
@@ -677,30 +676,6 @@ exports.reindex = function (req, callback) {
                 }
 
             })();
-
-            /*
-            request.post({
-                url: config.apiUrl + '/api/admin/v1/indexer/index/delete?api_key=' + config.apiKey,
-                form: {
-                    'index_name': index_name
-                }
-            }, function (error, httpResponse, body) {
-
-                if (error) {
-                    logger.module().error('ERROR: [/import/utils module (reindex/delete_index)] indexer error ' + error);
-                    return false;
-                }
-
-                if (httpResponse.statusCode === 201) {
-                    logger.module().info('INFO: [/import/utils module (reindex/delete_index/del)] ' + index_name + ' deleted.');
-                    return false;
-                } else {
-                    logger.module().error('ERROR: [/import/utils module (reindex/delete_index/del)] http error ' + httpResponse.statusCode + '/' + body);
-                    return false;
-                }
-            });
-
-             */
         }
 
         let timer = setInterval(function () {
@@ -747,30 +722,6 @@ exports.reindex = function (req, callback) {
                 }
 
             })();
-
-            /*
-            request.post({
-                url: config.apiUrl + '/api/admin/v1/indexer/index/create?api_key=' + config.apiKey,
-                form: {
-                    'index_name': index_name
-                }
-            }, function (error, httpResponse, body) {
-
-                if (error) {
-                    logger.module().error('ERROR: [/import/utils module (reindex/create_index/create)] indexer error ' + error);
-                    return false;
-                }
-
-                if (httpResponse.statusCode === 201) {
-                    logger.module().info('INFO: [/import/utils module (reindex/create_index/create)] ' + index_name + ' created.');
-                    return false;
-                } else {
-                    logger.module().error('ERROR: [/import/utils module (reindex/create_index/create)] http error ' + httpResponse.statusCode + '/' + body);
-                    return false;
-                }
-            });
-
-             */
         }
 
         let timer = setInterval(function () {
@@ -818,33 +769,6 @@ exports.reindex = function (req, callback) {
                 }
 
             })();
-
-            /*
-            request.post({
-                url: config.apiUrl + '/api/admin/v1/indexer/all?api_key=' + config.apiKey,
-                form: {
-                    'index_name': index_name,
-                    'reindex': true
-                }
-            }, function (error, httpResponse, body) {
-
-                if (error) {
-                    logger.module().error('ERROR: [/import/utils module (reindex/index/reindex)] indexer error ' + error);
-                    return false;
-                }
-
-                if (httpResponse.statusCode === 201) {
-                    logger.module().info('INFO: [/import/utils module (reindex/index/reindex)] reindexing ' + index_name + '.');
-                    obj.reindexed = true;
-                    callback(null, obj);
-                    return false;
-                } else {
-                    logger.module().error('ERROR: [/import/utils module (reindex/index/reindex)] http error ' + httpResponse.statusCode + '/' + body);
-                    return false;
-                }
-            });
-
-             */
         }
 
         reindex(config.elasticSearchBackIndex);
@@ -916,22 +840,24 @@ exports.reindex = function (req, callback) {
     });
 };
 
-/**
+/** TODO: refactoring...
  * Republishes collections after full reindex
  */
 const republish = function () {
+
+    console.log('Republishing records...');
 
     function publish(sip_uuid) {
 
         (async() => {
 
             let data = {
-                'pid': sip_uuid,
-                'type': 'collection'
+                'pid': sip_uuid
             };
 
+            // TODO: send to different endpoint
             let response = await HTTP.post({
-                endpoint: '/api/admin/v1/repo/publish',
+                endpoint: '/api/admin/v1/indexer/republish',
                 data: data
             });
 
@@ -942,31 +868,6 @@ const republish = function () {
             }
 
         })();
-
-        /*
-        request.post({
-            url: config.apiUrl + '/api/admin/v1/repo/publish?api_key=' + config.apiKey,
-            form: {
-                'pid': sip_uuid,
-                'type': 'collection'
-            }
-        }, function (error, httpResponse, body) {
-
-            if (error) {
-                logger.module().error('ERROR: [/import/utils module (republish/publish)] indexer error ' + error);
-                return false;
-            }
-
-            if (httpResponse.statusCode === 201) {
-                logger.module().info('INFO: [/import/utils module (republish/publish)] published ' + sip_uuid + '.');
-                return false;
-            } else {
-                logger.module().error('ERROR: [/import/utils module (republish/publish)] http error ' + httpResponse.statusCode + '/' + body);
-                return false;
-            }
-        });
-
-         */
     }
 
     knex(REPO_OBJECTS)
@@ -986,6 +887,7 @@ const republish = function () {
                 }
 
                 let record = data.pop();
+                console.log(record.pid);
                 publish(record.pid);
 
             }, 8000); // TODO: testing

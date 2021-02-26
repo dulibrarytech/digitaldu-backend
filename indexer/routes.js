@@ -42,6 +42,9 @@ module.exports = function (app) {
     app.route('/api/admin/v1/indexer/reindex')
         .post(TOKEN.verify, INDEXER.reindex);
 
+    app.route('/api/admin/v1/indexer/republish')
+        .post(TOKEN.verify, INDEXER.republish_records);
+
     app.route('/api/admin/v1/indexer/delete')
         .delete(TOKEN.verify, INDEXER.unindex_admin_record);
 };

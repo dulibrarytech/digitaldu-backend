@@ -653,7 +653,6 @@ exports.publish_objects = function (req, callback) {
             return false;
         }
 
-        // TODO: ... testing ...
         (async() => {
 
             let data = {
@@ -670,7 +669,7 @@ exports.publish_objects = function (req, callback) {
                 endpoint: '/api/admin/v1/indexer/reindex',
                 data: data
             });
-            console.log(response);
+
             if (response.error === true) {
                 LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection admin record ' + response.error);
             } else if (response.data.status === 201) {
@@ -820,6 +819,7 @@ exports.publish_objects = function (req, callback) {
                 }
             };
 
+        // TODO: .... replace with HTTP lib
         REQUEST.post({
             url: reindex_url,
             form: {
