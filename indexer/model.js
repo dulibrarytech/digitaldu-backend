@@ -463,11 +463,12 @@ exports.unindex_admin_record = function (req, callback) {
  * @param callback
  * @returns {boolean}
  */
-exports.republish_records = function (req, callback) {
+exports.republish_record = function (req, callback) {
 
-    let sip_uuid = req.body.sip_uuid;
+    let pid = req.body.sip_uuid;
+    console.log(pid);
 
-    if (sip_uuid === undefined || sip_uuid.length === 0) {
+    if (pid === undefined || pid.length === 0) {
 
         callback({
             status: 400,
@@ -479,14 +480,15 @@ exports.republish_records = function (req, callback) {
 
     let index_name = CONFIG.elasticSearchFrontIndex;
 
-    function index (index_name) {
+    function index (pid, index_name) {
 
         DB(REPO_OBJECTS)
             .select('pid', 'is_member_of_collection', 'uri', 'handle', 'object_type', 'display_record', 'thumbnail', 'file_name', 'is_published', 'created')
             .where({
+                pid: pid,
+                is_published: 1,
                 is_indexed: 0,
-                is_active: 1,
-                is_published: 1
+                is_active: 1
             })
             .whereNot({
                 display_record: null
@@ -552,10 +554,16 @@ exports.republish_records = function (req, callback) {
                         record.created = data[0].created;
                     }
 
+                    // TODO: figure out why some records are getting their is_published value changed to 0 (unpublished)
+                    // Everything getting funneled through here is published
+                    if (record.is_published === 0) {
+                        record.is_published = 1;
+                    }
+
                     SERVICE.index_record({
                         index: index_name,
                         type: 'data',
-                        id: record.sip_uuid,
+                        id: record.pid,
                         body: record
                     }, function (response) {
 
@@ -563,7 +571,7 @@ exports.republish_records = function (req, callback) {
 
                             DB(REPO_OBJECTS)
                                 .where({
-                                    sip_uuid: record.sip_uuid
+                                    pid: record.pid
                                 })
                                 .update({
                                     is_indexed: 1
@@ -578,26 +586,26 @@ exports.republish_records = function (req, callback) {
                                         }, CONFIG.indexTimer);
 
                                     } else {
-                                        LOGGER.module().error('ERROR: [/indexer/model module (publish_records)] more than one record was updated');
+                                        LOGGER.module().error('ERROR: [/indexer/model module (republish_record)] more than one record was updated');
                                     }
 
                                 })
                                 .catch(function (error) {
-                                    LOGGER.module().fatal('FATAL: [/indexer/model module (publish_records)] unable to update is_indexed field ' + error);
-                                    throw 'FATAL: [/indexer/model module (index_records)] unable to update is_indexed field ' + error;
+                                    LOGGER.module().fatal('FATAL: [/indexer/model module (republish_record)] unable to update is_indexed field ' + error);
+                                    throw 'FATAL: [/indexer/model module (republish_record)] unable to update is_indexed field ' + error;
                                 });
 
                         } else {
-                            LOGGER.module().error('ERROR: [/indexer/model module (publish_records)] unable to index record');
+                            LOGGER.module().error('ERROR: [/indexer/model module (republish_record)] unable to index record');
                         }
                     });
 
                 } else {
-                    LOGGER.module().info('INFO: [/indexer/model module (publish_records)] indexing complete');
+                    LOGGER.module().info('INFO: [/indexer/model module (republish_record)] indexing complete');
                 }
             })
             .catch(function (error) {
-                LOGGER.module().error('ERROR: [/indexer/model module (publish_records)] unable to get record ' + error);
+                LOGGER.module().error('ERROR: [/indexer/model module (republish_record)] unable to get record ' + error);
                 throw error;
             });
     }
@@ -605,6 +613,7 @@ exports.republish_records = function (req, callback) {
     // reset is_indexed fields
     DB(REPO_OBJECTS)
         .where({
+            pid: pid,
             is_indexed: 1,
             is_active: 1,
             is_published: 1
@@ -614,7 +623,7 @@ exports.republish_records = function (req, callback) {
             is_active: 1
         })
         .then(function (data) {
-            index(index_name);
+            index(pid, index_name);
         })
         .catch(function (error) {
             LOGGER.module().error('ERROR: [/indexer/model module (publish_records)] unable to reset is_indexed fields ' + error);

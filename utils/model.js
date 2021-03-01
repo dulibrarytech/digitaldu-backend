@@ -852,7 +852,7 @@ const republish = function () {
         (async() => {
 
             let data = {
-                'pid': sip_uuid
+                'sip_uuid': sip_uuid
             };
 
             // TODO: send to different endpoint
@@ -871,9 +871,8 @@ const republish = function () {
     }
 
     knex(REPO_OBJECTS)
-        .select('pid')
+        .select('sip_uuid')
         .where({
-            object_type: 'collection',
             is_published: 1,
             is_active: 1
         })
@@ -887,10 +886,9 @@ const republish = function () {
                 }
 
                 let record = data.pop();
-                console.log(record.pid);
-                publish(record.pid);
+                publish(record.sip_uuid);
 
-            }, 8000); // TODO: testing
+            }, 75);
 
             return null;
         })

@@ -63,8 +63,8 @@ exports.index_data = function (req, res) {
     });
 };
 
-exports.republish_records = function (req, res) {
-    MODEL.republish_records(req, function (data) {
+exports.republish_record = function (req, res) {
+    MODEL.republish_record(req, function (data) {
         res.status(data.status).send(data);
     });
 };
