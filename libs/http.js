@@ -80,7 +80,7 @@ exports.get = function(request_obj) {
     }
 
     async function get() {
-
+        console.log(request_obj);
         try {
 
             let response = await HTTP.get(url, request_obj);
@@ -238,11 +238,60 @@ exports.put = function(request_obj) {
 };
 
 /**
- * TODO:
+ * DELETE request
  * @param request_obj
  */
 exports.delete = function(request_obj) {
 
+    if (request_obj === undefined) {
+        LOGGER.module().error('ERROR: [HTTP libs (delete)] Missing request object.');
+        return false;
+    }
+
+    async function del() {
+
+        let url = serialize_params(request_obj);
+
+        if (request_obj.timeout === undefined) {
+            request_obj.timeout = TIMEOUT;
+        }
+
+        try {
+
+            let response = await HTTP.delete(url);
+
+            if (response.status === 204) {
+
+                return {
+                    error: false,
+                    message: response.statusText,
+                    data: response.data
+                };
+
+            } else {
+
+                LOGGER.module().error('ERROR: [HTTP libs (delete)] HTTP DELETE request failed.');
+
+                return {
+                    error: true,
+                    message: response.statusText,
+                    data: null
+                };
+            }
+
+        } catch (error) {
+
+            LOGGER.module().error('ERROR: [HTTP libs (delete)] HTTP DELETE request failed. ' + error);
+
+            return {
+                error: true,
+                message: error,
+                data: null
+            };
+        }
+    }
+
+    return del();
 };
 
 /**

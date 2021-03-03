@@ -395,7 +395,7 @@ exports.unindex_record = function (req, callback) {
     SERVICE.unindex_record({
         index: CONFIG.elasticSearchFrontIndex,
         type: 'data',
-        id: pid.replace('codu:', '')
+        id: pid
     }, function (response) {
 
         if (response.result === 'deleted') {

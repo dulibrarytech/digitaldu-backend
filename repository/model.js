@@ -760,8 +760,34 @@ exports.publish_objects = function (req, callback) {
                             return false;
                         }
 
-                        let update_doc_url = CONFIG.apiUrl + '/api/admin/v1/indexer/update_fragment?api_key=' + CONFIG.apiKey;
+                        // let update_doc_url = CONFIG.apiUrl + '/api/admin/v1/indexer/update_fragment?api_key=' + CONFIG.apiKey;
+                        // TODO: .... test
+                        (async() => {
+                            console.log('update_collection_object_docs');
+                            let data = {
+                                'sip_uuid': record.sip_uuid,
+                                'fragment': {
+                                    doc: {
+                                        is_published: 1
+                                    }
+                                }
+                            };
 
+                            let response = await HTTP.put({
+                                endpoint: '/api/admin/v1/indexer/update_fragment',
+                                data: data
+                            });
+
+                            if (response.error === true) {
+                                obj.status = 'failed';
+                                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + response.error);
+                            } else if (response.data.status === 201) {
+                                return false;
+                            }
+
+                        })();
+
+                        /*
                         REQUEST.put({
                             url: update_doc_url,
                             form: {
@@ -789,6 +815,8 @@ exports.publish_objects = function (req, callback) {
                             }
 
                         });
+
+                         */
                     }
 
                 }, 150);
@@ -808,6 +836,33 @@ exports.publish_objects = function (req, callback) {
             return false;
         }
 
+        (async() => {
+            console.log('publish_collection_objects');
+            let data = {
+                'bool': {
+                    'must': {
+                        'match_phrase': {
+                            'is_member_of_collection': obj.is_member_of_collection
+                        }
+                    }
+                }
+            };
+
+            let response = await HTTP.post({
+                endpoint: '/api/admin/v1/indexer/reindex',
+                data: data
+            });
+
+            if (response.error === true) {
+                obj.status = 'failed';
+                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + response.error);
+            } else if (response.data.status === 201) {
+                return false;
+            }
+
+        })();
+
+        /*
         let reindex_url = CONFIG.apiUrl + '/api/admin/v1/indexer/reindex?api_key=' + CONFIG.apiKey,
             query = {
                 'bool': {
@@ -845,6 +900,8 @@ exports.publish_objects = function (req, callback) {
             }
 
         });
+
+         */
     }
 
     /*
@@ -943,6 +1000,32 @@ exports.publish_objects = function (req, callback) {
 
         setTimeout(function () {
 
+            (async() => {
+                console.log('update_object_doc');
+                let data = {
+                    'sip_uuid': obj.sip_uuid,
+                    'fragment': {
+                        doc: {
+                            is_published: 1
+                        }
+                    }
+                };
+
+                let response = await HTTP.put({
+                    endpoint: '/api/admin/v1/indexer/update_fragment',
+                    data: data
+                });
+
+                if (response.error === true) {
+                    obj.status = 'failed';
+                    LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + response.error);
+                } else if (response.data.status === 201) {
+                    return false;
+                }
+
+            })();
+
+            /*
             let update_doc_url = CONFIG.apiUrl + '/api/admin/v1/indexer/update_fragment?api_key=' + CONFIG.apiKey;
 
             REQUEST.put({
@@ -974,6 +1057,8 @@ exports.publish_objects = function (req, callback) {
                 }
             });
 
+             */
+
         }, 500);
     }
 
@@ -984,6 +1069,7 @@ exports.publish_objects = function (req, callback) {
             return false;
         }
 
+        /*
         let reindex_url = CONFIG.apiUrl + '/api/admin/v1/indexer/reindex?api_key=' + CONFIG.apiKey,
             query = {
                 'bool': {
@@ -995,8 +1081,38 @@ exports.publish_objects = function (req, callback) {
                 }
             };
 
-        setTimeout(function () {
+         */
 
+        setTimeout(function () {
+            // TODO: ...
+
+            (async() => {
+                console.log('publish_object');
+                let data = {
+                    'bool': {
+                        'must': {
+                            'match_phrase': {
+                                'pid': obj.sip_uuid
+                            }
+                        }
+                    }
+                };
+
+                let response = await HTTP.post({
+                    endpoint: '/api/admin/v1/indexer/reindex',
+                    data: data
+                });
+
+                if (response.error === true) {
+                    obj.status = 'failed';
+                    LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection admin record ' + response.error);
+                } else if (response.data.status === 201) {
+                    return false;
+                }
+
+            })();
+
+            /*
             REQUEST.post({
                 url: reindex_url,
                 form: {
@@ -1022,6 +1138,8 @@ exports.publish_objects = function (req, callback) {
                 }
 
             });
+
+             */
 
         }, 3000);
     }
@@ -1115,6 +1233,28 @@ exports.unpublish_objects = function (req, callback) {
         let obj = {};
         obj.is_member_of_collection = pid;
 
+        (async() => {
+            console.log('unpublish_objects');
+
+            let response = await HTTP.delete({
+                endpoint: '/api/admin/v1/indexer',
+                params: {
+                    pid: obj.is_member_of_collection
+                }
+            });
+
+            if (response.error === true) {
+                LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/unpublish_collection)] unable to remove published record from index ' + response.error);
+                obj.status = 'failed';
+                callback(null, obj);
+            } else if (response.data.status === 204) {
+                callback(null, obj);
+                return false;
+            }
+
+        })();
+
+        /*
         REQUEST.delete({
             url: CONFIG.apiUrl + '/api/admin/v1/indexer?pid=' + obj.is_member_of_collection + '&api_key=' + CONFIG.apiKey,
             timeout: 25000
@@ -1136,6 +1276,8 @@ exports.unpublish_objects = function (req, callback) {
                 callback(null, obj);
             }
         });
+
+         */
     }
 
     // unpublish objects
@@ -1166,6 +1308,24 @@ exports.unpublish_objects = function (req, callback) {
                         }
 
                         // remove objects from public index
+                        (async() => {
+                            console.log('unpublish_collection_docs');
+                            let response = await HTTP.delete({
+                                endpoint: '/api/admin/v1/indexer',
+                                params: {
+                                    pid: record.sip_uuid
+                                }
+                            });
+
+                            if (response.error === true) {
+                                LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/unindex_objects)] unable to remove published record from index ' + response.error);
+                            } else if (response.data.status === 204) {
+                                return false;
+                            }
+
+                        })();
+
+                        /*
                         REQUEST.delete({
                             url: CONFIG.apiUrl + '/api/admin/v1/indexer?pid=' + record.sip_uuid + '&api_key=' + CONFIG.apiKey,
                             timeout: 25000
@@ -1182,6 +1342,8 @@ exports.unpublish_objects = function (req, callback) {
                                 LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/unindex_objects)] unable to remove published record from index ' + httpResponse.statusCode + '/' + body);
                             }
                         });
+
+                         */
 
                         // update admin objects to unpublished status
                         let update_doc_url = CONFIG.apiUrl + '/api/admin/v1/indexer/update_fragment?api_key=' + CONFIG.apiKey;
