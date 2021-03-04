@@ -466,7 +466,6 @@ exports.unindex_admin_record = function (req, callback) {
 exports.republish_record = function (req, callback) {
 
     let pid = req.body.sip_uuid;
-    console.log(pid);
 
     if (pid === undefined || pid.length === 0) {
 

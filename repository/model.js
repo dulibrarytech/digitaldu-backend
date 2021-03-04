@@ -837,7 +837,7 @@ exports.publish_objects = function (req, callback) {
         }
 
         (async() => {
-            console.log('publish_collection_objects');
+
             let data = {
                 'bool': {
                     'must': {
@@ -1001,7 +1001,7 @@ exports.publish_objects = function (req, callback) {
         setTimeout(function () {
 
             (async() => {
-                console.log('update_object_doc');
+
                 let data = {
                     'sip_uuid': obj.sip_uuid,
                     'fragment': {
@@ -1025,40 +1025,6 @@ exports.publish_objects = function (req, callback) {
 
             })();
 
-            /*
-            let update_doc_url = CONFIG.apiUrl + '/api/admin/v1/indexer/update_fragment?api_key=' + CONFIG.apiKey;
-
-            REQUEST.put({
-                url: update_doc_url,
-                form: {
-                    'sip_uuid': obj.sip_uuid,
-                    'fragment': {
-                        doc: {
-                            is_published: 1
-                        }
-                    }
-                },
-                timeout: 25000
-            }, function (error, httpResponse, body) {
-
-                if (error) {
-                    LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + error);
-                    obj.status = 'failed';
-                    return false;
-                }
-
-                if (httpResponse.statusCode === 201) {
-                    callback(null, obj);
-                    return false;
-                } else {
-                    LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
-                    obj.status = 'failed';
-                    callback(null, obj);
-                }
-            });
-
-             */
-
         }, 500);
     }
 
@@ -1069,25 +1035,10 @@ exports.publish_objects = function (req, callback) {
             return false;
         }
 
-        /*
-        let reindex_url = CONFIG.apiUrl + '/api/admin/v1/indexer/reindex?api_key=' + CONFIG.apiKey,
-            query = {
-                'bool': {
-                    'must': {
-                        'match_phrase': {
-                            'pid': obj.sip_uuid
-                        }
-                    }
-                }
-            };
-
-         */
-
         setTimeout(function () {
-            // TODO: ...
 
             (async() => {
-                console.log('publish_object');
+
                 let data = {
                     'bool': {
                         'must': {
@@ -1111,35 +1062,6 @@ exports.publish_objects = function (req, callback) {
                 }
 
             })();
-
-            /*
-            REQUEST.post({
-                url: reindex_url,
-                form: {
-                    'query': query
-                },
-                timeout: 25000
-            }, function (error, httpResponse, body) {
-
-                if (error) {
-                    LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection admin record ' + error);
-                    obj.status = 'failed';
-                    callback(null, obj);
-                    return false;
-                }
-
-                if (httpResponse.statusCode === 201) {
-                    callback(null, obj);
-                    return false;
-                } else {
-                    LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
-                    obj.status = 'failed';
-                    callback(null, obj);
-                }
-
-            });
-
-             */
 
         }, 3000);
     }

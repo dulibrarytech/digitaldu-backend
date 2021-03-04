@@ -80,7 +80,7 @@ exports.get = function(request_obj) {
     }
 
     async function get() {
-        console.log(request_obj);
+
         try {
 
             let response = await HTTP.get(url, request_obj);

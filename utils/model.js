@@ -807,7 +807,7 @@ exports.reindex = function (req, callback) {
 
         var timer = setInterval(function () {
             monitor();
-        }, 10000);  // TODO: testing... dist 60000
+        }, 10000);
     }
 
     async.waterfall([
@@ -828,9 +828,9 @@ exports.reindex = function (req, callback) {
         }
 
         if (results.reindex_complete !== undefined && results.reindex_complete === true) {
-            republish();
+            republish('collection');
+            republish('object');
         }
-
     });
 
     callback({
@@ -840,42 +840,48 @@ exports.reindex = function (req, callback) {
     });
 };
 
-/** TODO: refactoring...
- * Republishes collections after full reindex
+/**
+ * publishes (indexes) records into public index
+ * @param sip_uuid
  */
-const republish = function () {
+function publish(sip_uuid) {
 
-    console.log('Republishing records...');
+    (async() => {
 
-    function publish(sip_uuid) {
+        let data = {
+            'sip_uuid': sip_uuid
+        };
 
-        (async() => {
+        let response = await HTTP.post({
+            endpoint: '/api/admin/v1/indexer/republish',
+            data: data
+        });
 
-            let data = {
-                'sip_uuid': sip_uuid
-            };
+        if (response.error === true) {
+            logger.module().error('ERROR: [/import/utils module (republish/publish)] indexer error ' + response.error);
+        } else if (response.data.status === 201) {
+            return false;
+        }
 
-            // TODO: send to different endpoint
-            let response = await HTTP.post({
-                endpoint: '/api/admin/v1/indexer/republish',
-                data: data
-            });
+    })();
+}
 
-            if (response.error === true) {
-                logger.module().error('ERROR: [/import/utils module (republish/publish)] indexer error ' + response.error);
-            } else if (response.data.status === 201) {
-                return false;
-            }
+/**
+ * Republishes records after full reindex
+ */
+const republish = function (object_type) {
 
-        })();
-    }
+    console.log('Republishing ' + object_type + ' records...');
+
+    let whereObj = {
+        object_type: object_type,
+        is_published: 1,
+        is_active: 1
+    };
 
     knex(REPO_OBJECTS)
         .select('sip_uuid')
-        .where({
-            is_published: 1,
-            is_active: 1
-        })
+        .where(whereObj)
         .then(function (data) {
 
             let timer = setInterval(function () {
@@ -888,13 +894,13 @@ const republish = function () {
                 let record = data.pop();
                 publish(record.sip_uuid);
 
-            }, 75);
+            }, 20);
 
             return null;
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/import/utils module (reindex/republish/publish)] Unable to get object ' + error);
-            throw 'FATAL: [/import/utils module (reindex/republish/publish)] Unable to get object ' + error;
+            logger.module().fatal('FATAL: [/import/utils module (reindex/republish_collection/publish_collection)] Unable to get object ' + error);
+            throw 'FATAL: [/import/utils module (reindex/republish_collection/publish_collection)] Unable to get object ' + error;
         });
 };
 
