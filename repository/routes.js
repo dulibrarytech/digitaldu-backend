@@ -43,7 +43,6 @@ module.exports = function (app) {
     app.route('/api/admin/v1/repo/object/viewer')
         .get(TOKEN.verify, REPO.get_viewer);
 
-    // TODO: add object to path
     app.route('/api/admin/v1/repo/publish')
         .post(TOKEN.verify, REPO.publish_objects);
 
@@ -52,19 +51,6 @@ module.exports = function (app) {
 
     app.route('/api/admin/v1/repo/object/unpublished')
         .get(TOKEN.verify, REPO.get_unpublished_admin_objects);
-
-    // TODO: move to import
-    /*
-    app.route('/api/admin/v1/repo/metadata/object')
-        .put(TOKEN.verify, REPO.update_metadata_record);
-    */
-
-    // TODO: move to import
-    /*
-    app.route('/api/admin/v1/repo/metadata/collection')
-        .put(TOKEN.verify, REPO.update_collection_metadata_record);
-    //.delete(TOKEN.verify, REPO.delete_collection);
-    */
 
     app.route('/api/admin/v1/repo/metadata/reset')
         .post(TOKEN.verify, REPO.reset_display_record);

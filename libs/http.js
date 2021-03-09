@@ -265,7 +265,9 @@ exports.delete = function(request_obj) {
                 return {
                     error: false,
                     message: response.statusText,
-                    data: response.data
+                    data: {
+                        status: 204
+                    }
                 };
 
             } else {
