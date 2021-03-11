@@ -50,7 +50,7 @@ const reindex = function (match_phrase, callback) {
         bool.must = {};
         bool.must.match_phrase = match_phrase;
         query.bool = bool;
-        console.log('query: ', query);
+
         let data = {
             'query': query
         };
@@ -110,6 +110,37 @@ const update_fragment = function (sip_uuid, is_published, callback) {
 };
 
 /**
+ * Indexes record
+ * @param sip_uuid
+ * @param callback
+ */
+const index = function(sip_uuid, callback) {
+
+    (async () => {
+
+        let data = {
+            'sip_uuid': sip_uuid
+        };
+
+        let response = await HTTP.post({
+            endpoint: '/api/admin/v1/indexer',
+            data: data
+        });
+
+        let result = {};
+
+        if (response.error === true) {
+            LOGGER.module().error('ERROR: [/repository/model module (index)] index failed.');
+            result.error = true;
+        } else if (response.data.status === 201) {
+            result.error = false;
+        }
+
+        callback(result);
+    })();
+};
+
+/**
  * Removes record from index
  * @param sip_uuid
  * @param callback
@@ -129,6 +160,35 @@ const del = function (sip_uuid, callback) {
 
         if (response.error === true) {
             LOGGER.module().error('ERROR: [/repository/model module (del)] unable to remove published record from index.');
+            result.error = true;
+        } else if (response.data.status === 204) {
+            result.error = false;
+        }
+
+        callback(result);
+    })();
+};
+
+/**
+ * Removes record from admin and public indexes - part of record delete process
+ * @param sip_uuid
+ * @param callback
+ */
+const unindex = function(sip_uuid, callback) {
+
+    (async () => {
+
+        let response = await HTTP.delete({
+            endpoint: '/api/admin/v1/indexer/delete',
+            params: {
+                pid: sip_uuid
+            }
+        });
+
+        let result = {};
+
+        if (response.error === true) {
+            LOGGER.module().error('ERROR: [/repository/model module (del)] unable to remove record from index.');
             result.error = true;
         } else if (response.data.status === 204) {
             result.error = false;
@@ -313,39 +373,6 @@ exports.update_thumbnail = function (req, callback) {
 
                                                         return false;
                                                     });
-
-                                                    /*
-                                                    let reindex_url = '/api/admin/v1/indexer/reindex',
-                                                        query = {
-                                                            'bool': {
-                                                                'must': {
-                                                                    'match_phrase': {
-                                                                        'pid': recordObj.sip_uuid
-                                                                    }
-                                                                }
-                                                            }
-                                                        };
-
-                                                    (async() => {
-
-                                                        let data = {
-                                                            'query': query
-                                                        };
-
-                                                        let response = await HTTP.post({
-                                                            endpoint: reindex_url,
-                                                            data: data
-                                                        });
-
-                                                        if (response.error === true) {
-                                                            LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail ' + response.error);
-                                                        } else if (response.data.status === 201) {
-                                                            return false;
-                                                        }
-
-                                                    })();
-                                                    */
-
                                                 }, 7000);
                                             }
 
@@ -733,7 +760,7 @@ exports.publish_objects = function (req, callback) {
     }
 
     function update_collection_doc(obj, callback) {
-        console.log('update collection doc: ', obj);
+
         if (obj.status === 'failed') {
             callback(null, obj);
             return false;
@@ -1027,7 +1054,7 @@ exports.publish_objects = function (req, callback) {
     }
 
     if (type === 'object') {
-        console.log('publish object: ', type);
+
         ASYNC.waterfall([
             get_collection_uuid,
             check_collection,
@@ -1437,6 +1464,22 @@ exports.reset_display_record = function (req, callback) {
     function admin_index(obj, callback) {
 
         // update admin index
+        index(obj.sip_uuid, function(result) {
+
+            if (result.error === true) {
+                LOGGER.module().error('ERROR: [/repository/model module (reset_display_record/admin_index)] indexer error.');
+                obj.admin_index = false;
+                callback(null, obj);
+                return false;
+            }
+
+            obj.admin_index = true;
+            callback(null, obj);
+            return false;
+        });
+
+        /*
+
         REQUEST.post({
             url: CONFIG.apiUrl + '/api/admin/v1/indexer?api_key=' + CONFIG.apiKey,
             form: {
@@ -1460,6 +1503,8 @@ exports.reset_display_record = function (req, callback) {
                 return false;
             }
         });
+
+         */
     }
 
     function public_index(obj, callback) {
@@ -1467,6 +1512,21 @@ exports.reset_display_record = function (req, callback) {
         if (obj.is_published === 1) {
 
             // update public index
+            index(obj.sip_uuid, function(result) {
+
+                if (result.error === true) {
+                    LOGGER.module().error('ERROR: [/repository/model module (reset_display_record/admin_index)] indexer error.');
+                    obj.public_index = false;
+                    callback(null, obj);
+                    return false;
+                }
+
+                obj.public_index = true;
+                callback(null, obj);
+                return false;
+            });
+
+            /*
             REQUEST.post({
                 url: CONFIG.apiUrl + '/api/admin/v1/indexer?api_key=' + CONFIG.apiKey,
                 form: {
@@ -1491,6 +1551,9 @@ exports.reset_display_record = function (req, callback) {
                     return false;
                 }
             });
+
+             */
+
         } else {
             obj.public_index = false;
             callback(null, obj);
@@ -1589,6 +1652,19 @@ exports.delete_object = function (req, callback) {
             return false;
         }
 
+        unindex(obj.pid, function (result) {
+
+            if (result.error === true) {
+                LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/unindex_objects)] unable to remove published record from index.');
+                obj.status = 'failed';
+                callback(null, obj);
+                return false;
+            }
+
+            callback(null, obj);
+        });
+
+        /* TODO: build out async function
         REQUEST.delete({
             url: CONFIG.apiUrl + '/api/admin/v1/indexer/delete?pid=' + obj.pid + '&api_key=' + CONFIG.apiKey,
             timeout: 25000
@@ -1610,6 +1686,7 @@ exports.delete_object = function (req, callback) {
                 callback(null, obj);
             }
         });
+         */
     }
 
     function delete_aip_request(obj, callback) {

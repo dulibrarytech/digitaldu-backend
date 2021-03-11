@@ -340,7 +340,7 @@ exports.update_fragment = function (req, callback) {
  * @param callback
  */
 exports.reindex = function (req, callback) {
-    console.log(req.body.query);
+
     let query = req.body.query;
 
     if (query === undefined) {
