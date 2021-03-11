@@ -40,20 +40,17 @@ const CONFIG = require('../config/config'),
  * @param req
  * @param callback
  */
-const reindex = function (sip_uuid, callback) {
+const reindex = function (match_phrase, callback) {
 
     (async () => {
 
-        let query = {
-            'bool': {
-                'must': {
-                    'match_phrase': {
-                        'pid': sip_uuid
-                    }
-                }
-            }
-        };
+        let query = {};
+        let bool = {};
 
+        bool.must = {};
+        bool.must.match_phrase = match_phrase;
+        query.bool = bool;
+        console.log('query: ', query);
         let data = {
             'query': query
         };
@@ -304,7 +301,11 @@ exports.update_thumbnail = function (req, callback) {
                                                 // wait to make sure updated admin record is ready
                                                 setTimeout(function () {
 
-                                                    reindex(recordObj.sip_uuid, function (result) {
+                                                    let match_phrase = {
+                                                        'pid': recordObj.sip_uuid
+                                                    };
+
+                                                    reindex(match_phrase, function (result) {
 
                                                         if (result.error === true) {
                                                             LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail ' + response.error);
@@ -747,45 +748,21 @@ exports.publish_objects = function (req, callback) {
 
             callback(null, obj);
         });
-
-        /*
-        (async() => {
-
-            let data = {
-                'sip_uuid': obj.is_member_of_collection,
-                'fragment': {
-                    doc: {
-                        is_published: 1
-                    }
-                }
-            };
-
-            let response = await HTTP.put({
-                endpoint: '/api/admin/v1/indexer/update_fragment',
-                data: data
-            });
-            console.log(response);
-            if (response.error === true) {
-                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + response.error);
-            } else if (response.data.status === 201) {
-                callback(null, obj);
-                return false;
-            }
-
-        })();
-
-         */
     }
 
     function publish_collection(obj, callback) {
-        console.log('publish collection: ', obj);
+
         if (obj.status !== undefined && obj.status === 'failed') {
             callback(null, obj);
             return false;
         }
 
-        reindex(obj.is_member_of_collection, function (result) {
-            console.log('reindex result: ', result);
+        let match_phrase = {
+            'pid': obj.is_member_of_collection
+        };
+
+        reindex(match_phrase, function (result) {
+
             if (result.error === true) {
                 LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection admin record.');
                 obj.status = 'failed';
@@ -795,79 +772,10 @@ exports.publish_objects = function (req, callback) {
 
             callback(null, obj);
         });
-
-        /*
-        let data = {
-            'sip_uuid': record.sip_uuid,
-            'fragment': {
-                doc: {
-                    is_published: 1
-                }
-            }
-        };
-        */
-
-        /*
-        (async() => {
-
-            let data = {
-                'query': {
-                    'bool': {
-                        'must': {
-                            'match_phrase': {
-                                'pid': obj.is_member_of_collection
-                            }
-                        }
-                    }
-                 }
-                };
-
-            let response = await HTTP.post({
-                endpoint: '/api/admin/v1/indexer/reindex',
-                data: data
-            });
-            console.log('reindex - move to public: ', response);
-            if (response.error === true) {
-                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection admin record ' + response.error);
-            } else if (response.data.status === 201) {
-                callback(null, obj);
-                return false;
-            }
-
-        })();
-        */
-
-        /*
-        REQUEST.post({
-            url: reindex_url,
-            form: {
-                'query': query
-            },
-            timeout: 25000
-        }, function (error, httpResponse, body) {
-
-            if (error) {
-                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection admin record ' + error);
-                obj.status = 'failed';
-                callback(null, obj);
-                return false;
-            }
-
-            if (httpResponse.statusCode === 201) {
-                callback(null, obj);
-                return false;
-            } else {
-                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
-                obj.status = 'failed';
-                callback(null, obj);
-            }
-
-        });
-        */
     }
 
     function update_collection_object_records(obj, callback) {
-        console.log('update collection object records: ', obj);
+
         if (obj.status !== undefined && obj.status === 'failed') {
             callback(null, obj);
             return false;
@@ -892,7 +800,7 @@ exports.publish_objects = function (req, callback) {
     }
 
     function update_collection_object_docs(obj, callback) {
-        console.log('update collection object docs: ', obj);
+
         DB(REPO_OBJECTS)
             .select('sip_uuid')
             .where({
@@ -926,64 +834,6 @@ exports.publish_objects = function (req, callback) {
                                 return false;
                             }
                         });
-
-                        /* // let update_doc_url = CONFIG.apiUrl + '/api/admin/v1/indexer/update_fragment?api_key=' + CONFIG.apiKey;
-                        (async() => {
-                            console.log('update_collection_object_docs');
-                            let data = {
-                                'sip_uuid': record.sip_uuid,
-                                'fragment': {
-                                    doc: {
-                                        is_published: 1
-                                    }
-                                }
-                            };
-
-                            let response = await HTTP.put({
-                                endpoint: '/api/admin/v1/indexer/update_fragment',
-                                data: data
-                            });
-                            console.log('collection object: ', response);
-                            if (response.error === true) {
-                                obj.status = 'failed';
-                                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + response.error);
-                            } else if (response.data.status === 201) {
-                                return false;
-                            }
-
-                        })();
-                        */
-
-                        /*
-                        REQUEST.put({
-                            url: update_doc_url,
-                            form: {
-                                'sip_uuid': record.sip_uuid,
-                                'fragment': {
-                                    doc: {
-                                        is_published: 1
-                                    }
-                                }
-                            },
-                            timeout: 25000
-                        }, function (error, httpResponse, body) {
-
-                            if (error) {
-                                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + error);
-                                obj.status = 'failed';
-                                return false;
-                            }
-
-                            if (httpResponse.statusCode === 201) {
-                                return false;
-                            } else {
-                                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
-                                obj.status = 'failed';
-                            }
-
-                        });
-
-                         */
                     }
 
                 }, 150);
@@ -1003,7 +853,11 @@ exports.publish_objects = function (req, callback) {
             return false;
         }
 
-        reindex(obj.is_member_of_collection, function (result) {
+        let match_phrase = {
+            'is_member_of_collection': obj.is_member_of_collection
+        };
+
+        reindex(match_phrase, function (result) {
 
             if (result.error === true) {
                 LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + response.error);
@@ -1014,76 +868,6 @@ exports.publish_objects = function (req, callback) {
 
             callback(null, obj);
         });
-
-        /*
-        (async() => {
-
-            let data = {
-                'bool': {
-                    'must': {
-                        'match_phrase': {
-                            'is_member_of_collection': obj.is_member_of_collection
-                        }
-                    }
-                }
-            };
-
-            let response = await HTTP.post({
-                endpoint: '/api/admin/v1/indexer/reindex',
-                data: data
-            });
-            console.log('child objects: ', response);
-            if (response.error === true) {
-                obj.status = 'failed';
-                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + response.error);
-            } else if (response.data.status === 201) {
-                callback(null, obj);
-                return false;
-            }
-
-        })();
-        */
-
-        /*
-        let reindex_url = CONFIG.apiUrl + '/api/admin/v1/indexer/reindex?api_key=' + CONFIG.apiKey,
-            query = {
-                'bool': {
-                    'must': {
-                        'match_phrase': {
-                            'is_member_of_collection': obj.is_member_of_collection
-                        }
-                    }
-                }
-            };
-
-        // TODO: .... replace with HTTP lib
-        REQUEST.post({
-            url: reindex_url,
-            form: {
-                'query': query
-            },
-            timeout: 25000
-        }, function (error, httpResponse, body) {
-
-            if (error) {
-                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection admin record ' + error);
-                obj.status = 'failed';
-                callback(null, obj);
-                return false;
-            }
-
-            if (httpResponse.statusCode === 201) {
-                callback(null, obj);
-                return false;
-            } else {
-                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + httpResponse.statusCode + '/' + body);
-                obj.status = 'failed';
-                callback(null, obj);
-            }
-
-        });
-
-         */
     }
 
     /*
@@ -1110,7 +894,6 @@ exports.publish_objects = function (req, callback) {
             })
             .then(function (data) {
                 obj.is_member_of_collection = VALIDATOR.escape(data[0].is_member_of_collection);
-                console.log('get collection uuid: ', obj);
                 callback(null, obj);
                 return null;
             })
@@ -1199,7 +982,11 @@ exports.publish_objects = function (req, callback) {
             return false;
         }
 
-        reindex(obj.sip_uuid, function (result) {
+        let match_phrase = {
+            'pid': obj.sip_uuid
+        };
+
+        reindex(match_phrase, function (result) {
 
             if (result.error === true) {
                 LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection admin record.');
@@ -1248,7 +1035,7 @@ exports.publish_objects = function (req, callback) {
             update_object_doc,
             publish_object
         ], function (error, results) {
-            console.log('results: ', results);
+
             if (error) {
                 LOGGER.module().error('ERROR: [/repository/model module (publish_objects/async.waterfall)] ' + error);
                 throw 'ERROR: [/repository/model module (publish_objects/async.waterfall)] ' + error;
@@ -1272,7 +1059,6 @@ exports.publish_objects = function (req, callback) {
                     data: []
                 });
             }
-
         });
 
         return false;
