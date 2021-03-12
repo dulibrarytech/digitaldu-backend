@@ -327,7 +327,7 @@ exports.update_thumbnail = function (req, callback) {
                                 display_record: obj.display_record
                             })
                             .then(function (data) {
-                                // TODO: test
+
                                 index(recordObj.sip_uuid, function(result) {
 
                                     if (result.error === true) {
@@ -357,80 +357,10 @@ exports.update_thumbnail = function (req, callback) {
                                                 });
                                             }, 7000);
                                         }
-
-                                        return false;
                                     }
 
-                                    obj.public_index = true;
-                                    callback(null, obj);
                                     return false;
                                 });
-
-                                /*
-                                (async () => {
-
-                                    try {
-
-                                        let data = {
-                                            'sip_uuid': recordObj.sip_uuid
-                                        };
-
-                                        let response = await HTTP.post({
-                                            endpoint: '/api/admin/v1/indexer',
-                                            data: data
-                                        });
-
-                                        if (response.error === true) {
-
-                                            LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail)] ' + response.error);
-
-                                            callback({
-                                                error: true,
-                                                error_message: response.error
-                                            });
-
-                                            return false;
-
-                                        } else if (response.data.status === 201) {
-
-                                            if (recordObj.is_published === 1) {
-
-                                                // wait to make sure updated admin record is ready
-                                                setTimeout(function () {
-
-                                                    let match_phrase = {
-                                                        'pid': recordObj.sip_uuid
-                                                    };
-
-                                                    reindex(match_phrase, function (result) {
-
-                                                        if (result.error === true) {
-                                                            LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail ' + response.error);
-                                                        }
-
-                                                        return false;
-                                                    });
-                                                }, 7000);
-                                            }
-
-                                            return false;
-                                        }
-
-                                    } catch (error) {
-
-                                        LOGGER.module().fatal('FATAL: [/repository/model module (update_thumbnail/create_display_record/MODS.create_display_record)] unable to update display record ' + error);
-
-                                        callback({
-                                            error: true,
-                                            error_message: error
-                                        });
-
-                                        return false;
-                                    }
-
-                                })();
-
-                                 */
                             })
                             .catch(function (error) {
                                 LOGGER.module().fatal('FATAL: [/repository/model module (update_thumbnail/create_display_record/MODS.create_display_record)] unable to update display record ' + error);
