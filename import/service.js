@@ -20,7 +20,6 @@
 
 const ARCHIVESSPACE = require('../libs/archivespace'),
     HTTP = require('../libs/http'),
-    SERVICE = require('../import/service'),
     LOGGER = require('../libs/log4');
 
 /**
