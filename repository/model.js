@@ -19,7 +19,6 @@
 'use strict';
 
 const CONFIG = require('../config/config'),
-    REQUEST = require('request'),
     HTTP = require('../libs/http'),
     ASYNC = require('async'),
     UUID = require('node-uuid'),
@@ -188,7 +187,7 @@ const unindex = function(sip_uuid, callback) {
         let result = {};
 
         if (response.error === true) {
-            LOGGER.module().error('ERROR: [/repository/model module (del)] unable to remove record from index.');
+            LOGGER.module().error('ERROR: [/repository/model module (unindex)] unable to remove record from index.');
             result.error = true;
         } else if (response.data.status === 204) {
             result.error = false;
@@ -329,7 +328,46 @@ exports.update_thumbnail = function (req, callback) {
                                 display_record: obj.display_record
                             })
                             .then(function (data) {
+                                // TODO: test
+                                index(recordObj.sip_uuid, function(result) {
 
+                                    if (result.error === true) {
+                                        LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail.');
+
+                                        callback({
+                                            error: true,
+                                            error_message: 'ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail.'
+                                        });
+
+                                        if (recordObj.is_published === 1) {
+
+                                            // wait to make sure updated admin record is ready
+                                            setTimeout(function () {
+
+                                                let match_phrase = {
+                                                    'pid': recordObj.sip_uuid
+                                                };
+
+                                                reindex(match_phrase, function (result) {
+
+                                                    if (result.error === true) {
+                                                        LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail ' + response.error);
+                                                    }
+
+                                                    return false;
+                                                });
+                                            }, 7000);
+                                        }
+
+                                        return false;
+                                    }
+
+                                    obj.public_index = true;
+                                    callback(null, obj);
+                                    return false;
+                                });
+
+                                /*
                                 (async () => {
 
                                     try {
@@ -392,6 +430,8 @@ exports.update_thumbnail = function (req, callback) {
                                     }
 
                                 })();
+
+                                 */
                             })
                             .catch(function (error) {
                                 LOGGER.module().fatal('FATAL: [/repository/model module (update_thumbnail/create_display_record/MODS.create_display_record)] unable to update display record ' + error);
@@ -658,6 +698,17 @@ exports.create_collection_object = function (req, callback) {
             return false;
         }
 
+        // TODO:... test
+        index(obj.sip_uuid, function(result) {
+
+            if (result.error === true) {
+                LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/index_collection)] unable to index collection record.');
+            }
+
+            return false;
+        });
+
+        /*
         (async () => {
 
             let data = {
@@ -676,6 +727,8 @@ exports.create_collection_object = function (req, callback) {
             }
 
         })();
+
+         */
     }
 
     ASYNC.waterfall([
@@ -1477,34 +1530,6 @@ exports.reset_display_record = function (req, callback) {
             callback(null, obj);
             return false;
         });
-
-        /*
-
-        REQUEST.post({
-            url: CONFIG.apiUrl + '/api/admin/v1/indexer?api_key=' + CONFIG.apiKey,
-            form: {
-                'sip_uuid': obj.sip_uuid
-            }
-        }, function (error, httpResponse, body) {
-
-            if (error) {
-                LOGGER.module().error('ERROR: [/repository/model module (reset_display_record/admin_index)] indexer error ' + error);
-                return false;
-            }
-
-            if (httpResponse.statusCode === 201) {
-                obj.admin_index = true;
-                callback(null, obj);
-                return false;
-            } else {
-                LOGGER.module().error('ERROR: [/repository/model module (reset_display_record/admin_index)] http error ' + httpResponse.statusCode + '/' + body);
-                obj.admin_index = false;
-                callback(null, obj);
-                return false;
-            }
-        });
-
-         */
     }
 
     function public_index(obj, callback) {
@@ -1525,34 +1550,6 @@ exports.reset_display_record = function (req, callback) {
                 callback(null, obj);
                 return false;
             });
-
-            /*
-            REQUEST.post({
-                url: CONFIG.apiUrl + '/api/admin/v1/indexer?api_key=' + CONFIG.apiKey,
-                form: {
-                    'sip_uuid': obj.sip_uuid,
-                    'publish': true
-                }
-            }, function (error, httpResponse, body) {
-
-                if (error) {
-                    LOGGER.module().error('ERROR: [/repository/model module (update_metadata_cron/update_records/update_mods)] indexer error ' + error);
-                    return false;
-                }
-
-                if (httpResponse.statusCode === 201) {
-                    obj.public_index = true;
-                    callback(null, obj);
-                    return false;
-                } else {
-                    LOGGER.module().error('ERROR: [/repository/model module (update_metadata_cron/update_records/update_mods)] http error ' + httpResponse.statusCode + '/' + body);
-                    obj.public_index = false;
-                    callback(null, obj);
-                    return false;
-                }
-            });
-
-             */
 
         } else {
             obj.public_index = false;
@@ -1663,30 +1660,6 @@ exports.delete_object = function (req, callback) {
 
             callback(null, obj);
         });
-
-        /* TODO: build out async function
-        REQUEST.delete({
-            url: CONFIG.apiUrl + '/api/admin/v1/indexer/delete?pid=' + obj.pid + '&api_key=' + CONFIG.apiKey,
-            timeout: 25000
-        }, function (error, httpResponse, body) {
-
-            if (error) {
-                LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/unindex_objects)] unable to remove published record from index ' + error);
-                obj.status = 'failed';
-                callback(null, obj);
-                return false;
-            }
-
-            if (httpResponse.statusCode === 204) {
-                callback(null, obj);
-                return false;
-            } else {
-                LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/unindex_objects)] unable to remove published record from index ' + httpResponse.statusCode + '/' + body);
-                obj.status = 'failed';
-                callback(null, obj);
-            }
-        });
-         */
     }
 
     function delete_aip_request(obj, callback) {
