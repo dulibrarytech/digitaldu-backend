@@ -19,7 +19,6 @@
 'use strict';
 
 const CONFIG = require('../config/config'),
-    VALIDATOR = require('validator'),
     TOKEN = require('../libs/tokens'),
     SERVICE = require('../auth/service'),
     USER = require('../users/model');
@@ -47,7 +46,7 @@ exports.login = function (req, res) {
 
             return false;
 
-        } else if (VALIDATOR.isNumeric(username) === false) {
+        } else if (isNaN(username) === true) {
 
             res.status(401).send({
                 message: 'Authenticate failed due to invalid username.  Please enter a DU ID. i.e. 871******'
@@ -63,7 +62,6 @@ exports.login = function (req, res) {
 
                     let token = TOKEN.create(username);
                     token = encodeURIComponent(token);
-                    let uid = username.trim();
 
                     /* check if user has access to repo */
                     USER.check_auth_user(username, function (result) {
