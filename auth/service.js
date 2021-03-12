@@ -19,13 +19,12 @@
 'use strict';
 
 const CONFIG = require('../config/config'),
-    REQUEST = require('request'),
-    VALIDATOR = require('validator'),
+    HTTP = require('../libs/http'),
     LOGGER = require('../libs/log4');
 
 exports.authenticate = function (username, password, callback) {
 
-    if (VALIDATOR .isNumeric(username) === false || VALIDATOR.isEmpty(password) === true) {
+    if (isNaN(username) === true || password.length === 0) {
 
         let errorObj = {
             status: 400,
@@ -37,29 +36,32 @@ exports.authenticate = function (username, password, callback) {
         return false;
     }
 
-    REQUEST.post({
-            url: CONFIG.ldap, form: {
-                username: username,
-                password: password
-            }
-        },
-        function (error, headers, response) {
+    (async () => {
 
-            if (error) {
+        let data = {
+            username: username,
+            password: password
+        };
 
-                LOGGER.module().error('ERROR: [/auth/service module (authenticate)] request to LDAP failed ' + error);
-
-                let errorObj = {
-                    status: 500,
-                    success: false,
-                    message: 'An error has occurred.'
-                };
-
-                callback(errorObj);
-                return false;
-            }
-
-            let responseObj = JSON.parse(response);
-            callback(responseObj);
+        let response = await HTTP.post({
+            url: CONFIG.ldap,
+            data: data
         });
+
+        if (response.error === true) {
+            LOGGER.module().error('ERROR: [/auth/service module (authenticate)] request to LDAP failed.');
+
+            let errorObj = {
+                status: 500,
+                success: false,
+                message: 'An error has occurred.'
+            };
+
+            callback(errorObj);
+            return false;
+        }
+
+        callback(response.data);
+
+    })();
 };
