@@ -26,7 +26,6 @@ const CONFIG = require('../config/config'),
     HANDLES = require('../libs/handles'),
     MODS = require('../libs/display-record'),
     ARCHIVEMATICA = require('../libs/archivematica'),
-    DELETEDIP = require('../libs/delete-dip'),
     SERVICE = require('../repository/service'),
     LOGGER = require('../libs/log4'),
     DB = require('../config/db')(),
@@ -1715,21 +1714,6 @@ exports.delete_object = function (req, callback) {
                 callback(null, obj);
             });
         }
-    }
-    */
-
-    // TODO: remove
-    /*
-    function delete_dip(obj, callback) {
-
-        if (obj.is_published === true) {
-            callback(null, obj);
-            return false;
-        }
-
-        DELETEDIP.delete_dip(obj, function(result) {
-            callback(null, result);
-        });
     }
     */
 
