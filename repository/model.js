@@ -627,37 +627,15 @@ exports.create_collection_object = function (req, callback) {
             return false;
         }
 
-        // TODO:... test
         index(obj.sip_uuid, function(result) {
 
             if (result.error === true) {
                 LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/index_collection)] unable to index collection record.');
-            }
-
-            return false;
-        });
-
-        /*
-        (async () => {
-
-            let data = {
-                'sip_uuid': obj.sip_uuid
-            };
-
-            let response = await HTTP.post({
-                endpoint: '/api/admin/v1/indexer',
-                data: data
-            });
-
-            if (response.error === true) {
-                LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/index_collection)] unable to index collection record ' + response.error);
-            } else if (response.data.status === 201) {
                 return false;
             }
 
-        })();
-
-         */
+            callback(null, obj);
+        });
     }
 
     ASYNC.waterfall([
@@ -1653,7 +1631,6 @@ exports.delete_object = function (req, callback) {
         unindex_record,
         delete_aip_request
         // delete_aip_request_approval // approval not working (nightmare/electron dependency issue)
-        // delete_dip  // occurs automatically when delete is approved in storage service
     ], function (error, results) {
 
         if (error) {
