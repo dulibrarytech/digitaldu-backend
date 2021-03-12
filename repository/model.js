@@ -1608,29 +1608,11 @@ exports.delete_object = function (req, callback) {
         });
     }
 
-    // TODO: doesn't work
-    /*
-    function delete_aip_request_approval(obj, callback) {
-
-        if (obj.is_published === true) {
-            callback(null, obj);
-            return false;
-        }
-
-        if (obj.delete_id !== false) {
-            ARCHIVEMATICA.delete_aip_request_approval(obj, function(result) {
-                callback(null, obj);
-            });
-        }
-    }
-    */
-
     ASYNC.waterfall([
         check_if_published,
         delete_record,
         unindex_record,
         delete_aip_request
-        // delete_aip_request_approval // approval not working (nightmare/electron dependency issue)
     ], function (error, results) {
 
         if (error) {
