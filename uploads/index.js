@@ -20,7 +20,7 @@
 
 const CONFIG = require('../config/config'),
     MULTER = require('multer'),
-    REQUEST = require('request'),
+    HTTP = require('../libs/http'),
     LOGGER = require('../libs/log4'),
     TOKEN = require('../libs/tokens'),
     LIMIT = 500000; // ~500kb
@@ -100,18 +100,21 @@ module.exports = function (app) {
             return false;
         }
 
-        REQUEST.post({
-            url: CONFIG.apiUrl + '/api/admin/v1/repo/object/thumbnail?api_key=' + CONFIG.apiKey,
-            form: {
+        (async () => {
+
+            let data = {
                 'pid': pid,
                 'thumbnail_url':  req.protocol + '://' + req.headers.host + '/tn/' + pid + '.jpg'
-            },
-            timeout: 25000
-        }, function (error, httpResponse, body) {
+            };
 
-            if (error) {
+            let response = await HTTP.post({
+                endpoint: '/api/admin/v1/repo/object/thumbnail',
+                data: data
+            });
 
-                LOGGER.module().error('ERROR: [ Unable to update collection thumbnail ' + error);
+            if (response.error === true) {
+
+                LOGGER.module().error('ERROR: [ Unable to update collection thumbnail.');
 
                 res.render('dashboard-upload', {
                     host: CONFIG.host,
@@ -123,9 +126,8 @@ module.exports = function (app) {
                 });
 
                 return false;
-            }
 
-            if (httpResponse.statusCode === 201) {
+            } else {
 
                 LOGGER.module().info('INFO: Thumbnail updated');
 
@@ -137,22 +139,8 @@ module.exports = function (app) {
                     message: 'Thumbnail Updated.',
                     error: false
                 });
-
-            } else {
-
-                LOGGER.module().error('ERROR: Unable to update collection thumbnail ' + httpResponse.statusCode + '/' + body);
-
-                res.render('dashboard-upload', {
-                    host: CONFIG.host,
-                    appname: CONFIG.appName,
-                    organization: CONFIG.organization,
-                    appversion: CONFIG.appVersion,
-                    message: 'File was uploaded, but the record update failed.',
-                    error: true
-                });
-
-                return false;
             }
-        });
+
+        })();
     });
 };
