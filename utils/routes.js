@@ -31,59 +31,9 @@ module.exports = function (app) {
         res.send('User-agent: *\nDisallow: /');
     });
 
-    //--- QA ---//
-    app.route('/api/admin/v1/utils/batch/qa/metadata')
-        .post(token.verify, Utils.batch_qa_metadata);
-
-    app.route('/api/admin/v1/utils/batch/reset/display_records')
-        .post(token.verify, Utils.batch_reset_display_records);
-
-    //--- Updates metadata ---//
-    // updates all metadata
-    /*
-    app.route('/api/admin/v1/utils/batch/update/metadata')
-        .post(token.verify, Utils.batch_update_metadata);
-    */
-    app.route('/api/admin/v1/utils/batch/update/metadata/collection')
-        .post(token.verify, Utils.batch_update_collection_metadata);
-
-    app.route('/api/v1/utils/metadata/update')
-        .put(token.verify, Utils.update_metadata_record);
-
-    //--- Re-index repository data ---//
     app.route('/api/admin/v1/utils/reindex')
         .post(token.verify, Utils.reindex);
 
-    //--- Delete tasks ---//
-    app.route('/api/admin/v1/utils/objects/delete')
-        .post(token.verify, Utils.delete_objects);
-
-    app.route('/api/admin/v1/utils/object/delete')
-        .post(token.verify, Utils.delete_object);
-
-    /*
-    app.route('/api/admin/v1/utils/objects/delete')
-        .post(token.verify, Utils.batch_delete_objects);
-    */
-    // temporary
-    /*
-    app.route('/api/admin/v1/utils/objects/uuids/delete')
-        .post(token.verify, Utils.get_sip_uuids);
-    */
-
-    //--- misc. tasks ---//
-    app.route('/api/admin/v1/utils/objects')
-        .get(token.verify, Utils.check_objects);
-
     app.route('/api/admin/v1/utils/objects/ids')
         .get(token.verify, Utils.get_archivesspace_ids);
-
-    app.route('/api/admin/v1/utils/objects/fix-compounds')
-        .get(token.verify, Utils.fix_compound_objects);
-
-    app.route('/api/admin/v1/utils/objects/fix-display-records')
-        .post(token.verify, Utils.fix_display_records);
-
-    app.route('/api/admin/v1/utils/confirm-dip')
-        .get(token.verify, Utils.confirm_dip_file);
 };
