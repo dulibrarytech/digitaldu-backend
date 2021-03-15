@@ -19,8 +19,8 @@
 const CONFIG = require('../config/config'),
     CLIENT = require('ssh2-sftp-client'),
     REQUEST = require('request'),
-    NIGHTMAREOBJ = require('nightmare'),
-    AUTOMATE = NIGHTMAREOBJ({show: CONFIG.nightmareStatus}),
+    // NIGHTMAREOBJ = require('nightmare'),
+    // AUTOMATE = NIGHTMAREOBJ({show: CONFIG.nightmareStatus}),
     FS = require('fs'),
     LOGGER = require('../libs/log4');
 
@@ -604,6 +604,7 @@ exports.delete_aip_request = function (obj, callback) {
  * @param obj
  * @param callback
  */
+/*
 exports.delete_aip_request_approval = function (obj, callback) {
 
     'use strict';
@@ -642,3 +643,5 @@ exports.delete_aip_request_approval = function (obj, callback) {
             callback(obj);
         });
 };
+
+ */
