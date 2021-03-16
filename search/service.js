@@ -63,7 +63,6 @@ exports.get_search_results = function (req, callback) {
         from: page,
         size: total_on_page,
         index: CONFIG.elasticSearchBackIndex,
-        type: 'data',
         q: q
     }).then(function (body) {
 
