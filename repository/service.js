@@ -266,7 +266,6 @@ exports.get_admin_objects = function (req, callback) {
         from: page,
         size: total_on_page,
         index: CONFIG.elasticSearchBackIndex,
-        type: 'data',
         sort: sort,
         body: query
     }).then(function (body) {

@@ -266,8 +266,9 @@ const objectsModule = (function () {
             html = '';
 
         $('#current-collection').prop('href', '/dashboard/collections/add?is_member_of_collection=' + is_member_of_collection);
-
-        if (data.total === 0) {
+        console.log(data);
+        console.log(data.total.value);
+        if (data.total.value === 0) {
             html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; No unpublished objects found for this collection.</strong></div>';
             domModule.html('#objects', html);
             return false;
