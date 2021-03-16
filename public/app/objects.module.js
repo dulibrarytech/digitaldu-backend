@@ -262,7 +262,7 @@ const objectsModule = (function () {
     obj.renderDisplayRecords = function (data) {
 
         let is_member_of_collection = helperModule.getParameterByName('pid'),
-            total_records = DOMPurify.sanitize(data.total),
+            total_records = DOMPurify.sanitize(data.total.value),
             html = '';
 
         $('#current-collection').prop('href', '/dashboard/collections/add?is_member_of_collection=' + is_member_of_collection);
