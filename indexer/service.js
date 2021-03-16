@@ -88,7 +88,6 @@ exports.create_repo_index = function (req, callback) {
 
         CLIENT.indices.putMapping({
             index: obj.index_name,
-            type: 'data',
             body: body
         }).then(function (result) {
 
