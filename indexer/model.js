@@ -99,7 +99,6 @@ exports.get_index_record = function (req, callback) {
 
             SERVICE.index_record({
                 index: elasticSearchIndex,
-                type: 'data',
                 id: record.pid.replace('codu:', ''),
                 body: record
             }, function (response) {
@@ -218,7 +217,6 @@ exports.index_records = function (req, callback) {
 
                     SERVICE.index_record({
                         index: index_name,
-                        type: 'data',
                         id: record.pid.replace('codu:', ''), // TODO: remove replace
                         body: record
                     }, function (response) {
@@ -312,7 +310,6 @@ exports.update_fragment = function (req, callback) {
 
     SERVICE.update_fragment({
         index: CONFIG.elasticSearchBackIndex,
-        type: 'data',
         id: sip_uuid,
         body: doc_fragment
     }, function (response) {
@@ -355,13 +352,12 @@ exports.reindex = function (req, callback) {
 
     SERVICE.reindex({
         body: {
-            "source": {
-                "index": CONFIG.elasticSearchBackIndex,
-                "type": 'data',
-                "query": query
+            'source': {
+                'index': CONFIG.elasticSearchBackIndex,
+                'query': query
             },
-            "dest": {
-                "index": CONFIG.elasticSearchFrontIndex
+            'dest': {
+                'index': CONFIG.elasticSearchFrontIndex
             }
         }
     }, function (response) {
@@ -394,7 +390,6 @@ exports.unindex_record = function (req, callback) {
 
     SERVICE.unindex_record({
         index: CONFIG.elasticSearchFrontIndex,
-        type: 'data',
         id: pid
     }, function (response) {
 
@@ -436,7 +431,6 @@ exports.unindex_admin_record = function (req, callback) {
 
     SERVICE.unindex_record({
         index: CONFIG.elasticSearchBackIndex,
-        type: 'data',
         id: pid.replace('codu:', '')
     }, function (response) {
 
@@ -561,7 +555,6 @@ exports.republish_record = function (req, callback) {
 
                     SERVICE.index_record({
                         index: index_name,
-                        type: 'data',
                         id: record.pid,
                         body: record
                     }, function (response) {
