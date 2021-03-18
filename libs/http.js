@@ -302,4 +302,47 @@ exports.delete = function(request_obj) {
  */
 exports.head = function(request_obj) {
 
+    if (request_obj === undefined) {
+        LOGGER.module().error('ERROR: [HTTP libs (head)] Missing request object.');
+        return false;
+    }
+
+    async function head() {
+
+        let url = serialize_params(request_obj);
+
+        if (request_obj.timeout === undefined) {
+            request_obj.timeout = TIMEOUT;
+        }
+
+        try {
+
+            let response = await HTTP.head(url);
+
+            if (response.status === 200) {
+
+                return {
+                    error: false
+                };
+
+            } else {
+
+                LOGGER.module().error('ERROR: [HTTP libs (head)] HTTP HEAD request failed.');
+
+                return {
+                    error: true
+                };
+            }
+
+        } catch (error) {
+
+            LOGGER.module().error('ERROR: [HTTP libs (head)] HTTP HEAD request failed.');
+
+            return {
+                error: true
+            };
+        }
+    }
+
+    return head();
 };
