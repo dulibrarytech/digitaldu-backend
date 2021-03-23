@@ -19,6 +19,7 @@
 const CONFIG = require('../config/config'),
     CLIENT = require('ssh2-sftp-client'),
     REQUEST = require('request'),
+    HTTP = require('axios'),
     FS = require('fs'),
     LOGGER = require('../libs/log4');
 
@@ -30,39 +31,42 @@ exports.ping_api = function (callback) {
 
     'use strict';
 
-    let apiUrl = CONFIG.archivematicaApi + 'administration/dips/atom/levels/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
+    let endpoint = CONFIG.archivematicaApi + 'administration/dips/atom/levels/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
 
-    REQUEST.get({
-        url: apiUrl,
-        timeout: 25000
-    }, function (error, httpResponse, body) {
+    (async() => {
 
-        if (error) {
+        try {
 
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_api)] unable to ping archivematica ' + error);
-
-            callback({
-                error: true,
-                status: 'down',
-                message: error
+            let response = await HTTP.get(endpoint, {
+                timeout: 25000,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             });
 
-            return false;
-        }
+            if (response.status !== 200) {
 
-        if (httpResponse.statusCode === 200) {
+                LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_api)] unable to ping archivematica.');
 
-            callback({
-                error: false,
-                status: 'up',
-                message: 'Archivematica service is available'
-            });
+                callback({
+                    error: true,
+                    status: 'down',
+                    message: error
+                });
 
-            return false;
+            } else if (response.status === 200) {
 
-        } else {
+                callback({
+                    error: false,
+                    status: 'up',
+                    message: 'Archivematica service is available'
+                });
 
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_api)] unable to ping archivematica ' + body);
+            }
+
+        } catch (error) {
+
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_api)] unable to ping archivematica. Request failed: ' + error);
 
             callback({
                 error: true,
@@ -70,7 +74,10 @@ exports.ping_api = function (callback) {
                 message: 'ERROR: [/libs/archivematica lib (ping_api)] Unable to ping archivematica'
             });
         }
-    });
+
+        return false;
+
+    })();
 };
 
 /**
