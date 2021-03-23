@@ -136,55 +136,47 @@ exports.get_tn = function (req, callback) {
         return false;
     }
 
-    let apiUrl = CONFIG.tnService + 'datastream/' + uuid + '/tn?key=' + CONFIG.tnServiceApiKey;
+    (async () => {
 
-    REQUEST.get({
-        url: apiUrl,
-        encoding: null,
-        timeout: 45000,
-        headers: {
-            'x-api-key': CONFIG.tnServiceApiKey
-        }
-    }, function (error, httpResponse, body) {
+        try {
 
-        let missing_tn = '/images/image-tn.png';
-
-        if (error) {
-
-            LOGGER.module().error('ERROR: [/libs/tn-service lib (get_tn)] Unable to get thumbnail from TN service' + error);
-
-            callback({
-                error: true,
-                status: 200,
-                data: missing_tn
+            let endpoint = CONFIG.tnService + 'datastream/' + uuid + '/tn?key=' + CONFIG.tnServiceApiKey;
+            let response = await HTTP.get(endpoint, {
+                timeout: 45000,
+                responseType: 'arraybuffer',
+                headers: {
+                    'x-api-key': CONFIG.tnServiceApiKey
+                }
             });
 
+            if (response.status !== 200) {
+
+                LOGGER.module().error('ERROR: [/libs/tn-service lib (get_tn)] Unable to get thumbnail from TN service.');
+
+                let missing_tn = '/images/image-tn.png';
+
+                callback({
+                    error: true,
+                    status: 200,
+                    data: missing_tn
+                });
+
+            } else if (response.status === 200) {
+
+                callback({
+                    error: false,
+                    status: 200,
+                    data: response.data
+                });
+            }
+
             return false;
+
+        } catch(error) {
+            LOGGER.module().error('ERROR: [/libs/tn-service lib (get_tn)] Unable to get thumbnail from TN service. Request failed: ' + error);
         }
 
-        if (httpResponse.statusCode === 200) {
-
-            callback({
-                error: false,
-                status: 200,
-                data: body
-            });
-
-            return false;
-
-        } else {
-
-            LOGGER.module().error('ERROR: [/libs/tn-service lib (get_tn)] Unable to get thumbnail from TN service ' + httpResponse.statusCode + '/' + body);
-
-            callback({
-                error: true,
-                status: 200,
-                data: missing_tn
-            });
-
-            return false;
-        }
-    });
+    })();
 };
 
 /**
