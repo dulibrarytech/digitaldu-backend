@@ -19,8 +19,6 @@
 const CONFIG = require('../config/config'),
     CLIENT = require('ssh2-sftp-client'),
     REQUEST = require('request'),
-    // NIGHTMAREOBJ = require('nightmare'),
-    // AUTOMATE = NIGHTMAREOBJ({show: CONFIG.nightmareStatus}),
     FS = require('fs'),
     LOGGER = require('../libs/log4');
 
@@ -598,50 +596,3 @@ exports.delete_aip_request = function (obj, callback) {
         }
     });
 };
-
-/**
- * Approves delete request
- * @param obj
- * @param callback
- */
-/*
-exports.delete_aip_request_approval = function (obj, callback) {
-
-    'use strict';
-
-    const archivematica_storage_dashboard_login = CONFIG.archivematicaStorageDashboardLogin;
-    const archivematica_storage_dashboard_username = CONFIG.archivematicaStorageDashboardUsername;
-    const archivematica_storage_dashboard_password = CONFIG.archivematicaStorageDashboardPassword;
-    const archivematcia_storage_dashboard_packages = CONFIG.archivematicaStorageDashboardPackages;
-    const archivematica_storage_dashboard_logout = CONFIG.archivematicaStorageDashboardLogout;
-
-    console.log('#id_' + obj.delete_id + '-status_reason');
-
-    AUTOMATE
-        .goto(archivematica_storage_dashboard_login)
-        .insert('#id_username', archivematica_storage_dashboard_username)
-        .insert('#id_password', archivematica_storage_dashboard_password)
-        .click('.btn-primary')
-        .wait(5000)
-        .goto(archivematcia_storage_dashboard_packages)
-        .wait(3000)
-        .insert('#id_' + obj.delete_id + '-status_reason', obj.delete_reason)
-        .click('input[name="approve"]')
-        .wait('.alert-success')
-        .wait(3000)
-        .goto(archivematica_storage_dashboard_logout)
-        .wait(2000)
-        // .end()
-        .then(function() {
-            LOGGER.module().info('INFO: [/libs/archivematica lib (delete_aip)] aip deleted (' + obj.pid + ')');
-            obj.set_delete = true;
-            callback(obj);
-        })
-        .catch(function(error)  {
-            LOGGER.module().error('ERROR: [/libs/delete_aip lib (delete_from_dashboard)] unable to delete aip ' + error);
-            obj.set_delete = false;
-            callback(obj);
-        });
-};
-
- */
