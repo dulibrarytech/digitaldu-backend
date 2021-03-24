@@ -38,7 +38,7 @@ exports.ping_api = function (callback) {
         try {
 
             let response = await HTTP.get(endpoint, {
-                timeout: 25000,
+                timeout: 35000,
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -88,38 +88,44 @@ exports.ping_storage_api = function (callback) {
 
     'use strict';
 
-    let apiUrl = CONFIG.archivematicaStorageApi + 'v2/file/?username=' + CONFIG.archivematicaStorageUsername + '&api_key=' + CONFIG.archivematicaStorageApiKey;
+    let endpoint = CONFIG.archivematicaStorageApi + 'v2/file/?username=' + CONFIG.archivematicaStorageUsername + '&api_key=' + CONFIG.archivematicaStorageApiKey;
 
-    REQUEST.get({
-        url: apiUrl,
-        timeout: 25000
-    }, function (error, httpResponse, body) {
+    (async() => {
 
-        if (error) {
+        try {
 
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_storage_api)] unable to ping archivematica storage api ' + error);
-
-            callback({
-                error: true,
-                status: 'down',
-                message: error
+            let response = await HTTP.get(endpoint, {
+                timeout: 35000,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             });
 
+            if (response.status !== 200) {
+
+                LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_storage_api)] unable to ping archivematica storage api.');
+
+                callback({
+                    error: true,
+                    status: 'down',
+                    message: error
+                });
+
+            } else if (response.status === 200) {
+
+                callback({
+                    error: false,
+                    status: 'up',
+                    message: 'Archivematica storage api service is available'
+                });
+
+            }
+
             return false;
-        }
 
-        if (httpResponse.statusCode === 200) {
-            callback({
-                error: false,
-                status: 'up',
-                message: 'Archivematica storage api service is available'
-            });
+        } catch (error) {
 
-            return false;
-
-        } else {
-
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_storage_api)] unable to ping archivematica storage api ' + body);
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_storage_api)] unable to ping archivematica storage api. Request failed: ' + error);
 
             callback({
                 error: true,
@@ -127,7 +133,8 @@ exports.ping_storage_api = function (callback) {
                 message: 'ERROR: [/libs/archivematica lib (ping_storage_api)] Unable to ping archivematica storage api'
             });
         }
-    });
+
+    })();
 };
 
 /**
