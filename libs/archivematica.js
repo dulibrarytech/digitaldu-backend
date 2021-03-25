@@ -402,56 +402,63 @@ exports.get_dip_path = function (uuid, callback) {
 
     'use strict';
 
-    let apiUrl = CONFIG.archivematicaStorageApi + 'v2/file/' + uuid + '/?username=' + CONFIG.archivematicaStorageUsername + '&api_key=' + CONFIG.archivematicaStorageApiKey;
+    let endpoint = CONFIG.archivematicaStorageApi + 'v2/file/' + uuid + '/?username=' + CONFIG.archivematicaStorageUsername + '&api_key=' + CONFIG.archivematicaStorageApiKey;
 
-    REQUEST.get({
-        url: apiUrl,
-        timeout: 55000
-    }, function (error, httpResponse, body) {
+    (async () => {
 
-        if (error) {
+        try {
 
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_dip_path)] unable to get dip path ' + error);
+            let response = await HTTP.get(endpoint, {
+                timeout: 35000,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.status !== 200) {
+
+                LOGGER.module().error('ERROR: [/libs/archivematica lib (get_dip_path)] unable to get dip path.');
+
+                callback({
+                    error: true,
+                    message: 'ERROR: [/libs/archivematica lib (get_dip_path)] unable to get dip path.'
+                });
+
+            } else if (response.status === 200) {
+
+                let json = response.data,
+                    dipuuidArr = json.related_packages[0].split('/');
+
+                let uuid = dipuuidArr.filter(function (result) {
+                    return result;
+                });
+
+                let dipuuid = uuid[uuid.length - 1],
+                    tmp = dipuuid.replace(/-/g, ''),
+                    tmpuuid = tmp.match(/.{1,4}/g),
+                    path = tmpuuid.join('/');
+
+                let folderArr = json.current_path.split('/'),
+                    folderTmp = folderArr[folderArr.length - 1],
+                    folder = folderTmp.replace('.7z', ''),
+                    dipPath = path + '/' + folder;
+
+                callback(dipPath);
+            }
+
+            return false;
+
+        } catch (error) {
+
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_dip_path)] unable to get dip path. Request failed: ' + error);
 
             callback({
                 error: true,
-                message: error
+                message: 'ERROR: [/libs/archivematica lib (get_dip_path)] unable to get dip path. Request failed: ' + error
             });
-
-            return false;
         }
 
-        if (httpResponse.statusCode !== 200) {
-
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_dip_path)] unable to get dip path ' + httpResponse.statusCode + '/' + body);
-
-            callback({
-                error: true,
-                message: 'ERROR: Unable to get dip path'
-            });
-
-            return false;
-        }
-
-        let json = JSON.parse(body),
-            dipuuidArr = json.related_packages[0].split('/');
-
-        let uuid = dipuuidArr.filter(function (result) {
-            return result;
-        });
-
-        let dipuuid = uuid[uuid.length - 1],
-            tmp = dipuuid.replace(/-/g, ''),
-            tmpuuid = tmp.match(/.{1,4}/g),
-            path = tmpuuid.join('/');
-
-        let folderArr = json.current_path.split('/'),
-            folderTmp = folderArr[folderArr.length - 1],
-            folder = folderTmp.replace('.7z', ''),
-            dipPath = path + '/' + folder;
-
-        callback(dipPath);
-    });
+    })();
 };
 
 /**
