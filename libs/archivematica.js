@@ -211,8 +211,14 @@ exports.start_tranfser = function (transferObj, callback) {
             });
 
             if (response.status !== 200) {
+
                 LOGGER.module().fatal('FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer.');
-                callback(response.error = true);
+
+                callback({
+                    error: true,
+                    message: 'FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer.'
+                });
+
             } else if (response.status === 200) {
                 callback(JSON.stringify(response.data));
             }
@@ -332,7 +338,6 @@ exports.get_transfer_status = function (uuid, callback) {
                 error: true,
                 message: 'ERROR: [/libs/archivematica lib (get_transfer_status)] Unable to get transfer status'
             });
-
         }
 
     })();
@@ -347,33 +352,45 @@ exports.get_ingest_status = function (uuid, callback) {
 
     'use strict';
 
-    let apiUrl = CONFIG.archivematicaApi + 'ingest/status/' + uuid + '/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
+    let endpoint = CONFIG.archivematicaApi + 'ingest/status/' + uuid + '/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
 
-    REQUEST.get({
-        url: apiUrl,
-        timeout: 25000
-    }, function (error, httpResponse, body) {
+    (async () => {
 
-        if (error) {
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_ingest_status)] unable to get ingest status ' + error);
+        try {
+
+            let response = await HTTP.get(endpoint, {
+                timeout: 35000,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.status !== 200) {
+
+                LOGGER.module().error('ERROR: [/libs/archivematica lib (get_ingest_status)] unable to get ingest status.');
+
+                callback({
+                    error: true,
+                    message: 'ERROR: [/libs/archivematica lib (get_ingest_status)] unable to get ingest status.'
+                });
+
+            } else if (response.status === 200) {
+                callback(JSON.stringify(response.data));
+            }
+
             return false;
-        }
 
-        if (httpResponse.statusCode === 200) {
-            callback(body);
-            return false;
-        } else {
+        } catch (error) {
 
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_ingest_status)] unable to get ingest status ' + httpResponse.statusCode + '/' + error);
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_ingest_status)] unable to get ingest status. Request failed: ' + error);
 
             callback({
                 error: true,
-                message: 'ERROR: [/libs/archivematica lib (get_ingest_status)] unable to get ingest status ' + httpResponse.statusCode + '/' + error
+                message: 'ERROR: [/libs/archivematica lib (get_ingest_status)] unable to get ingest status. Request failed: ' + error
             });
-
-            return false;
         }
-    });
+
+    })();
 };
 
 /**
