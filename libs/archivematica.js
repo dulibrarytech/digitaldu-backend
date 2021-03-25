@@ -204,7 +204,7 @@ exports.start_tranfser = function (transferObj, callback) {
             };
 
             let response = await HTTP.post(endpoint, QS.stringify(data), {
-                timeout: 45000,
+                timeout: 35000,
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
                 }
@@ -241,42 +241,50 @@ exports.approve_transfer = function (transferFolder, callback) {
 
     'use strict';
 
-    let apiUrl = CONFIG.archivematicaApi + 'transfer/approve?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
+    let endpoint = CONFIG.archivematicaApi + 'transfer/approve?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
 
-    REQUEST.post({
-        url: apiUrl,
-        form: {
-            'type': 'standard',
-            'directory': transferFolder
-        },
-        timeout: 55000
-    }, function (error, httpResponse, body) {
+    (async () => {
 
-        if (error) {
+        try {
 
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (approve_transfer)] unable to approve transfer ' + error);
+            let data = {
+                'type': 'standard',
+                'directory': transferFolder
+            };
+
+            let response = await HTTP.post(endpoint, QS.stringify(data), {
+                timeout: 35000,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            });
+
+            if (response.status !== 200) {
+
+                LOGGER.module().error('ERROR: [/libs/archivematica lib (approve_transfer)] unable to approve transfer.');
+
+                callback({
+                    error: true,
+                    message: 'ERROR: [/libs/archivematica lib (approve_transfer)] unable to approve transfer.'
+                });
+
+            } else if (response.status === 200) {
+                callback(JSON.stringify(response.data));
+            }
+
+            return false;
+
+        } catch (error) {
+
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (approve_transfer)] unable to approve transfer. Request failed: ' + error);
 
             callback({
                 error: true,
-                message: error
-            });
-
-            return false;
-        }
-
-        if (httpResponse.statusCode === 200) {
-            callback(body);
-            return false;
-        } else {
-
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (approve_transfer)] unable to approve transfer ' + httpResponse.statusCode + '/' + body);
-
-            callback({
-                error: true,
-                message: 'ERROR: [/libs/archivematica lib (approve_transfer)] Unable to approve transfer'
+                message: 'ERROR: [/libs/archivematica lib (approve_transfer)] unable to approve transfer. Request failed: ' + error
             });
         }
-    });
+
+    })();
 };
 
 /**
@@ -328,34 +336,6 @@ exports.get_transfer_status = function (uuid, callback) {
         }
 
     })();
-
-    /*
-    REQUEST.get({
-        url: apiUrl,
-        timeout: 25000
-    }, function (error, httpResponse, body) {
-
-        if (error) {
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_transfer_status)] unable to get transfer status ' + error);
-            return false;
-        }
-
-        if (httpResponse.statusCode === 200) {
-            callback(body);
-            return false;
-
-        } else {
-
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_transfer_status)] unable to get transfer status ' + httpResponse.statusCode + '/' + body);
-
-            callback({
-                error: true,
-                message: 'ERROR: [/libs/archivematica lib (get_transfer_status)] Unable to get transfer status'
-            });
-        }
-    });
-
-     */
 };
 
 /**
