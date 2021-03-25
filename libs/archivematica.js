@@ -21,6 +21,7 @@ const CONFIG = require('../config/config'),
     REQUEST = require('request'),
     HTTP = require('axios'),
     FS = require('fs'),
+    QS = require('querystring'),
     LOGGER = require('../libs/log4');
 
 /**
@@ -33,7 +34,7 @@ exports.ping_api = function (callback) {
 
     let endpoint = CONFIG.archivematicaApi + 'administration/dips/atom/levels/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
 
-    (async() => {
+    (async () => {
 
         try {
 
@@ -90,7 +91,7 @@ exports.ping_storage_api = function (callback) {
 
     let endpoint = CONFIG.archivematicaStorageApi + 'v2/file/?username=' + CONFIG.archivematicaStorageUsername + '&api_key=' + CONFIG.archivematicaStorageApiKey;
 
-    (async() => {
+    (async () => {
 
         try {
 
@@ -188,39 +189,47 @@ exports.start_tranfser = function (transferObj, callback) {
         location = transferSource + ':' + sftpPath + '/' + transferObj.is_member_of_collection + '/' + transferObj.object,
         buffer = new Buffer(location),
         encodedLocation = buffer.toString('base64'),
-        apiUrl = CONFIG.archivematicaApi + 'transfer/start_transfer/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
+        endpoint = CONFIG.archivematicaApi + 'transfer/start_transfer/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
 
-    REQUEST.post({
-        url: apiUrl,
-        form: {
-            'name': transferObj.is_member_of_collection + '_' + transferObj.object + '_transfer',
-            'type': 'standard',
-            'accession': '',
-            'paths[]': encodedLocation,
-            'rows_ids[]': '[""]'
-        }
-    }, function (error, httpResponse, body) {
+    (async () => {
 
-        if (error) {
-            LOGGER.module().fatal('FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer ' + error);
+        try {
+
+            let data = {
+                'name': transferObj.is_member_of_collection + '_' + transferObj.object + '_transfer',
+                'type': 'standard',
+                'accession': '',
+                'paths[]': encodedLocation,
+                'rows_ids[]': '[""]'
+            };
+
+            let response = await HTTP.post(endpoint, QS.stringify(data), {
+                timeout: 45000,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            });
+
+            if (response.status !== 200) {
+                LOGGER.module().fatal('FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer.');
+                callback(response.error = true);
+            } else if (response.status === 200) {
+                callback(JSON.stringify(response.data));
+            }
+
             return false;
-        }
 
-        if (httpResponse.statusCode === 200) {
-            callback(body);
-            return false;
-        } else {
+        } catch (error) {
 
-            LOGGER.module().fatal('FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer ' + httpResponse.statusCode + '/' + error);
+            LOGGER.module().fatal('FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer. Request failed: ' + error);
 
             callback({
                 error: true,
-                message: 'FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer ' + httpResponse.statusCode + '/' + error
+                message: 'FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer. Request failed: ' + error
             });
-
-            return false;
         }
-    });
+
+    })();
 };
 
 /**
@@ -279,8 +288,48 @@ exports.get_transfer_status = function (uuid, callback) {
 
     'use strict';
 
-    let apiUrl = CONFIG.archivematicaApi + 'transfer/status/' + uuid + '/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
+    let endpoint = CONFIG.archivematicaApi + 'transfer/status/' + uuid + '/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
 
+    (async () => {
+
+        try {
+
+            let response = await HTTP.get(endpoint, {
+                timeout: 35000,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.status !== 200) {
+
+                LOGGER.module().error('ERROR: [/libs/archivematica lib (get_transfer_status)] unable to get transfer status ' + error);
+
+                callback({
+                    error: true,
+                    message: 'ERROR: [/libs/archivematica lib (get_transfer_status)] Unable to get transfer status'
+                });
+
+            } else if (response.status === 200) {
+                callback(JSON.stringify(response.data));
+            }
+
+            return false;
+
+        } catch (error) {
+
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_transfer_status)] unable to get transfer status. Request failed:  ' + error);
+
+            callback({
+                error: true,
+                message: 'ERROR: [/libs/archivematica lib (get_transfer_status)] Unable to get transfer status'
+            });
+
+        }
+
+    })();
+
+    /*
     REQUEST.get({
         url: apiUrl,
         timeout: 25000
@@ -305,6 +354,8 @@ exports.get_transfer_status = function (uuid, callback) {
             });
         }
     });
+
+     */
 };
 
 /**
@@ -511,7 +562,7 @@ exports.download_aip = function (sip_uuid, callback) {
             return false;
         }
 
-        FS.writeFile('./tmp/' + sip_uuid + '.7z', body, function(error) {
+        FS.writeFile('./tmp/' + sip_uuid + '.7z', body, function (error) {
 
             if (error) {
 
