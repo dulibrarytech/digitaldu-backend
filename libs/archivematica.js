@@ -519,7 +519,141 @@ exports.clear_ingest = function (uuid) {
     })();
 };
 
-/** TODO: refactor.  make use of shell.js and curl and run as OS process
+/**
+ * Generates a delete request
+ * @param obj
+ * @param callback
+ */
+exports.delete_aip_request = function (obj, callback) {
+
+    'use strict';
+
+    let endpoint = CONFIG.archivematicaStorageApi + 'v2/file/' + obj.pid + '/delete_aip/?username=' + CONFIG.archivematicaStorageUsername + '&api_key=' + CONFIG.archivematicaStorageApiKey;
+
+    (async () => {
+
+        try {
+
+            let data = {
+                'event_reason': obj.delete_reason,
+                'pipeline': CONFIG.archivematicaPipeline,
+                'user_id': CONFIG.archivematicaUserId,
+                'user_email': CONFIG.archivematicaUserEmail
+            };
+
+            let response = await HTTP.post(endpoint, QS.stringify(data), {
+                timeout: 35000,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            });
+
+            if (response.status === 200) {
+
+
+            } else if (response.status === 202) {
+
+                LOGGER.module().info('INFO: [/libs/archivematica lib (delete_aip)] delete aip (' + obj.pid + ') request succeeded.');
+
+                callback({
+                    error: false,
+                    message: 'INFO: [/libs/archivematica lib (delete_aip)] delete aip (' + obj.pid + ') request succeeded.',
+                    data: JSON.stringify(response.data)
+                });
+
+            } else {
+
+                LOGGER.module().error('ERROR: [/libs/archivematica lib (delete_aip)] unable to delete aip - (' + obj.pid + ')');
+
+                callback({
+                    error: true,
+                    message: 'ERROR: [/libs/archivematica lib (delete_aip)] unable to delete aip - (' + obj.pid + ')'
+                });
+            }
+
+            return false;
+
+        } catch (error) {
+
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (delete_aip)] unable to delete aip. Request failed: ' + error);
+
+            callback({
+                error: true,
+                message: 'ERROR: [/libs/archivematica lib (delete_aip)] unable to delete aip. Request failed: ' + error
+            });
+        }
+
+    })();
+
+    /*
+    REQUEST.post({
+        url: apiUrl,
+        json: {
+            'event_reason': obj.delete_reason,
+            'pipeline': CONFIG.archivematicaPipeline,
+            'user_id': CONFIG.archivematicaUserId,
+            'user_email': CONFIG.archivematicaUserEmail
+        },
+        timeout: 45000
+    }, function (error, httpResponse, body) {
+
+        if (error) {
+
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (delete_aip)] unable to delete aip - (' + obj.pid + ') - ' + error);
+
+            callback({
+                error: true,
+                message: error
+            });
+
+            return false;
+        }
+
+        if (httpResponse.statusCode === 202) {
+
+            LOGGER.module().info('INFO: [/libs/archivematica lib (delete_aip)] delete aip (' + obj.pid + ') request succeeded.');
+
+            callback({
+                error: false,
+                message: '',
+                data: body
+            });
+
+            return false;
+
+        } else if (httpResponse.statusCode === 200) {
+
+            LOGGER.module().info('INFO: [/libs/archivematica lib (delete_aip)] A deletion request already exists for this AIP (' + obj.pid + ').');
+
+            if (body.message === 'A deletion request already exists for this AIP.') {
+                callback({
+                    error: false,
+                    message: body.message,
+                    data: {
+                        id: 0
+                    }
+                });
+            }
+
+            return false;
+
+        } else {
+
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (delete_aip)] unable to delete aip ' + httpResponse.statusCode + '/' + body);
+
+            callback({
+                error: true,
+                message: 'ERROR: [/libs/archivematica lib (delete_aip)] Unable to delete aip'
+            });
+
+            return false;
+        }
+    });
+
+     */
+};
+
+/** TODO: REMOVE
  * Downloads AIP from archivematica
  * @param sip_uuid
  * @param callback
@@ -585,81 +719,5 @@ exports.download_aip = function (sip_uuid, callback) {
 
             }, 1000);
         });
-    });
-};
-
-/**
- * Generates a delete request
- * @param obj
- * @param callback
- */
-exports.delete_aip_request = function (obj, callback) {
-
-    'use strict';
-
-    let apiUrl = CONFIG.archivematicaStorageApi + 'v2/file/' + obj.pid + '/delete_aip/?username=' + CONFIG.archivematicaStorageUsername + '&api_key=' + CONFIG.archivematicaStorageApiKey;
-
-    REQUEST.post({
-        url: apiUrl,
-        json: {
-            'event_reason': obj.delete_reason,
-            'pipeline': CONFIG.archivematicaPipeline,
-            'user_id': CONFIG.archivematicaUserId,
-            'user_email': CONFIG.archivematicaUserEmail
-        },
-        timeout: 45000
-    }, function (error, httpResponse, body) {
-
-        if (error) {
-
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (delete_aip)] unable to delete aip - (' + obj.pid + ') - ' + error);
-
-            callback({
-                error: true,
-                message: error
-            });
-
-            return false;
-        }
-
-        if (httpResponse.statusCode === 202) {
-
-            LOGGER.module().info('INFO: [/libs/archivematica lib (delete_aip)] delete aip (' + obj.pid + ') request succeeded.');
-
-            callback({
-                error: false,
-                message: '',
-                data: body
-            });
-
-            return false;
-
-        } else if (httpResponse.statusCode === 200) {
-
-            LOGGER.module().info('INFO: [/libs/archivematica lib (delete_aip)] A deletion request already exists for this AIP (' + obj.pid + ').');
-
-            if (body.message === 'A deletion request already exists for this AIP.') {
-                callback({
-                    error: false,
-                    message: body.message,
-                    data: {
-                        id: 0
-                    }
-                });
-            }
-
-            return false;
-
-        } else {
-
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (delete_aip)] unable to delete aip ' + httpResponse.statusCode + '/' + body);
-
-            callback({
-                error: true,
-                message: 'ERROR: [/libs/archivematica lib (delete_aip)] Unable to delete aip'
-            });
-
-            return false;
-        }
     });
 };
