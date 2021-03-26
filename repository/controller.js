@@ -40,23 +40,6 @@ exports.update_thumbnail = function (req, res) {
     });
 };
 
-/*
-// TODO: move to import
-exports.update_metadata_record = function (req, res) {
-    REPO.update_metadata_record (req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-*/
-/*
-// TODO: move to import
-exports.update_collection_metadata_record = function (req, res) {
-    REPO.update_collection_metadata_record (req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-*/
-
 /* imports object(s) for administrators */
 exports.get_import_admin_objects = function (req, res) {
     REPO.get_import_admin_objects(req, function (data) {

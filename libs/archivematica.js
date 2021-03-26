@@ -19,7 +19,9 @@
 const CONFIG = require('../config/config'),
     CLIENT = require('ssh2-sftp-client'),
     REQUEST = require('request'),
+    HTTP = require('axios'),
     FS = require('fs'),
+    QS = require('querystring'),
     LOGGER = require('../libs/log4');
 
 /**
@@ -30,39 +32,42 @@ exports.ping_api = function (callback) {
 
     'use strict';
 
-    let apiUrl = CONFIG.archivematicaApi + 'administration/dips/atom/levels/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
+    let endpoint = CONFIG.archivematicaApi + 'administration/dips/atom/levels/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
 
-    REQUEST.get({
-        url: apiUrl,
-        timeout: 25000
-    }, function (error, httpResponse, body) {
+    (async () => {
 
-        if (error) {
+        try {
 
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_api)] unable to ping archivematica ' + error);
-
-            callback({
-                error: true,
-                status: 'down',
-                message: error
+            let response = await HTTP.get(endpoint, {
+                timeout: 35000,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             });
 
-            return false;
-        }
+            if (response.status !== 200) {
 
-        if (httpResponse.statusCode === 200) {
+                LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_api)] unable to ping archivematica.');
 
-            callback({
-                error: false,
-                status: 'up',
-                message: 'Archivematica service is available'
-            });
+                callback({
+                    error: true,
+                    status: 'down',
+                    message: error
+                });
 
-            return false;
+            } else if (response.status === 200) {
 
-        } else {
+                callback({
+                    error: false,
+                    status: 'up',
+                    message: 'Archivematica service is available'
+                });
 
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_api)] unable to ping archivematica ' + body);
+            }
+
+        } catch (error) {
+
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_api)] unable to ping archivematica. Request failed: ' + error);
 
             callback({
                 error: true,
@@ -70,7 +75,10 @@ exports.ping_api = function (callback) {
                 message: 'ERROR: [/libs/archivematica lib (ping_api)] Unable to ping archivematica'
             });
         }
-    });
+
+        return false;
+
+    })();
 };
 
 /**
@@ -81,38 +89,44 @@ exports.ping_storage_api = function (callback) {
 
     'use strict';
 
-    let apiUrl = CONFIG.archivematicaStorageApi + 'v2/file/?username=' + CONFIG.archivematicaStorageUsername + '&api_key=' + CONFIG.archivematicaStorageApiKey;
+    let endpoint = CONFIG.archivematicaStorageApi + 'v2/file/?username=' + CONFIG.archivematicaStorageUsername + '&api_key=' + CONFIG.archivematicaStorageApiKey;
 
-    REQUEST.get({
-        url: apiUrl,
-        timeout: 25000
-    }, function (error, httpResponse, body) {
+    (async () => {
 
-        if (error) {
+        try {
 
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_storage_api)] unable to ping archivematica storage api ' + error);
-
-            callback({
-                error: true,
-                status: 'down',
-                message: error
+            let response = await HTTP.get(endpoint, {
+                timeout: 35000,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             });
 
+            if (response.status !== 200) {
+
+                LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_storage_api)] unable to ping archivematica storage api.');
+
+                callback({
+                    error: true,
+                    status: 'down',
+                    message: error
+                });
+
+            } else if (response.status === 200) {
+
+                callback({
+                    error: false,
+                    status: 'up',
+                    message: 'Archivematica storage api service is available'
+                });
+
+            }
+
             return false;
-        }
 
-        if (httpResponse.statusCode === 200) {
-            callback({
-                error: false,
-                status: 'up',
-                message: 'Archivematica storage api service is available'
-            });
+        } catch (error) {
 
-            return false;
-
-        } else {
-
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_storage_api)] unable to ping archivematica storage api ' + body);
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_storage_api)] unable to ping archivematica storage api. Request failed: ' + error);
 
             callback({
                 error: true,
@@ -120,7 +134,8 @@ exports.ping_storage_api = function (callback) {
                 message: 'ERROR: [/libs/archivematica lib (ping_storage_api)] Unable to ping archivematica storage api'
             });
         }
-    });
+
+    })();
 };
 
 /**
@@ -174,39 +189,53 @@ exports.start_tranfser = function (transferObj, callback) {
         location = transferSource + ':' + sftpPath + '/' + transferObj.is_member_of_collection + '/' + transferObj.object,
         buffer = new Buffer(location),
         encodedLocation = buffer.toString('base64'),
-        apiUrl = CONFIG.archivematicaApi + 'transfer/start_transfer/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
+        endpoint = CONFIG.archivematicaApi + 'transfer/start_transfer/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
 
-    REQUEST.post({
-        url: apiUrl,
-        form: {
-            'name': transferObj.is_member_of_collection + '_' + transferObj.object + '_transfer',
-            'type': 'standard',
-            'accession': '',
-            'paths[]': encodedLocation,
-            'rows_ids[]': '[""]'
-        }
-    }, function (error, httpResponse, body) {
+    (async () => {
 
-        if (error) {
-            LOGGER.module().fatal('FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer ' + error);
+        try {
+
+            let data = {
+                'name': transferObj.is_member_of_collection + '_' + transferObj.object + '_transfer',
+                'type': 'standard',
+                'accession': '',
+                'paths[]': encodedLocation,
+                'rows_ids[]': '[""]'
+            };
+
+            let response = await HTTP.post(endpoint, QS.stringify(data), {
+                timeout: 35000,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            });
+
+            if (response.status !== 200) {
+
+                LOGGER.module().fatal('FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer.');
+
+                callback({
+                    error: true,
+                    message: 'FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer.'
+                });
+
+            } else if (response.status === 200) {
+                callback(JSON.stringify(response.data));
+            }
+
             return false;
-        }
 
-        if (httpResponse.statusCode === 200) {
-            callback(body);
-            return false;
-        } else {
+        } catch (error) {
 
-            LOGGER.module().fatal('FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer ' + httpResponse.statusCode + '/' + error);
+            LOGGER.module().fatal('FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer. Request failed: ' + error);
 
             callback({
                 error: true,
-                message: 'FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer ' + httpResponse.statusCode + '/' + error
+                message: 'FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer. Request failed: ' + error
             });
-
-            return false;
         }
-    });
+
+    })();
 };
 
 /**
@@ -218,42 +247,50 @@ exports.approve_transfer = function (transferFolder, callback) {
 
     'use strict';
 
-    let apiUrl = CONFIG.archivematicaApi + 'transfer/approve?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
+    let endpoint = CONFIG.archivematicaApi + 'transfer/approve?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
 
-    REQUEST.post({
-        url: apiUrl,
-        form: {
-            'type': 'standard',
-            'directory': transferFolder
-        },
-        timeout: 55000
-    }, function (error, httpResponse, body) {
+    (async () => {
 
-        if (error) {
+        try {
 
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (approve_transfer)] unable to approve transfer ' + error);
+            let data = {
+                'type': 'standard',
+                'directory': transferFolder
+            };
+
+            let response = await HTTP.post(endpoint, QS.stringify(data), {
+                timeout: 35000,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            });
+
+            if (response.status !== 200) {
+
+                LOGGER.module().error('ERROR: [/libs/archivematica lib (approve_transfer)] unable to approve transfer.');
+
+                callback({
+                    error: true,
+                    message: 'ERROR: [/libs/archivematica lib (approve_transfer)] unable to approve transfer.'
+                });
+
+            } else if (response.status === 200) {
+                callback(JSON.stringify(response.data));
+            }
+
+            return false;
+
+        } catch (error) {
+
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (approve_transfer)] unable to approve transfer. Request failed: ' + error);
 
             callback({
                 error: true,
-                message: error
-            });
-
-            return false;
-        }
-
-        if (httpResponse.statusCode === 200) {
-            callback(body);
-            return false;
-        } else {
-
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (approve_transfer)] unable to approve transfer ' + httpResponse.statusCode + '/' + body);
-
-            callback({
-                error: true,
-                message: 'ERROR: [/libs/archivematica lib (approve_transfer)] Unable to approve transfer'
+                message: 'ERROR: [/libs/archivematica lib (approve_transfer)] unable to approve transfer. Request failed: ' + error
             });
         }
-    });
+
+    })();
 };
 
 /**
@@ -265,32 +302,45 @@ exports.get_transfer_status = function (uuid, callback) {
 
     'use strict';
 
-    let apiUrl = CONFIG.archivematicaApi + 'transfer/status/' + uuid + '/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
+    let endpoint = CONFIG.archivematicaApi + 'transfer/status/' + uuid + '/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
 
-    REQUEST.get({
-        url: apiUrl,
-        timeout: 25000
-    }, function (error, httpResponse, body) {
+    (async () => {
 
-        if (error) {
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_transfer_status)] unable to get transfer status ' + error);
+        try {
+
+            let response = await HTTP.get(endpoint, {
+                timeout: 35000,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.status !== 200) {
+
+                LOGGER.module().error('ERROR: [/libs/archivematica lib (get_transfer_status)] unable to get transfer status ' + error);
+
+                callback({
+                    error: true,
+                    message: 'ERROR: [/libs/archivematica lib (get_transfer_status)] Unable to get transfer status'
+                });
+
+            } else if (response.status === 200) {
+                callback(JSON.stringify(response.data));
+            }
+
             return false;
-        }
 
-        if (httpResponse.statusCode === 200) {
-            callback(body);
-            return false;
+        } catch (error) {
 
-        } else {
-
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_transfer_status)] unable to get transfer status ' + httpResponse.statusCode + '/' + body);
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_transfer_status)] unable to get transfer status. Request failed:  ' + error);
 
             callback({
                 error: true,
                 message: 'ERROR: [/libs/archivematica lib (get_transfer_status)] Unable to get transfer status'
             });
         }
-    });
+
+    })();
 };
 
 /**
@@ -302,33 +352,45 @@ exports.get_ingest_status = function (uuid, callback) {
 
     'use strict';
 
-    let apiUrl = CONFIG.archivematicaApi + 'ingest/status/' + uuid + '/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
+    let endpoint = CONFIG.archivematicaApi + 'ingest/status/' + uuid + '/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
 
-    REQUEST.get({
-        url: apiUrl,
-        timeout: 25000
-    }, function (error, httpResponse, body) {
+    (async () => {
 
-        if (error) {
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_ingest_status)] unable to get ingest status ' + error);
+        try {
+
+            let response = await HTTP.get(endpoint, {
+                timeout: 35000,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.status !== 200) {
+
+                LOGGER.module().error('ERROR: [/libs/archivematica lib (get_ingest_status)] unable to get ingest status.');
+
+                callback({
+                    error: true,
+                    message: 'ERROR: [/libs/archivematica lib (get_ingest_status)] unable to get ingest status.'
+                });
+
+            } else if (response.status === 200) {
+                callback(JSON.stringify(response.data));
+            }
+
             return false;
-        }
 
-        if (httpResponse.statusCode === 200) {
-            callback(body);
-            return false;
-        } else {
+        } catch (error) {
 
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_ingest_status)] unable to get ingest status ' + httpResponse.statusCode + '/' + error);
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_ingest_status)] unable to get ingest status. Request failed: ' + error);
 
             callback({
                 error: true,
-                message: 'ERROR: [/libs/archivematica lib (get_ingest_status)] unable to get ingest status ' + httpResponse.statusCode + '/' + error
+                message: 'ERROR: [/libs/archivematica lib (get_ingest_status)] unable to get ingest status. Request failed: ' + error
             });
-
-            return false;
         }
-    });
+
+    })();
 };
 
 /**
@@ -340,56 +402,63 @@ exports.get_dip_path = function (uuid, callback) {
 
     'use strict';
 
-    let apiUrl = CONFIG.archivematicaStorageApi + 'v2/file/' + uuid + '/?username=' + CONFIG.archivematicaStorageUsername + '&api_key=' + CONFIG.archivematicaStorageApiKey;
+    let endpoint = CONFIG.archivematicaStorageApi + 'v2/file/' + uuid + '/?username=' + CONFIG.archivematicaStorageUsername + '&api_key=' + CONFIG.archivematicaStorageApiKey;
 
-    REQUEST.get({
-        url: apiUrl,
-        timeout: 55000
-    }, function (error, httpResponse, body) {
+    (async () => {
 
-        if (error) {
+        try {
 
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_dip_path)] unable to get dip path ' + error);
+            let response = await HTTP.get(endpoint, {
+                timeout: 35000,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.status !== 200) {
+
+                LOGGER.module().error('ERROR: [/libs/archivematica lib (get_dip_path)] unable to get dip path.');
+
+                callback({
+                    error: true,
+                    message: 'ERROR: [/libs/archivematica lib (get_dip_path)] unable to get dip path.'
+                });
+
+            } else if (response.status === 200) {
+
+                let json = response.data,
+                    dipuuidArr = json.related_packages[0].split('/');
+
+                let uuid = dipuuidArr.filter(function (result) {
+                    return result;
+                });
+
+                let dipuuid = uuid[uuid.length - 1],
+                    tmp = dipuuid.replace(/-/g, ''),
+                    tmpuuid = tmp.match(/.{1,4}/g),
+                    path = tmpuuid.join('/');
+
+                let folderArr = json.current_path.split('/'),
+                    folderTmp = folderArr[folderArr.length - 1],
+                    folder = folderTmp.replace('.7z', ''),
+                    dipPath = path + '/' + folder;
+
+                callback(dipPath);
+            }
+
+            return false;
+
+        } catch (error) {
+
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_dip_path)] unable to get dip path. Request failed: ' + error);
 
             callback({
                 error: true,
-                message: error
+                message: 'ERROR: [/libs/archivematica lib (get_dip_path)] unable to get dip path. Request failed: ' + error
             });
-
-            return false;
         }
 
-        if (httpResponse.statusCode !== 200) {
-
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_dip_path)] unable to get dip path ' + httpResponse.statusCode + '/' + body);
-
-            callback({
-                error: true,
-                message: 'ERROR: Unable to get dip path'
-            });
-
-            return false;
-        }
-
-        let json = JSON.parse(body),
-            dipuuidArr = json.related_packages[0].split('/');
-
-        let uuid = dipuuidArr.filter(function (result) {
-            return result;
-        });
-
-        let dipuuid = uuid[uuid.length - 1],
-            tmp = dipuuid.replace(/-/g, ''),
-            tmpuuid = tmp.match(/.{1,4}/g),
-            path = tmpuuid.join('/');
-
-        let folderArr = json.current_path.split('/'),
-            folderTmp = folderArr[folderArr.length - 1],
-            folder = folderTmp.replace('.7z', ''),
-            dipPath = path + '/' + folder;
-
-        callback(dipPath);
-    });
+    })();
 };
 
 /**
@@ -400,26 +469,25 @@ exports.clear_transfer = function (uuid) {
 
     'use strict';
 
-    let apiUrl = CONFIG.archivematicaApi + 'transfer/' + uuid + '/delete/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
+    let endpoint = CONFIG.archivematicaApi + 'transfer/' + uuid + '/delete/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
 
-    REQUEST.delete({
-        url: apiUrl,
-        timeout: 55000
-    }, function (error, httpResponse, body) {
+    (async () => {
 
-        if (error) {
+        try {
+
+            let response = await HTTP.delete(endpoint);
+
+            if (response.status === 200) {
+                LOGGER.module().info('INFO: [/libs/archivematica lib (clear_transfer)] transfer ' + uuid + ' has been cleared.');
+            } else {
+                LOGGER.module().error('ERROR: [HTTP libs (delete)] HTTP DELETE request failed.');
+            }
+
+        } catch (error) {
             LOGGER.module().error('ERROR: [/libs/archivematica lib (clear_transfer)] unable to clear transfer queue ' + error);
-            return false;
         }
 
-        if (httpResponse.statusCode === 200) {
-            LOGGER.module().info('INFO: [/libs/archivematica lib (clear_transfer)] transfer ' + uuid + ' has been cleared.');
-            return false;
-        } else {
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (clear_transfer)] unable to clear transfer queue ' + error);
-            return false;
-        }
-    });
+    })();
 };
 
 /**
@@ -430,95 +498,25 @@ exports.clear_ingest = function (uuid) {
 
     'use strict';
 
-    let apiUrl = CONFIG.archivematicaApi + 'ingest/' + uuid + '/delete/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
+    let endpoint = CONFIG.archivematicaApi + 'ingest/' + uuid + '/delete/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
 
-    REQUEST.delete({
-        url: apiUrl,
-        timeout: 55000
-    }, function (error, httpResponse, body) {
+    (async () => {
 
-        if (error) {
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (clear_ingest)] unable to clear ingest ' + error);
-            return false;
-        }
+        try {
 
-        if (httpResponse.statusCode === 200) {
-            LOGGER.module().info('INFO: [/libs/archivematica lib (clear_ingest)] ingest ' + uuid + ' has been cleared.');
-            return false;
-        } else {
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (clear_ingest)] unable to clear ingest ' + httpResponse.statusCode + '/' + error);
-            return false;
-        }
-    });
-};
+            let response = await HTTP.delete(endpoint);
 
-/** TODO: refactor.  make use of shell.js and curl and run as OS process
- * Downloads AIP from archivematica
- * @param sip_uuid
- * @param callback
- */
-exports.download_aip = function (sip_uuid, callback) {
-
-    'use strict';
-
-    if (FS.existsSync('./tmp/' + sip_uuid + '.7z')) {
-        callback('./tmp/' + sip_uuid + '.7z');
-        return false;
-    }
-
-    let apiUrl = CONFIG.archivematicaStorageApi + 'v2/file/' + sip_uuid + '/download/?username=' + CONFIG.archivematicaStorageUsername + '&api_key=' + CONFIG.archivematicaStorageApiKey;
-
-    REQUEST.get({
-        url: apiUrl,
-        timeout: 600000
-    }, function (error, httpResponse, body) {
-
-        if (error) {
-
-            logger.module().error('ERROR: [/libs/archivematica lib (download_aip)] unable to download aip ' + error);
-
-            callback({
-                error: true,
-                message: error
-            });
-
-            return false;
-        }
-
-        if (httpResponse.statusCode !== 200) {
-
-            logger.module().error('ERROR: [/libs/archivematica lib (download_aip)] unable to get AIP ' + httpResponse.statusCode + '/' + body);
-
-            callback({
-                error: true,
-                message: 'ERROR: Unable to get AIP'
-            });
-
-            return false;
-        }
-
-        FS.writeFile('./tmp/' + sip_uuid + '.7z', body, function(error) {
-
-            if (error) {
-
-                logger.module().error('ERROR: [/libs/archivematica lib (download_aip)] unable to write to tmp folder ' + error);
-
-                callback({
-                    error: true,
-                    error_message: error
-                });
+            if (response.status === 200) {
+                LOGGER.module().info('INFO: [/libs/archivematica lib (clear_ingest)] ingest ' + uuid + ' has been cleared.');
+            } else {
+                LOGGER.module().error('ERROR: [HTTP libs (delete)] HTTP DELETE request failed.');
             }
 
-            setTimeout(function () {
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (clear_ingest)] unable to clear ingest ' + error);
+        }
 
-                if (FS.existsSync('./tmp/' + sip_uuid + '.7z')) {
-                    callback('./tmp/' + sip_uuid + '.7z');
-                    return false;
-                }
-
-            }, 1000);
-        });
-    });
+    })();
 };
 
 /**
@@ -530,8 +528,64 @@ exports.delete_aip_request = function (obj, callback) {
 
     'use strict';
 
-    let apiUrl = CONFIG.archivematicaStorageApi + 'v2/file/' + obj.pid + '/delete_aip/?username=' + CONFIG.archivematicaStorageUsername + '&api_key=' + CONFIG.archivematicaStorageApiKey;
+    let endpoint = CONFIG.archivematicaStorageApi + 'v2/file/' + obj.pid + '/delete_aip/?username=' + CONFIG.archivematicaStorageUsername + '&api_key=' + CONFIG.archivematicaStorageApiKey;
 
+    (async () => {
+
+        try {
+
+            let data = {
+                'event_reason': obj.delete_reason,
+                'pipeline': CONFIG.archivematicaPipeline,
+                'user_id': CONFIG.archivematicaUserId,
+                'user_email': CONFIG.archivematicaUserEmail
+            };
+
+            let response = await HTTP.post(endpoint, QS.stringify(data), {
+                timeout: 35000,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            });
+
+            if (response.status === 200) {
+
+
+            } else if (response.status === 202) {
+
+                LOGGER.module().info('INFO: [/libs/archivematica lib (delete_aip)] delete aip (' + obj.pid + ') request succeeded.');
+
+                callback({
+                    error: false,
+                    message: 'INFO: [/libs/archivematica lib (delete_aip)] delete aip (' + obj.pid + ') request succeeded.',
+                    data: JSON.stringify(response.data)
+                });
+
+            } else {
+
+                LOGGER.module().error('ERROR: [/libs/archivematica lib (delete_aip)] unable to delete aip - (' + obj.pid + ')');
+
+                callback({
+                    error: true,
+                    message: 'ERROR: [/libs/archivematica lib (delete_aip)] unable to delete aip - (' + obj.pid + ')'
+                });
+            }
+
+            return false;
+
+        } catch (error) {
+
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (delete_aip)] unable to delete aip. Request failed: ' + error);
+
+            callback({
+                error: true,
+                message: 'ERROR: [/libs/archivematica lib (delete_aip)] unable to delete aip. Request failed: ' + error
+            });
+        }
+
+    })();
+
+    /*
     REQUEST.post({
         url: apiUrl,
         json: {
@@ -594,5 +648,76 @@ exports.delete_aip_request = function (obj, callback) {
 
             return false;
         }
+    });
+
+     */
+};
+
+/** TODO: REMOVE
+ * Downloads AIP from archivematica
+ * @param sip_uuid
+ * @param callback
+ */
+exports.download_aip = function (sip_uuid, callback) {
+
+    'use strict';
+
+    if (FS.existsSync('./tmp/' + sip_uuid + '.7z')) {
+        callback('./tmp/' + sip_uuid + '.7z');
+        return false;
+    }
+
+    let apiUrl = CONFIG.archivematicaStorageApi + 'v2/file/' + sip_uuid + '/download/?username=' + CONFIG.archivematicaStorageUsername + '&api_key=' + CONFIG.archivematicaStorageApiKey;
+
+    REQUEST.get({
+        url: apiUrl,
+        timeout: 600000
+    }, function (error, httpResponse, body) {
+
+        if (error) {
+
+            logger.module().error('ERROR: [/libs/archivematica lib (download_aip)] unable to download aip ' + error);
+
+            callback({
+                error: true,
+                message: error
+            });
+
+            return false;
+        }
+
+        if (httpResponse.statusCode !== 200) {
+
+            logger.module().error('ERROR: [/libs/archivematica lib (download_aip)] unable to get AIP ' + httpResponse.statusCode + '/' + body);
+
+            callback({
+                error: true,
+                message: 'ERROR: Unable to get AIP'
+            });
+
+            return false;
+        }
+
+        FS.writeFile('./tmp/' + sip_uuid + '.7z', body, function (error) {
+
+            if (error) {
+
+                logger.module().error('ERROR: [/libs/archivematica lib (download_aip)] unable to write to tmp folder ' + error);
+
+                callback({
+                    error: true,
+                    error_message: error
+                });
+            }
+
+            setTimeout(function () {
+
+                if (FS.existsSync('./tmp/' + sip_uuid + '.7z')) {
+                    callback('./tmp/' + sip_uuid + '.7z');
+                    return false;
+                }
+
+            }, 1000);
+        });
     });
 };
