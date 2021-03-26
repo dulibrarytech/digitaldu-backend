@@ -469,26 +469,25 @@ exports.clear_transfer = function (uuid) {
 
     'use strict';
 
-    let apiUrl = CONFIG.archivematicaApi + 'transfer/' + uuid + '/delete/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
+    let endpoint = CONFIG.archivematicaApi + 'transfer/' + uuid + '/delete/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
 
-    REQUEST.delete({
-        url: apiUrl,
-        timeout: 55000
-    }, function (error, httpResponse, body) {
+    (async () => {
 
-        if (error) {
+        try {
+
+            let response = await HTTP.delete(endpoint);
+
+            if (response.status === 200) {
+                LOGGER.module().info('INFO: [/libs/archivematica lib (clear_transfer)] transfer ' + uuid + ' has been cleared.');
+            } else {
+                LOGGER.module().error('ERROR: [HTTP libs (delete)] HTTP DELETE request failed.');
+            }
+
+        } catch (error) {
             LOGGER.module().error('ERROR: [/libs/archivematica lib (clear_transfer)] unable to clear transfer queue ' + error);
-            return false;
         }
 
-        if (httpResponse.statusCode === 200) {
-            LOGGER.module().info('INFO: [/libs/archivematica lib (clear_transfer)] transfer ' + uuid + ' has been cleared.');
-            return false;
-        } else {
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (clear_transfer)] unable to clear transfer queue ' + error);
-            return false;
-        }
-    });
+    })();
 };
 
 /**
@@ -499,26 +498,25 @@ exports.clear_ingest = function (uuid) {
 
     'use strict';
 
-    let apiUrl = CONFIG.archivematicaApi + 'ingest/' + uuid + '/delete/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
+    let endpoint = CONFIG.archivematicaApi + 'ingest/' + uuid + '/delete/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
 
-    REQUEST.delete({
-        url: apiUrl,
-        timeout: 55000
-    }, function (error, httpResponse, body) {
+    (async () => {
 
-        if (error) {
+        try {
+
+            let response = await HTTP.delete(endpoint);
+
+            if (response.status === 200) {
+                LOGGER.module().info('INFO: [/libs/archivematica lib (clear_ingest)] ingest ' + uuid + ' has been cleared.');
+            } else {
+                LOGGER.module().error('ERROR: [HTTP libs (delete)] HTTP DELETE request failed.');
+            }
+
+        } catch (error) {
             LOGGER.module().error('ERROR: [/libs/archivematica lib (clear_ingest)] unable to clear ingest ' + error);
-            return false;
         }
 
-        if (httpResponse.statusCode === 200) {
-            LOGGER.module().info('INFO: [/libs/archivematica lib (clear_ingest)] ingest ' + uuid + ' has been cleared.');
-            return false;
-        } else {
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (clear_ingest)] unable to clear ingest ' + httpResponse.statusCode + '/' + error);
-            return false;
-        }
-    });
+    })();
 };
 
 /** TODO: refactor.  make use of shell.js and curl and run as OS process
