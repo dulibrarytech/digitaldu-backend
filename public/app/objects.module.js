@@ -262,12 +262,12 @@ const objectsModule = (function () {
     obj.renderDisplayRecords = function (data) {
 
         let is_member_of_collection = helperModule.getParameterByName('pid'),
-            total_records = DOMPurify.sanitize(data.total),
+            total_records = DOMPurify.sanitize(data.total.value),
             html = '';
 
         $('#current-collection').prop('href', '/dashboard/collections/add?is_member_of_collection=' + is_member_of_collection);
 
-        if (data.total === 0) {
+        if (data.total.value === 0) {
             html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; No unpublished objects found for this collection.</strong></div>';
             domModule.html('#objects', html);
             return false;
@@ -357,67 +357,6 @@ const objectsModule = (function () {
         httpModule.req(request, callback);
         return false;
     };
-
-    /** TODO: remove
-     * Binds click event to defined selector
-
-    obj.batchUpdateMetadataListener = function() {
-        domModule.getElement('#batch-update-metadata').addEventListener('click', batchUpdateMetadata);
-    };
-     */
-
-    /** TODO: remove
-     *  Updates all metadata records for current collection
-
-    const batchUpdateMetadata = function() {
-
-        let pid = helperModule.getParameterByName('pid');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-
-        let obj = {};
-        let url = api + '/api/admin/v1/import/metadata/batch?pid=' + pid,
-            token = userModule.getUserToken(),
-            request = new Request(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                body: JSON.stringify(obj),
-                mode: 'cors'
-            });
-
-        const callback = function (response) {
-
-            if (response.status === 201) {
-
-                domModule.html('#message', '<div class="alert alert-success"><i class="fa fa-exclamation-circle"></i>  The metadata records in this collection are being updated.  The process may take awhile depending on the size of the collection.    </div>');
-
-                setTimeout(function () {
-                    domModule.html('#message', null);
-                }, 5000);
-
-
-            } else if (response.status === 401) {
-
-                response.json().then(function (response) {
-
-                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
-
-                    setTimeout(function () {
-                        window.location.replace('/login');
-                    }, 4000);
-                });
-
-            } else {
-                helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to update metadata.');
-            }
-        };
-
-        httpModule.req(request, callback);
-        return false;
-    };
-     */
 
     /**
      * Starts delete process

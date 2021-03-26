@@ -41,10 +41,66 @@ const config = require('../config/config'),
  */
 exports.reindex = function (req, callback) {
 
-    function delete_index(callback) {
+    function check_indexes(callback) {
 
         let obj = {};
-        obj.delete_indexes = [config.elasticSearchBackIndex, config.elasticSearchFrontIndex];
+        let indexes = [config.elasticSearchBackIndex, config.elasticSearchFrontIndex];
+        obj.indexes = [];
+
+        function check_index(index, cb) {
+
+            (async () => {
+
+                let response = await HTTP.head({
+                    url: config.elasticSearch + '/' + index
+                });
+
+                let result = {};
+
+                if (response.error === true) {
+                    logger.module().error('ERROR: [/utils/model module (check_index)] request failed. Index does not exist.');
+                    result.error = true;
+                } else {
+                    result.error = false;
+                }
+
+                result.index = index;
+                cb(result);
+            })();
+        }
+
+        let timer = setInterval(function () {
+
+            if (indexes.length === 0) {
+                clearInterval(timer);
+                callback(null, obj);
+                return false;
+            }
+
+            let index = indexes.pop();
+
+            check_index(index, function(result) {
+
+                if (result.error === false) {
+                    // indexes to delete
+                    obj.indexes.push(result.index);
+                }
+
+            });
+
+        }, 500);
+    }
+
+    function delete_index(obj, callback) {
+
+        // no need to run delete if indices do not exist
+        if (obj.error === false) {
+            obj.delete_indexes = [];
+            callback(null, obj);
+            return false;
+        }
+
+        obj.delete_indexes = obj.indexes;
 
         function del(index_name) {
 
@@ -201,6 +257,7 @@ exports.reindex = function (req, callback) {
     }
 
     async.waterfall([
+        check_indexes,
         delete_index,
         create_index,
         index,

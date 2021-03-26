@@ -78,7 +78,7 @@ module.exports = {
     archivespaceRepositoryid: process.env.ARCHIVESPACE_REPOSITORY_ID,
     archivespaceUser: process.env.ARCHIVESPACE_USER,
     archivespacePassword: process.env.ARCHIVESPACE_PASSWORD,
-    nightmareStatus: process.env.NIGHTMARE_STATUS,
+    // nightmareStatus: process.env.NIGHTMARE_STATUS,
     duraCloudApi: process.env.DURACLOUD_API,
     duraCloudUser: process.env.DURACLOUD_USER,
     duraCloudPwd: process.env.DURACLOUD_PWD,
