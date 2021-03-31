@@ -39,7 +39,7 @@ const metadataModule = (function () {
         display += createIdentifiers(record);
         display += createLanguage(record);
         display += createNames(record);
-        display += createNotes(record);
+        // display += createNotes(record);
         display += createParts(record);
         display += createSubjects(record);
         display += createAbstract(record);
@@ -367,7 +367,8 @@ const metadataModule = (function () {
      * Creates notes fragment
      * @param record
      * @returns {string}
-     */
+    */
+    /*
     function createNotes(record) {
 
         let notes = '';
@@ -389,6 +390,8 @@ const metadataModule = (function () {
 
         return notes;
     }
+
+     */
 
     /**
      * Creates parts fragment
