@@ -179,8 +179,8 @@ exports.list = function (folder, callback) {
  * Starts transfer process
  * @param transferObj
  * @param callback
- */ // TODO: fix typo github issue #159
-exports.start_tranfser = function (transferObj, callback) {
+ */
+exports.start_transfer = function (transferObj, callback) {
 
     'use strict';
 
