@@ -266,11 +266,11 @@ exports.start_transfer = function (req, callback) {
         /*
          Initiates file transfer on Archivematica service
          */
-        ARCHIVEMATICA.start_tranfser(object, function (response) {
+        ARCHIVEMATICA.start_transfer(object, function (response) {
 
             if (response.error !== undefined && response.error === true) {
 
-                LOGGER.module().fatal('FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_tranfser)] transfer error ' + response);
+                LOGGER.module().fatal('FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_transfer)] transfer error ' + response);
 
                 let failObj = {
                     is_member_of_collection: collection,
@@ -288,7 +288,7 @@ exports.start_transfer = function (req, callback) {
 
                 });
 
-                throw 'FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_tranfser)] transfer error ' + response;
+                throw 'FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_transfer)] transfer error ' + response;
             }
 
             TRANSFER_INGEST.confirm_transfer(response, object.id);
@@ -309,15 +309,15 @@ exports.start_transfer = function (req, callback) {
                 }, function (error, httpResponse, body) {
 
                     if (error) {
-                        LOGGER.module().fatal('FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_tranfser)] http error. unable to approve transfer ' + error);
-                        throw 'FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_tranfser)] http error. unable to approve transfer ' + error;
+                        LOGGER.module().fatal('FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_transfer)] http error. unable to approve transfer ' + error);
+                        throw 'FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_transfer)] http error. unable to approve transfer ' + error;
                     }
 
                     if (httpResponse.statusCode === 200) {
                         return false;
                     } else {
-                        LOGGER.module().fatal('FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_tranfser)] http error. unable to approve transfer ' + httpResponse.statusCode + '/' + body);
-                        throw 'FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_tranfser)] http error. unable to approve transfer ' + httpResponse.statusCode + '/' + body;
+                        LOGGER.module().fatal('FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_transfer)] http error. unable to approve transfer ' + httpResponse.statusCode + '/' + body);
+                        throw 'FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_transfer)] http error. unable to approve transfer ' + httpResponse.statusCode + '/' + body;
                     }
                 });
 
