@@ -187,7 +187,7 @@ exports.start_tranfser = function (transferObj, callback) {
     let transferSource = CONFIG.archivematicaTransferSource,
         sftpPath = CONFIG.sftpRemotePath,
         location = transferSource + ':' + sftpPath + '/' + transferObj.is_member_of_collection + '/' + transferObj.object,
-        buffer = new Buffer(location),
+        buffer = Buffer.from(location),
         encodedLocation = buffer.toString('base64'),
         endpoint = CONFIG.archivematicaApi + 'transfer/start_transfer/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
 
