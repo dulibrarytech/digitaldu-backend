@@ -175,27 +175,24 @@ exports.queue_objects = function (req, callback) {
             /*
              Send request to start transfer
              */
-            REQUEST.post({
-                url: CONFIG.apiUrl + '/api/admin/v1/import/start_transfer?api_key=' + CONFIG.apiKey,
-                form: {
+            (async() => {
+
+                let data = {
                     'collection': transfer_data.collection
-                }
-            }, function (error, httpResponse, body) {
+                };
 
-                if (error) {
-                    LOGGER.module().fatal('FATAL: [/import/queue module (queue_objects/start_transfer/TRANSFER_INGEST.save_transfer_records)] unable to begin transfer ' + error);
-                    throw 'FATAL: [/import/queue module (queue_objects/start_transfer/TRANSFER_INGEST.save_transfer_records)] unable to begin transfer ' + error;
-                }
+                let response = await HTTP.post({
+                    endpoint: '/api/admin/v1/import/start_transfer',
+                    data: data
+                });
 
-                if (httpResponse.statusCode === 200) {
+                if (response.error === true) {
+                    LOGGER.module().fatal('FATAL: [/import/queue module (queue_objects/start_transfer/TRANSFER_INGEST.save_transfer_records)] unable to begin transfer.');
+                } else if (response.data.status === 200) {
                     return false;
-                } else {
-                    LOGGER.module().fatal('FATAL: [/import/queue module (queue_objects/start_transfer/TRANSFER_INGEST.save_transfer_records)] unable to begin transfer ' + httpResponse.statusCode + '/' + error);
-                    throw 'FATAL: [/import/queue module (queue_objects/start_transfer/TRANSFER_INGEST.save_transfer_records)] unable to begin transfer ' + httpResponse.statusCode + '/' + error;
                 }
-            });
 
-            return false;
+            })();
         });
     };
 
