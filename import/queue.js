@@ -385,6 +385,26 @@ exports.approve_transfer = function (req, callback) {
                 /*
                  Send request to begin transfer status checks
                  */
+                (async () => {
+
+                    let response = await HTTP.get({
+                        endpoint: '/api/admin/v1/import/transfer_status',
+                        params: {
+                            collection: result.is_member_of_collection,
+                            transfer_uuid: result.transfer_uuid
+                        }
+                    });
+
+                    if (response.error === true) {
+                        LOGGER.module().fatal('FATAL: [/import/queue module (approve_transfer/TRANSFER_INGEST.get_transferred_record/archivematica.approve_transfer/TRANSFER_INGEST.confirm_transfer_approval)] http error ' + error);
+                        throw 'FATAL: [/import/queue module (approve_transfer/TRANSFER_INGEST.get_transferred_record/archivematica.approve_transfer/TRANSFER_INGEST.confirm_transfer_approval)] http error ' + error;
+                    } else if (response.data.status === 200) {
+                        return false;
+                    }
+
+                })();
+
+                /*
                 REQUEST.get({
                     url: CONFIG.apiUrl + '/api/admin/v1/import/transfer_status?collection=' + result.is_member_of_collection + '&transfer_uuid=' + result.transfer_uuid + '&api_key=' + CONFIG.apiKey
                 }, function (error, httpResponse, body) {
@@ -401,6 +421,8 @@ exports.approve_transfer = function (req, callback) {
                         throw 'FATAL: [/import/queue module (approve_transfer/TRANSFER_INGEST.get_transferred_record/archivematica.approve_transfer/TRANSFER_INGEST.confirm_transfer_approval)] http error ' + httpResponse.statusCode + '/' + body;
                     }
                 });
+
+                 */
             });
         });
     });
