@@ -57,7 +57,7 @@ const serialize_params = function(request_obj) {
             url += query_string;
         }
 
-        return url;
+        return url.toString();
     }
 };
 

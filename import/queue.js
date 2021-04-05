@@ -387,12 +387,14 @@ exports.approve_transfer = function (req, callback) {
                  */
                 (async () => {
 
+                    let params = {
+                        collection: result.is_member_of_collection,
+                        transfer_uuid: result.transfer_uuid
+                    };
+
                     let response = await HTTP.get({
                         endpoint: '/api/admin/v1/import/transfer_status',
-                        params: {
-                            collection: result.is_member_of_collection,
-                            transfer_uuid: result.transfer_uuid
-                        }
+                        params: params
                     });
 
                     if (response.error === true) {
@@ -403,26 +405,6 @@ exports.approve_transfer = function (req, callback) {
                     }
 
                 })();
-
-                /*
-                REQUEST.get({
-                    url: CONFIG.apiUrl + '/api/admin/v1/import/transfer_status?collection=' + result.is_member_of_collection + '&transfer_uuid=' + result.transfer_uuid + '&api_key=' + CONFIG.apiKey
-                }, function (error, httpResponse, body) {
-
-                    if (error) {
-                        LOGGER.module().fatal('FATAL: [/import/queue module (approve_transfer/TRANSFER_INGEST.get_transferred_record/archivematica.approve_transfer/TRANSFER_INGEST.confirm_transfer_approval)] http error ' + error);
-                        throw 'FATAL: [/import/queue module (approve_transfer/TRANSFER_INGEST.get_transferred_record/archivematica.approve_transfer/TRANSFER_INGEST.confirm_transfer_approval)] http error ' + error;
-                    }
-
-                    if (httpResponse.statusCode === 200) {
-                        return false;
-                    } else {
-                        LOGGER.module().fatal('FATAL: [/import/queue module (approve_transfer/TRANSFER_INGEST.get_transferred_record/archivematica.approve_transfer/TRANSFER_INGEST.confirm_transfer_approval)] http error ' + httpResponse.statusCode + '/' + body);
-                        throw 'FATAL: [/import/queue module (approve_transfer/TRANSFER_INGEST.get_transferred_record/archivematica.approve_transfer/TRANSFER_INGEST.confirm_transfer_approval)] http error ' + httpResponse.statusCode + '/' + body;
-                    }
-                });
-
-                 */
             });
         });
     });
@@ -441,8 +423,20 @@ exports.approve_transfer = function (req, callback) {
  */
 exports.get_transfer_status = function (req, callback) {
 
-    var is_member_of_collection = req.query.collection,
+    /*
+        ** Axios is duplicating the values in the query string (creates an array)
+        * This is a workaround or that issue...
+     */
+    var is_member_of_collection,
+        transfer_uuid;
+
+    if (typeof req.query.collection !== 'string') {
+        is_member_of_collection = req.query.collection.pop();
+        transfer_uuid = req.query.transfer_uuid.pop();
+    } else {
+        is_member_of_collection = req.query.collection;
         transfer_uuid = req.query.transfer_uuid;
+    }
 
     if (is_member_of_collection === undefined || transfer_uuid === undefined) {
         LOGGER.module().error('ERROR: [/import/queue module (get_transfer_status)] unable to start transfer checks');
@@ -488,6 +482,29 @@ exports.get_transfer_status = function (req, callback) {
                     clearInterval(timer);
 
                     // Send request to begin ingest status checks
+                    (async () => {
+
+                        let response = await HTTP.get({
+                            endpoint: '/api/admin/v1/import/ingest_status',
+                            params: {
+                                sip_uuid: result.sip_uuid
+                            }
+                        });
+
+                        if (response.error === true) {
+                            LOGGER.module().error('ERROR: [/import/queue module (get_transfer_status/archivematica.get_transfer_status/TRANSFER_INGEST.update_transfer_status)] http error.');
+                        } else if (response.data.status === 200) {
+
+                            setTimeout(function () {
+                                ARCHIVEMATICA.clear_transfer(transfer_uuid);
+                            }, 5000);
+
+                            return false;
+                        }
+
+                    })();
+
+                    /*
                     REQUEST.get({
                         url: CONFIG.apiUrl + '/api/admin/v1/import/ingest_status?sip_uuid=' + result.sip_uuid + '&api_key=' + CONFIG.apiKey
                     }, function (error, httpResponse, body) {
@@ -505,6 +522,7 @@ exports.get_transfer_status = function (req, callback) {
                             LOGGER.module().error('ERROR: [/import/queue module (get_transfer_status/archivematica.get_transfer_status/TRANSFER_INGEST.update_transfer_status)] http error ' + httpResponse.statusCode + '/' + body);
                         }
                     });
+                    */
 
                     return false;
                 }
@@ -527,7 +545,17 @@ exports.get_transfer_status = function (req, callback) {
  */
 exports.get_ingest_status = function (req, callback) {
 
-    let sip_uuid = req.query.sip_uuid;
+    /*
+        ** Axios is duplicating the values in the query string (creates an array)
+        * This is a workaround or that issue...
+     */
+    let sip_uuid;
+
+    if (typeof req.query.sip_uuid !== 'string') {
+        sip_uuid = req.query.sip_uuid.pop();
+    } else {
+        sip_uuid = req.query.sip_uuid;
+    }
 
     if (sip_uuid === undefined) {
         LOGGER.module().error('ERROR: [/import/queue module (get_ingest_status)] sip uuid undefined');
