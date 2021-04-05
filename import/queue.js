@@ -27,12 +27,10 @@ const CONFIG = require('../config/config'),
     MANIFEST = require('../libs/manifest'),
     handles = require('../libs/handles'),
     ARCHIVEMATICA = require('../libs/archivematica'),
-    // ARCHIVESSPACE = require('../libs/archivespace'),
     DURACLOUD = require('../libs/duracloud'),
     LOGGER = require('../libs/log4'),
     ASYNC = require('async'),
     MOMENT = require('moment'),
-    REQUEST = require('request'),
     HTTP = require('../libs/http'),
     DBQ = require('../config/dbqueue')(),
     SERVICE = require('../import/service'),
@@ -176,27 +174,24 @@ exports.queue_objects = function (req, callback) {
             /*
              Send request to start transfer
              */
-            REQUEST.post({
-                url: CONFIG.apiUrl + '/api/admin/v1/import/start_transfer?api_key=' + CONFIG.apiKey,
-                form: {
+            (async() => {
+
+                let data = {
                     'collection': transfer_data.collection
-                }
-            }, function (error, httpResponse, body) {
+                };
 
-                if (error) {
-                    LOGGER.module().fatal('FATAL: [/import/queue module (queue_objects/start_transfer/TRANSFER_INGEST.save_transfer_records)] unable to begin transfer ' + error);
-                    throw 'FATAL: [/import/queue module (queue_objects/start_transfer/TRANSFER_INGEST.save_transfer_records)] unable to begin transfer ' + error;
-                }
+                let response = await HTTP.post({
+                    endpoint: '/api/admin/v1/import/start_transfer',
+                    data: data
+                });
 
-                if (httpResponse.statusCode === 200) {
+                if (response.error === true) {
+                    LOGGER.module().fatal('FATAL: [/import/queue module (queue_objects/start_transfer/TRANSFER_INGEST.save_transfer_records)] unable to begin transfer.');
+                } else if (response.data.status === 200) {
                     return false;
-                } else {
-                    LOGGER.module().fatal('FATAL: [/import/queue module (queue_objects/start_transfer/TRANSFER_INGEST.save_transfer_records)] unable to begin transfer ' + httpResponse.statusCode + '/' + error);
-                    throw 'FATAL: [/import/queue module (queue_objects/start_transfer/TRANSFER_INGEST.save_transfer_records)] unable to begin transfer ' + httpResponse.statusCode + '/' + error;
                 }
-            });
 
-            return false;
+            })();
         });
     };
 
@@ -301,25 +296,25 @@ exports.start_transfer = function (req, callback) {
                 /*
                  Send request to approve transfer
                  */
-                REQUEST.post({
-                    url: CONFIG.apiUrl + '/api/admin/v1/import/approve_transfer?api_key=' + CONFIG.apiKey,
-                    form: {
+                (async() => {
+
+                    let data = {
                         'collection': collection
-                    }
-                }, function (error, httpResponse, body) {
+                    };
 
-                    if (error) {
-                        LOGGER.module().fatal('FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_transfer)] http error. unable to approve transfer ' + error);
-                        throw 'FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_transfer)] http error. unable to approve transfer ' + error;
-                    }
+                    let response = await HTTP.post({
+                        endpoint: '/api/admin/v1/import/approve_transfer',
+                        data: data
+                    });
 
-                    if (httpResponse.statusCode === 200) {
+                    if (response.error === true) {
+                        LOGGER.module().fatal('FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_transfer)] http error. unable to approve transfer.');
+                        throw 'FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_transfer)] http error. unable to approve transfer.';
+                    } else if (response.data.status === 200) {
                         return false;
-                    } else {
-                        LOGGER.module().fatal('FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_transfer)] http error. unable to approve transfer ' + httpResponse.statusCode + '/' + body);
-                        throw 'FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_transfer)] http error. unable to approve transfer ' + httpResponse.statusCode + '/' + body;
                     }
-                });
+
+                })();
 
             }, TRANSFER_APPROVAL_TIMER);
         });
@@ -389,22 +384,26 @@ exports.approve_transfer = function (req, callback) {
                 /*
                  Send request to begin transfer status checks
                  */
-                REQUEST.get({
-                    url: CONFIG.apiUrl + '/api/admin/v1/import/transfer_status?collection=' + result.is_member_of_collection + '&transfer_uuid=' + result.transfer_uuid + '&api_key=' + CONFIG.apiKey
-                }, function (error, httpResponse, body) {
+                (async () => {
 
-                    if (error) {
+                    let params = {
+                        collection: result.is_member_of_collection,
+                        transfer_uuid: result.transfer_uuid
+                    };
+
+                    let response = await HTTP.get({
+                        endpoint: '/api/admin/v1/import/transfer_status',
+                        params: params
+                    });
+
+                    if (response.error === true) {
                         LOGGER.module().fatal('FATAL: [/import/queue module (approve_transfer/TRANSFER_INGEST.get_transferred_record/archivematica.approve_transfer/TRANSFER_INGEST.confirm_transfer_approval)] http error ' + error);
                         throw 'FATAL: [/import/queue module (approve_transfer/TRANSFER_INGEST.get_transferred_record/archivematica.approve_transfer/TRANSFER_INGEST.confirm_transfer_approval)] http error ' + error;
+                    } else if (response.data.status === 200) {
+                        return false;
                     }
 
-                    if (httpResponse.statusCode === 200) {
-                        return false;
-                    } else {
-                        LOGGER.module().fatal('FATAL: [/import/queue module (approve_transfer/TRANSFER_INGEST.get_transferred_record/archivematica.approve_transfer/TRANSFER_INGEST.confirm_transfer_approval)] http error ' + httpResponse.statusCode + '/' + body);
-                        throw 'FATAL: [/import/queue module (approve_transfer/TRANSFER_INGEST.get_transferred_record/archivematica.approve_transfer/TRANSFER_INGEST.confirm_transfer_approval)] http error ' + httpResponse.statusCode + '/' + body;
-                    }
-                });
+                })();
             });
         });
     });
@@ -423,8 +422,20 @@ exports.approve_transfer = function (req, callback) {
  */
 exports.get_transfer_status = function (req, callback) {
 
-    var is_member_of_collection = req.query.collection,
+    /*
+        ** Axios is duplicating the values in the query string (creates an array)
+        * This is a workaround or that issue...
+     */
+    var is_member_of_collection,
+        transfer_uuid;
+
+    if (typeof req.query.collection !== 'string') {
+        is_member_of_collection = req.query.collection.pop();
+        transfer_uuid = req.query.transfer_uuid.pop();
+    } else {
+        is_member_of_collection = req.query.collection;
         transfer_uuid = req.query.transfer_uuid;
+    }
 
     if (is_member_of_collection === undefined || transfer_uuid === undefined) {
         LOGGER.module().error('ERROR: [/import/queue module (get_transfer_status)] unable to start transfer checks');
@@ -470,23 +481,27 @@ exports.get_transfer_status = function (req, callback) {
                     clearInterval(timer);
 
                     // Send request to begin ingest status checks
-                    REQUEST.get({
-                        url: CONFIG.apiUrl + '/api/admin/v1/import/ingest_status?sip_uuid=' + result.sip_uuid + '&api_key=' + CONFIG.apiKey
-                    }, function (error, httpResponse, body) {
+                    (async () => {
 
-                        if (error) {
-                            LOGGER.module().error('ERROR: [/import/queue module (get_transfer_status/archivematica.get_transfer_status/TRANSFER_INGEST.update_transfer_status)] http error ' + error);
-                        }
+                        let response = await HTTP.get({
+                            endpoint: '/api/admin/v1/import/ingest_status',
+                            params: {
+                                sip_uuid: result.sip_uuid
+                            }
+                        });
 
-                        if (httpResponse.statusCode === 200) {
+                        if (response.error === true) {
+                            LOGGER.module().error('ERROR: [/import/queue module (get_transfer_status/archivematica.get_transfer_status/TRANSFER_INGEST.update_transfer_status)] http error.');
+                        } else if (response.data.status === 200) {
+
                             setTimeout(function () {
                                 ARCHIVEMATICA.clear_transfer(transfer_uuid);
                             }, 5000);
+
                             return false;
-                        } else {
-                            LOGGER.module().error('ERROR: [/import/queue module (get_transfer_status/archivematica.get_transfer_status/TRANSFER_INGEST.update_transfer_status)] http error ' + httpResponse.statusCode + '/' + body);
                         }
-                    });
+
+                    })();
 
                     return false;
                 }
@@ -509,7 +524,17 @@ exports.get_transfer_status = function (req, callback) {
  */
 exports.get_ingest_status = function (req, callback) {
 
-    let sip_uuid = req.query.sip_uuid;
+    /*
+        ** Axios is duplicating the values in the query string (creates an array)
+        * This is a workaround or that issue...
+     */
+    let sip_uuid;
+
+    if (typeof req.query.sip_uuid !== 'string') {
+        sip_uuid = req.query.sip_uuid.pop();
+    } else {
+        sip_uuid = req.query.sip_uuid;
+    }
 
     if (sip_uuid === undefined) {
         LOGGER.module().error('ERROR: [/import/queue module (get_ingest_status)] sip uuid undefined');
@@ -556,21 +581,24 @@ exports.get_ingest_status = function (req, callback) {
                     /*
                      Send request to import DIP data
                      */
-                    REQUEST.get({
-                        url: CONFIG.apiUrl + '/api/admin/v1/import/import_dip?sip_uuid=' + result.sip_uuid + '&api_key=' + CONFIG.apiKey
-                    }, function (error, httpResponse, body) {
+                    (async () => {
 
-                        if (error) {
-                            LOGGER.module().error('ERROR: [/import/queue module (get_ingest_status/archivematica.get_ingest_status/TRANSFER_INGEST.update_ingest_status)] import dip request error ' + error);
-                        }
+                        let params = {
+                            sip_uuid: result.sip_uuid
+                        };
 
-                        if (httpResponse.statusCode === 200) {
+                        let response = await HTTP.get({
+                            endpoint: '/api/admin/v1/import/import_dip',
+                            params: params
+                        });
+
+                        if (response.error === true) {
+                            LOGGER.module().error('ERROR: [/import/queue module (get_ingest_status/archivematica.get_ingest_status/TRANSFER_INGEST.update_ingest_status)] import dip request error.');
+                        } else if (response.data.status === 200) {
                             return false;
-                        } else {
-                            LOGGER.module().error('ERROR: [/import/queue module (get_ingest_status/archivematica.get_ingest_status/TRANSFER_INGEST.update_ingest_status)] import dip request error ' + httpResponse.statusCode + '/' + body);
                         }
 
-                    });
+                    })();
 
                     return false;
                 }
@@ -597,7 +625,13 @@ exports.get_ingest_status = function (req, callback) {
  */
 exports.import_dip = function (req, callback) {
 
-    var sip_uuid = req.query.sip_uuid;
+    var sip_uuid;
+
+    if (typeof req.query.sip_uuid !== 'string') {
+        sip_uuid = req.query.sip_uuid.pop();
+    } else {
+        sip_uuid = req.query.sip_uuid;
+    }
 
     if (sip_uuid === undefined) {
 
@@ -662,6 +696,27 @@ exports.import_dip = function (req, callback) {
                     /*
                      Send request to create repository record
                      */
+                    (async () => {
+
+                        let params = {
+                            sip_uuid: sip_uuid
+                        };
+
+                        let response = await HTTP.get({
+                            endpoint: '/api/admin/v1/import/create_repo_record',
+                            params: params
+                        });
+
+                        if (response.error === true) {
+                            LOGGER.module().fatal('FATAL: [/import/queue module (import_dip/archivematica.get_dip_path/duracloud.get_mets/TRANSFER_INGEST.save_mets_data)] create repo record request error.');
+                            throw 'FATAL: [/import/queue module (import_dip/archivematica.get_dip_path/duracloud.get_mets/TRANSFER_INGEST.save_mets_data)] create repo record request error.';
+                        } else if (response.data.status === 200) {
+                            return false;
+                        }
+
+                    })();
+
+                    /*
                     REQUEST.get({
                         url: CONFIG.apiUrl + '/api/admin/v1/import/create_repo_record?sip_uuid=' + sip_uuid + '&api_key=' + CONFIG.apiKey
                     }, function (error, httpResponse, body) {
@@ -678,6 +733,8 @@ exports.import_dip = function (req, callback) {
                             throw 'FATAL: [/import/queue module (import_dip/archivematica.get_dip_path/duracloud.get_mets/TRANSFER_INGEST.save_mets_data)] http create repo record request error ' + httpResponse.statusCode + '/' + body;
                         }
                     });
+
+                     */
                 }
             });
         });
@@ -697,7 +754,13 @@ exports.import_dip = function (req, callback) {
  */
 exports.create_repo_record = function (req, callback) {
 
-    var sip_uuid = req.query.sip_uuid;
+    var sip_uuid;
+
+    if (req.query.sip_uuid !== 'string') {
+        sip_uuid = req.query.sip_uuid.pop();
+    } else {
+        sip_uuid = req.query.sip_uuid;
+    }
 
     if (sip_uuid === undefined || sip_uuid === null) {
         // no need to move forward if sip_uuid is missing
@@ -1191,27 +1254,27 @@ exports.create_repo_record = function (req, callback) {
         /*
          Send request to index repository record
          */
-        REQUEST.post({
-            url: CONFIG.apiUrl + '/api/admin/v1/indexer?api_key=' + CONFIG.apiKey,
-            form: {
+        (async() => {
+
+            let data = {
                 'sip_uuid': obj.sip_uuid
-            }
-        }, function (error, httpResponse, body) {
+            };
 
-            if (error) {
-                LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/index)] indexer error ' + error);
+            let response = await HTTP.post({
+                endpoint: '/api/admin/v1/indexer',
+                data: data
+            });
+
+            if (response.error === true) {
+                LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/index)] indexer error.');
                 return false;
-            }
-
-            if (httpResponse.statusCode === 201) {
+            } else if (response.data.status === 201) {
                 obj.indexed = true;
                 callback(null, obj);
                 return false;
-            } else {
-                LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/index)] http error ' + httpResponse.statusCode + '/' + body);
-                return false;
             }
-        });
+
+        })();
     }
 
     // 14.)
@@ -1274,18 +1337,6 @@ exports.create_repo_record = function (req, callback) {
 
         LOGGER.module().info('INFO: [/import/queue module (create_repo_record/async.waterfall)] record imported');
 
-        // look for null values in object as it indicates that the record is incomplete
-        // TODO: not working
-        /*
-         for (let i in results) {
-         if (results[i] === null) {
-         TRANSFER_INGEST.flag_incomplete_record(results);
-         LOGGER.module().info('INFO: [/import/queue module (create_repo_record/async.waterfall)] ' + results.sip_uuid + ' is incomplete');
-         break;
-         }
-         }
-         */
-
         let collection = results.is_member_of_collection.replace(':', '_');
 
         // start next transfer
@@ -1301,27 +1352,26 @@ exports.create_repo_record = function (req, callback) {
             /*
              Send request to begin next transfer
              */
-            REQUEST.post({
-                url: CONFIG.apiUrl + '/api/admin/v1/import/start_transfer?api_key=' + CONFIG.apiKey,
-                form: {
+            (async() => {
+
+                let data = {
                     'collection': collection
-                }
-            }, function (error, httpResponse, body) {
+                };
 
-                if (error) {
-                    LOGGER.module().fatal('FATAL: [/import/queue module (create_repo_record/async.waterfall/TRANSFER_INGEST.check_queue)] unable to begin transfer ' + error);
-                    throw 'FATAL: [/import/queue module (create_repo_record/async.waterfall/TRANSFER_INGEST.check_queue)] unable to begin transfer ' + error;
-                }
+                let response = await HTTP.post({
+                    endpoint: '/api/admin/v1/import/start_transfer',
+                    data: data
+                });
 
-                if (httpResponse.statusCode === 200) {
+                if (response.error === true) {
+                    LOGGER.module().fatal('FATAL: [/import/queue module (create_repo_record/async.waterfall/TRANSFER_INGEST.check_queue)] unable to begin transfer.');
+                    throw 'FATAL: [/import/queue module (create_repo_record/async.waterfall/TRANSFER_INGEST.check_queue)] unable to begin transfer.';
+                } else if (response.data.status === 200) {
                     LOGGER.module().info('INFO: [/import/queue module (create_repo_record/async.waterfall/TRANSFER_INGEST.check_queue)] sending request to start next transfer (async)');
                     return false;
-                } else {
-                    LOGGER.module().fatal('FATAL: [/import/queue module (create_repo_record/async.waterfall/TRANSFER_INGEST.check_queue)] unable to begin next transfer ' + body);
-                    throw 'FATAL: [/import/queue module (create_repo_record/async.waterfall/TRANSFER_INGEST.check_queue)] unable to begin next transfer ' + body;
                 }
-            });
 
+            })();
         });
     });
 
