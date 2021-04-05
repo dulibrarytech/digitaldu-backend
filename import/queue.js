@@ -504,26 +504,6 @@ exports.get_transfer_status = function (req, callback) {
 
                     })();
 
-                    /*
-                    REQUEST.get({
-                        url: CONFIG.apiUrl + '/api/admin/v1/import/ingest_status?sip_uuid=' + result.sip_uuid + '&api_key=' + CONFIG.apiKey
-                    }, function (error, httpResponse, body) {
-
-                        if (error) {
-                            LOGGER.module().error('ERROR: [/import/queue module (get_transfer_status/archivematica.get_transfer_status/TRANSFER_INGEST.update_transfer_status)] http error ' + error);
-                        }
-
-                        if (httpResponse.statusCode === 200) {
-                            setTimeout(function () {
-                                ARCHIVEMATICA.clear_transfer(transfer_uuid);
-                            }, 5000);
-                            return false;
-                        } else {
-                            LOGGER.module().error('ERROR: [/import/queue module (get_transfer_status/archivematica.get_transfer_status/TRANSFER_INGEST.update_transfer_status)] http error ' + httpResponse.statusCode + '/' + body);
-                        }
-                    });
-                    */
-
                     return false;
                 }
             });
@@ -602,21 +582,24 @@ exports.get_ingest_status = function (req, callback) {
                     /*
                      Send request to import DIP data
                      */
-                    REQUEST.get({
-                        url: CONFIG.apiUrl + '/api/admin/v1/import/import_dip?sip_uuid=' + result.sip_uuid + '&api_key=' + CONFIG.apiKey
-                    }, function (error, httpResponse, body) {
+                    (async () => {
 
-                        if (error) {
-                            LOGGER.module().error('ERROR: [/import/queue module (get_ingest_status/archivematica.get_ingest_status/TRANSFER_INGEST.update_ingest_status)] import dip request error ' + error);
-                        }
+                        let params = {
+                            sip_uuid: result.sip_uuid
+                        };
 
-                        if (httpResponse.statusCode === 200) {
+                        let response = await HTTP.get({
+                            endpoint: '/api/admin/v1/import/import_dip',
+                            params: params
+                        });
+
+                        if (response.error === true) {
+                            LOGGER.module().error('ERROR: [/import/queue module (get_ingest_status/archivematica.get_ingest_status/TRANSFER_INGEST.update_ingest_status)] import dip request error.');
+                        } else if (response.data.status === 200) {
                             return false;
-                        } else {
-                            LOGGER.module().error('ERROR: [/import/queue module (get_ingest_status/archivematica.get_ingest_status/TRANSFER_INGEST.update_ingest_status)] import dip request error ' + httpResponse.statusCode + '/' + body);
                         }
 
-                    });
+                    })();
 
                     return false;
                 }
@@ -643,7 +626,13 @@ exports.get_ingest_status = function (req, callback) {
  */
 exports.import_dip = function (req, callback) {
 
-    var sip_uuid = req.query.sip_uuid;
+    var sip_uuid;
+
+    if (typeof req.query.sip_uuid !== 'string') {
+        sip_uuid = req.query.sip_uuid.pop();
+    } else {
+        sip_uuid = req.query.sip_uuid;
+    }
 
     if (sip_uuid === undefined) {
 
