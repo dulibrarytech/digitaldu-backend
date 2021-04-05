@@ -18,6 +18,7 @@
 
 const CONFIG = require('../config/config'),
     LOGGER = require('../libs/log4'),
+    HTTP = require('axios'),
     REQUEST = require('request');
 
 /**
@@ -28,8 +29,56 @@ exports.ping = function (callback) {
 
     'use strict';
 
-    let apiUrl = 'https://' + CONFIG.duraCloudUser + ':' + CONFIG.duraCloudPwd + '@' + CONFIG.duraCloudApi;
+    let endpoint = 'https://' + CONFIG.duraCloudUser + ':' + CONFIG.duraCloudPwd + '@' + CONFIG.duraCloudApi;
 
+    (async () => {
+
+        try {
+
+            let response = await HTTP.get(endpoint, {
+                timeout: 35000,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.status !== 200) {
+
+                LOGGER.module().error('ERROR: [/libs/duracloud lib (ping)] unable to ping duracloud.');
+
+                callback({
+                    error: true,
+                    status: 'down',
+                    message: error
+                });
+
+            } else if (response.status === 200) {
+
+                callback({
+                    error: false,
+                    status: 'up',
+                    message: 'Duracloud service is available'
+                });
+
+                return false;
+            }
+
+        } catch (error) {
+
+            LOGGER.module().error('ERROR: [/libs/duracloud lib (ping)] unable to ping duracloud ' + error);
+
+            callback({
+                error: true,
+                status: 'down',
+                message: error
+            });
+        }
+
+        return false;
+
+    })();
+
+    /*
     REQUEST.get({
         url: apiUrl,
         timeout: 25000
@@ -69,6 +118,8 @@ exports.ping = function (callback) {
             return false;
         }
     });
+
+     */
 };
 
 /**
