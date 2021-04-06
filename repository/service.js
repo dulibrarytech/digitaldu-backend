@@ -138,6 +138,8 @@ exports.get_tn = function (req, callback) {
 
     (async () => {
 
+        let missing_tn = '/images/image-tn.png';
+
         try {
 
             let endpoint = CONFIG.tnService + 'datastream/' + uuid + '/tn?key=' + CONFIG.tnServiceApiKey;
@@ -152,8 +154,6 @@ exports.get_tn = function (req, callback) {
             if (response.status !== 200) {
 
                 LOGGER.module().error('ERROR: [/libs/tn-service lib (get_tn)] Unable to get thumbnail from TN service.');
-
-                let missing_tn = '/images/image-tn.png';
 
                 callback({
                     error: true,
@@ -173,7 +173,14 @@ exports.get_tn = function (req, callback) {
             return false;
 
         } catch(error) {
+
             LOGGER.module().error('ERROR: [/libs/tn-service lib (get_tn)] Unable to get thumbnail from TN service. Request failed: ' + error);
+
+            callback({
+                error: true,
+                status: 200,
+                data: missing_tn
+            });
         }
 
     })();
