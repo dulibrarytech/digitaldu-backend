@@ -715,26 +715,6 @@ exports.import_dip = function (req, callback) {
                         }
 
                     })();
-
-                    /*
-                    REQUEST.get({
-                        url: CONFIG.apiUrl + '/api/admin/v1/import/create_repo_record?sip_uuid=' + sip_uuid + '&api_key=' + CONFIG.apiKey
-                    }, function (error, httpResponse, body) {
-
-                        if (error) {
-                            LOGGER.module().fatal('FATAL: [/import/queue module (import_dip/archivematica.get_dip_path/duracloud.get_mets/TRANSFER_INGEST.save_mets_data)] create repo record request error ' + error);
-                            throw 'FATAL: [/import/queue module (import_dip/archivematica.get_dip_path/duracloud.get_mets/TRANSFER_INGEST.save_mets_data)] create repo record request error' + error;
-                        }
-
-                        if (httpResponse.statusCode === 200) {
-                            return false;
-                        } else {
-                            LOGGER.module().fatal('FATAL: [/import/queue module (import_dip/archivematica.get_dip_path/duracloud.get_mets/TRANSFER_INGEST.save_mets_data)] http create repo record request error ' + httpResponse.statusCode + '/' + body);
-                            throw 'FATAL: [/import/queue module (import_dip/archivematica.get_dip_path/duracloud.get_mets/TRANSFER_INGEST.save_mets_data)] http create repo record request error ' + httpResponse.statusCode + '/' + body;
-                        }
-                    });
-
-                     */
                 }
             });
         });
