@@ -19,6 +19,10 @@
 const CONFIG = require('../config/config'),
     LOGGER = require('../libs/log4'),
     HTTP = require('axios'),
+    TIMEOUT = 35000,
+    HEADER = {
+        'Content-Type': 'application/json'
+    },
     REQUEST = require('request');
 
 /**
@@ -36,10 +40,8 @@ exports.ping = function (callback) {
         try {
 
             let response = await HTTP.get(endpoint, {
-                timeout: 35000,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
+                timeout: TIMEOUT,
+                headers: HEADER
             });
 
             if (response.status !== 200) {
@@ -77,49 +79,6 @@ exports.ping = function (callback) {
         return false;
 
     })();
-
-    /*
-    REQUEST.get({
-        url: apiUrl,
-        timeout: 25000
-    }, function (error, httpResponse, body) {
-
-        if (error) {
-
-            LOGGER.module().error('ERROR: [/libs/duracloud lib (ping)] unable to ping duracloud ' + error);
-
-            callback({
-                error: true,
-                status: 'down',
-                message: error
-            });
-        }
-
-        if (httpResponse.statusCode === 200) {
-
-            callback({
-                error: false,
-                status: 'up',
-                message: 'Duracloud service is available'
-            });
-
-            return false;
-
-        } else {
-
-            LOGGER.module().error('ERROR: [/libs/duracloud lib (ping)] Unable to ping duracloud ' + httpResponse.statusCode + '/' + body);
-
-            callback({
-                error: true,
-                status: 'down',
-                message: error
-            });
-
-            return false;
-        }
-    });
-
-     */
 };
 
 /**
@@ -132,13 +91,38 @@ exports.get_mets = function (data, callback) {
     'use strict';
 
     let mets = 'METS.' + data.sip_uuid + '.xml',
-        apiUrl = 'https://' + CONFIG.duraCloudUser + ':' + CONFIG.duraCloudPwd + '@' + CONFIG.duraCloudApi + 'dip-store/' + data.dip_path + '/' + mets;
+        endpoint = 'https://' + CONFIG.duraCloudUser + ':' + CONFIG.duraCloudPwd + '@' + CONFIG.duraCloudApi + 'dip-store/' + data.dip_path + '/' + mets;
 
-    REQUEST.get({
-        url: apiUrl
-    }, function (error, httpResponse, body) {
+    (async () => {
 
-        if (error) {
+        try {
+
+            let response = await HTTP.get(endpoint, {
+                timeout: TIMEOUT,
+                headers: HEADER
+            });
+
+            if (response.status !== 200) {
+
+                LOGGER.module().error('ERROR: [/libs/duracloud lib (get_mets)] Unable to get METS.');
+
+                callback({
+                    error: true,
+                    error_message: 'ERROR: [/libs/duracloud lib (get_mets)] Unable to get METS.'
+                });
+
+            } else if (response.status === 200) {
+
+                callback({
+                    error: false,
+                    mets: response.data,
+                    sip_uuid: data.sip_uuid
+                });
+            }
+
+            return false;
+
+        } catch (error) {
 
             LOGGER.module().error('ERROR: [/libs/duracloud lib (get_mets)] Unable to get METS ' + error);
 
@@ -146,28 +130,9 @@ exports.get_mets = function (data, callback) {
                 error: true,
                 error_message: error
             });
-
-            return false;
         }
 
-        if (httpResponse.statusCode !== 200) {
-
-            LOGGER.module().error('ERROR: [/libs/duracloud lib (get_mets)] Unable to get METS: status code: ' + httpResponse.statusCode + '/' + body);
-
-            callback({
-                error: true,
-                error_message: body
-            });
-
-            return false;
-        }
-
-        callback({
-            error: false,
-            mets: body,
-            sip_uuid: data.sip_uuid
-        });
-    });
+    })();
 };
 
 /**
