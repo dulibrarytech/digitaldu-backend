@@ -152,14 +152,37 @@ exports.get_object_info = function (data, callback) {
         data.file = data.file.replace('tif', 'jpg');
     }
 
-    let apiUrl = 'https://' + CONFIG.duraCloudUser + ':' + CONFIG.duraCloudPwd + '@' + CONFIG.duraCloudApi + 'dip-store/' + dip_path + '/objects/' + data.uuid + '-' + data.file;
+    let endpoint = 'https://' + CONFIG.duraCloudUser + ':' + CONFIG.duraCloudPwd + '@' + CONFIG.duraCloudApi + 'dip-store/' + dip_path + '/objects/' + data.uuid + '-' + data.file;
 
-    REQUEST.head({
-        url: apiUrl,
-        timeout: 45000
-    }, function (error, httpResponse, body) {
+    (async () => {
 
-        if (error) {
+        try {
+
+            let response = await HTTP.head(endpoint, {
+                timeout: TIMEOUT
+            });
+
+            if (response.status !== 200) {
+
+                LOGGER.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud object.');
+
+                callback({
+                    error: true,
+                    error_message: error
+                });
+
+            } else if (response.status === 200) {
+
+                let resp = {};
+                resp.headers = response.headers;
+                resp.file = data.file;
+                callback(resp);
+                return false;
+            }
+
+            return false;
+
+        } catch (error) {
 
             LOGGER.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud object ' + error);
 
@@ -169,26 +192,7 @@ exports.get_object_info = function (data, callback) {
             });
         }
 
-        if (httpResponse.statusCode === 200) {
-
-            let resp = {};
-            resp.headers = httpResponse.headers;
-            resp.file = data.file;
-            callback(resp);
-            return false;
-
-        } else {
-
-            LOGGER.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud object ' + httpResponse.statusCode + '/' + body);
-
-            callback({
-                error: true,
-                error_message: body
-            });
-
-            return false;
-        }
-    });
+    })();
 };
 
 /**
