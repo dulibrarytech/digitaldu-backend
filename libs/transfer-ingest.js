@@ -16,7 +16,7 @@
 
 */
 
-const REQUEST = require('request'),
+const HTTP = require('../libs/http'),
     DB = require('../config/db')(),
     DBQ = require('../config/dbqueue')(),
     LOGGER = require('../libs/log4'),
@@ -911,26 +911,26 @@ exports.restart_import = function () {
                 return false;
             }
 
-            REQUEST.post({
-                url: config.apiUrl + '/api/admin/v1/import/start_transfer',
-                form: {
+            (async() => {
+
+                let data = {
                     'collection': data[0].is_member_of_collection
-                }
-            }, function (error, httpResponse, body) {
+                };
 
-                if (error) {
-                    LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (restart_import)] unable to restart transfer (request async)' + error);
-                    throw 'FATAL: [/libs/transfer-ingest lib (restart_import)] unable to restart transfer (request async)' + error;
-                }
+                let response = await HTTP.post({
+                    endpoint: '/api/admin/v1/import/start_transfer',
+                    data: data
+                });
 
-                if (httpResponse.statusCode === 200) {
+                if (response.error === true) {
+                    LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (restart_import)] unable to restart transfer (request async).');
+                    throw 'FATAL: [/libs/transfer-ingest lib (restart_import)] unable to restart transfer (request async).';
+                } else if (response.data.status === 200) {
                     LOGGER.module().info('INFO: [/libs/transfer-ingest lib (restart_import)] sending request to restart transfer (request async)');
                     return false;
-                } else {
-                    LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (restart_import)] unable to restart transfer ' + httpResponse.statusCode + '/' + body + ' (request async)');
-                    throw 'FATAL: [/libs/transfer-ingest lib (restart_import)] unable to begin restart transfer ' + httpResponse.statusCode + '/' + body + ' (request async)';
                 }
-            });
+
+            })();
 
             return null;
         })
