@@ -25,7 +25,7 @@ const CONFIG = require('../config/config'),
     TRANSFER_INGEST = require('../libs/transfer-ingest'),
     MIME_TYPE = require('../libs/mime-types'),
     MANIFEST = require('../libs/manifest'),
-    handles = require('../libs/handles'),
+    HANDLES = require('../libs/handles'),
     ARCHIVEMATICA = require('../libs/archivematica'),
     DURACLOUD = require('../libs/duracloud'),
     LOGGER = require('../libs/log4'),
@@ -1119,7 +1119,7 @@ exports.create_repo_record = function (req, callback) {
             return false;
         }
 
-        handles.create_handle(obj.pid, function (handle) {
+        HANDLES.create_handle(obj.pid, function (handle) {
 
             if (handle.error !== undefined && handle.error === true) {
                 LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/get_handle/handles.create_handle)] handle error ' + handle.message);

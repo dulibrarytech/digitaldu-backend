@@ -22,8 +22,7 @@ const CONFIG = require('../config/config'),
     TIMEOUT = 35000,
     HEADER = {
         'Content-Type': 'application/json'
-    },
-    REQUEST = require('request');
+    };
 
 /**
  * Pings duracloud service to check availability
@@ -346,102 +345,3 @@ exports.get_thumbnail = function (tn, callback) {
 
     })();
 };
-
-/** NOT USED
- * Confirms that file exists in duracloud storage
- * @param file
-
-exports.confirm_dip_file = function (file, callback) {
-    console.log('confirm dip file: ', file);
-    'use strict';
-
-    let endpoint = 'https://' + CONFIG.duraCloudUser + ':' + CONFIG.duraCloudPwd + '@' + CONFIG.duraCloudApi + 'dip-store/' + file;
-
-    (async () => {
-
-        try {
-
-            let response = await HTTP.head(endpoint, {
-                timeout: TIMEOUT
-            });
-
-            if (response.status !== 200) {
-
-                LOGGER.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud object.');
-
-                callback({
-                    error: true,
-                    error_message: 'ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud object.'
-                });
-
-            } else if (response.status === 200) {
-
-                callback({
-                    error: false,
-                    error_message: ''
-                });
-            }
-
-            return false;
-
-        } catch (error) {
-
-            LOGGER.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud object ' + error);
-
-            callback({
-                error: true,
-                error_message: error
-            });
-        }
-
-    })();
-};
- */
-
-/** NOT USED
- * Deletes dip file
- * @param file
- * @param callback
-
-exports.delete_dip_file = function (file, callback) {
-
-    'use strict';
-
-    let endpoint = 'https://' + CONFIG.duraCloudUser + ':' + CONFIG.duraCloudPwd + '@' + CONFIG.duraCloudApi + 'dip-store/' + file;
-
-    (async () => {
-
-        try {
-
-            let response = await HTTP.delete(endpoint);
-
-            if (response.status !== 200) {
-
-                LOGGER.module().error('ERROR: [/libs/duracloud lib  (delete_dip_file)] unable to delete dip file.');
-
-                callback({
-                    error: true,
-                    error_message: 'ERROR: [/libs/duracloud lib  (delete_dip_file)] unable to delete dip file.'
-                });
-
-            } else if (response.status === 200) {
-
-                callback({
-                    error: false,
-                    error_message: ''
-                });
-            }
-
-        } catch (error) {
-
-            LOGGER.module().error('ERROR: [/libs/duracloud lib  (delete_dip_file)] unable to delete dip file ' + error);
-
-            callback({
-                error: true,
-                error_message: error
-            });
-        }
-
-    })();
-};
- */

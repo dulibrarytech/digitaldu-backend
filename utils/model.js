@@ -18,20 +18,11 @@
 
 'use strict';
 
-const config = require('../config/config'),
+const CONFIG = require('../config/config'),
     HTTP = require('../libs/http'),
-    async = require('async'),
-    logger = require('../libs/log4'),
-    knex = require('../config/db')(),
-    knexQ = require('knex')({
-        client: 'mysql2',
-        connection: {
-            host: config.dbQueueHost,
-            user: config.dbQueueUser,
-            password: config.dbQueuePassword,
-            database: config.dbQueueName
-        }
-    }),
+    ASYNC = require('async'),
+    LOGGER = require('../libs/log4'),
+    DB = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects';
 
 /**
@@ -44,7 +35,7 @@ exports.reindex = function (req, callback) {
     function check_indexes(callback) {
 
         let obj = {};
-        let indexes = [config.elasticSearchBackIndex, config.elasticSearchFrontIndex];
+        let indexes = [CONFIG.elasticSearchBackIndex, CONFIG.elasticSearchFrontIndex];
         obj.indexes = [];
 
         function check_index(index, cb) {
@@ -52,13 +43,13 @@ exports.reindex = function (req, callback) {
             (async () => {
 
                 let response = await HTTP.head({
-                    url: config.elasticSearch + '/' + index
+                    url: CONFIG.elasticSearch + '/' + index
                 });
 
                 let result = {};
 
                 if (response.error === true) {
-                    logger.module().error('ERROR: [/utils/model module (check_index)] request failed. Index does not exist.');
+                    LOGGER.module().error('ERROR: [/utils/model module (check_index)] request failed. Index does not exist.');
                     result.error = true;
                 } else {
                     result.error = false;
@@ -116,7 +107,7 @@ exports.reindex = function (req, callback) {
                 });
 
                 if (response.error === true) {
-                    logger.module().error('ERROR: [/import/utils module (reindex/delete_index)] indexer error ' + response.error);
+                    LOGGER.module().error('ERROR: [/import/utils module (reindex/delete_index)] indexer error ' + response.error);
                 } else if (response.data.status === 201) {
                     return false;
                 }
@@ -146,7 +137,7 @@ exports.reindex = function (req, callback) {
             return false;
         }
 
-        obj.create_indexes = [config.elasticSearchBackIndex, config.elasticSearchFrontIndex];
+        obj.create_indexes = [CONFIG.elasticSearchBackIndex, CONFIG.elasticSearchFrontIndex];
 
         function create(index_name) {
 
@@ -162,7 +153,7 @@ exports.reindex = function (req, callback) {
                 });
 
                 if (response.error === true) {
-                    logger.module().error('ERROR: [/import/utils module (reindex/create_index/create)] indexer error ' + response.error);
+                    LOGGER.module().error('ERROR: [/import/utils module (reindex/create_index/create)] indexer error ' + response.error);
                 } else if (response.data.status === 201) {
                     return false;
                 }
@@ -207,7 +198,7 @@ exports.reindex = function (req, callback) {
                 });
 
                 if (response.error === true) {
-                    logger.module().error('ERROR: [/import/utils module (reindex/index/reindex)] indexer error ' + response.error);
+                    LOGGER.module().error('ERROR: [/import/utils module (reindex/index/reindex)] indexer error ' + response.error);
                 } else if (response.data.status === 201) {
                     obj.reindexed = true;
                     callback(null, obj);
@@ -217,7 +208,7 @@ exports.reindex = function (req, callback) {
             })();
         }
 
-        reindex(config.elasticSearchBackIndex);
+        reindex(CONFIG.elasticSearchBackIndex);
     }
 
     function monitor_index_progress(obj, callback) {
@@ -226,7 +217,7 @@ exports.reindex = function (req, callback) {
 
         function monitor() {
 
-            knex(REPO_OBJECTS)
+            DB(REPO_OBJECTS)
                 .count('is_indexed as is_indexed_count')
                 .where({
                     is_indexed: 0,
@@ -246,7 +237,7 @@ exports.reindex = function (req, callback) {
                     return null;
                 })
                 .catch(function (error) {
-                    logger.module().fatal('FATAL: [/stats/model module (get_stats/monitor_index_progress)] unable to monitor index progress ' + error);
+                    LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/monitor_index_progress)] unable to monitor index progress ' + error);
                     throw 'FATAL: [/stats/model module (get_stats/monitor_index_progress)] unable to monitor index progress ' + error;
                 });
         }
@@ -256,7 +247,7 @@ exports.reindex = function (req, callback) {
         }, 10000);
     }
 
-    async.waterfall([
+    ASYNC.waterfall([
         check_indexes,
         delete_index,
         create_index,
@@ -265,13 +256,13 @@ exports.reindex = function (req, callback) {
     ], function (error, results) {
 
         if (error) {
-            logger.module().error('ERROR: [/utils/model module (reindex/async.waterfall)] ' + error);
+            LOGGER.module().error('ERROR: [/utils/model module (reindex/async.waterfall)] ' + error);
         }
 
         if (results.reindexed !== undefined) {
-            logger.module().info('INFO: [/utils/model module (reindex/async.waterfall)] indexing in progress');
+            LOGGER.module().info('INFO: [/utils/model module (reindex/async.waterfall)] indexing in progress');
         } else {
-            logger.module().error('ERROR: [/utils/model module (reindex/async.waterfall)] reindex failed. ' + results);
+            LOGGER.module().error('ERROR: [/utils/model module (reindex/async.waterfall)] reindex failed. ' + results);
         }
 
         if (results.reindex_complete !== undefined && results.reindex_complete === true) {
@@ -305,7 +296,7 @@ function publish(sip_uuid) {
         });
 
         if (response.error === true) {
-            logger.module().error('ERROR: [/import/utils module (republish/publish)] indexer error ' + response.error);
+            LOGGER.module().error('ERROR: [/import/utils module (republish/publish)] indexer error ' + response.error);
         } else if (response.data.status === 201) {
             return false;
         }
@@ -326,7 +317,7 @@ const republish = function (object_type) {
         is_active: 1
     };
 
-    knex(REPO_OBJECTS)
+    DB(REPO_OBJECTS)
         .select('sip_uuid')
         .where(whereObj)
         .then(function (data) {
@@ -346,67 +337,7 @@ const republish = function (object_type) {
             return null;
         })
         .catch(function (error) {
-            logger.module().fatal('FATAL: [/import/utils module (reindex/republish_collection/publish_collection)] Unable to get object ' + error);
+            LOGGER.module().fatal('FATAL: [/import/utils module (reindex/republish_collection/publish_collection)] Unable to get object ' + error);
             throw 'FATAL: [/import/utils module (reindex/republish_collection/publish_collection)] Unable to get object ' + error;
         });
-};
-
-/**
- *  gets archivesspace ids for incomplete records
- */
-exports.get_archivesspace_ids = function (req, callback) {
-
-    knexQ('tbl_incomplete_queue')
-        .distinct('sip_uuid', 'call_number')
-        .then(function (data) {
-
-            let timer = setInterval(function () {
-
-                if (data.length === 0) {
-                    clearInterval(timer);
-                    return false;
-                }
-
-                let record = data.pop();
-
-                knex(REPO_OBJECTS)
-                    .select('uri')
-                    .where({
-                        sip_uuid: record.sip_uuid
-                    })
-                    .then(function (data) {
-
-                        let obj = {};
-                        obj.sip_uuid = record.sip_uuid.trim();
-                        obj.uri = data[0].uri.trim();
-                        obj.call_number = record.call_number.trim();
-
-                        knexQ('broken_tiffs')
-                            .insert(obj)
-                            .then(function (data) {
-                                console.log(data);
-                                return null;
-                            })
-                            .catch(function (error) {
-                                logger.module().fatal('FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save incomplete record data ' + error);
-                                throw 'FATAL: [/libs/transfer-ingest lib (save_mets_data)] unable to save incomplete record data ' + error;
-                            });
-                    })
-                    .catch(function (error) {
-                        logger.module().fatal('FATAL: [/utils/model module (check_objects)] Unable to get objects ' + error);
-                        throw 'FATAL: [/utils/model module (check_objects)] Unable to check objects ' + error;
-                    });
-
-            }, 150);
-
-        })
-        .catch(function (error) {
-            logger.module().fatal('FATAL: [/utils/model module (check_objects)] Unable to get objects ' + error);
-            throw 'FATAL: [/utils/model module (check_objects)] Unable to check objects ' + error;
-        });
-
-    callback({
-        status: 200,
-        message: 'Getting archivesspace ids.'
-    });
 };
