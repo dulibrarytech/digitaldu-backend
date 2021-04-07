@@ -350,7 +350,7 @@ exports.get_thumbnail = function (tn, callback) {
 /** NOT USED
  * Confirms that file exists in duracloud storage
  * @param file
- */
+
 exports.confirm_dip_file = function (file, callback) {
     console.log('confirm dip file: ', file);
     'use strict';
@@ -396,12 +396,13 @@ exports.confirm_dip_file = function (file, callback) {
 
     })();
 };
+ */
 
 /** NOT USED
  * Deletes dip file
  * @param file
  * @param callback
- */
+
 exports.delete_dip_file = function (file, callback) {
 
     'use strict';
@@ -443,3 +444,4 @@ exports.delete_dip_file = function (file, callback) {
 
     })();
 };
+ */

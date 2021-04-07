@@ -550,6 +550,7 @@ exports.delete_aip_request = function (obj, callback) {
             if (response.status === 200) {
 
                 LOGGER.module().info('INFO: [/libs/archivematica lib (delete_aip)] A deletion request already exists for this AIP (' + obj.pid + ').');
+
                 if (response.data.message === 'A deletion request already exists for this AIP.') {
                     callback({
                         error: false,
@@ -594,75 +595,3 @@ exports.delete_aip_request = function (obj, callback) {
 
     })();
 };
-
-/** TODO: REMOVE
- * Downloads AIP from archivematica
- * @param sip_uuid
- * @param callback
- */
-/*
-exports.download_aip = function (sip_uuid, callback) {
-
-    'use strict';
-
-    if (FS.existsSync('./tmp/' + sip_uuid + '.7z')) {
-        callback('./tmp/' + sip_uuid + '.7z');
-        return false;
-    }
-
-    let apiUrl = CONFIG.archivematicaStorageApi + 'v2/file/' + sip_uuid + '/download/?username=' + CONFIG.archivematicaStorageUsername + '&api_key=' + CONFIG.archivematicaStorageApiKey;
-
-    REQUEST.get({
-        url: apiUrl,
-        timeout: TIMEMOUT
-    }, function (error, httpResponse, body) {
-
-        if (error) {
-
-            logger.module().error('ERROR: [/libs/archivematica lib (download_aip)] unable to download aip ' + error);
-
-            callback({
-                error: true,
-                message: error
-            });
-
-            return false;
-        }
-
-        if (httpResponse.statusCode !== 200) {
-
-            logger.module().error('ERROR: [/libs/archivematica lib (download_aip)] unable to get AIP ' + httpResponse.statusCode + '/' + body);
-
-            callback({
-                error: true,
-                message: 'ERROR: Unable to get AIP'
-            });
-
-            return false;
-        }
-
-        FS.writeFile('./tmp/' + sip_uuid + '.7z', body, function (error) {
-
-            if (error) {
-
-                logger.module().error('ERROR: [/libs/archivematica lib (download_aip)] unable to write to tmp folder ' + error);
-
-                callback({
-                    error: true,
-                    error_message: error
-                });
-            }
-
-            setTimeout(function () {
-
-                if (FS.existsSync('./tmp/' + sip_uuid + '.7z')) {
-                    callback('./tmp/' + sip_uuid + '.7z');
-                    return false;
-                }
-
-            }, 1000);
-        });
-    });
-};
-
- */
