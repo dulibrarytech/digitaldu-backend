@@ -18,10 +18,9 @@
 
 const CONFIG = require('../config/config'),
     CLIENT = require('ssh2-sftp-client'),
-    REQUEST = require('request'),
     HTTP = require('axios'),
-    FS = require('fs'),
     QS = require('querystring'),
+    TIMEMOUT = 35000,
     LOGGER = require('../libs/log4');
 
 /**
@@ -39,7 +38,7 @@ exports.ping_api = function (callback) {
         try {
 
             let response = await HTTP.get(endpoint, {
-                timeout: 35000,
+                timeout: TIMEMOUT,
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -96,7 +95,7 @@ exports.ping_storage_api = function (callback) {
         try {
 
             let response = await HTTP.get(endpoint, {
-                timeout: 35000,
+                timeout: TIMEMOUT,
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -204,7 +203,7 @@ exports.start_transfer = function (transferObj, callback) {
             };
 
             let response = await HTTP.post(endpoint, QS.stringify(data), {
-                timeout: 35000,
+                timeout: TIMEMOUT,
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
                 }
@@ -259,7 +258,7 @@ exports.approve_transfer = function (transferFolder, callback) {
             };
 
             let response = await HTTP.post(endpoint, QS.stringify(data), {
-                timeout: 35000,
+                timeout: TIMEMOUT,
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
                 }
@@ -309,7 +308,7 @@ exports.get_transfer_status = function (uuid, callback) {
         try {
 
             let response = await HTTP.get(endpoint, {
-                timeout: 35000,
+                timeout: TIMEMOUT,
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -359,7 +358,7 @@ exports.get_ingest_status = function (uuid, callback) {
         try {
 
             let response = await HTTP.get(endpoint, {
-                timeout: 35000,
+                timeout: TIMEMOUT,
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -409,7 +408,7 @@ exports.get_dip_path = function (uuid, callback) {
         try {
 
             let response = await HTTP.get(endpoint, {
-                timeout: 35000,
+                timeout: TIMEMOUT,
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -541,15 +540,26 @@ exports.delete_aip_request = function (obj, callback) {
                 'user_email': CONFIG.archivematicaUserEmail
             };
 
-            let response = await HTTP.post(endpoint, QS.stringify(data), {
-                timeout: 35000,
+            let response = await HTTP.post(endpoint, data, {
+                timeout: TIMEMOUT,
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
+                    'Content-Type': 'application/json'
                 }
             });
 
             if (response.status === 200) {
 
+                LOGGER.module().info('INFO: [/libs/archivematica lib (delete_aip)] A deletion request already exists for this AIP (' + obj.pid + ').');
+
+                if (response.data.message === 'A deletion request already exists for this AIP.') {
+                    callback({
+                        error: false,
+                        message: response.data.message,
+                        data: {
+                            id: 0
+                        }
+                    });
+                }
 
             } else if (response.status === 202) {
 
@@ -584,140 +594,4 @@ exports.delete_aip_request = function (obj, callback) {
         }
 
     })();
-
-    /*
-    REQUEST.post({
-        url: apiUrl,
-        json: {
-            'event_reason': obj.delete_reason,
-            'pipeline': CONFIG.archivematicaPipeline,
-            'user_id': CONFIG.archivematicaUserId,
-            'user_email': CONFIG.archivematicaUserEmail
-        },
-        timeout: 45000
-    }, function (error, httpResponse, body) {
-
-        if (error) {
-
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (delete_aip)] unable to delete aip - (' + obj.pid + ') - ' + error);
-
-            callback({
-                error: true,
-                message: error
-            });
-
-            return false;
-        }
-
-        if (httpResponse.statusCode === 202) {
-
-            LOGGER.module().info('INFO: [/libs/archivematica lib (delete_aip)] delete aip (' + obj.pid + ') request succeeded.');
-
-            callback({
-                error: false,
-                message: '',
-                data: body
-            });
-
-            return false;
-
-        } else if (httpResponse.statusCode === 200) {
-
-            LOGGER.module().info('INFO: [/libs/archivematica lib (delete_aip)] A deletion request already exists for this AIP (' + obj.pid + ').');
-
-            if (body.message === 'A deletion request already exists for this AIP.') {
-                callback({
-                    error: false,
-                    message: body.message,
-                    data: {
-                        id: 0
-                    }
-                });
-            }
-
-            return false;
-
-        } else {
-
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (delete_aip)] unable to delete aip ' + httpResponse.statusCode + '/' + body);
-
-            callback({
-                error: true,
-                message: 'ERROR: [/libs/archivematica lib (delete_aip)] Unable to delete aip'
-            });
-
-            return false;
-        }
-    });
-
-     */
-};
-
-/** TODO: REMOVE
- * Downloads AIP from archivematica
- * @param sip_uuid
- * @param callback
- */
-exports.download_aip = function (sip_uuid, callback) {
-
-    'use strict';
-
-    if (FS.existsSync('./tmp/' + sip_uuid + '.7z')) {
-        callback('./tmp/' + sip_uuid + '.7z');
-        return false;
-    }
-
-    let apiUrl = CONFIG.archivematicaStorageApi + 'v2/file/' + sip_uuid + '/download/?username=' + CONFIG.archivematicaStorageUsername + '&api_key=' + CONFIG.archivematicaStorageApiKey;
-
-    REQUEST.get({
-        url: apiUrl,
-        timeout: 600000
-    }, function (error, httpResponse, body) {
-
-        if (error) {
-
-            logger.module().error('ERROR: [/libs/archivematica lib (download_aip)] unable to download aip ' + error);
-
-            callback({
-                error: true,
-                message: error
-            });
-
-            return false;
-        }
-
-        if (httpResponse.statusCode !== 200) {
-
-            logger.module().error('ERROR: [/libs/archivematica lib (download_aip)] unable to get AIP ' + httpResponse.statusCode + '/' + body);
-
-            callback({
-                error: true,
-                message: 'ERROR: Unable to get AIP'
-            });
-
-            return false;
-        }
-
-        FS.writeFile('./tmp/' + sip_uuid + '.7z', body, function (error) {
-
-            if (error) {
-
-                logger.module().error('ERROR: [/libs/archivematica lib (download_aip)] unable to write to tmp folder ' + error);
-
-                callback({
-                    error: true,
-                    error_message: error
-                });
-            }
-
-            setTimeout(function () {
-
-                if (FS.existsSync('./tmp/' + sip_uuid + '.7z')) {
-                    callback('./tmp/' + sip_uuid + '.7z');
-                    return false;
-                }
-
-            }, 1000);
-        });
-    });
 };

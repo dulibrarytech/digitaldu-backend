@@ -18,22 +18,16 @@
 
 'use strict';
 
-const Utils = require('../utils/model');
+const UTILS = require('../utils/model');
 
 exports.default = function (req, res) {
     res.status(403).send({
-        info: 'University of Denver Libraries'
+        info: 'University of Denver Libraries - Digital Object Repository'
     });
 };
 
 exports.reindex = function (req, res) {
-    Utils.reindex(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.get_archivesspace_ids = function (req, res) {
-    Utils.get_archivesspace_ids(req, function (data) {
+    UTILS.reindex(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };

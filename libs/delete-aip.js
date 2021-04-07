@@ -16,6 +16,8 @@
 
  */
 
+// TODO: remove
+
 'use strict';
 
 const CONFIG = require('../config/config'),

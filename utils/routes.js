@@ -18,13 +18,13 @@
 
 'use strict';
 
-const Utils = require('../utils/controller'),
-    token = require('../libs/tokens');
+const UTILS = require('../utils/controller'),
+    TOKEN = require('../libs/tokens');
 
 module.exports = function (app) {
 
     app.route('/')
-        .get(Utils.default);
+        .get(UTILS.default);
 
     app.get('/robots.txt', function (req, res) {
         res.type('text/plain');
@@ -32,8 +32,5 @@ module.exports = function (app) {
     });
 
     app.route('/api/admin/v1/utils/reindex')
-        .post(token.verify, Utils.reindex);
-
-    app.route('/api/admin/v1/utils/objects/ids')
-        .get(token.verify, Utils.get_archivesspace_ids);
+        .post(TOKEN.verify, UTILS.reindex);
 };

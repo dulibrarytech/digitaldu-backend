@@ -297,7 +297,7 @@ exports.delete = function(request_obj) {
 };
 
 /**
- * TODO:
+ * HEAD request
  * @param request_obj
  */
 exports.head = function(request_obj) {
