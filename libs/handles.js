@@ -18,6 +18,7 @@
 
 const CONFIG = require('../config/config'),
     LOGGER = require('../libs/log4'),
+    HTTP = require('axios'),
     REQUEST = require('request'),
     HANDLE_HOST = CONFIG.handleHost,
     HANDLE_PREFIX = CONFIG.handlePrefix,
@@ -48,7 +49,7 @@ exports.create_handle = function (pid, callback) {
     }
 
     let handleUrl = HANDLE_HOST + '/' + HANDLE_PREFIX + '/' + encodeURIComponent(pid) + '?target=' + HANDLE_TARGET + encodeURIComponent(pid),
-        auth = new Buffer(HANDLE_USER + ':' + HANDLE_PASSWORD).toString('base64'),
+        auth = Buffer.from(HANDLE_USER + ':' + HANDLE_PASSWORD).toString('base64'),
         options = {
         url: handleUrl,
         method: 'POST',
