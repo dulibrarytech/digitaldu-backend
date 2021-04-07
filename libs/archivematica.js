@@ -540,15 +540,25 @@ exports.delete_aip_request = function (obj, callback) {
                 'user_email': CONFIG.archivematicaUserEmail
             };
 
-            let response = await HTTP.post(endpoint, QS.stringify(data), {
+            let response = await HTTP.post(endpoint, data, {
                 timeout: TIMEMOUT,
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
+                    'Content-Type': 'application/json'
                 }
             });
 
             if (response.status === 200) {
 
+                LOGGER.module().info('INFO: [/libs/archivematica lib (delete_aip)] A deletion request already exists for this AIP (' + obj.pid + ').');
+                if (response.data.message === 'A deletion request already exists for this AIP.') {
+                    callback({
+                        error: false,
+                        message: response.data.message,
+                        data: {
+                            id: 0
+                        }
+                    });
+                }
 
             } else if (response.status === 202) {
 

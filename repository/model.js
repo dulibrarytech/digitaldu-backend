@@ -1580,7 +1580,8 @@ exports.delete_object = function (req, callback) {
 
             if (result.error === false) {
 
-                obj.delete_id = result.data.id;
+                let json = JSON.parse(result.data);
+                obj.delete_id = json.id;
 
                 DB(REPO_OBJECTS)
                     .where({
