@@ -48,56 +48,59 @@ exports.create_handle = function (pid, callback) {
         return false;
     }
 
-    let handleUrl = HANDLE_HOST + '/' + HANDLE_PREFIX + '/' + encodeURIComponent(pid) + '?target=' + HANDLE_TARGET + encodeURIComponent(pid),
-        auth = Buffer.from(HANDLE_USER + ':' + HANDLE_PASSWORD).toString('base64'),
-        options = {
-        url: handleUrl,
-        method: 'POST',
-        headers: {
-            Authorization: 'Basic ' + auth
-        }
-    };
+    (async () => {
 
-    REQUEST(options, function (error, response, body) {
+        try {
 
-        if (error) {
+            let handleUrl = HANDLE_HOST + '/' + HANDLE_PREFIX + '/' + encodeURIComponent(pid) + '?target=' + HANDLE_TARGET + encodeURIComponent(pid),
+                auth = Buffer.from(HANDLE_USER + ':' + HANDLE_PASSWORD).toString('base64');
 
-            LOGGER.module().error('ERROR: [/libs/handles lib (create_handle)] Unable to create handle. ' + error);
-
-            callback({
-                error: true,
-                message: error
+            let response = await HTTP.post(handleUrl, '', {
+                timeout: 35000,
+                headers: {
+                    'Authorization': 'Basic ' + auth
+                }
             });
+
+            if (response.status === 201) {
+
+                LOGGER.module().info('INFO: [/libs/handles lib (create_handle)] Handle for object: ' + pid + ' had been created.');
+
+                let handle = HANDLE_SERVER + HANDLE_PREFIX + '/' + pid;
+                callback(handle);
+
+            } else if (response.status === 409) {
+
+                LOGGER.module().error('ERROR: [/libs/handles lib (create_handle)] Handle already exists (conflict)');
+
+                callback({
+                    error: true,
+                    message: 'Error: [/libs/handles lib (create_handle)] Handle already exists (conflict)'
+                });
+
+            } else {
+
+                LOGGER.module().error('ERROR: [/libs/handles lib (create_handle)] Unable to create new handle ' + response.status);
+
+                callback({
+                    error: true,
+                    message: 'Error: [/libs/handles lib (create_handle)] Unable to create new handle ' + response.status
+                });
+            }
 
             return false;
-        }
 
-        if (response.statusCode === 201) {
+        } catch (error) {
 
-            LOGGER.module().info('INFO: [/libs/handles lib (create_handle)] Handle for object: ' + pid + ' had been created.');
-
-            let handle = HANDLE_SERVER + HANDLE_PREFIX + '/' + pid;
-            callback(handle);
-
-        } else if (response.statusCode === 409) {
-
-            LOGGER.module().error('ERROR: [/libs/handles lib (create_handle)] Handle already exists (conflict)');
+            LOGGER.module().error('ERROR: [/libs/handles lib (create_handle)] Unable to create new handle ' + error);
 
             callback({
                 error: true,
-                message: 'Error: [/libs/handles lib (create_handle)] Handle already exists (conflict)'
-            });
-
-        } else {
-
-            LOGGER.module().error('ERROR: [/libs/handles lib (create_handle)] Unable to create new handle ' + response.statusCode);
-
-            callback({
-                error: true,
-                message: 'Error: [/libs/handles lib (create_handle)] Unable to create new handle ' + response.statusCode
+                message: 'Error: [/libs/handles lib (create_handle)] Unable to create new handle ' + error
             });
         }
-    });
+
+    })();
 };
 
 /**
