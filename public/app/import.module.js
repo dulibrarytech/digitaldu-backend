@@ -232,7 +232,7 @@ const importModule = (function () {
                 html += '<td ' + alignTd + '><i class="fa fa-check fa-lg" style="color:green"></i></td>';
             }
 
-            html += '<td ' + alignTd + '><a href="/dashboard/objects/?pid=' + DOMPurify.sanitize(data[i].is_member_of_collection) + '"><i class="fa fa-archive fa-lg"></i></a></td>';
+            html += '<td ' + alignTd + '><a href="/dashboard/objects/unpublished?pid=' + DOMPurify.sanitize(data[i].is_member_of_collection) + '"><i class="fa fa-archive fa-lg"></i></a></td>';
 
             if (data[i].sip_uuid !== null) {
 
