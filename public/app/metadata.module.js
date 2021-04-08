@@ -108,15 +108,15 @@ const metadataModule = (function () {
 
             if (is_published === 1) {
                 menu += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
-                menu += '<p><a href="#" onclick="objectsModule.unpublishObject(\'' + DOMPurify.sanitize(record.pid) + '\', \'collection\'); return false;"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
+                menu += '<p><a id="unpublish-' + record.pid + '" href="#' + record.pid + '" onclick="objectsModule.unpublishObject(\'' + DOMPurify.sanitize(record.pid) + '\', \'collection\'); return false;"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
             } else if (is_published === 0) {
                 menu += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
-                menu += '<p><a href="#" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(record.pid) + '\', \'collection\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
+                menu += '<p><a id="publish-' + record.pid + '" href="#' + record.pid + '" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(record.pid) + '\', \'collection\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
             }
 
             menu += '<p><a href="' + api + '/dashboard/objects/unpublished?pid=' + DOMPurify.sanitize(record.pid) + '"><i class="fa fa-info-circle"></i>&nbsp;Unpublished objects</a></p>';
             menu += '<p><a href="' + api + '/dashboard/object/thumbnail?pid=' + DOMPurify.sanitize(record.pid) + '"><i class="fa fa-edit"></i>&nbsp;Change Thumbnail</a></p>';
-            menu += '<p><a href="#" onclick="collectionsModule.updateCollectionMetadata(\'' + DOMPurify.sanitize(record.pid) + '\', \'collection\'); return false;"><i class="fa fa-code"></i>&nbsp;Update Collection Metadata</a></p>';
+            menu += '<p><a id="update-' + record.pid + '" href="#' + record.pid + '" onclick="collectionsModule.updateCollectionMetadata(\'' + DOMPurify.sanitize(record.pid) + '\', \'collection\'); return false;"><i class="fa fa-code"></i>&nbsp;Update Collection Metadata</a></p>';
         }
 
         return menu;

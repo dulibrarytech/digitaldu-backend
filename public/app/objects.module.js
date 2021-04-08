@@ -95,14 +95,12 @@ const objectsModule = (function () {
      */
     obj.publishObject = function (pid, type) {
 
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-
         let obj = {
             pid: pid,
             type: type
         };
 
-        domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-check-circle"></i> Publishing...</div>');
+        domModule.html('#publish-' + pid, '<div class="alert alert-info"><i class="fa fa-check-circle"></i> Publishing...</div>');
 
         let url = api + '/api/admin/v1/repo/publish',
             token = userModule.getUserToken(),
@@ -120,20 +118,19 @@ const objectsModule = (function () {
 
             if (response.status === 201) {
 
-                domModule.html('#message', '<div class="alert alert-success">Published</div>');
-
                 setTimeout(function () {
-                    domModule.html('#message', null);
+                    domModule.html('#publish-' + pid, null);
                     objectsModule.getObjects();
+                    location.hash = '#' + pid;
                 }, 5000);
 
             } else if (response.status === 418) {
 
+                window.scrollTo({ top: 0, behavior: 'smooth' });
                 domModule.html('#message', '<div class="alert alert-warning">Unable to publish object. (The object\'s parent collection must be published before attempting to publish one of its objects.)</div>');
 
                 setTimeout(function () {
                     domModule.html('#message', null);
-                    objectsModule.getObjects();
                 }, 7000);
 
             } else if (response.status === 401) {
@@ -161,14 +158,12 @@ const objectsModule = (function () {
      */
     obj.unpublishObject = function (pid, type) {
 
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-
         let obj = {
             pid: pid,
             type: type
         };
 
-        domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-check-circle"></i> Unpublishing...</div>');
+        domModule.html('#unpublish-' + pid, '<div class="alert alert-info"><i class="fa fa-check-circle"></i> Unpublishing...</div>');
 
         let url = api + '/api/admin/v1/repo/unpublish',
             token = userModule.getUserToken(),
@@ -186,11 +181,10 @@ const objectsModule = (function () {
 
             if (response.status === 201) {
 
-                domModule.html('#message', '<div class="alert alert-success">Unpublished</div>');
-
                 setTimeout(function () {
-                    domModule.html('#message', null);
+                    domModule.html('#unpublish-' + pid, null);
                     objectsModule.getObjects();
+                    location.hash = '#' + pid;
                 }, 8000);
 
 

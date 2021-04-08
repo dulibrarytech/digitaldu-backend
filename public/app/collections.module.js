@@ -289,8 +289,8 @@ const collectionsModule = (function () {
      */
     obj.updateCollectionMetadata = function(pid) {
 
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> Updating...</div>');
+        // window.scrollTo({ top: 0, behavior: 'smooth' });
+        domModule.html('#update-' + pid, '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> Updating...</div>');
 
         let obj = {};
         obj.sip_uuid = pid;
@@ -311,11 +311,12 @@ const collectionsModule = (function () {
 
             if (response.status === 201) {
 
-                domModule.html('#message', '<div class="alert alert-success"><i class="fa fa-exclamation-circle"></i> Collection Metadata Updated.</div>');
+                // domModule.html('#update-' + pid, '<div class="alert alert-success"><i class="fa fa-exclamation-circle"></i> Collection Metadata Updated.</div>');
 
                 setTimeout(function () {
-                    domModule.html('#message', null);
+                    // domModule.html('#message', null);
                     objectsModule.getObjects();
+                    location.hash = '#' + pid;
                 }, 4000);
 
 
