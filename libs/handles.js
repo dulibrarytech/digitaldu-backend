@@ -19,13 +19,13 @@
 const CONFIG = require('../config/config'),
     LOGGER = require('../libs/log4'),
     HTTP = require('axios'),
-    REQUEST = require('request'),
     HANDLE_HOST = CONFIG.handleHost,
     HANDLE_PREFIX = CONFIG.handlePrefix,
     HANDLE_USER = CONFIG.handleUsername,
     HANDLE_PASSWORD = CONFIG.handlePwd,
     HANDLE_TARGET = CONFIG.handleTarget,
-    HANDLE_SERVER = CONFIG.handleServer;
+    HANDLE_SERVER = CONFIG.handleServer,
+    TIMEOUT = 35000;
 
 /**
  * Creates handle
@@ -56,7 +56,7 @@ exports.create_handle = function (pid, callback) {
                 auth = Buffer.from(HANDLE_USER + ':' + HANDLE_PASSWORD).toString('base64');
 
             let response = await HTTP.post(handleUrl, '', {
-                timeout: 35000,
+                timeout: TIMEOUT,
                 headers: {
                     'Authorization': 'Basic ' + auth
                 }
@@ -124,19 +124,40 @@ exports.update_handle = function (pid, callback) {
         return false;
     }
 
-    let handleUrl = HANDLE_HOST + '/' + HANDLE_PREFIX + '/' + encodeURIComponent(pid) + '?target=' + HANDLE_TARGET + encodeURIComponent(pid),
-        auth = new Buffer(HANDLE_USER + ':' + HANDLE_PASSWORD).toString('base64'),
-        options = {
-        url: handleUrl,
-        method: 'PUT',
-        headers: {
-            Authorization: 'Basic ' + auth
-        }
-    };
+    (async () => {
 
-    REQUEST(options, function (error, response, body) {
+        try {
 
-        if (error) {
+            let handleUrl = HANDLE_HOST + '/' + HANDLE_PREFIX + '/' + encodeURIComponent(pid) + '?target=' + HANDLE_TARGET + encodeURIComponent(pid),
+                auth = Buffer.from(HANDLE_USER + ':' + HANDLE_PASSWORD).toString('base64');
+
+            let response = await HTTP.put(handleUrl, '', {
+                timeout: TIMEOUT,
+                headers: {
+                    'Authorization': 'Basic ' + auth
+                }
+            });
+
+            if (response.status === 204) {
+
+                LOGGER.module().info('INFO: [/libs/handles lib (update_handle)] Handle for object: ' + pid + ' had been updated.');
+
+                let handle = HANDLE_SERVER + HANDLE_PREFIX + '/' + pid;
+                callback(handle);
+
+            } else {
+
+                LOGGER.module().error('ERROR: [/libs/handles lib (update_handle)] Unable to update handle.');
+
+                callback({
+                    error: true,
+                    message: 'Error: [/libs/handles lib (update_handle)] Unable to update handle.'
+                });
+            }
+
+            return false;
+
+        } catch (error) {
 
             LOGGER.module().error('ERROR: [/libs/handles lib (update_handle)] Unable to create handle. ' + error);
 
@@ -144,25 +165,7 @@ exports.update_handle = function (pid, callback) {
                 error: true,
                 message: error
             });
-
-            return false;
         }
 
-        if (response.statusCode === 204) {
-
-            LOGGER.module().info('INFO: [/libs/handles lib (update_handle)] Handle for object: ' + pid + ' had been updated.');
-
-            let handle = HANDLE_SERVER + HANDLE_PREFIX + '/' + pid;
-            callback(handle);
-
-        } else {
-
-            LOGGER.module().error('ERROR: [/libs/handles lib (update_handle)] Unable to update handle. ' + response.statusCode);
-
-            callback({
-                error: true,
-                message: 'Error: [/libs/handles lib (update_handle)] Unable to update handle ' + response.statusCode
-            });
-        }
-    });
+    })();
 };
