@@ -18,6 +18,7 @@
 
 const CONFIG = require('../config/config'),
     HTTP = require('axios'),
+    TIMEOUT = 55000,
     LOGGER = require('../libs/log4');
 
 /**
@@ -35,7 +36,7 @@ exports.ping = function (callback) {
         try {
 
             let response = await HTTP.get(apiUrl, {
-                timeout: 35000,
+                timeout: TIMEOUT,
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -114,7 +115,7 @@ exports.get_mods = function (id, session, callback) {
         try {
 
             let response = await HTTP.get(apiUrl, {
-                timeout: 60000,
+                timeout: TIMEOUT,
                 headers: {
                     'Content-Type': 'application/json',
                     'X-ArchivesSpace-Session': session
@@ -185,7 +186,7 @@ exports.get_session_token = function (callback) {
         try {
 
             let response = await HTTP.post(apiUrl, {
-                timeout: 45000,
+                timeout: TIMEOUT,
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -255,7 +256,7 @@ exports.destroy_session_token = function (session, callback) {
             let response = await HTTP({
                 method: 'post',
                 url: apiUrl,
-                timeout: 45000,
+                timeout: TIMEOUT,
                 headers: {
                     'X-ArchivesSpace-Session': session,
                     'Content-Type': 'application/json'
