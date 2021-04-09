@@ -100,7 +100,8 @@ const objectsModule = (function () {
             type: type
         };
 
-        domModule.html('#publish-' + pid, '<div class="alert alert-info"><i class="fa fa-check-circle"></i> Publishing...</div>');
+        // domModule.html('#publish-' + pid, '<div class="alert alert-info"><i class="fa fa-check-circle"></i> Publishing...</div>');
+        domModule.html('#publish-' + pid, '<em><i class="fa fa-exclamation-circle"></i> Publishing...</em>');
 
         let url = api + '/api/admin/v1/repo/publish',
             token = userModule.getUserToken(),
@@ -163,7 +164,7 @@ const objectsModule = (function () {
             type: type
         };
 
-        domModule.html('#unpublish-' + pid, '<div class="alert alert-info"><i class="fa fa-check-circle"></i> Unpublishing...</div>');
+        domModule.html('#unpublish-' + pid, '<em><i class="fa fa-exclamation-circle"></i> Unpublishing...</em>');
 
         let url = api + '/api/admin/v1/repo/unpublish',
             token = userModule.getUserToken(),
@@ -302,8 +303,8 @@ const objectsModule = (function () {
      */
     obj.updateMetadata = function(pid) {
 
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> Updating...</div>');
+        // window.scrollTo({ top: 0, behavior: 'smooth' });
+        domModule.html('#update-' + pid, '<em><i class="fa fa-exclamation-circle"></i> Updating Metadata...</em>');
 
         let obj = {};
         obj.sip_uuid = pid;
@@ -324,11 +325,11 @@ const objectsModule = (function () {
 
             if (response.status === 201) {
 
-                domModule.html('#message', '<div class="alert alert-success"><i class="fa fa-exclamation-circle"></i> Metadata Updated.</div>');
+                // domModule.html('#message', '<div class="alert alert-success"><i class="fa fa-exclamation-circle"></i> Metadata Updated.</div>');
 
                 setTimeout(function () {
-                    domModule.html('#message', null);
                     objectsModule.getObjects();
+                    location.hash = '#' + pid;
                 }, 4000);
 
 

@@ -289,8 +289,7 @@ const collectionsModule = (function () {
      */
     obj.updateCollectionMetadata = function(pid) {
 
-        // window.scrollTo({ top: 0, behavior: 'smooth' });
-        domModule.html('#update-' + pid, '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> Updating...</div>');
+        domModule.html('#update-' + pid, '<em><i class="fa fa-exclamation-circle"></i> Updating Metadata...</em>');
 
         let obj = {};
         obj.sip_uuid = pid;
@@ -311,10 +310,7 @@ const collectionsModule = (function () {
 
             if (response.status === 201) {
 
-                // domModule.html('#update-' + pid, '<div class="alert alert-success"><i class="fa fa-exclamation-circle"></i> Collection Metadata Updated.</div>');
-
                 setTimeout(function () {
-                    // domModule.html('#message', null);
                     objectsModule.getObjects();
                     location.hash = '#' + pid;
                 }, 4000);
@@ -333,6 +329,7 @@ const collectionsModule = (function () {
 
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to update collection metadata.');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         };
 
