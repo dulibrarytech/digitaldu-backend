@@ -100,7 +100,6 @@ const objectsModule = (function () {
             type: type
         };
 
-        // domModule.html('#publish-' + pid, '<div class="alert alert-info"><i class="fa fa-check-circle"></i> Publishing...</div>');
         domModule.html('#publish-' + pid, '<em><i class="fa fa-exclamation-circle"></i> Publishing...</em>');
 
         let url = api + '/api/admin/v1/repo/publish',
@@ -251,6 +250,55 @@ const objectsModule = (function () {
         httpModule.req(request, callback);
     };
 
+    /**
+     * Constructs search request
+     */
+    obj.search = function () {
+
+        let q = helperModule.getParameterByName('q');
+        let token = userModule.getUserToken(),
+            page = helperModule.getParameterByName('page'),
+            total_on_page = helperModule.getParameterByName('total_on_page'),
+            sort = helperModule.getParameterByName('sort'),
+            url = api + '/api/admin/v1/search?q=' + q;
+
+        if (page !== null && total_on_page !== null) {
+            url = api + '/api/admin/v1/search?q=' + q + '&page=' + page + '&total_on_page=' + total_on_page;
+        }
+
+        let request = new Request(url, {
+                method: 'GET',
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+        const callback = function (response) {
+
+            if (response.status === 200) {
+
+                response.json().then(function (data) {
+
+                    domModule.html('#message', null);
+
+                    if (data.length === 0) {
+                        domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No records found.</div>');
+                    } else {
+                        console.log(data);
+                        objectsModule.renderDisplayRecords(data);
+                    }
+                });
+
+            } else {
+                helperModule.renderError('Error: (HTTP status ' + response.status + '. Unable to get incomplete records.');
+            }
+        };
+
+        httpModule.req(request, callback);
+    };
+
     /** TODO: ...
      * Publishes all objects in batch
      */
@@ -266,17 +314,24 @@ const objectsModule = (function () {
     obj.renderDisplayRecords = function (data) {
 
         let is_member_of_collection = helperModule.getParameterByName('pid'),
+            q = helperModule.getParameterByName('q'),
             total_records = DOMPurify.sanitize(data.total.value),
             html = '',
             add_collection_link;
 
-        if (is_member_of_collection === null || is_member_of_collection === configModule.getRootPid()) {
+        if (q === null && is_member_of_collection === null || is_member_of_collection === configModule.getRootPid()) {
             add_collection_link = '<a href="/dashboard/collections/add?is_member_of_collection=' + configModule.getRootPid() + '"><i class="fa fa-plus"></i>&nbsp;Add top-level collection</a>';
             domModule.html('#collection-name', 'Collections');
             domModule.html('#total-records', '<p>Total Collections: ' + total_records + '</p>');
-        } else {
+        } else if (q === null && is_member_of_collection !== null && is_member_of_collection !== configModule.getRootPid()) {
+            console.log(q);
+            console.log('obj');
             add_collection_link = '<a href="/dashboard/collections/add?is_member_of_collection=' + is_member_of_collection + '"><i class="fa fa-plus"></i>&nbsp;Add sub-collection</a>';
             domModule.html('#total-records', '<p>Total Objects: ' + total_records + '</p>');
+        } else if (q !== null) {
+            domModule.html('#searched-for', '<p>You searched for: <em><strong>' + q + '</strong></em></p>');
+            domModule.html('#total-records', '<p>Total Results: ' + total_records + '</p>');
+            add_collection_link = '';
         }
 
         domModule.html('#add-collection-link', add_collection_link);
@@ -320,7 +375,6 @@ const objectsModule = (function () {
      */
     obj.updateMetadata = function(pid) {
 
-        // window.scrollTo({ top: 0, behavior: 'smooth' });
         domModule.html('#update-' + pid, '<em><i class="fa fa-exclamation-circle"></i> Updating Metadata...</em>');
 
         let obj = {};
@@ -431,7 +485,12 @@ const objectsModule = (function () {
     };
 
     obj.init = function () {
-        objectsModule.getObjects();
+
+        if (helperModule.getParameterByName('q') === null) {
+            objectsModule.getObjects();
+        } else {
+            objectsModule.search();
+        }
     };
 
     return obj;

@@ -28,6 +28,7 @@ const searchModule = (function () {
      * @param data
      * @returns {boolean}
      */
+    /*
     const renderSearchResults = function (data) {
 
         let is_member_of_collection = helperModule.getParameterByName('pid'),
@@ -73,9 +74,11 @@ const searchModule = (function () {
         domModule.html('#objects', html);
     };
 
+     */
+
     /**
      * Constructs search request
-     */
+
     obj.search = function () {
 
         let q = helperModule.getParameterByName('q');
@@ -102,7 +105,8 @@ const searchModule = (function () {
                     if (data.length === 0) {
                         domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No records found.</div>');
                     } else {
-                        renderSearchResults(data);
+                        // renderSearchResults(data);
+                        objectsModule.renderDisplayRecords(data);
                     }
                 });
 
@@ -113,9 +117,10 @@ const searchModule = (function () {
 
         httpModule.req(request, callback);
     };
+     */
 
     obj.init = function () {
-        userModule.renderUserName();
+        // userModule.renderUserName();
     };
 
     return obj;

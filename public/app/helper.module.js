@@ -172,9 +172,10 @@ const helperModule = (function () {
      */
     obj.pagination = function (pid, total_records) {
 
-        let path = window.location.pathname;
+        let path = window.location.pathname,
+            q = helperModule.getParameterByName('q')
 
-        if (pid === null) {
+        if (pid === null && q === null) {
             pid = 'codu:root';
         }
 
@@ -182,7 +183,14 @@ const helperModule = (function () {
             total_on_page = 10,
             max_pages = 10,
             total_pages = Math.ceil(total_records / total_on_page),
+            query_string,
             html = '';
+
+        if (pid === null && q !== null) {
+            query_string = '?q=' + q;
+        } else {
+            query_string = '?pid=' + pid;
+        }
 
         // don't render pagination
         if (total_pages === 1) {
@@ -202,13 +210,20 @@ const helperModule = (function () {
 
         // create first link
         if (current_page > total_on_page) {
-            html += '<li><a href="' + path + '?pid=' + pid + '&page=1&total_on_page=' + total_on_page + '">First</a></li>';
+
+            html += '<li>';
+            html += '<a href="' + path + query_string + '&page=1&total_on_page=' + total_on_page + '">First</a>';
+            html += '</li>';
         }
 
         // create previous link
         if (current_page > 1) {
+
             let prev_current_page = current_page - 1;
-            html += '<li><a href="' + path + '?pid=' + pid + '&page=' + prev_current_page + '&total_on_page=' + total_on_page + '">Prev</a></li>';
+
+            html += '<li>';
+            html += '<a href="' + path + query_string + '&page=' + prev_current_page + '&total_on_page=' + total_on_page + '">Prev</a>';
+            html += '</li>';
         }
 
         let start_page,
@@ -244,7 +259,6 @@ const helperModule = (function () {
                 start_page = current_page - total_pages_before_current_page;
                 end_page = current_page + total_pages_after_current_page;
             }
-
         }
 
         let start_index = (current_page - 1) * total_on_page,
@@ -254,21 +268,35 @@ const helperModule = (function () {
         for (let i=0;i<pages.length;i++) {
 
             if (current_page === pages[i]) {
-                html += '<li class="active disabled"><a href="' + path + '?pid=' + pid + '&page=' + pages[i] + '&total_on_page=' + total_on_page + '" disabled>' + pages[i] + '</a></li>';
+
+                html += '<li class="active disabled">';
+                html += '<a href="' + path + query_string + '&page=' + pages[i] + '&total_on_page=' + total_on_page + '" disabled>' + pages[i] + '</a>';
+                html += '</li>';
+
             } else {
-                html += '<li><a href="' + path + '?pid=' + pid + '&page=' + pages[i] + '&total_on_page=' + total_on_page + '">' + pages[i] + '</a></li>';
+
+                html += '<li>';
+                html += '<a href="' + path + query_string + '&page=' + pages[i] + '&total_on_page=' + total_on_page + '">' + pages[i] + '</a>';
+                html += '</li>';
             }
         }
 
         // create next link
         if (current_page < total_pages) {
+
             current_page = (parseInt(current_page) + 1);
-            html += '<li><a href="' + path + '?pid=' + pid + '&page=' + current_page + '&total_on_page=' + total_on_page + '">Next</a></li>';
+
+            html += '<li>';
+            html += '<a href="' + path + query_string + '&page=' + current_page + '&total_on_page=' + total_on_page + '">Next</a>';
+            html += '</li>';
         }
 
         // create last link
         if (total_pages > 10 && current_page !== total_pages) {
-            html += '<li><a href="' + path + '?pid=' + pid + '&page=' + total_pages + '&total_on_page=' + total_on_page + '">Last</a></li>';
+
+            html += '<li>';
+            html += '<a href="' + path + query_string + '&page=' + total_pages + '&total_on_page=' + total_on_page + '">Last</a>';
+            html += '</li>';
         }
 
         html += '</ul>';

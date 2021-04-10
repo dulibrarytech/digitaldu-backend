@@ -29,15 +29,6 @@ exports.get_dashboard_home = function (req, res) {
     });
 };
 
-exports.get_dashboard_collections = function (req, res) {
-    res.render('dashboard-collections', {
-        host: CONFIG.host,
-        appname: CONFIG.appName,
-        appversion: CONFIG.appVersion,
-        organization: CONFIG.organization
-    });
-};
-
 exports.get_dashboard_collection_add_form = function (req, res) {
     res.render('dashboard-add-collection', {
         host: CONFIG.host,
@@ -165,7 +156,7 @@ exports.get_dashboard_user_delete_form = function (req, res) {
 };
 
 exports.get_dashboard_search = function (req, res) {
-    res.render('dashboard-search-results', {
+    res.render('dashboard-objects', {
         host: CONFIG.host,
         appname: CONFIG.appName,
         appversion: CONFIG.appVersion,
