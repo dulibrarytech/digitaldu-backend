@@ -273,8 +273,10 @@ const objectsModule = (function () {
         if (is_member_of_collection === null || is_member_of_collection === configModule.getRootPid()) {
             add_collection_link = '<a href="/dashboard/collections/add?is_member_of_collection=' + configModule.getRootPid() + '"><i class="fa fa-plus"></i>&nbsp;Add top-level collection</a>';
             domModule.html('#collection-name', 'Collections');
+            domModule.html('#total-records', '<p>Total Collections: ' + total_records + '</p>');
         } else {
             add_collection_link = '<a href="/dashboard/collections/add?is_member_of_collection=' + is_member_of_collection + '"><i class="fa fa-plus"></i>&nbsp;Add sub-collection</a>';
+            domModule.html('#total-records', '<p>Total Objects: ' + total_records + '</p>');
         }
 
         domModule.html('#add-collection-link', add_collection_link);
@@ -284,8 +286,6 @@ const objectsModule = (function () {
             domModule.html('#objects', html);
             return false;
         }
-
-        domModule.html('#total-records', '<p>Total Objects: ' + total_records + '</p>');
 
         for (let i = 0; i < data.hits.length; i++) {
 
