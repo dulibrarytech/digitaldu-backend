@@ -324,8 +324,6 @@ const objectsModule = (function () {
             domModule.html('#collection-name', 'Collections');
             domModule.html('#total-records', '<p>Total Collections: ' + total_records + '</p>');
         } else if (q === null && is_member_of_collection !== null && is_member_of_collection !== configModule.getRootPid()) {
-            console.log(q);
-            console.log('obj');
             add_collection_link = '<a href="/dashboard/collections/add?is_member_of_collection=' + is_member_of_collection + '"><i class="fa fa-plus"></i>&nbsp;Add sub-collection</a>';
             domModule.html('#total-records', '<p>Total Objects: ' + total_records + '</p>');
         } else if (q !== null) {
