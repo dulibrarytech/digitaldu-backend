@@ -29,6 +29,7 @@ const helperModule = (function () {
      */
     obj.renderError = function (message) {
         domModule.html('#message', '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + DOMPurify.sanitize(message) + '</div>');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         return false;
     };
 
@@ -171,7 +172,7 @@ const helperModule = (function () {
      */
     obj.pagination = function (pid, total_records) {
 
-        let path = '/dashboard/objects';
+        let path = window.location.pathname;
 
         if (pid === null) {
             pid = 'codu:root';

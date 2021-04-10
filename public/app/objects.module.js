@@ -127,8 +127,8 @@ const objectsModule = (function () {
 
             } else if (response.status === 418) {
 
-                window.scrollTo({ top: 0, behavior: 'smooth' });
                 domModule.html('#message', '<div class="alert alert-warning">Unable to publish object. (The object\'s parent collection must be published before attempting to publish one of its objects.)</div>');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
 
                 setTimeout(function () {
                     domModule.html('#message', null);
@@ -216,6 +216,8 @@ const objectsModule = (function () {
         let pid = helperModule.getParameterByName('pid'),
             token = userModule.getUserToken();
 
+        collectionsModule.getCollectionName(pid);
+
         let url = api + '/api/admin/v1/repo/object/unpublished?pid=' + pid,
             request = new Request(url, {
                 method: 'GET',
@@ -242,11 +244,18 @@ const objectsModule = (function () {
                 });
 
             } else {
-                helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to get incomplete records.');
+                helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to get unpublished records.');
             }
         };
 
         httpModule.req(request, callback);
+    };
+
+    /** TODO: ...
+     * Publishes all objects in batch
+     */
+    obj.publishAllObjects = function () {
+
     };
 
     /**
@@ -258,9 +267,17 @@ const objectsModule = (function () {
 
         let is_member_of_collection = helperModule.getParameterByName('pid'),
             total_records = DOMPurify.sanitize(data.total.value),
-            html = '';
+            html = '',
+            add_collection_link;
 
-        $('#current-collection').prop('href', '/dashboard/collections/add?is_member_of_collection=' + is_member_of_collection);
+        if (is_member_of_collection === null || is_member_of_collection === configModule.getRootPid()) {
+            add_collection_link = '<a href="/dashboard/collections/add?is_member_of_collection=' + configModule.getRootPid() + '"><i class="fa fa-plus"></i>&nbsp;Add top-level collection</a>';
+            domModule.html('#collection-name', 'Collections');
+        } else {
+            add_collection_link = '<a href="/dashboard/collections/add?is_member_of_collection=' + is_member_of_collection + '"><i class="fa fa-plus"></i>&nbsp;Add sub-collection</a>';
+        }
+
+        domModule.html('#add-collection-link', add_collection_link);
 
         if (data.total.value === 0) {
             html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; No unpublished objects found for this collection.</strong></div>';
@@ -268,7 +285,7 @@ const objectsModule = (function () {
             return false;
         }
 
-        domModule.html('#total-records', '<p>Total Records: ' + total_records + '</p>');
+        domModule.html('#total-records', '<p>Total Objects: ' + total_records + '</p>');
 
         for (let i = 0; i < data.hits.length; i++) {
 
