@@ -18,7 +18,7 @@
         <% include partials/top-nav.ejs %>
         <div class="right_col" role="main">
             <div id="message"></div>
-            <div class="">
+            <div id="dashboard" style="visibility: hidden">
                 <div class="row top_tiles">
                     <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
                         <div class="tile-stats">
@@ -105,5 +105,6 @@
 <script src="../app/user.module.js"></script>
 <script src="../app/home.module.js"></script>
 <script src="../app/stats.module.js"></script>
+<script>helperModule.onLoadVisibility('#dashboard', 250);</script>
 </body>
 </html>

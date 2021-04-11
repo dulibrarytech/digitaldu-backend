@@ -286,7 +286,6 @@ const objectsModule = (function () {
                     if (data.length === 0) {
                         domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No records found.</div>');
                     } else {
-                        console.log(data);
                         objectsModule.renderDisplayRecords(data);
                     }
                 });
@@ -457,7 +456,7 @@ const objectsModule = (function () {
 
                     setTimeout(function() {
                         domModule.html('#message', null);
-                        window.location.replace('/dashboard/collections');
+                        window.location.replace('/dashboard/objects');
                         // domModule.show('#delete-object');
                     }, 5000);
 
@@ -483,6 +482,8 @@ const objectsModule = (function () {
     };
 
     obj.init = function () {
+
+        domModule.html('#message', 'Loading...');
 
         if (helperModule.getParameterByName('q') === null) {
             objectsModule.getObjects();

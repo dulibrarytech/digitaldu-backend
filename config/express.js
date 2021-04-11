@@ -24,7 +24,8 @@ const HTTP = require('http'),
     BODYPARSER = require('body-parser'),
     METHODOVERRIDE = require('method-override'),
     HELMET = require('helmet'),
-    XSS = require('../libs/dom');
+    XSS = require('../libs/dom'),
+    CACHE = require('../libs/cache');
 
 module.exports = function() {
 
@@ -68,4 +69,6 @@ module.exports = function() {
     require('../api/routes.js')(APP);
     require('../uploads/index.js')(APP);
     require('../qa/routes.js')(APP);
+
+    CACHE.clear_cache();
 };

@@ -320,6 +320,20 @@ const helperModule = (function () {
         }
     };
 
+    /**
+     * Makes content visible only after it is fully rendered on page
+     * @param selector
+     * @param timeout
+     */
+    obj.onLoadVisibility = function (selector, timeout) {
+
+        document.addEventListener("DOMContentLoaded", function() {
+            setTimeout(function() {
+                document.querySelector(selector).style.visibility = 'visible';
+            }, timeout);
+        });
+    };
+
     obj.init = function () {
         npProgress();
     };

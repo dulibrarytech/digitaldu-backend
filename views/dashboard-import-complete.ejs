@@ -52,7 +52,7 @@
                                         <th style="text-align: center; vertical-align: middle">Imported On</th>
                                     </tr>
                                     </thead>
-                                    <tbody id="complete-records"></tbody>
+                                    <tbody id="complete-records" style="visibility: hidden"></tbody>
                                 </table>
                             </div>
                         </div>
@@ -79,6 +79,7 @@
     <script src="../../app/import.module.js"></script>
     <script>
         importModule.getCompleteImportRecords();
+        helperModule.onLoadVisibility('#complete-records', 500);
     </script>
 </body>
 </html>

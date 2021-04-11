@@ -36,7 +36,7 @@
                                 <ul class="nav navbar-right"><!-- panel_toolbox --></ul>
                                 <div class="clearfix"></div>
                             </div>
-                            <div class="x_content">
+                            <div class="x_content" style="visibility: hidden">
                                 <div id="message"></div>
                                 <h3>Archivematica Ingests</h3>
                                 <div id="import-record-count"></div>
@@ -98,5 +98,6 @@
     <script src="../../app/user.module.js"></script>
     <script src="../../app/collections.module.js"></script>
     <script src="../../app/import.module.js"></script>
+    <script>helperModule.onLoadVisibility('.x_content', 250);</script>
 </body>
 </html>

@@ -18,34 +18,59 @@
 
 'use strict';
 
-const USERS = require('../users/model');
+const USERS = require('../users/model'),
+    CACHE = require('../libs/cache');
 
+/**
+ * Gets Users
+ * @param req
+ * @param res
+ */
 exports.get_users = function (req, res) {
-    USERS.get_users(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
+
+    let cache = CACHE.get_cache(req);
+
+    if (cache) {
+        res.send(cache);
+    } else {
+        USERS.get_users(req, function (data) {
+            res.status(data.status).send(data.data);
+        });
+    }
 };
 
+/**
+ * Updates user
+ * @param req
+ * @param res
+ */
 exports.update_user = function (req, res) {
+    CACHE.clear_cache();
     USERS.update_user(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
 
+/**
+ * Deletes user
+ * @param req
+ * @param res
+ */
 exports.delete_user = function (req, res) {
+    CACHE.clear_cache();
     USERS.delete_user(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
 
+/**
+ * Saves user
+ * @param req
+ * @param res
+ */
 exports.save_user = function (req, res) {
+    CACHE.clear_cache();
     USERS.save_user(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.get_user_groups = function (req, res) {
-    USERS.get_user_groups(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };

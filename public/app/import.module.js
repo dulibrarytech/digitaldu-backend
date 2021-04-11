@@ -562,7 +562,7 @@ const importModule = (function () {
      * saves missing mods id to repository record
      * @param sip_uuid
      * @param mods_id
-     */
+
     obj.importModsId = function (sip_uuid, mods_id) {
 
         let url = api + '/api/admin/v1/import/mods_id',
@@ -582,184 +582,6 @@ const importModule = (function () {
             if (response.status === 201) {
 
                 domModule.html('#responses', '<p><strong>Archivesapce ID added to repository record</strong></p>');
-
-                setTimeout(function () {
-                    domModule.html('#responses', null);
-                }, 5000);
-
-            } else if (response.status === 401) {
-
-                helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
-
-                setTimeout(function () {
-                    window.location.replace('/login');
-                }, 4000);
-
-            } else {
-                helperModule.renderError('Error: (HTTP status ' + response.status + '. Unable to import MODS.');
-            }
-        };
-
-        httpModule.req(request, callback);
-    };
-
-    /** TODO: remove
-     * Renders form that allows users to enter archivespace id
-     * @param sip_uuid
-     * @returns {boolean}
-
-    obj.createModsIdForm = function (sip_uuid) {
-
-        let html;
-        html = '<div class="alert alert-danger">Please enter an Archivespace ID in order to retrieve MODS record</div>';
-        html += '<form id="id-form">';
-        html += '<input id="sip-uuid" name="sip_uuid" type="hidden" value="' + DOMPurify.sanitize(sip_uuid) + '">';
-        html += '<div class="form-group row col-lg-3">';
-        html += '<label for="mods-id">* Archivespace ID:</label>';
-        html += '<input name="mods_id" type="text" class="form-control form-control-sm" id="mods-id" required><br>';
-        html += '<p><button type="submit" class="btn btn-primary" id="add-mods"><i class="fa fa-download"></i>&nbsp;Import MODS</button></p>';
-        html += '</div>';
-        html += '</form>';
-
-        domModule.html('#mods-id-form', html);
-        importModule.modsIdFormValidation();
-
-        return false;
-    };
-     */
-
-    /**
-     * Imports MODS metadata
-     * @param mods_id
-     * @param sip_uuid
-     * @returns {boolean}
-
-    obj.importMods = function (sip_uuid, mods_id) {
-
-        if (mods_id === null || mods_id === undefined || mods_id.length === 0) {
-            importModule.createModsIdForm(sip_uuid);
-            return false;
-        }
-
-        let url = api + '/api/admin/v1/import/mods',
-            token = userModule.getUserToken(),
-            request = new Request(url, {
-                method: 'POST',
-                body: JSON.stringify({mods_id: mods_id, sip_uuid: sip_uuid}),
-                mode: 'cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-        const callback = function (response) {
-
-            if (response.status === 201) {
-
-                domModule.html('#responses', '<p><strong>(' + DOMPurify.sanitize(sip_uuid) + ') MODS added to repository record</strong></p>');
-                importModule.getIncompleteImportRecords();
-
-                setTimeout(function () {
-                    domModule.html('#responses', null);
-                }, 5000);
-
-            } else if (response.status === 401) {
-
-                helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
-
-                setTimeout(function () {
-                    window.location.replace('/login');
-                }, 4000);
-
-            } else {
-                helperModule.renderError('Error: (HTTP status ' + response.status + '. Unable to import MODS for record (' + sip_uuid + ').');
-            }
-        };
-
-        httpModule.req(request, callback);
-    };
-     */
-
-    /** TODO: remove
-     * Imports missing thumbnail data
-     * @param sip_uuid
-
-    obj.importThumbnail = function (sip_uuid) {
-
-        if (sip_uuid === undefined) {
-            helperModule.renderError('sip_uuid undefined (importThumbnail)');
-            return false;
-        }
-
-        let url = api + '/api/admin/v1/import/thumbnail',
-            token = userModule.getUserToken(),
-            request = new Request(url, {
-                method: 'POST',
-                body: JSON.stringify({sip_uuid: sip_uuid}),
-                mode: 'cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-        const callback = function (response) {
-
-            if (response.status === 201) {
-
-                domModule.html('#responses', '<p><strong>Thumbnail path added to repository record</strong></p>');
-
-                setTimeout(function () {
-                    domModule.html('#responses', null);
-                }, 5000);
-
-            } else if (response.status === 401) {
-
-                helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
-
-                setTimeout(function () {
-                    window.location.replace('/login');
-                }, 4000);
-
-            } else {
-                helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to import MODS.');
-            }
-        };
-
-        httpModule.req(request, callback);
-    };
-     */
-
-    /** TODO: remove
-     * Imports missing master object data
-     * @param sip_uuid
-     * @returns {boolean}
-
-    obj.importMaster = function (sip_uuid) {
-
-        if (sip_uuid === undefined) {
-            helperModule.renderError('sip_uuid is undefined (importMaster)');
-            return false;
-        }
-
-        let url = api + '/api/admin/v1/import/master',
-            token = userModule.getUserToken(),
-            request = new Request(url, {
-                method: 'POST',
-                body: JSON.stringify({sip_uuid: sip_uuid}),
-                mode: 'cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-        const callback = function (response) {
-
-            if (response.status === 201) {
-
-                domModule.html('#responses', '<p><strong>Master path added to repository record</strong></p>');
 
                 setTimeout(function () {
                     domModule.html('#responses', null);
@@ -880,7 +702,7 @@ const importModule = (function () {
 
                     response.json().then(function (response) {
 
-                        if (response.length > 0) {
+                        if (response[0].count > 0) {
                             domModule.html('#import-record-count', 'Objects remaining in current batch: ' + DOMPurify.sanitize(response[0].count));
                         } else {
                             domModule.html('#import-record-count', null);
