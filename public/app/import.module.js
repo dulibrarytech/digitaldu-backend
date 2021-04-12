@@ -112,97 +112,6 @@ const importModule = (function () {
         domModule.html('.loading', null);
     };
 
-    /** REMOVE
-     * Renders incomplete imported records
-     * @param data
-     */
-    const renderIncompleteRecords = function (data) {
-
-        window.sessionStorage.removeItem('incomplete_records');
-
-        let html = '',
-            alignTd = 'style="text-align: center; vertical-align: middle"',
-            incomplete = [],
-            obj = {},
-            startImport;
-
-        startImport = '<p><a class="btn btn-primary" href="#" onclick="importModule.import(); return false;" title="Import missing record components"><i class="fa fa-download"></i> Import Missing Record Components</a></p>';
-        domModule.html('#start-import', startImport);
-
-        for (let i = 0; i < data.length; i++) {
-
-            if (data[i].object_type !== 'object') {
-                continue;
-            }
-
-            html += '<tr>';
-            html += '<td ' + alignTd + '>' + DOMPurify.sanitize(data[i].sip_uuid) + '</td>';
-
-            // determine what is missing from the record
-            if (data[i].handle === null || data[i].handle.length === 0) {
-                html += '<td ' + alignTd + '><i class="fa fa-exclamation"></i></td>';
-            } else {
-                html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
-            }
-
-            if (data[i].mods_id === null || data[i].mods === null || data[i].mods_id.length === 0 || data[i].mods.length === 0) {
-
-                if (data[i].mods_id.length === 0) {
-                    data[i].mods_id = null;
-                }
-
-                html += '<td ' + alignTd + '><i class="fa fa-exclamation"></i></td>';
-            } else {
-                html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
-            }
-
-            if (data[i].thumbnail === null || data[i].thumbnail.length === 0) {
-                html += '<td ' + alignTd + '><i class="fa fa-exclamation"></i></td>';
-            } else {
-                html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
-            }
-
-            if (data[i].file_name === null || data[i].file_name.length === 0) {
-                html += '<td ' + alignTd + '><i class="fa fa-exclamation"></i></td>';
-            } else {
-                html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
-            }
-
-            if (data[i].mime_type === null || data[i].mime_type.length === 0) {
-                html += '<td ' + alignTd + '><i class="fa fa-exclamation"></i></td>';
-            } else {
-                html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
-            }
-
-            if (data[i].checksum === null || data[i].checksum.length === 0) {
-                html += '<td ' + alignTd + '><i class="fa fa-exclamation"></i></td>';
-            } else {
-                html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
-            }
-
-            html += '<td ' + alignTd + '>' + DOMPurify.sanitize(moment(data[i].created).tz('America/Denver').format('MM-DD-YYYY, h:mm:ss a')) + '</td>';
-            html += '</tr>';
-
-            obj.sip_uuid = DOMPurify.sanitize(data[i].sip_uuid);
-            obj.pid = DOMPurify.sanitize(data[i].pid);
-            obj.is_member_of_collection = DOMPurify.sanitize(data[i].is_member_of_collection);
-            obj.handle = DOMPurify.sanitize(data[i].handle);
-            obj.mods_id = DOMPurify.sanitize(data[i].mods_id);
-            obj.mods = DOMPurify.sanitize(data[i].mods);
-            obj.thumbnail = DOMPurify.sanitize(data[i].thumbnail);
-            obj.mime_type = DOMPurify.sanitize(data[i].mime_type);
-            obj.file_name = DOMPurify.sanitize(data[i].file_name);
-            obj.checksum = DOMPurify.sanitize(data[i].checksum);
-
-            incomplete.push(obj);
-            obj = {};
-            window.sessionStorage.setItem('incomplete_records', JSON.stringify(incomplete));
-        }
-
-        domModule.html('#incomplete-records', html);
-        domModule.html('#message', null);
-    };
-
     /**
      * Gets completed records after an ingest/import
      * @param data
@@ -210,8 +119,7 @@ const importModule = (function () {
     const renderCompleteRecords = function (data) {
 
         let html = '',
-            alignTd = 'style="text-align: center; vertical-align: middle"',
-            complete = [];
+            alignTd = 'style="text-align: center; vertical-align: middle"';
 
         for (let i = 0; i < data.length; i++) {
 
@@ -223,6 +131,7 @@ const importModule = (function () {
             let title = mods.title;
             let identifier = mods.identifiers[0].identifier;
             let display_record = JSON.parse(data[i].display_record);
+            let token = userModule.getUserToken();
 
             if (data[i].mime_type === null || data[i].thumbnail === null) {
                 html += '<tr style="background-color:#ffcdd2">';
@@ -232,7 +141,7 @@ const importModule = (function () {
                 html += '<td ' + alignTd + '><i class="fa fa-check fa-lg" style="color:green"></i></td>';
             }
 
-            html += '<td ' + alignTd + '><a href="/dashboard/objects/unpublished?pid=' + DOMPurify.sanitize(data[i].is_member_of_collection) + '"><i class="fa fa-archive fa-lg"></i></a></td>';
+            html += '<td width="25%" ' + alignTd + '><a href="/dashboard/objects/unpublished?pid=' + DOMPurify.sanitize(data[i].is_member_of_collection) + '"> ' + DOMPurify.sanitize(data[i].collection_title) + '</a></td>';
 
             if (data[i].sip_uuid !== null) {
 
@@ -242,14 +151,15 @@ const importModule = (function () {
                     compound = '&nbsp;&nbsp;<i class="fa fa-cubes"></i>';
                 }
 
-                let token = userModule.getUserToken();
+                // let token = userModule.getUserToken();
                 html += '<td ' + alignTd + '><a href="' + api + '/api/admin/v1/repo/object/viewer?uuid=' + DOMPurify.sanitize(data[i].sip_uuid) + '&t=' + token + '" target="_blank">' + DOMPurify.sanitize(title) + compound + '</a></td>';
             }
 
             if (data[i].mods_id !== null) {
-                html += '<td ' + alignTd + '><a href="' + configModule.getASpace() + configModule.getUriPath() + DOMPurify.sanitize(data[i].mods_id) + '" target="_blank">' + identifier + '</a></i></td>';
+                html += '<td width="15%" ' + alignTd + '><a href="' + configModule.getASpace() + configModule.getUriPath() + DOMPurify.sanitize(data[i].mods_id) + '" target="_blank">' + identifier + '</a></i></td>';
             }
 
+            /*
             if (data[i].mime_type !== null) {
 
                 switch (data[i].mime_type) {
@@ -283,7 +193,9 @@ const importModule = (function () {
                 html += '<td ' + alignTd + '><i class="fa fa-exclamation fa-lg"></i></td>';
             }
 
-            html += '<td ' + alignTd + '>' + DOMPurify.sanitize(moment(data[i].created).tz('America/Denver').format('MM-DD-YYYY, h:mm:ss a')) + '</td>';
+             */
+
+            html += '<td width="15%" ' + alignTd + '>' + DOMPurify.sanitize(moment(data[i].created).tz('America/Denver').format('MM-DD-YYYY, h:mm:ss a')) + '</td>';
             html += '</tr>';
         }
 
@@ -401,53 +313,6 @@ const importModule = (function () {
     };
 
     /**
-     * Gets incomplete import records
-     */
-    obj.getIncompleteImportRecords = function () {
-
-        let url = api + '/api/admin/v1/import/incomplete',
-            token = userModule.getUserToken(),
-            request = new Request(url, {
-                method: 'GET',
-                mode: 'cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-        const callback = function (response) {
-
-            if (response.status === 200) {
-
-                response.json().then(function (data) {
-
-                    if (data.length === 0) {
-                        domModule.empty('#incomplete-imports-table');
-                        domModule.html('#responses', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No incomplete records found.</div>');
-
-                    } else {
-                        renderIncompleteRecords(data);
-                    }
-                });
-
-            } else if (response.status === 401) {
-
-                helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
-
-                setTimeout(function () {
-                    window.location.replace('/login');
-                }, 4000);
-
-            } else {
-                helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to get incomplete records.');
-            }
-        };
-
-        httpModule.req(request, callback);
-    };
-
-    /**
      * Gets completed import records for current day
      */
     obj.getCompleteImportRecords = function () {
@@ -495,114 +360,6 @@ const importModule = (function () {
 
         httpModule.req(request, callback);
     };
-
-    /**
-     * Initiates import of incomplete records
-     * @returns {boolean}
-     */
-    obj.import = function () {
-
-        let incompleteRecords = JSON.parse(window.sessionStorage.getItem('incomplete_records'));
-
-        let timer = setInterval(function () {
-
-            if (incompleteRecords.length === 0) {
-                clearInterval(timer);
-                importModule.getIncompleteImportRecords();
-                return false;
-            } else {
-
-                let record = incompleteRecords.pop();
-                domModule.html('#message', '<p><strong>Importing (' + DOMPurify.sanitize(record.sip_uuid) + ')...</strong></p>');
-
-                if (record.mods === null || record.mods.length === 0) {
-                    importModule.importMods(record.sip_uuid, record.mods_id);
-                }
-
-                if (record.thumbnail === null || record.thumbnail.length === 0) {
-                    importModule.importThumbnail(DOMPurify.sanitize(record.sip_uuid));
-                }
-
-                if (record.file_name === null) {
-                    importModule.importMaster(DOMPurify.sanitize(record.sip_uuid));
-                }
-            }
-
-        }, 10000);
-
-        return false;
-    };
-
-    /** TODO: remove
-     * Enable validation on add mods id form
-
-    obj.modsIdFormValidation = function () {
-
-        document.addEventListener('DOMContentLoaded', function() {
-            $('#id-form').validate({
-                submitHandler: function () {
-
-                    let sip_uuid = domModule.val('#sip-uuid', null);
-                    let mods_id = domModule.val('#mods-id', null);
-
-                    importModule.importModsId(sip_uuid, mods_id);
-
-                    setTimeout(function () {
-                        importModule.importMods(sip_uuid, mods_id);
-                    }, 4000);
-
-                    domModule.html('#mods-id-form', null);
-                }
-            });
-        });
-    };
-     */
-
-    /** TODO: remove
-     * saves missing mods id to repository record
-     * @param sip_uuid
-     * @param mods_id
-
-    obj.importModsId = function (sip_uuid, mods_id) {
-
-        let url = api + '/api/admin/v1/import/mods_id',
-            token = userModule.getUserToken(),
-            request = new Request(url, {
-                method: 'POST',
-                body: JSON.stringify({mods_id: mods_id, sip_uuid: sip_uuid}),
-                mode: 'cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-        const callback = function (response) {
-
-            if (response.status === 201) {
-
-                domModule.html('#responses', '<p><strong>Archivesapce ID added to repository record</strong></p>');
-
-                setTimeout(function () {
-                    domModule.html('#responses', null);
-                }, 5000);
-
-            } else if (response.status === 401) {
-
-                helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
-
-                setTimeout(function () {
-                    window.location.replace('/login');
-                }, 4000);
-
-            } else {
-                helperModule.renderError('Error: (HTTP status ' + response.status + '. Unable to import MODS.');
-            }
-        };
-
-        httpModule.req(request, callback);
-    };
-     */
 
     /**
      * Gets transfer status

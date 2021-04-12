@@ -24,6 +24,7 @@ const CONFIG = require('../config/config'),
     DURACLOUD = require('../libs/duracloud'),
     HTTP = require('axios'),
     LOGGER = require('../libs/log4'),
+    CACHE = require('../libs/cache'),
     ASYNC = require('async'),
     ES = require('elasticsearch'),
     CLIENT = new ES.Client({
@@ -162,7 +163,7 @@ exports.get_tn = function (req, callback) {
                 });
 
             } else if (response.status === 200) {
-
+                CACHE.cache_tn(uuid, response.data);
                 callback({
                     error: false,
                     status: 200,

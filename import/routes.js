@@ -49,12 +49,6 @@ module.exports = function (app) {
     app.route('/api/admin/v1/import/create_repo_record')
         .get(TOKEN.verify, IMPORT.create_repo_record);
 
-    app.route('/api/admin/v1/import/status')
-        .get(TOKEN.verify, IMPORT.get_import_status);
-
-    app.route('/api/admin/v1/import/incomplete')
-        .get(TOKEN.verify, IMPORT.get_import_incomplete);
-
     app.route('/api/admin/v1/import/complete')
         .get(TOKEN.verify, IMPORT.get_import_complete);
 

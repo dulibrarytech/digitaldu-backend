@@ -20,14 +20,17 @@
 
 const MCACHE = require('memory-cache'),
     LOGGER = require('../libs/log4'),
-    CACHE_TIME = 60000*720; // 12hrs
+    FS = require('fs'),
+    PATH = require('path'),
+    TN_CACHE = '../public/tn_cache/',
+    CACHE_TIME = 60000 * 720; // 12hrs
 
 /**
  * Constructs cache key
  * @param req
  * @returns {string}
  */
-const construct_cache_key = function(req) {
+const construct_cache_key = function (req) {
     return '__repo-cache__' + req.originalUrl || req.url;
 };
 
@@ -36,9 +39,9 @@ const construct_cache_key = function(req) {
  * @param req
  * @param data
  */
-exports.cache_request = function(req, data) {
+exports.cache_request = function (req, data) {
     let key = construct_cache_key(req);
-    MCACHE.put(key, data, CACHE_TIME, function(key, value) {
+    MCACHE.put(key, data, CACHE_TIME, function (key, value) {
         LOGGER.module().info('INFO: [/libs/cache (cache_request)] ' + key + ' cached.');
     });
 };
@@ -48,16 +51,55 @@ exports.cache_request = function(req, data) {
  * @param req
  * @returns {*}
  */
-exports.get_cache = function(req) {
+exports.get_cache = function (req) {
     let key = construct_cache_key(req);
-    LOGGER.module().info('INFO: [/libs/cache (clear_cache)] cache used for ' + key);
     return MCACHE.get(key);
 };
 
 /**
  * Clears cache
  */
-exports.clear_cache = function() {
+exports.clear_cache = function () {
     MCACHE.clear();
     LOGGER.module().info('INFO: [/libs/cache (clear_cache)] cache cleared. ');
+};
+
+/**
+ * Caches thumbnail
+ * @param uuid
+ * @param tn
+ */
+exports.cache_tn = function (uuid, tn) {
+
+    let tn_path = PATH.join(__dirname, TN_CACHE);
+
+    FS.writeFile(tn_path + uuid + '.jpg', tn, (error) => {
+
+        if (error) {
+            LOGGER.module().error('ERROR: [/libs/cache (cache_tn)]' + error.message);
+        }
+    });
+};
+
+/**
+ * Gets cached thumbnail
+ * @param req
+ * @returns {string}
+ */
+exports.get_tn_cache = function (req) {
+
+    let uuid = req.query.uuid;
+    let tn = PATH.join(__dirname, TN_CACHE, uuid + '.jpg');
+
+    try {
+
+        if(FS.existsSync(tn)) {
+            return tn;
+        } else {
+            return false;
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/libs/cache (get_tn_cache)]' + error);
+    }
 };

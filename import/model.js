@@ -1292,63 +1292,8 @@ const update_db_mods = function (sip_uuid, mods, callback) {
         });
 };
 
-/** TODO:...
- * logs update to db
- * @param obj
- * @param callback
- */
-const metadata_update_logs = function (obj, callback) {
-
-    let log = {};
-    // obj.mods;
-
-    /*
-     DBQ(UPDATE_LOGS)
-     .insert(log)
-     .then(function (data) {
-     return null;
-     })
-     .catch(function (error) {
-     LOGGER.module().fatal('FATAL: [/import/service module (metadata_update_logs)] unable to save update log' + error);
-     throw 'FATAL: [/import/service module (metadata_update_logs)] unable to save update log ' + error;
-     });
-     */
-};
-
 /**
- * Gets incomplete records in repo
- * @param req
- * @param callback
- */
-exports.get_import_incomplete = function (req, callback) {
-
-    DB(REPO_OBJECTS)
-        .select('id', 'sip_uuid', 'handle', 'mods_id', 'mods', 'display_record', 'thumbnail', 'file_name', 'mime_type', 'checksum', 'object_type', 'created')
-        .orWhere('thumbnail', null)
-        .orWhere('file_name', null)
-        .orWhere('file_size', null)
-        .orWhere('checksum', null)
-        .orWhere('mods', null)
-        .orWhere('display_record', null)
-        .orderBy('created', 'desc')
-        .then(function (data) {
-
-            callback({
-                status: 200,
-                message: 'Incomplete records.',
-                data: data
-            });
-
-            return null;
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/import/model module (get_import_incomplete)] unable to get incomplete records ' + error);
-            throw 'FATAL: [/import/model module (get_import_incomplete)] unable to get incomplete records ' + error;
-        });
-};
-
-/**
- * Gets daily completed records list
+ * Gets completed imports for the past 30 days
  * @param req
  * @param callback
  */
@@ -1360,16 +1305,47 @@ exports.get_import_complete = function (req, callback) {
         .where({
             is_active: 1,
             is_complete: 1,
+            is_published: 0,
             object_type: 'object'
         })
         .orderBy('created', 'desc')
         .then(function (data) {
 
-            callback({
-                status: 200,
-                message: 'Complete records.',
-                data: data
-            });
+            let response = [];
+
+            // Get collection names
+            let timer = setInterval(function() {
+
+                if (data.length === 0) {
+                    clearInterval(timer);
+
+                    callback({
+                        status: 200,
+                        message: 'Complete records.',
+                        data: response
+                    });
+
+                    return false;
+                }
+
+                let record = data.pop();
+
+                DB(REPO_OBJECTS)
+                    .select( 'mods')
+                    .where({
+                        pid: record.is_member_of_collection,
+                        object_type: 'collection'
+                    })
+                    .then(function (collection_obj) {
+                        let mods = JSON.parse(collection_obj[0].mods);
+                        record.collection_title = mods.title;
+                        response.push(record);
+                    })
+                    .catch(function(error) {
+                        console.log(error);
+                    });
+
+            }, 10);
 
             return null;
         })
