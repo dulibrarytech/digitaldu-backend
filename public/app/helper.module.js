@@ -328,8 +328,13 @@ const helperModule = (function () {
     obj.onLoadVisibility = function (selector, timeout) {
 
         document.addEventListener("DOMContentLoaded", function() {
+
             setTimeout(function() {
-                document.querySelector(selector).style.visibility = 'visible';
+
+                if (document.querySelector(selector) !== null) {
+                    document.querySelector(selector).style.visibility = 'visible';
+                }
+
             }, timeout);
         });
     };

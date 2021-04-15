@@ -133,15 +133,8 @@ const importModule = (function () {
             let display_record = JSON.parse(data[i].display_record);
             let token = userModule.getUserToken();
 
-            if (data[i].mime_type === null || data[i].thumbnail === null) {
-                html += '<tr style="background-color:#ffcdd2">';
-                html += '<td ' + alignTd + '><i class="fa fa-exclamation fa-lg" style="color:red"></i></td>';
-            } else {
-                html += '<tr>';
-                html += '<td ' + alignTd + '><i class="fa fa-check fa-lg" style="color:green"></i></td>';
-            }
-
-            html += '<td width="25%" ' + alignTd + '><a href="/dashboard/objects/unpublished?pid=' + DOMPurify.sanitize(data[i].is_member_of_collection) + '"> ' + DOMPurify.sanitize(data[i].collection_title) + '</a></td>';
+            html += '<td width="5%" ' + alignTd + '><a href="/dashboard/objects/unpublished?pid=' + DOMPurify.sanitize(data[i].is_member_of_collection) + '" title="Allows you to publish all unpublished records in this collection"><i class="fa fa-cloud-upload"></i></a></td>';
+            html += '<td width="25%" ' + alignTd + '>' + DOMPurify.sanitize(data[i].collection_title) + '</td>';
 
             if (data[i].sip_uuid !== null) {
 
@@ -151,49 +144,12 @@ const importModule = (function () {
                     compound = '&nbsp;&nbsp;<i class="fa fa-cubes"></i>';
                 }
 
-                // let token = userModule.getUserToken();
                 html += '<td ' + alignTd + '><a href="' + api + '/api/admin/v1/repo/object/viewer?uuid=' + DOMPurify.sanitize(data[i].sip_uuid) + '&t=' + token + '" target="_blank">' + DOMPurify.sanitize(title) + compound + '</a></td>';
             }
 
             if (data[i].mods_id !== null) {
                 html += '<td width="15%" ' + alignTd + '><a href="' + configModule.getASpace() + configModule.getUriPath() + DOMPurify.sanitize(data[i].mods_id) + '" target="_blank">' + identifier + '</a></i></td>';
             }
-
-            /*
-            if (data[i].mime_type !== null) {
-
-                switch (data[i].mime_type) {
-                    case 'application/pdf':
-                        html += '<td ' + alignTd + ' title="' + DOMPurify.sanitize(data[i].mime_type) + '"><i class="fa fa-file-pdf-o fa-lg"></i></td>';
-                        break;
-                    case 'video/mov':
-                        html += '<td ' + alignTd + ' title="' + DOMPurify.sanitize(data[i].mime_type) + '"><i class="fa fa-file-video-o fa-lg"></i></td>';
-                        break;
-                    case 'video/mp4':
-                        html += '<td ' + alignTd + ' title="' + DOMPurify.sanitize(data[i].mime_type) + '"><i class="fa fa-file-video-o fa-lg"></i></td>';
-                        break;
-                    case 'image/tiff':
-                        html += '<td ' + alignTd + ' title="' + DOMPurify.sanitize(data[i].mime_type) + '"><i class="fa fa-file-image-o fa-lg"></i></td>';
-                        break;
-                    case 'audio/x-wav':
-                        html += '<td ' + alignTd + ' title="' + DOMPurify.sanitize(data[i].mime_type) + '"><i class="fa fa-file-audio-o fa-lg"></i></td>';
-                        break;
-                    case 'audio/mpeg':
-                        html += '<td ' + alignTd + ' title="' + DOMPurify.sanitize(data[i].mime_type) + '"><i class="fa fa-file-audio-o fa-lg"></i></td>';
-                        break;
-                    case 'image/jpeg':
-                        html += '<td ' + alignTd + ' title="' + DOMPurify.sanitize(data[i].mime_type) + '"><i class="fa fa-file-image-o fa-lg"></i></td>';
-                        break;
-
-                    default:
-                        html += '<td ' + alignTd + '><i class="fa fa-exclamation fa-lg"></i> Unknown mime-type</td>';
-                }
-
-            } else {
-                html += '<td ' + alignTd + '><i class="fa fa-exclamation fa-lg"></i></td>';
-            }
-
-             */
 
             html += '<td width="15%" ' + alignTd + '>' + DOMPurify.sanitize(moment(data[i].created).tz('America/Denver').format('MM-DD-YYYY, h:mm:ss a')) + '</td>';
             html += '</tr>';

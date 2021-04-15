@@ -43,6 +43,11 @@ module.exports = function (app) {
     app.route('/api/admin/v1/repo/object/viewer')
         .get(TOKEN.verify, REPO.get_viewer);
 
+    /*
+    app.route('/api/admin/v1/repo/publish/all')
+        .post(TOKEN.verify, REPO.publish_all_objects);
+    */
+
     app.route('/api/admin/v1/repo/publish')
         .post(TOKEN.verify, REPO.publish_objects);
 

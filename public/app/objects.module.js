@@ -298,11 +298,77 @@ const objectsModule = (function () {
         httpModule.req(request, callback);
     };
 
-    /** TODO: ...
-     * Publishes all objects in batch
+    /**
+     * Publishes all newly imported objects in batch
      */
     obj.publishAllObjects = function () {
 
+        let pid = helperModule.getParameterByName('pid');
+
+        if (pid === null) {
+            return false;
+        }
+
+        domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> <em>Publishing imported objects...</em></div>');
+
+        // place pid and type in post body
+        let obj = {
+            pid: pid,
+            type: 'collection'
+        };
+
+        let url = api + '/api/admin/v1/repo/publish',
+            token = userModule.getUserToken(),
+            request = new Request(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                body: JSON.stringify(obj),
+                mode: 'cors'
+            });
+
+        const callback = function (response) {
+
+            if (response.status === 201) {
+
+                setTimeout(function () {
+                    domModule.html('#message', null);
+                    location.replace('/dashboard/import/complete')
+                    // objectsModule.getObjects();
+                    // location.hash = '#' + pid;
+                }, 10000);
+
+            }
+            /*
+            else if (response.status === 418) {
+
+                domModule.html('#message', '<div class="alert alert-warning">Unable to publish object. (The object\'s parent collection must be published before attempting to publish one of its objects.)</div>');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                setTimeout(function () {
+                    domModule.html('#message', null);
+                }, 7000);
+
+            } */
+            else if (response.status === 401) {
+
+                response.json().then(function (response) {
+
+                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
+
+                    setTimeout(function () {
+                        window.location.replace('/login');
+                    }, 4000);
+                });
+
+            } else {
+                helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to publish object(s).');
+            }
+        };
+
+        httpModule.req(request, callback);
     };
 
     /**
@@ -324,17 +390,22 @@ const objectsModule = (function () {
             domModule.html('#total-records', '<p>Total Collections: ' + total_records + '</p>');
         } else if (q === null && is_member_of_collection !== null && is_member_of_collection !== configModule.getRootPid()) {
             add_collection_link = '<a href="/dashboard/collections/add?is_member_of_collection=' + is_member_of_collection + '"><i class="fa fa-plus"></i>&nbsp;Add sub-collection</a>';
-            domModule.html('#total-records', '<p>Total Objects: ' + total_records + '</p>');
+            if (total_records.length !== 0) {
+                domModule.html('#total-records', '<p>Total Objects: ' + total_records + '</p>');
+            } else {
+                domModule.html('#current-collection', null);
+            }
         } else if (q !== null) {
             domModule.html('#searched-for', '<p>You searched for: <em><strong>' + q + '</strong></em></p>');
-            domModule.html('#total-records', '<p>Total Results: ' + total_records + '</p>');
+            domModule.html('#total-records', '<p>Total Search Results: ' + total_records + '</p>');
             add_collection_link = '';
         }
 
+        // TODO: add conditional
         domModule.html('#add-collection-link', add_collection_link);
 
         if (data.total.value === 0) {
-            html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; No unpublished objects found for this collection.</strong></div>';
+            html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; No unpublished objects found in this collection.</strong></div>';
             domModule.html('#objects', html);
             return false;
         }

@@ -25,11 +25,6 @@ module.exports = function (app) {
     app.route('/dashboard/home')
         .get(DASHBOARD.get_dashboard_home);
 
-    /*
-    app.route('/dashboard/collections')
-        .get(DASHBOARD.get_dashboard_collections);
-    */
-
     app.route('/dashboard/collections/add')
         .get(DASHBOARD.get_dashboard_collection_add_form);
 
@@ -77,4 +72,9 @@ module.exports = function (app) {
 
     app.route('/dashboard/qa')
         .get(DASHBOARD.get_dashboard_qa);
+
+    /*
+    app.route('/dashboard/collections')
+        .get(DASHBOARD.get_dashboard_collections);
+    */
 };

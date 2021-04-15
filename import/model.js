@@ -1308,7 +1308,7 @@ exports.get_import_complete = function (req, callback) {
             is_published: 0,
             object_type: 'object'
         })
-        .orderBy('created', 'desc')
+        .orderBy('created', 'asc')
         .then(function (data) {
 
             let response = [];
