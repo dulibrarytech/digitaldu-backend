@@ -673,21 +673,6 @@ exports.create_collection_object = function (req, callback) {
     });
 };
 
-/** TODO: many not need this
- * Publishes all unpublished objects in a collection
- * @param req
- * @param callback
-
-exports.publish_all_objects = function (req, callback) {
-    console.log(req.query);
-    // check if collection is published
-    // 1.) check if collection is published / get collection uuid / check URL or as argument
-    // if collection is published, proceed to publish all unpublished records
-    // if collection is unpublished. Ask user if they would like to publish it along with it's child objects
-    // show completed message.
-};
- */
-
 /**
  * Publishes object(s)
  * @param req

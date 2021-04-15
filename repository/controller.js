@@ -55,16 +55,6 @@ exports.update_thumbnail = function (req, res) {
     });
 };
 
-/*
-exports.publish_all_objects = function (req, res) {
-    CACHE.clear_cache();
-    REPO.publish_all_objects(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
- */
-
 exports.publish_objects = function (req, res) {
     CACHE.clear_cache();
     REPO.publish_objects(req, function (data) {
