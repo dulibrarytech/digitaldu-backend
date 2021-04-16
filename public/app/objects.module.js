@@ -311,7 +311,6 @@ const objectsModule = (function () {
 
         domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> <em>Publishing imported objects...</em></div>');
 
-        // place pid and type in post body
         let obj = {
             pid: pid,
             type: 'collection'
@@ -336,23 +335,9 @@ const objectsModule = (function () {
                 setTimeout(function () {
                     domModule.html('#message', null);
                     location.replace('/dashboard/import/complete')
-                    // objectsModule.getObjects();
-                    // location.hash = '#' + pid;
                 }, 10000);
 
-            }
-            /*
-            else if (response.status === 418) {
-
-                domModule.html('#message', '<div class="alert alert-warning">Unable to publish object. (The object\'s parent collection must be published before attempting to publish one of its objects.)</div>');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-
-                setTimeout(function () {
-                    domModule.html('#message', null);
-                }, 7000);
-
-            } */
-            else if (response.status === 401) {
+            } else if (response.status === 401) {
 
                 response.json().then(function (response) {
 

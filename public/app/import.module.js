@@ -591,7 +591,6 @@ const importModule = (function () {
     };
 
     obj.init = function () {
-        helperModule.ping();
         get_ingest_status();
         get_transfer_status();
         get_import_status();

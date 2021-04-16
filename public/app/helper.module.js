@@ -145,6 +145,7 @@ const helperModule = (function () {
                         }
                     }
 
+                    domModule.html('.x_content', null);
                     domModule.html('#ping', html);
                 });
 
