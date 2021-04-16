@@ -402,7 +402,7 @@ const userModule = (function () {
 
                     setTimeout(function () {
                         window.location.replace('/login');
-                    }, 4000);
+                    }, 3000);
                 });
 
             } else {
@@ -453,7 +453,7 @@ const userModule = (function () {
 
                     setTimeout(function () {
                         window.location.replace('/login');
-                    }, 4000);
+                    }, 3000);
                 });
 
             } else {
@@ -506,32 +506,12 @@ const userModule = (function () {
                 window.location.replace('/login');
             }, 0);
 
+        } else if (data === null) {
+            window.location.replace('/login');
         } else {
             return DOMPurify.sanitize(data.token);
         }
     };
-
-    /** DEPRECATE
-     * Sets session token in request header
-     */
-    /*
-    obj.setHeaderUserToken = function () {
-
-        let data = JSON.parse(window.sessionStorage.getItem('repo_token'));
-
-        if (data === null) {
-            setTimeout(function () {
-                window.location.replace('/login');
-            }, 0);
-        }
-
-        $.ajaxSetup({
-            beforeSend: function (xhr) {
-                xhr.setRequestHeader('x-access-token', DOMPurify.sanitize(data.token));
-            }
-        });
-    };
-    */
 
     /**
      * Gets user profile data after authentication
@@ -569,10 +549,11 @@ const userModule = (function () {
 
                     setTimeout(function () {
                         window.location.replace('/login');
-                    }, 4000);
+                    }, 3000);
 
                 } else {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to retrieve user profile.');
+                    window.location.replace('/login');
                 }
             };
 
@@ -590,7 +571,7 @@ const userModule = (function () {
         window.sessionStorage.removeItem('repo_user');
         setTimeout(function () {
             window.location.replace('/login');
-        }, 2000);
+        }, 500);
     };
 
     /**

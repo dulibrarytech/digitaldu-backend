@@ -31,6 +31,7 @@ const homeModule = (function () {
         }
 
         history.replaceState({}, '', '/dashboard/home');
+        history.pushState({}, '', '/dashboard/home');
     };
 
     return obj;

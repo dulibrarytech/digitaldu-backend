@@ -36,8 +36,12 @@
 <script src="app/helper.module.js"></script>
 <script src="app/http.module.js"></script>
 <script src="app/user.module.js"></script>
-<script>userModule.loginFormValidation()</script>
-<script>userModule.reset();</script>
-<script>helperModule.getCurrentYear();</script>
+<script>
+    userModule.loginFormValidation();
+    userModule.reset();
+    helperModule.getCurrentYear();
+    history.replaceState({}, '', '/login');
+    history.pushState({}, '', '/login');
+</script>
 </body>
 </html>
