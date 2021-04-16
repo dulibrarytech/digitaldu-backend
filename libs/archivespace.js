@@ -36,7 +36,7 @@ exports.ping = function (callback) {
         try {
 
             let response = await HTTP.get(apiUrl, {
-                timeout: 25,
+                timeout: 25000,
                 headers: {
                     'Content-Type': 'application/json'
                 }

@@ -141,11 +141,11 @@ const helperModule = (function () {
 
                         if (data[prop] === 'down') {
                             domModule.hide('.import-link');
+                            domModule.html('.x_content', null);
                             html += '<div class="alert alert-danger"><strong>' + prop + ' is currently not available.  Ingests are not possible at this time.</strong></div>';
                         }
                     }
 
-                    domModule.html('.x_content', null);
                     domModule.html('#ping', html);
                 });
 
