@@ -82,6 +82,7 @@ const objectsModule = (function () {
                 });
 
             } else {
+                console.log(response);
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to get objects.');
             }
         };
