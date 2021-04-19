@@ -31,7 +31,16 @@ const apiModule = (function () {
             users: '/api/admin/v1/users',
             repo_object: '/api/admin/v1/repo/object',
             repo_object_thumbnail: '/api/admin/v1/repo/object/thumbnail',
-            import_metadata_collection: '/api/admin/v1/import/metadata/collection'
+            repo_ping_services: '/api/admin/v1/repo/ping/services',
+            repo_object_viewer: '/api/admin/v1/repo/object/viewer',
+            import_metadata_collection: '/api/admin/v1/import/metadata/collection',
+            import_queue_objects: '/api/admin/v1/import/queue_objects',
+            import_list: '/api/admin/v1/import/list',
+            import_complete: '/api/admin/v1/import/complete',
+            import_poll_transfer_status: '/api/admin/v1/import/poll/transfer_status',
+            import_poll_ingest_status: '/api/admin/v1/import/poll/ingest_status',
+            import_poll_import_status: '/api/admin/v1/import/poll/import_status',
+            import_poll_fail_queue: '/api/admin/v1/import/poll/fail_queue'
         };
     };
 

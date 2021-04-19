@@ -21,6 +21,7 @@ const importModule = (function () {
     'use strict';
 
     const api = configModule.getApi();
+    const endpoints = apiModule.endpoints();
     let obj = {};
 
     /**
@@ -144,7 +145,7 @@ const importModule = (function () {
                     compound = '&nbsp;&nbsp;<i class="fa fa-cubes"></i>';
                 }
 
-                html += '<td ' + alignTd + '><a href="' + api + '/api/admin/v1/repo/object/viewer?uuid=' + DOMPurify.sanitize(data[i].sip_uuid) + '&t=' + token + '" target="_blank">' + DOMPurify.sanitize(title) + compound + '</a></td>';
+                html += '<td ' + alignTd + '><a href="' + api + endpoints.repo_object_viewer + '?uuid=' + DOMPurify.sanitize(data[i].sip_uuid) + '&t=' + token + '" target="_blank">' + DOMPurify.sanitize(title) + compound + '</a></td>';
             }
 
             if (data[i].mods_id !== null) {
@@ -180,7 +181,7 @@ const importModule = (function () {
             user: userModule.getUserFullName()
         };
 
-        let url = api + '/api/admin/v1/import/queue_objects',
+        let url = api + endpoints.import_queue_objects,
             token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'POST',
@@ -226,12 +227,12 @@ const importModule = (function () {
     obj.getImportObjects = function () {
 
         let folder = helperModule.getParameterByName('collection'),
-            url = api + '/api/admin/v1/import/list?collection=' + null;
+            url = api + endpoints.import_list + '?collection=' + null;
 
         // gets child folders when parent folder (collection) is present
         if (folder !== null) {
             domModule.html('#back', '<p><a href="/dashboard/import" class="btn btn-default" id="back"><i class="fa fa-arrow-left"></i> Back</a></p>');
-            url = api + '/api/admin/v1/import/list?collection=' + folder;
+            url = api + endpoints.import_list + '?collection=' + folder;
         }
 
         let token = userModule.getUserToken(),
@@ -273,7 +274,7 @@ const importModule = (function () {
      */
     obj.getCompleteImportRecords = function () {
 
-        let url = api + '/api/admin/v1/import/complete',
+        let url = api + endpoints.import_complete,
             token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'GET',
@@ -324,7 +325,7 @@ const importModule = (function () {
 
         function transfer_status_http() {
 
-            let url = api + '/api/admin/v1/import/poll/transfer_status',
+            let url = api + endpoints.import_poll_transfer_status,
                 token = userModule.getUserToken(),
                 request = new Request(url, {
                     method: 'GET',
@@ -398,7 +399,7 @@ const importModule = (function () {
 
         function ingest_status_http() {
 
-            let url = api + '/api/admin/v1/import/poll/ingest_status',
+            let url = api + endpoints.import_poll_ingest_status,
                 token = userModule.getUserToken(),
                 request = new Request(url, {
                     method: 'GET',
@@ -455,7 +456,7 @@ const importModule = (function () {
 
         function import_status_http() {
 
-            let url = api + '/api/admin/v1/import/poll/import_status',
+            let url = api + endpoints.import_poll_import_status,
                 token = userModule.getUserToken(),
                 request = new Request(url, {
                     method: 'GET',
@@ -526,7 +527,7 @@ const importModule = (function () {
 
         function fail_status_http() {
 
-            let url = api + '/api/admin/v1/import/poll/fail_queue',
+            let url = api + endpoints.import_poll_fail_queue,
                 token = userModule.getUserToken(),
                 request = new Request(url, {
                     method: 'GET',

@@ -21,6 +21,7 @@ const helperModule = (function () {
     'use strict';
 
     const api = configModule.getApi();
+    const endpoints = apiModule.endpoints();
     let obj = {};
 
     /**
@@ -119,7 +120,7 @@ const helperModule = (function () {
     obj.ping = function () {
 
         let token = userModule.getUserToken();
-        let url = api + '/api/admin/v1/repo/ping/services',
+        let url = api + endpoints.repo_ping_services,
             request = new Request(url, {
                 method: 'GET',
                 mode: 'cors',
