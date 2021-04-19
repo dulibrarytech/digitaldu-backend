@@ -28,7 +28,10 @@ const apiModule = (function () {
     obj.endpoints = function () {
         return {
             authenticate: '/api/authenticate',
-            users: '/api/admin/v1/users'
+            users: '/api/admin/v1/users',
+            repo_object: '/api/admin/v1/repo/object',
+            repo_object_thumbnail: '/api/admin/v1/repo/object/thumbnail',
+            import_metadata_collection: '/api/admin/v1/import/metadata/collection'
         };
     };
 

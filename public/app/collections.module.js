@@ -21,6 +21,7 @@ const collectionsModule = (function () {
     'use strict';
 
     const api = configModule.getApi();
+    const endpoints = apiModule.endpoints();
     let obj = {};
 
     /**
@@ -36,7 +37,7 @@ const collectionsModule = (function () {
         }
 
         let token = userModule.getUserToken();
-        let url = api + '/api/admin/v1/repo/object/?pid=' + pid,
+        let url = api + endpoints.repo_object + '?pid=' + pid,
             request = new Request(url, {
                 method: 'GET',
                 mode: 'cors',
@@ -106,7 +107,7 @@ const collectionsModule = (function () {
 
         domModule.html('#message', '');
         let token = userModule.getUserToken();
-        let url = api + '/api/admin/v1/repo/object/thumbnail',
+        let url = api + endpoints.repo_object_thumbnail,
             request = new Request(url, {
                 method: 'POST',
                 headers: {
@@ -218,7 +219,7 @@ const collectionsModule = (function () {
         }
 
         let token = userModule.getUserToken();
-        let url = api + '/api/admin/v1/repo/object',
+        let url = api + endpoints.repo_object,
             request = new Request(url, {
                 method: 'POST',
                 headers: {
@@ -294,7 +295,7 @@ const collectionsModule = (function () {
         let obj = {};
         obj.sip_uuid = pid;
 
-        let url = api + '/api/admin/v1/import/metadata/collection',
+        let url = api + endpoints.import_metadata_collection,
             token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'PUT',
