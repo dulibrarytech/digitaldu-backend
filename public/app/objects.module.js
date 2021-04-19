@@ -21,6 +21,7 @@ const objectsModule = (function () {
     'use strict';
 
     const api = configModule.getApi();
+    const endpoints = apiModule.endpoints();
     let obj = {};
 
     /**
@@ -39,10 +40,10 @@ const objectsModule = (function () {
             collectionsModule.getCollectionName(pid);
         }
 
-        let url = api + '/api/admin/v1/repo/objects?pid=' + pid;
+        let url = api + endpoints.repo_objects + '?pid=' + pid;
 
         if (page !== null && total_on_page !== null) {
-            url = api + '/api/admin/v1/repo/objects?pid=' + pid + '&page=' + page + '&total_on_page=' + total_on_page;
+            url = api + endpoints.repo_objects + '?pid=' + pid + '&page=' + page + '&total_on_page=' + total_on_page;
         }
 
         let token = userModule.getUserToken(),
@@ -102,7 +103,7 @@ const objectsModule = (function () {
 
         domModule.html('#publish-' + pid, '<em><i class="fa fa-exclamation-circle"></i> Publishing...</em>');
 
-        let url = api + '/api/admin/v1/repo/publish',
+        let url = api + endpoints.repo_publish,
             token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'POST',
@@ -165,7 +166,7 @@ const objectsModule = (function () {
 
         domModule.html('#unpublish-' + pid, '<em><i class="fa fa-exclamation-circle"></i> Unpublishing...</em>');
 
-        let url = api + '/api/admin/v1/repo/unpublish',
+        let url = api + endpoints.repo_unpublish,
             token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'POST',
@@ -217,7 +218,7 @@ const objectsModule = (function () {
 
         collectionsModule.getCollectionName(pid);
 
-        let url = api + '/api/admin/v1/repo/object/unpublished?pid=' + pid,
+        let url = api + endpoints.repo_object_unpublished + '?pid=' + pid,
             request = new Request(url, {
                 method: 'GET',
                 mode: 'cors',
@@ -260,10 +261,10 @@ const objectsModule = (function () {
             page = helperModule.getParameterByName('page'),
             total_on_page = helperModule.getParameterByName('total_on_page'),
             sort = helperModule.getParameterByName('sort'),
-            url = api + '/api/admin/v1/search?q=' + q;
+            url = api + endpoints.search + '?q=' + q;
 
         if (page !== null && total_on_page !== null) {
-            url = api + '/api/admin/v1/search?q=' + q + '&page=' + page + '&total_on_page=' + total_on_page;
+            url = api + endpoints.search + '?q=' + q + '&page=' + page + '&total_on_page=' + total_on_page;
         }
 
         let request = new Request(url, {
@@ -316,7 +317,7 @@ const objectsModule = (function () {
             type: 'collection'
         };
 
-        let url = api + '/api/admin/v1/repo/publish',
+        let url = api + endpoints.repo_publish,
             token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'POST',
@@ -433,7 +434,7 @@ const objectsModule = (function () {
         let obj = {};
         obj.sip_uuid = pid;
 
-        let url = api + '/api/admin/v1/import/metadata/object',
+        let url = api + endpoints.import_metadata_object,
             token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'PUT',
@@ -448,8 +449,6 @@ const objectsModule = (function () {
         const callback = function (response) {
 
             if (response.status === 201) {
-
-                // domModule.html('#message', '<div class="alert alert-success"><i class="fa fa-exclamation-circle"></i> Metadata Updated.</div>');
 
                 setTimeout(function () {
                     objectsModule.getObjects();
@@ -487,7 +486,7 @@ const objectsModule = (function () {
         obj.pid = helperModule.getParameterByName('pid');
         obj.delete_reason = domModule.val('#delete-reason', null) + '  --deleted by ' + userModule.getUserFullName();
 
-        let url = api + '/api/admin/v1/repo/object',
+        let url = api + endpoints.repo_object,
             token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'DELETE',
@@ -513,7 +512,6 @@ const objectsModule = (function () {
                     setTimeout(function() {
                         domModule.html('#message', null);
                         window.location.replace('/dashboard/objects');
-                        // domModule.show('#delete-object');
                     }, 5000);
 
                 }, 10000);
