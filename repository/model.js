@@ -679,7 +679,7 @@ exports.create_collection_object = function (req, callback) {
  * @param callback
  */
 exports.publish_objects = function (req, callback) {
-    console.log(req.body);
+
     if (req.body.pid === undefined || req.body.pid.length === 0) {
 
         callback({
