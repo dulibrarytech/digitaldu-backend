@@ -53,7 +53,8 @@ const apiModule = (function () {
             qa_check_collection: '/api/v1/qa/check-collection',
             qa_move_to_ingest: '/api/v1/qa/move-to-ingest',
             qa_move_to_sftp: '/api/v1/qa/move-to-sftp',
-            qa_upload_status: '/api/v1/qa/upload-status'
+            qa_upload_status: '/api/v1/qa/upload-status',
+            stats: '/api/admin/v1/stats'
         };
     };
 
