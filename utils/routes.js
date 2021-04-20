@@ -33,4 +33,7 @@ module.exports = function (app) {
 
     app.route('/api/admin/v1/utils/reindex')
         .post(TOKEN.verify, UTILS.reindex);
+
+    app.route('/api/admin/v1/utils/clear_cache')
+        .post(TOKEN.verify, UTILS.clear_cache);
 };
