@@ -32,8 +32,18 @@ const collectionsModule = (function () {
 
         if (pid === null) {
             return false;
-        } else if (pid === undefined) {
+        }
+
+        if (pid === undefined) {
             let pid = helperModule.getParameterByName('pid');
+        }
+
+        // used add collection form
+        if (helperModule.getParameterByName('is_member_of_collection') !== null && helperModule.getParameterByName('is_member_of_collection') === configModule.getRootPid()) {
+            domModule.html('#collection-type', 'Add top-level collection');
+            return false;
+        } else if (helperModule.getParameterByName('is_member_of_collection') !== null && helperModule.getParameterByName('is_member_of_collection') !== configModule.getRootPid()) {
+            domModule.html('#collection-type', 'Add sub-level collection');
         }
 
         let token = userModule.getUserToken();
@@ -89,6 +99,7 @@ const collectionsModule = (function () {
     obj.getIsMemberOfCollection = function () {
         let is_member_of_collection = helperModule.getParameterByName('is_member_of_collection');
         domModule.val('#is-member-of-collection', is_member_of_collection);
+        collectionsModule.getCollectionName(is_member_of_collection);
     };
 
     /**
