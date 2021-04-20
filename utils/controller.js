@@ -18,7 +18,8 @@
 
 'use strict';
 
-const UTILS = require('../utils/model');
+const UTILS = require('../utils/model'),
+    CACHE = require('../libs/cache');
 
 exports.default = function (req, res) {
     res.status(403).send({
@@ -29,5 +30,12 @@ exports.default = function (req, res) {
 exports.reindex = function (req, res) {
     UTILS.reindex(req, function (data) {
         res.status(data.status).send(data.data);
+    });
+};
+
+exports.clear_cache = function (req, res) {
+    CACHE.clear_cache();
+    res.status(200).send({
+        message: 'Cache Cleared.'
     });
 };
