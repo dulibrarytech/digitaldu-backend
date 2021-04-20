@@ -1,5 +1,4 @@
 <% include partials/header.ejs %>
-
 <body class="nav-md">
 <div class="container body">
     <div class="main_container">
@@ -18,15 +17,12 @@
         <% include partials/top-nav.ejs %>
         <div class="right_col" role="main">
             <div class="">
-
                 <div class="page-title">
                     <div class="title_left">
                         <h3> Thumbnail Upload <span id="object-type"></span></h3>
                     </div>
                 </div>
-
                 <div class="clearfix"></div>
-
                 <div class="row">
                     <div class="col-md-12">
                         <div class="x_panel">
@@ -37,24 +33,26 @@
                                 <div class="clearfix"></div>
                             </div>
                             <div class="x_content">
-
                                 <% if (error === true) { %>
-                                    <div id="message" class="alert alert-danger"><%=message%></div>
+                                <div id="message" class="alert alert-danger"><%= message %></div>
                                 <% } else if (error === false) { %>
-                                    <div id="message" class="alert alert-success"><%=message%></div>
+                                <div id="message" class="alert alert-success"><%= message %></div>
                                 <% } else { %>
                                     <div id="message"></div>
-                                <% }%>
-
+                                <% } %>
                                 <form id="collection-thumbnail-upload-form" action="/repo/tn/upload"
                                       enctype="multipart/form-data" method="POST">
-                                    <p style="background-color:#4DA5DF;color:#FFF;width:320px;padding:3px;">*Upload .jpg files only and file must be under 500kb</p>
+                                    <p style="background-color:#4DA5DF;color:#FFF;width:320px;padding:3px;">*Upload .jpg
+                                        files only and file must be under 500kb</p>
                                     <span id="sip-uuid-input"></span>
                                     <div class="form-group">
-                                        <input id="file" type="file" name="tn" accept="image/jpeg" required onchange="helperModule.checkFileSize()"/>
+                                        <input id="file" type="file" name="tn" accept="image/jpeg" required
+                                               onchange="helperModule.checkFileSize()"/>
                                     </div>
                                     <br>
-                                    <button id="upload-button" class="btn btn-primary" type="submit"><i class="fa fa-upload"></i> Upload</button>
+                                    <button id="upload-button" class="btn btn-primary" type="submit"><i
+                                                class="fa fa-upload"></i> Upload
+                                    </button>
                                 </form>
                             </div>
                         </div>
@@ -64,7 +62,6 @@
         </div>
         <% include partials/footer.ejs %>
     </div>
-
     <script src="../../../libs/jquery/dist/jquery.min.js"></script>
     <script src="../../../libs/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="../../../libs/nprogress/nprogress.js"></script>

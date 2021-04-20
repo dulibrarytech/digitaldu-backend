@@ -24,6 +24,9 @@ const FS = require('fs'),
     TN = './public/tn',
     TN_CACHE = './public/tn_cache';
 
+/**
+ * Checks if required directories exist, creates them if they don't
+ */
 exports.check_directories = function () {
 
     try {
