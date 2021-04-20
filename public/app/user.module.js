@@ -21,6 +21,7 @@ const userModule = (function () {
     'use strict';
 
     const api = configModule.getApi();
+    const endpoints = apiModule.endpoints();
     let obj = {};
 
     /**
@@ -134,7 +135,7 @@ const userModule = (function () {
     obj.getUsers = function () {
 
         let token = userModule.getUserToken();
-        let url = api + '/api/admin/v1/users',
+        let url = api + endpoints.users,
             request = new Request(url, {
                 method: 'GET',
                 mode: 'cors',
@@ -177,7 +178,7 @@ const userModule = (function () {
 
         let id = helperModule.getParameterByName('id');
         let token = userModule.getUserToken();
-        let url = api + '/api/admin/v1/users?id=' + id,
+        let url = api + endpoints.users + '?id=' + id,
             request = new Request(url, {
                 method: 'GET',
                 mode: 'cors',
@@ -310,7 +311,7 @@ const userModule = (function () {
         }
 
         let token = userModule.getUserToken();
-        let url = api + '/api/admin/v1/users',
+        let url = api + endpoints.users,
             request = new Request(url, {
                 method: 'POST',
                 headers: {
@@ -370,7 +371,7 @@ const userModule = (function () {
         domModule.html('#message', '<div class="alert alert-info">Updating User...</div>');
 
         let token = userModule.getUserToken();
-        let url = api + '/api/admin/v1/users',
+        let url = api + endpoints.users,
             request = new Request(url, {
                 method: 'PUT',
                 headers: {
@@ -402,7 +403,7 @@ const userModule = (function () {
 
                     setTimeout(function () {
                         window.location.replace('/login');
-                    }, 4000);
+                    }, 3000);
                 });
 
             } else {
@@ -423,7 +424,7 @@ const userModule = (function () {
         domModule.html('#message', '<div class="alert alert-info">Deleting User...</div>');
 
         let token = userModule.getUserToken();
-        let url = api + '/api/admin/v1/users?id=' + id,
+        let url = api + endpoints.users + '?id=' + id,
             request = new Request(url, {
                 method: 'DELETE',
                 headers: {
@@ -453,7 +454,7 @@ const userModule = (function () {
 
                     setTimeout(function () {
                         window.location.replace('/login');
-                    }, 4000);
+                    }, 3000);
                 });
 
             } else {
@@ -506,32 +507,12 @@ const userModule = (function () {
                 window.location.replace('/login');
             }, 0);
 
+        } else if (data === null) {
+            window.location.replace('/login');
         } else {
             return DOMPurify.sanitize(data.token);
         }
     };
-
-    /** DEPRECATE
-     * Sets session token in request header
-     */
-    /*
-    obj.setHeaderUserToken = function () {
-
-        let data = JSON.parse(window.sessionStorage.getItem('repo_token'));
-
-        if (data === null) {
-            setTimeout(function () {
-                window.location.replace('/login');
-            }, 0);
-        }
-
-        $.ajaxSetup({
-            beforeSend: function (xhr) {
-                xhr.setRequestHeader('x-access-token', DOMPurify.sanitize(data.token));
-            }
-        });
-    };
-    */
 
     /**
      * Gets user profile data after authentication
@@ -544,7 +525,7 @@ const userModule = (function () {
         if (uid !== null) {
 
             let token = userModule.getUserToken();
-            let url = api + '/api/admin/v1/users?id=' + uid,
+            let url = api + endpoints.users + '?id=' + uid,
                 request = new Request(url, {
                     method: 'GET',
                     mode: 'cors',
@@ -569,10 +550,11 @@ const userModule = (function () {
 
                     setTimeout(function () {
                         window.location.replace('/login');
-                    }, 4000);
+                    }, 3000);
 
                 } else {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to retrieve user profile.');
+                    window.location.replace('/login');
                 }
             };
 
@@ -590,7 +572,7 @@ const userModule = (function () {
         window.sessionStorage.removeItem('repo_user');
         setTimeout(function () {
             window.location.replace('/login');
-        }, 2000);
+        }, 500);
     };
 
     /**
@@ -643,7 +625,7 @@ const userModule = (function () {
             password: domModule.val('#password', null)
         };
 
-        let url = api + '/api/authenticate',
+        let url = api + endpoints.authenticate,
             request = new Request(url, {
                 method: 'POST',
                 headers: {

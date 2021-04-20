@@ -21,6 +21,7 @@ const objectsModule = (function () {
     'use strict';
 
     const api = configModule.getApi();
+    const endpoints = apiModule.endpoints();
     let obj = {};
 
     /**
@@ -39,10 +40,10 @@ const objectsModule = (function () {
             collectionsModule.getCollectionName(pid);
         }
 
-        let url = api + '/api/admin/v1/repo/objects?pid=' + pid;
+        let url = api + endpoints.repo_objects + '?pid=' + pid;
 
         if (page !== null && total_on_page !== null) {
-            url = api + '/api/admin/v1/repo/objects?pid=' + pid + '&page=' + page + '&total_on_page=' + total_on_page;
+            url = api + endpoints.repo_objects + '?pid=' + pid + '&page=' + page + '&total_on_page=' + total_on_page;
         }
 
         let token = userModule.getUserToken(),
@@ -95,16 +96,14 @@ const objectsModule = (function () {
      */
     obj.publishObject = function (pid, type) {
 
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-
         let obj = {
             pid: pid,
             type: type
         };
 
-        domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-check-circle"></i> Publishing...</div>');
+        domModule.html('#publish-' + pid, '<em><i class="fa fa-exclamation-circle"></i> Publishing...</em>');
 
-        let url = api + '/api/admin/v1/repo/publish',
+        let url = api + endpoints.repo_publish,
             token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'POST',
@@ -120,20 +119,19 @@ const objectsModule = (function () {
 
             if (response.status === 201) {
 
-                domModule.html('#message', '<div class="alert alert-success">Published</div>');
-
                 setTimeout(function () {
-                    domModule.html('#message', null);
+                    domModule.html('#publish-' + pid, null);
                     objectsModule.getObjects();
+                    location.hash = '#' + pid;
                 }, 5000);
 
             } else if (response.status === 418) {
 
                 domModule.html('#message', '<div class="alert alert-warning">Unable to publish object. (The object\'s parent collection must be published before attempting to publish one of its objects.)</div>');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
 
                 setTimeout(function () {
                     domModule.html('#message', null);
-                    objectsModule.getObjects();
                 }, 7000);
 
             } else if (response.status === 401) {
@@ -161,16 +159,14 @@ const objectsModule = (function () {
      */
     obj.unpublishObject = function (pid, type) {
 
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-
         let obj = {
             pid: pid,
             type: type
         };
 
-        domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-check-circle"></i> Unpublishing...</div>');
+        domModule.html('#unpublish-' + pid, '<em><i class="fa fa-exclamation-circle"></i> Unpublishing...</em>');
 
-        let url = api + '/api/admin/v1/repo/unpublish',
+        let url = api + endpoints.repo_unpublish,
             token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'POST',
@@ -186,11 +182,10 @@ const objectsModule = (function () {
 
             if (response.status === 201) {
 
-                domModule.html('#message', '<div class="alert alert-success">Unpublished</div>');
-
                 setTimeout(function () {
-                    domModule.html('#message', null);
+                    domModule.html('#unpublish-' + pid, null);
                     objectsModule.getObjects();
+                    location.hash = '#' + pid;
                 }, 8000);
 
 
@@ -221,7 +216,9 @@ const objectsModule = (function () {
         let pid = helperModule.getParameterByName('pid'),
             token = userModule.getUserToken();
 
-        let url = api + '/api/admin/v1/repo/object/unpublished?pid=' + pid,
+        collectionsModule.getCollectionName(pid);
+
+        let url = api + endpoints.repo_object_unpublished + '?pid=' + pid,
             request = new Request(url, {
                 method: 'GET',
                 mode: 'cors',
@@ -247,7 +244,113 @@ const objectsModule = (function () {
                 });
 
             } else {
-                helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to get incomplete records.');
+                helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to get unpublished records.');
+            }
+        };
+
+        httpModule.req(request, callback);
+    };
+
+    /**
+     * Constructs search request
+     */
+    obj.search = function () {
+
+        let q = helperModule.getParameterByName('q');
+        let token = userModule.getUserToken(),
+            page = helperModule.getParameterByName('page'),
+            total_on_page = helperModule.getParameterByName('total_on_page'),
+            sort = helperModule.getParameterByName('sort'),
+            url = api + endpoints.search + '?q=' + q;
+
+        if (page !== null && total_on_page !== null) {
+            url = api + endpoints.search + '?q=' + q + '&page=' + page + '&total_on_page=' + total_on_page;
+        }
+
+        let request = new Request(url, {
+                method: 'GET',
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+        const callback = function (response) {
+
+            if (response.status === 200) {
+
+                response.json().then(function (data) {
+
+                    domModule.html('#message', null);
+
+                    if (data.length === 0) {
+                        domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No records found.</div>');
+                    } else {
+                        objectsModule.renderDisplayRecords(data);
+                    }
+                });
+
+            } else {
+                helperModule.renderError('Error: (HTTP status ' + response.status + '. Unable to get incomplete records.');
+            }
+        };
+
+        httpModule.req(request, callback);
+    };
+
+    /**
+     * Publishes all newly imported objects in batch
+     */
+    obj.publishAllObjects = function () {
+
+        let pid = helperModule.getParameterByName('pid');
+
+        if (pid === null) {
+            return false;
+        }
+
+        domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> <em>Publishing imported objects...</em></div>');
+
+        let obj = {
+            pid: pid,
+            type: 'collection'
+        };
+
+        let url = api + endpoints.repo_publish,
+            token = userModule.getUserToken(),
+            request = new Request(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                body: JSON.stringify(obj),
+                mode: 'cors'
+            });
+
+        const callback = function (response) {
+
+            if (response.status === 201) {
+
+                setTimeout(function () {
+                    domModule.html('#message', null);
+                    location.replace('/dashboard/import/complete')
+                }, 10000);
+
+            } else if (response.status === 401) {
+
+                response.json().then(function (response) {
+
+                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
+
+                    setTimeout(function () {
+                        window.location.replace('/login');
+                    }, 4000);
+                });
+
+            } else {
+                helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to publish object(s).');
             }
         };
 
@@ -262,18 +365,36 @@ const objectsModule = (function () {
     obj.renderDisplayRecords = function (data) {
 
         let is_member_of_collection = helperModule.getParameterByName('pid'),
+            q = helperModule.getParameterByName('q'),
             total_records = DOMPurify.sanitize(data.total.value),
-            html = '';
+            html = '',
+            add_collection_link;
 
-        $('#current-collection').prop('href', '/dashboard/collections/add?is_member_of_collection=' + is_member_of_collection);
+        if (q === null && is_member_of_collection === null || is_member_of_collection === configModule.getRootPid()) {
+            add_collection_link = '<a href="/dashboard/collections/add?is_member_of_collection=' + configModule.getRootPid() + '"><i class="fa fa-plus"></i>&nbsp;Add top-level collection</a>';
+            domModule.html('#collection-name', 'Collections');
+            domModule.html('#total-records', '<p>Total Collections: ' + total_records + '</p>');
+        } else if (q === null && is_member_of_collection !== null && is_member_of_collection !== configModule.getRootPid()) {
+            add_collection_link = '<a href="/dashboard/collections/add?is_member_of_collection=' + is_member_of_collection + '"><i class="fa fa-plus"></i>&nbsp;Add sub-collection</a>';
+            if (total_records.length !== 0) {
+                domModule.html('#total-records', '<p>Total Objects: ' + total_records + '</p>');
+            } else {
+                domModule.html('#current-collection', null);
+            }
+        } else if (q !== null) {
+            domModule.html('#searched-for', '<p>You searched for: <em><strong>' + q + '</strong></em></p>');
+            domModule.html('#total-records', '<p>Total Search Results: ' + total_records + '</p>');
+            add_collection_link = '';
+        }
+
+        // TODO: add conditional
+        domModule.html('#add-collection-link', add_collection_link);
 
         if (data.total.value === 0) {
-            html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; No unpublished objects found for this collection.</strong></div>';
+            html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; No unpublished objects found in this collection.</strong></div>';
             domModule.html('#objects', html);
             return false;
         }
-
-        domModule.html('#total-records', '<p>Total Records: ' + total_records + '</p>');
 
         for (let i = 0; i < data.hits.length; i++) {
 
@@ -308,13 +429,12 @@ const objectsModule = (function () {
      */
     obj.updateMetadata = function(pid) {
 
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> Updating...</div>');
+        domModule.html('#update-' + pid, '<em><i class="fa fa-exclamation-circle"></i> Updating Metadata...</em>');
 
         let obj = {};
         obj.sip_uuid = pid;
 
-        let url = api + '/api/admin/v1/import/metadata/object',
+        let url = api + endpoints.import_metadata_object,
             token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'PUT',
@@ -330,11 +450,9 @@ const objectsModule = (function () {
 
             if (response.status === 201) {
 
-                domModule.html('#message', '<div class="alert alert-success"><i class="fa fa-exclamation-circle"></i> Metadata Updated.</div>');
-
                 setTimeout(function () {
-                    domModule.html('#message', null);
                     objectsModule.getObjects();
+                    location.hash = '#' + pid;
                 }, 4000);
 
 
@@ -368,7 +486,7 @@ const objectsModule = (function () {
         obj.pid = helperModule.getParameterByName('pid');
         obj.delete_reason = domModule.val('#delete-reason', null) + '  --deleted by ' + userModule.getUserFullName();
 
-        let url = api + '/api/admin/v1/repo/object',
+        let url = api + endpoints.repo_object,
             token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'DELETE',
@@ -393,8 +511,7 @@ const objectsModule = (function () {
 
                     setTimeout(function() {
                         domModule.html('#message', null);
-                        window.location.replace('/dashboard/collections');
-                        // domModule.show('#delete-object');
+                        window.location.replace('/dashboard/objects');
                     }, 5000);
 
                 }, 10000);
@@ -419,7 +536,14 @@ const objectsModule = (function () {
     };
 
     obj.init = function () {
-        objectsModule.getObjects();
+
+        domModule.html('#message', 'Loading...');
+
+        if (helperModule.getParameterByName('q') === null) {
+            objectsModule.getObjects();
+        } else {
+            objectsModule.search();
+        }
     };
 
     return obj;

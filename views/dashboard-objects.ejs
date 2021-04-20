@@ -19,7 +19,7 @@
             <div class="">
                 <div class="page-title">
                     <div class="title_left">
-                        <h3> Collection Objects</h3>
+                        <h3> Objects</h3>
                     </div>
                     <div class="title_right">
                         <% include partials/search.ejs %>
@@ -33,29 +33,19 @@
                             <div class="x_title">
                                 <h2 id="collection-name"></h2>
                                 <ul class="nav navbar-right">
-                                    <li><a id="current-collection" href="#"><i class="fa fa-plus"></i>&nbsp;Add sub-collection</a></li>
+                                    <li id="add-collection-link"></li>
                                 </ul>
-                                <!--
-                                <ul class="nav navbar-right panel_toolbox"><!-- panel_toolbox --
-                                    <li class="dropdown">
-                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-bars"></i></a>
-                                        <ul class="dropdown-menu" role="menu">
-                                            <li><a id="current-collection" href="#"><i class="fa fa-plus"></i>&nbsp;Add sub-collection</a></li>
-                                            <li><a id="batch-update-metadata" href="#" title="Updates all metadata records for current collection"><i class="fa fa-code"></i>&nbsp;Batch update all object metadata </a></li>
-                                        </ul>
-                                    </li>
-                                </ul>
-                                -->
                                 <div class="clearfix"></div>
                             </div>
                             <div class="x_content">
                                 <div id="message"></div>
                                 <div class="row">
+                                    <div id="searched-for"></div>
                                     <div id="total-records"></div>
                                     <div id="pagination"></div>
                                     <hr>
                                 </div>
-                                <div class="row" id="objects"><!-- objects are rendered here --></div>
+                                <div class="row" id="objects" style="visibility: hidden"><!-- objects are rendered here --></div>
                             </div>
                         </div>
                     </div>
@@ -65,21 +55,23 @@
         <% include partials/footer.ejs %>
     </div>
 </div>
-<script src="../../vendors/jquery/dist/jquery.min.js"></script>
-<script src="../../vendors/bootstrap/dist/js/bootstrap.min.js"></script>
-<script src="../../vendors/nprogress/nprogress.js"></script>
-<script src="../../js/dompurify/purify.min.js"></script>
+<script src="../../libs/jquery/dist/jquery.min.js"></script>
+<script src="../../libs/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="../../libs/nprogress/nprogress.js"></script>
+<script src="../../libs/dompurify/purify.min.js"></script>
 <script src="../../assets/js/theme_sidebar.js"></script>
-<script src="../../app/config.module.js"></script>
 <script src="../../app/dom.module.js"></script>
-<script src="../../app/http.module.js"></script>
+<script src="../../app/config.module.js"></script>
+<script src="../../app/api.module.js"></script>
 <script src="../../app/helper.module.js"></script>
+<script src="../../app/http.module.js"></script>
 <script src="../../app/metadata.module.js"></script>
 <script src="../../app/user.module.js"></script>
 <script src="../../app/collections.module.js"></script>
 <script src="../../app/objects.module.js"></script>
-<script src="../../app/search.module.js"></script>
-<script>objectsModule.getObjects();</script>
-<!--<script>objectsModule.batchUpdateMetadataListener();</script>-->
+<script>
+    objectsModule.init();
+    helperModule.onLoadVisibility('#objects', 250);
+</script>
 </body>
 </html>

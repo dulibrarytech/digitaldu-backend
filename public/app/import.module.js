@@ -21,6 +21,7 @@ const importModule = (function () {
     'use strict';
 
     const api = configModule.getApi();
+    const endpoints = apiModule.endpoints();
     let obj = {};
 
     /**
@@ -112,97 +113,6 @@ const importModule = (function () {
         domModule.html('.loading', null);
     };
 
-    /** REMOVE
-     * Renders incomplete imported records
-     * @param data
-     */
-    const renderIncompleteRecords = function (data) {
-
-        window.sessionStorage.removeItem('incomplete_records');
-
-        let html = '',
-            alignTd = 'style="text-align: center; vertical-align: middle"',
-            incomplete = [],
-            obj = {},
-            startImport;
-
-        startImport = '<p><a class="btn btn-primary" href="#" onclick="importModule.import(); return false;" title="Import missing record components"><i class="fa fa-download"></i> Import Missing Record Components</a></p>';
-        domModule.html('#start-import', startImport);
-
-        for (let i = 0; i < data.length; i++) {
-
-            if (data[i].object_type !== 'object') {
-                continue;
-            }
-
-            html += '<tr>';
-            html += '<td ' + alignTd + '>' + DOMPurify.sanitize(data[i].sip_uuid) + '</td>';
-
-            // determine what is missing from the record
-            if (data[i].handle === null || data[i].handle.length === 0) {
-                html += '<td ' + alignTd + '><i class="fa fa-exclamation"></i></td>';
-            } else {
-                html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
-            }
-
-            if (data[i].mods_id === null || data[i].mods === null || data[i].mods_id.length === 0 || data[i].mods.length === 0) {
-
-                if (data[i].mods_id.length === 0) {
-                    data[i].mods_id = null;
-                }
-
-                html += '<td ' + alignTd + '><i class="fa fa-exclamation"></i></td>';
-            } else {
-                html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
-            }
-
-            if (data[i].thumbnail === null || data[i].thumbnail.length === 0) {
-                html += '<td ' + alignTd + '><i class="fa fa-exclamation"></i></td>';
-            } else {
-                html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
-            }
-
-            if (data[i].file_name === null || data[i].file_name.length === 0) {
-                html += '<td ' + alignTd + '><i class="fa fa-exclamation"></i></td>';
-            } else {
-                html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
-            }
-
-            if (data[i].mime_type === null || data[i].mime_type.length === 0) {
-                html += '<td ' + alignTd + '><i class="fa fa-exclamation"></i></td>';
-            } else {
-                html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
-            }
-
-            if (data[i].checksum === null || data[i].checksum.length === 0) {
-                html += '<td ' + alignTd + '><i class="fa fa-exclamation"></i></td>';
-            } else {
-                html += '<td ' + alignTd + '><i class="fa fa-check"></i></td>';
-            }
-
-            html += '<td ' + alignTd + '>' + DOMPurify.sanitize(moment(data[i].created).tz('America/Denver').format('MM-DD-YYYY, h:mm:ss a')) + '</td>';
-            html += '</tr>';
-
-            obj.sip_uuid = DOMPurify.sanitize(data[i].sip_uuid);
-            obj.pid = DOMPurify.sanitize(data[i].pid);
-            obj.is_member_of_collection = DOMPurify.sanitize(data[i].is_member_of_collection);
-            obj.handle = DOMPurify.sanitize(data[i].handle);
-            obj.mods_id = DOMPurify.sanitize(data[i].mods_id);
-            obj.mods = DOMPurify.sanitize(data[i].mods);
-            obj.thumbnail = DOMPurify.sanitize(data[i].thumbnail);
-            obj.mime_type = DOMPurify.sanitize(data[i].mime_type);
-            obj.file_name = DOMPurify.sanitize(data[i].file_name);
-            obj.checksum = DOMPurify.sanitize(data[i].checksum);
-
-            incomplete.push(obj);
-            obj = {};
-            window.sessionStorage.setItem('incomplete_records', JSON.stringify(incomplete));
-        }
-
-        domModule.html('#incomplete-records', html);
-        domModule.html('#message', null);
-    };
-
     /**
      * Gets completed records after an ingest/import
      * @param data
@@ -210,8 +120,7 @@ const importModule = (function () {
     const renderCompleteRecords = function (data) {
 
         let html = '',
-            alignTd = 'style="text-align: center; vertical-align: middle"',
-            complete = [];
+            alignTd = 'style="text-align: center; vertical-align: middle"';
 
         for (let i = 0; i < data.length; i++) {
 
@@ -223,16 +132,10 @@ const importModule = (function () {
             let title = mods.title;
             let identifier = mods.identifiers[0].identifier;
             let display_record = JSON.parse(data[i].display_record);
+            let token = userModule.getUserToken();
 
-            if (data[i].mime_type === null || data[i].thumbnail === null) {
-                html += '<tr style="background-color:#ffcdd2">';
-                html += '<td ' + alignTd + '><i class="fa fa-exclamation fa-lg" style="color:red"></i></td>';
-            } else {
-                html += '<tr>';
-                html += '<td ' + alignTd + '><i class="fa fa-check fa-lg" style="color:green"></i></td>';
-            }
-
-            html += '<td ' + alignTd + '><a href="/dashboard/objects/unpublished?pid=' + DOMPurify.sanitize(data[i].is_member_of_collection) + '"><i class="fa fa-archive fa-lg"></i></a></td>';
+            html += '<td width="5%" ' + alignTd + '><a href="/dashboard/objects/unpublished?pid=' + DOMPurify.sanitize(data[i].is_member_of_collection) + '" title="Allows you to publish all unpublished records in this collection"><i class="fa fa-cloud-upload"></i></a></td>';
+            html += '<td width="25%" ' + alignTd + '>' + DOMPurify.sanitize(data[i].collection_title) + '</td>';
 
             if (data[i].sip_uuid !== null) {
 
@@ -242,48 +145,14 @@ const importModule = (function () {
                     compound = '&nbsp;&nbsp;<i class="fa fa-cubes"></i>';
                 }
 
-                let token = userModule.getUserToken();
-                html += '<td ' + alignTd + '><a href="' + api + '/api/admin/v1/repo/object/viewer?uuid=' + DOMPurify.sanitize(data[i].sip_uuid) + '&t=' + token + '" target="_blank">' + DOMPurify.sanitize(title) + compound + '</a></td>';
+                html += '<td ' + alignTd + '><a href="' + api + endpoints.repo_object_viewer + '?uuid=' + DOMPurify.sanitize(data[i].sip_uuid) + '&t=' + token + '" target="_blank">' + DOMPurify.sanitize(title) + compound + '</a></td>';
             }
 
             if (data[i].mods_id !== null) {
-                html += '<td ' + alignTd + '><a href="' + configModule.getASpace() + configModule.getUriPath() + DOMPurify.sanitize(data[i].mods_id) + '" target="_blank">' + identifier + '</a></i></td>';
+                html += '<td width="15%" ' + alignTd + '><a href="' + configModule.getASpace() + configModule.getUriPath() + DOMPurify.sanitize(data[i].mods_id) + '" target="_blank">' + identifier + '</a></i></td>';
             }
 
-            if (data[i].mime_type !== null) {
-
-                switch (data[i].mime_type) {
-                    case 'application/pdf':
-                        html += '<td ' + alignTd + ' title="' + DOMPurify.sanitize(data[i].mime_type) + '"><i class="fa fa-file-pdf-o fa-lg"></i></td>';
-                        break;
-                    case 'video/mov':
-                        html += '<td ' + alignTd + ' title="' + DOMPurify.sanitize(data[i].mime_type) + '"><i class="fa fa-file-video-o fa-lg"></i></td>';
-                        break;
-                    case 'video/mp4':
-                        html += '<td ' + alignTd + ' title="' + DOMPurify.sanitize(data[i].mime_type) + '"><i class="fa fa-file-video-o fa-lg"></i></td>';
-                        break;
-                    case 'image/tiff':
-                        html += '<td ' + alignTd + ' title="' + DOMPurify.sanitize(data[i].mime_type) + '"><i class="fa fa-file-image-o fa-lg"></i></td>';
-                        break;
-                    case 'audio/x-wav':
-                        html += '<td ' + alignTd + ' title="' + DOMPurify.sanitize(data[i].mime_type) + '"><i class="fa fa-file-audio-o fa-lg"></i></td>';
-                        break;
-                    case 'audio/mpeg':
-                        html += '<td ' + alignTd + ' title="' + DOMPurify.sanitize(data[i].mime_type) + '"><i class="fa fa-file-audio-o fa-lg"></i></td>';
-                        break;
-                    case 'image/jpeg':
-                        html += '<td ' + alignTd + ' title="' + DOMPurify.sanitize(data[i].mime_type) + '"><i class="fa fa-file-image-o fa-lg"></i></td>';
-                        break;
-
-                    default:
-                        html += '<td ' + alignTd + '><i class="fa fa-exclamation fa-lg"></i> Unknown mime-type</td>';
-                }
-
-            } else {
-                html += '<td ' + alignTd + '><i class="fa fa-exclamation fa-lg"></i></td>';
-            }
-
-            html += '<td ' + alignTd + '>' + DOMPurify.sanitize(moment(data[i].created).tz('America/Denver').format('MM-DD-YYYY, h:mm:ss a')) + '</td>';
+            html += '<td width="15%" ' + alignTd + '>' + DOMPurify.sanitize(moment(data[i].created).tz('America/Denver').format('MM-DD-YYYY, h:mm:ss a')) + '</td>';
             html += '</tr>';
         }
 
@@ -312,7 +181,7 @@ const importModule = (function () {
             user: userModule.getUserFullName()
         };
 
-        let url = api + '/api/admin/v1/import/queue_objects',
+        let url = api + endpoints.import_queue_objects,
             token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'POST',
@@ -358,12 +227,12 @@ const importModule = (function () {
     obj.getImportObjects = function () {
 
         let folder = helperModule.getParameterByName('collection'),
-            url = api + '/api/admin/v1/import/list?collection=' + null;
+            url = api + endpoints.import_list + '?collection=' + null;
 
         // gets child folders when parent folder (collection) is present
         if (folder !== null) {
             domModule.html('#back', '<p><a href="/dashboard/import" class="btn btn-default" id="back"><i class="fa fa-arrow-left"></i> Back</a></p>');
-            url = api + '/api/admin/v1/import/list?collection=' + folder;
+            url = api + endpoints.import_list + '?collection=' + folder;
         }
 
         let token = userModule.getUserToken(),
@@ -401,58 +270,11 @@ const importModule = (function () {
     };
 
     /**
-     * Gets incomplete import records
-     */
-    obj.getIncompleteImportRecords = function () {
-
-        let url = api + '/api/admin/v1/import/incomplete',
-            token = userModule.getUserToken(),
-            request = new Request(url, {
-                method: 'GET',
-                mode: 'cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-        const callback = function (response) {
-
-            if (response.status === 200) {
-
-                response.json().then(function (data) {
-
-                    if (data.length === 0) {
-                        domModule.empty('#incomplete-imports-table');
-                        domModule.html('#responses', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No incomplete records found.</div>');
-
-                    } else {
-                        renderIncompleteRecords(data);
-                    }
-                });
-
-            } else if (response.status === 401) {
-
-                helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
-
-                setTimeout(function () {
-                    window.location.replace('/login');
-                }, 4000);
-
-            } else {
-                helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to get incomplete records.');
-            }
-        };
-
-        httpModule.req(request, callback);
-    };
-
-    /**
      * Gets completed import records for current day
      */
     obj.getCompleteImportRecords = function () {
 
-        let url = api + '/api/admin/v1/import/complete',
+        let url = api + endpoints.import_complete,
             token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'GET',
@@ -497,299 +319,13 @@ const importModule = (function () {
     };
 
     /**
-     * Initiates import of incomplete records
-     * @returns {boolean}
-     */
-    obj.import = function () {
-
-        let incompleteRecords = JSON.parse(window.sessionStorage.getItem('incomplete_records'));
-
-        let timer = setInterval(function () {
-
-            if (incompleteRecords.length === 0) {
-                clearInterval(timer);
-                importModule.getIncompleteImportRecords();
-                return false;
-            } else {
-
-                let record = incompleteRecords.pop();
-                domModule.html('#message', '<p><strong>Importing (' + DOMPurify.sanitize(record.sip_uuid) + ')...</strong></p>');
-
-                if (record.mods === null || record.mods.length === 0) {
-                    importModule.importMods(record.sip_uuid, record.mods_id);
-                }
-
-                if (record.thumbnail === null || record.thumbnail.length === 0) {
-                    importModule.importThumbnail(DOMPurify.sanitize(record.sip_uuid));
-                }
-
-                if (record.file_name === null) {
-                    importModule.importMaster(DOMPurify.sanitize(record.sip_uuid));
-                }
-            }
-
-        }, 10000);
-
-        return false;
-    };
-
-    /** TODO: remove
-     * Enable validation on add mods id form
-
-    obj.modsIdFormValidation = function () {
-
-        document.addEventListener('DOMContentLoaded', function() {
-            $('#id-form').validate({
-                submitHandler: function () {
-
-                    let sip_uuid = domModule.val('#sip-uuid', null);
-                    let mods_id = domModule.val('#mods-id', null);
-
-                    importModule.importModsId(sip_uuid, mods_id);
-
-                    setTimeout(function () {
-                        importModule.importMods(sip_uuid, mods_id);
-                    }, 4000);
-
-                    domModule.html('#mods-id-form', null);
-                }
-            });
-        });
-    };
-     */
-
-    /** TODO: remove
-     * saves missing mods id to repository record
-     * @param sip_uuid
-     * @param mods_id
-     */
-    obj.importModsId = function (sip_uuid, mods_id) {
-
-        let url = api + '/api/admin/v1/import/mods_id',
-            token = userModule.getUserToken(),
-            request = new Request(url, {
-                method: 'POST',
-                body: JSON.stringify({mods_id: mods_id, sip_uuid: sip_uuid}),
-                mode: 'cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-        const callback = function (response) {
-
-            if (response.status === 201) {
-
-                domModule.html('#responses', '<p><strong>Archivesapce ID added to repository record</strong></p>');
-
-                setTimeout(function () {
-                    domModule.html('#responses', null);
-                }, 5000);
-
-            } else if (response.status === 401) {
-
-                helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
-
-                setTimeout(function () {
-                    window.location.replace('/login');
-                }, 4000);
-
-            } else {
-                helperModule.renderError('Error: (HTTP status ' + response.status + '. Unable to import MODS.');
-            }
-        };
-
-        httpModule.req(request, callback);
-    };
-
-    /** TODO: remove
-     * Renders form that allows users to enter archivespace id
-     * @param sip_uuid
-     * @returns {boolean}
-
-    obj.createModsIdForm = function (sip_uuid) {
-
-        let html;
-        html = '<div class="alert alert-danger">Please enter an Archivespace ID in order to retrieve MODS record</div>';
-        html += '<form id="id-form">';
-        html += '<input id="sip-uuid" name="sip_uuid" type="hidden" value="' + DOMPurify.sanitize(sip_uuid) + '">';
-        html += '<div class="form-group row col-lg-3">';
-        html += '<label for="mods-id">* Archivespace ID:</label>';
-        html += '<input name="mods_id" type="text" class="form-control form-control-sm" id="mods-id" required><br>';
-        html += '<p><button type="submit" class="btn btn-primary" id="add-mods"><i class="fa fa-download"></i>&nbsp;Import MODS</button></p>';
-        html += '</div>';
-        html += '</form>';
-
-        domModule.html('#mods-id-form', html);
-        importModule.modsIdFormValidation();
-
-        return false;
-    };
-     */
-
-    /**
-     * Imports MODS metadata
-     * @param mods_id
-     * @param sip_uuid
-     * @returns {boolean}
-
-    obj.importMods = function (sip_uuid, mods_id) {
-
-        if (mods_id === null || mods_id === undefined || mods_id.length === 0) {
-            importModule.createModsIdForm(sip_uuid);
-            return false;
-        }
-
-        let url = api + '/api/admin/v1/import/mods',
-            token = userModule.getUserToken(),
-            request = new Request(url, {
-                method: 'POST',
-                body: JSON.stringify({mods_id: mods_id, sip_uuid: sip_uuid}),
-                mode: 'cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-        const callback = function (response) {
-
-            if (response.status === 201) {
-
-                domModule.html('#responses', '<p><strong>(' + DOMPurify.sanitize(sip_uuid) + ') MODS added to repository record</strong></p>');
-                importModule.getIncompleteImportRecords();
-
-                setTimeout(function () {
-                    domModule.html('#responses', null);
-                }, 5000);
-
-            } else if (response.status === 401) {
-
-                helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
-
-                setTimeout(function () {
-                    window.location.replace('/login');
-                }, 4000);
-
-            } else {
-                helperModule.renderError('Error: (HTTP status ' + response.status + '. Unable to import MODS for record (' + sip_uuid + ').');
-            }
-        };
-
-        httpModule.req(request, callback);
-    };
-     */
-
-    /** TODO: remove
-     * Imports missing thumbnail data
-     * @param sip_uuid
-
-    obj.importThumbnail = function (sip_uuid) {
-
-        if (sip_uuid === undefined) {
-            helperModule.renderError('sip_uuid undefined (importThumbnail)');
-            return false;
-        }
-
-        let url = api + '/api/admin/v1/import/thumbnail',
-            token = userModule.getUserToken(),
-            request = new Request(url, {
-                method: 'POST',
-                body: JSON.stringify({sip_uuid: sip_uuid}),
-                mode: 'cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-        const callback = function (response) {
-
-            if (response.status === 201) {
-
-                domModule.html('#responses', '<p><strong>Thumbnail path added to repository record</strong></p>');
-
-                setTimeout(function () {
-                    domModule.html('#responses', null);
-                }, 5000);
-
-            } else if (response.status === 401) {
-
-                helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
-
-                setTimeout(function () {
-                    window.location.replace('/login');
-                }, 4000);
-
-            } else {
-                helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to import MODS.');
-            }
-        };
-
-        httpModule.req(request, callback);
-    };
-     */
-
-    /** TODO: remove
-     * Imports missing master object data
-     * @param sip_uuid
-     * @returns {boolean}
-
-    obj.importMaster = function (sip_uuid) {
-
-        if (sip_uuid === undefined) {
-            helperModule.renderError('sip_uuid is undefined (importMaster)');
-            return false;
-        }
-
-        let url = api + '/api/admin/v1/import/master',
-            token = userModule.getUserToken(),
-            request = new Request(url, {
-                method: 'POST',
-                body: JSON.stringify({sip_uuid: sip_uuid}),
-                mode: 'cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-        const callback = function (response) {
-
-            if (response.status === 201) {
-
-                domModule.html('#responses', '<p><strong>Master path added to repository record</strong></p>');
-
-                setTimeout(function () {
-                    domModule.html('#responses', null);
-                }, 5000);
-
-            } else if (response.status === 401) {
-
-                helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
-
-                setTimeout(function () {
-                    window.location.replace('/login');
-                }, 4000);
-
-            } else {
-                helperModule.renderError('Error: (HTTP status ' + response.status + '. Unable to import MODS.');
-            }
-        };
-
-        httpModule.req(request, callback);
-    };
-     */
-
-    /**
      * Gets transfer status
      */
     const get_transfer_status = function () {
 
         function transfer_status_http() {
 
-            let url = api + '/api/admin/v1/import/poll/transfer_status',
+            let url = api + endpoints.import_poll_transfer_status,
                 token = userModule.getUserToken(),
                 request = new Request(url, {
                     method: 'GET',
@@ -863,7 +399,7 @@ const importModule = (function () {
 
         function ingest_status_http() {
 
-            let url = api + '/api/admin/v1/import/poll/ingest_status',
+            let url = api + endpoints.import_poll_ingest_status,
                 token = userModule.getUserToken(),
                 request = new Request(url, {
                     method: 'GET',
@@ -880,7 +416,7 @@ const importModule = (function () {
 
                     response.json().then(function (response) {
 
-                        if (response.length > 0) {
+                        if (response[0].count > 0) {
                             domModule.html('#import-record-count', 'Objects remaining in current batch: ' + DOMPurify.sanitize(response[0].count));
                         } else {
                             domModule.html('#import-record-count', null);
@@ -920,7 +456,7 @@ const importModule = (function () {
 
         function import_status_http() {
 
-            let url = api + '/api/admin/v1/import/poll/import_status',
+            let url = api + endpoints.import_poll_import_status,
                 token = userModule.getUserToken(),
                 request = new Request(url, {
                     method: 'GET',
@@ -991,7 +527,7 @@ const importModule = (function () {
 
         function fail_status_http() {
 
-            let url = api + '/api/admin/v1/import/poll/fail_queue',
+            let url = api + endpoints.import_poll_fail_queue,
                 token = userModule.getUserToken(),
                 request = new Request(url, {
                     method: 'GET',
@@ -1056,7 +592,6 @@ const importModule = (function () {
     };
 
     obj.init = function () {
-        helperModule.ping();
         get_ingest_status();
         get_transfer_status();
         get_import_status();

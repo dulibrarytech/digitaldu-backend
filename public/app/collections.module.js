@@ -21,6 +21,7 @@ const collectionsModule = (function () {
     'use strict';
 
     const api = configModule.getApi();
+    const endpoints = apiModule.endpoints();
     let obj = {};
 
     /**
@@ -31,12 +32,22 @@ const collectionsModule = (function () {
 
         if (pid === null) {
             return false;
-        } else if (pid === undefined) {
+        }
+
+        if (pid === undefined) {
             let pid = helperModule.getParameterByName('pid');
         }
 
+        // used add collection form
+        if (helperModule.getParameterByName('is_member_of_collection') !== null && helperModule.getParameterByName('is_member_of_collection') === configModule.getRootPid()) {
+            domModule.html('#collection-type', 'Add top-level collection');
+            return false;
+        } else if (helperModule.getParameterByName('is_member_of_collection') !== null && helperModule.getParameterByName('is_member_of_collection') !== configModule.getRootPid()) {
+            domModule.html('#collection-type', 'Add sub-level collection');
+        }
+
         let token = userModule.getUserToken();
-        let url = api + '/api/admin/v1/repo/object/?pid=' + pid,
+        let url = api + endpoints.repo_object + '?pid=' + pid,
             request = new Request(url, {
                 method: 'GET',
                 mode: 'cors',
@@ -88,6 +99,7 @@ const collectionsModule = (function () {
     obj.getIsMemberOfCollection = function () {
         let is_member_of_collection = helperModule.getParameterByName('is_member_of_collection');
         domModule.val('#is-member-of-collection', is_member_of_collection);
+        collectionsModule.getCollectionName(is_member_of_collection);
     };
 
     /**
@@ -106,7 +118,7 @@ const collectionsModule = (function () {
 
         domModule.html('#message', '');
         let token = userModule.getUserToken();
-        let url = api + '/api/admin/v1/repo/object/thumbnail',
+        let url = api + endpoints.repo_object_thumbnail,
             request = new Request(url, {
                 method: 'POST',
                 headers: {
@@ -218,7 +230,7 @@ const collectionsModule = (function () {
         }
 
         let token = userModule.getUserToken();
-        let url = api + '/api/admin/v1/repo/object',
+        let url = api + endpoints.repo_object,
             request = new Request(url, {
                 method: 'POST',
                 headers: {
@@ -289,13 +301,12 @@ const collectionsModule = (function () {
      */
     obj.updateCollectionMetadata = function(pid) {
 
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> Updating...</div>');
+        domModule.html('#update-' + pid, '<em><i class="fa fa-exclamation-circle"></i> Updating Metadata...</em>');
 
         let obj = {};
         obj.sip_uuid = pid;
 
-        let url = api + '/api/admin/v1/import/metadata/collection',
+        let url = api + endpoints.import_metadata_collection,
             token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'PUT',
@@ -311,11 +322,9 @@ const collectionsModule = (function () {
 
             if (response.status === 201) {
 
-                domModule.html('#message', '<div class="alert alert-success"><i class="fa fa-exclamation-circle"></i> Collection Metadata Updated.</div>');
-
                 setTimeout(function () {
-                    domModule.html('#message', null);
                     objectsModule.getObjects();
+                    location.hash = '#' + pid;
                 }, 4000);
 
 
@@ -332,6 +341,7 @@ const collectionsModule = (function () {
 
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to update collection metadata.');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         };
 

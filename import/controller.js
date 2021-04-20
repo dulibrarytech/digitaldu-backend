@@ -52,11 +52,13 @@ exports.get_transfer_status = function (req, res) {
     });
 };
 
+/*
 exports.get_import_status = function (req, res) {
     IMPORT.get_import_status(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
+*/
 
 exports.get_ingest_status = function (req, res) {
     IMPORT.get_ingest_status(req, function (data) {
@@ -72,12 +74,6 @@ exports.import_dip = function (req, res) {
 
 exports.create_repo_record = function (req, res) {
     IMPORT.create_repo_record(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.get_import_incomplete = function (req, res) {
-    MODEL.get_import_incomplete(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
@@ -141,46 +137,6 @@ exports.poll_fail_queue = function (req, res) {
         res.status(data.status).send(data.data);
     });
 };
-
-/*
- exports.import_mods = function (req, res) {
- MODEL.import_mods(req, function (data) {
- res.status(data.status).send(data.data);
- });
- };
- */
-
-/*
- exports.import_mods_id = function (req, res) {
- MODEL.import_mods_id(req, function (data) {
- res.status(data.status).send(data.data);
- });
- };
- */
-
-/*
- exports.import_thumbnail = function (req, res) {
- MODEL.import_thumbnail(req, function (data) {
- res.status(data.status).send(data.data);
- });
- };
- */
-
-/*
- exports.import_master = function (req, res) {
- MODEL.import_master(req, function (data) {
- res.status(data.status).send(data.data);
- });
- };
- */
-
-/*
- exports.import_checksum = function (req, res) {
- MODEL.import_checksum(req, function (data) {
- res.status(data.status).send(data.data);
- });
- };
- */
 
 /*
 exports.get_metadata_updates = function (req, res) {

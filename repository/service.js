@@ -24,6 +24,7 @@ const CONFIG = require('../config/config'),
     DURACLOUD = require('../libs/duracloud'),
     HTTP = require('axios'),
     LOGGER = require('../libs/log4'),
+    CACHE = require('../libs/cache'),
     ASYNC = require('async'),
     ES = require('elasticsearch'),
     CLIENT = new ES.Client({
@@ -153,7 +154,7 @@ exports.get_tn = function (req, callback) {
 
             if (response.status !== 200) {
 
-                LOGGER.module().error('ERROR: [/libs/tn-service lib (get_tn)] Unable to get thumbnail from TN service.');
+                LOGGER.module().error('ERROR: [/repository/service module (get_tn)] Unable to get thumbnail from TN service.');
 
                 callback({
                     error: true,
@@ -162,7 +163,7 @@ exports.get_tn = function (req, callback) {
                 });
 
             } else if (response.status === 200) {
-
+                CACHE.cache_tn(uuid, response.data);
                 callback({
                     error: false,
                     status: 200,
@@ -174,7 +175,7 @@ exports.get_tn = function (req, callback) {
 
         } catch(error) {
 
-            LOGGER.module().error('ERROR: [/libs/tn-service lib (get_tn)] Unable to get thumbnail from TN service. Request failed: ' + error);
+            LOGGER.module().error('ERROR: [/repository/service module (get_tn)] Unable to get thumbnail from TN service. Request failed: ' + error);
 
             callback({
                 error: true,
@@ -274,7 +275,13 @@ exports.get_admin_objects = function (req, callback) {
             data: body.hits
         });
     }, function (error) {
-        callback(error);
+
+        LOGGER.module().error('ERROR: [/repository/service/ module (get_admin_objects)] Request to Elasticsearch failed: ' + error);
+
+        callback({
+            status: 500,
+            data: error
+        });
     });
 };
 
@@ -344,7 +351,13 @@ exports.get_unpublished_admin_objects = function (req, callback) {
             data: body.hits
         });
     }, function (error) {
-        callback(error);
+
+        LOGGER.module().error('ERROR: [/repository/service/ module (get_unpublished_admin_objects)] Request to Elasticsearch failed: ' + error);
+
+        callback({
+            status: 500,
+            data: error
+        });
     });
 };
 

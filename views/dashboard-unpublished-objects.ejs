@@ -1,5 +1,4 @@
 <% include partials/header.ejs %>
-
 <body class="nav-md">
 <div class="container body">
     <div class="main_container">
@@ -20,7 +19,7 @@
             <div class="">
                 <div class="page-title">
                     <div class="title_left">
-                        <h3> Unpublished Collection Objects</h3>
+                        <h3> Unpublished Objects</h3>
                     </div>
                     <div class="title_right">
                         <% include partials/search.ejs %>
@@ -34,7 +33,7 @@
                             <div class="x_title">
                                 <h2 id="collection-name"></h2>
                                 <ul class="nav navbar-right"><!-- panel_toolbox -->
-                                    <li><a id="current-collection" href="#"><i class="fa fa-plus"></i>&nbsp;Add collection</a></li>
+                                    <li><a id="current-collection" href="#" onclick="objectsModule.publishAllObjects();"><i class="fa fa-cloud-upload"></i>&nbsp;Publish all objects</a></li>
                                 </ul>
                                 <div class="clearfix"></div>
                             </div>
@@ -45,30 +44,33 @@
                                     <div id="pagination"></div>
                                     <hr>
                                 </div>
-                                <div class="row" id="objects"><!-- objects are rendered here --></div>
+                                <div class="row" id="objects" style="visibility: hidden"><!-- objects are rendered here --></div>
                             </div>
                         </div>
                     </div>
-                </div> <!-- end row -->
+                </div>
             </div>
         </div>
         <% include partials/footer.ejs %>
     </div>
 </div>
-<script src="../../vendors/jquery/dist/jquery.min.js"></script>
-<script src="../../vendors/bootstrap/dist/js/bootstrap.min.js"></script>
-<script src="../../vendors/nprogress/nprogress.js"></script>
-<script src="../../js/dompurify/purify.min.js"></script>
+<script src="../../libs/jquery/dist/jquery.min.js"></script>
+<script src="../../libs/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="../../libs/nprogress/nprogress.js"></script>
+<script src="../../libs/dompurify/purify.min.js"></script>
 <script src="../../assets/js/theme_sidebar.js"></script>
 <script src="../../app/dom.module.js"></script>
 <script src="../../app/config.module.js"></script>
-<script src="../../app/http.module.js"></script>
+<script src="../../app/api.module.js"></script>
 <script src="../../app/helper.module.js"></script>
+<script src="../../app/http.module.js"></script>
 <script src="../../app/metadata.module.js"></script>
 <script src="../../app/user.module.js"></script>
 <script src="../../app/collections.module.js"></script>
 <script src="../../app/objects.module.js"></script>
-<script src="../../app/search.module.js"></script>
-<script>objectsModule.getUnPublishedObjects();</script>
+<script>
+    objectsModule.getUnPublishedObjects();
+    helperModule.onLoadVisibility('#objects', 250);
+</script>
 </body>
 </html>

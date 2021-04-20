@@ -20,7 +20,22 @@
 
 const REPO = require('../repository/model'),
     SERVICE = require('../repository/service'),
+    CACHE = require('../libs/cache'),
     PATH = require('path');
+
+exports.get_admin_objects = function (req, res) {
+
+    let cache = CACHE.get_cache(req);
+
+    if (cache) {
+        res.send(cache);
+    } else {
+        SERVICE.get_admin_objects(req, function (data) {
+            CACHE.cache_request(req, data.data);
+            res.status(data.status).send(data.data);
+        });
+    }
+};
 
 exports.get_display_record = function (req, res) {
     REPO.get_display_record(req, function (data) {
@@ -40,20 +55,15 @@ exports.update_thumbnail = function (req, res) {
     });
 };
 
-/* imports object(s) for administrators */
-exports.get_import_admin_objects = function (req, res) {
-    REPO.get_import_admin_objects(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
 exports.publish_objects = function (req, res) {
+    CACHE.clear_cache();
     REPO.publish_objects(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
 
 exports.unpublish_objects = function (req, res) {
+    CACHE.clear_cache();
     REPO.unpublish_objects(req, function (data) {
         res.status(data.status).send(data.data);
     });
@@ -73,14 +83,19 @@ exports.delete_object = function (req, res) {
 
 exports.get_tn = function (req, res) {
 
-    SERVICE.get_tn(req, function (data) {
+    let cache = CACHE.get_tn_cache(req);
 
-        if (data.error === true) {
-            res.sendFile(PATH.join(__dirname, '../public', data.data));
-        } else {
-            res.status(data.status).end(data.data, 'binary');
-        }
-    });
+    if (cache) {
+        res.sendFile(cache);
+    } else {
+        SERVICE.get_tn(req, function (data) {
+            if (data.error === true) {
+                res.sendFile(PATH.join(__dirname, '../public', data.data));
+            } else {
+                res.status(data.status).end(data.data, 'binary');
+            }
+        });
+    }
 };
 
 exports.get_viewer = function (req, res) {
@@ -103,12 +118,6 @@ exports.get_thumbnail = function (req, res) {
         } else {
             res.status(data.status).end(data.data, 'binary');
         }
-    });
-};
-
-exports.get_admin_objects = function (req, res) {
-    SERVICE.get_admin_objects(req, function (data) {
-        res.status(data.status).send(data.data);
     });
 };
 

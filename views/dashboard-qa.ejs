@@ -1,5 +1,4 @@
 <% include partials/header.ejs %>
-
 <body class="nav-md">
 <div class="container body">
     <div class="main_container">
@@ -36,7 +35,6 @@
                                 <div id="message"></div>
                                 <div id="ready"></div>
                                 <div id="qa-on-ready"></div>
-
                                 <table id="qa-folders-tbl" class="table table-striped table-bordered">
                                     <thead>
                                     <tr>
@@ -46,7 +44,6 @@
                                     </thead>
                                     <tbody id="qa-folders"></tbody>
                                 </table>
-
                                 <!-- panels -->
                                 <div class="row">
                                     <div class="col-md-4" id="qa-results-missing-files-panel" style="display: none">
@@ -98,17 +95,18 @@
 </div>
 <% include partials/footer.ejs %>
 </div>
-<script src="../../vendors/jquery/dist/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.17.0/dist/jquery.validate.js"></script>
-<script src="../../vendors/bootstrap/dist/js/bootstrap.min.js"></script>
-<script src="../../vendors/nprogress/nprogress.js"></script>
-<script src="../../js/dompurify/purify.min.js"></script>
-<script src="../../js/moment/moment.min.js"></script>
-<script src="../../js/moment/moment.timezone.js"></script>
+<script src="../../libs/jquery/dist/jquery.min.js"></script>
+<script src="../../libs/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="../../libs/nprogress/nprogress.js"></script>
+<script src="../../libs/validator/jquery.validate.js"></script>
+<script src="../../libs/dompurify/purify.min.js"></script>
+<script src="../../libs/moment/moment.min.js"></script>
+<script src="../../libs/moment/moment.timezone.js"></script>
 <script src="../../assets/js/theme_sidebar.js"></script>
-<script src="../../app/config.module.js"></script>
-<script src="../../app/http.module.js"></script>
 <script src="../../app/dom.module.js"></script>
+<script src="../../app/config.module.js"></script>
+<script src="../../app/api.module.js"></script>
+<script src="../../app/http.module.js"></script>
 <script src="../../app/helper.module.js"></script>
 <script src="../../app/user.module.js"></script>
 <script src="../../app/collections.module.js"></script>

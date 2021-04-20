@@ -21,6 +21,7 @@ const helperModule = (function () {
     'use strict';
 
     const api = configModule.getApi();
+    const endpoints = apiModule.endpoints();
     let obj = {};
 
     /**
@@ -29,6 +30,7 @@ const helperModule = (function () {
      */
     obj.renderError = function (message) {
         domModule.html('#message', '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + DOMPurify.sanitize(message) + '</div>');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         return false;
     };
 
@@ -118,7 +120,7 @@ const helperModule = (function () {
     obj.ping = function () {
 
         let token = userModule.getUserToken();
-        let url = api + '/api/admin/v1/repo/ping/services',
+        let url = api + endpoints.repo_ping_services,
             request = new Request(url, {
                 method: 'GET',
                 mode: 'cors',
@@ -140,6 +142,7 @@ const helperModule = (function () {
 
                         if (data[prop] === 'down') {
                             domModule.hide('.import-link');
+                            domModule.html('.x_content', null);
                             html += '<div class="alert alert-danger"><strong>' + prop + ' is currently not available.  Ingests are not possible at this time.</strong></div>';
                         }
                     }
@@ -171,9 +174,10 @@ const helperModule = (function () {
      */
     obj.pagination = function (pid, total_records) {
 
-        let path = '/dashboard/objects';
+        let path = window.location.pathname,
+            q = helperModule.getParameterByName('q')
 
-        if (pid === null) {
+        if (pid === null && q === null) {
             pid = 'codu:root';
         }
 
@@ -181,7 +185,14 @@ const helperModule = (function () {
             total_on_page = 10,
             max_pages = 10,
             total_pages = Math.ceil(total_records / total_on_page),
+            query_string,
             html = '';
+
+        if (pid === null && q !== null) {
+            query_string = '?q=' + q;
+        } else {
+            query_string = '?pid=' + pid;
+        }
 
         // don't render pagination
         if (total_pages === 1) {
@@ -201,13 +212,20 @@ const helperModule = (function () {
 
         // create first link
         if (current_page > total_on_page) {
-            html += '<li><a href="' + path + '?pid=' + pid + '&page=1&total_on_page=' + total_on_page + '">First</a></li>';
+
+            html += '<li>';
+            html += '<a href="' + path + query_string + '&page=1&total_on_page=' + total_on_page + '">First</a>';
+            html += '</li>';
         }
 
         // create previous link
         if (current_page > 1) {
+
             let prev_current_page = current_page - 1;
-            html += '<li><a href="' + path + '?pid=' + pid + '&page=' + prev_current_page + '&total_on_page=' + total_on_page + '">Prev</a></li>';
+
+            html += '<li>';
+            html += '<a href="' + path + query_string + '&page=' + prev_current_page + '&total_on_page=' + total_on_page + '">Prev</a>';
+            html += '</li>';
         }
 
         let start_page,
@@ -243,7 +261,6 @@ const helperModule = (function () {
                 start_page = current_page - total_pages_before_current_page;
                 end_page = current_page + total_pages_after_current_page;
             }
-
         }
 
         let start_index = (current_page - 1) * total_on_page,
@@ -253,21 +270,35 @@ const helperModule = (function () {
         for (let i=0;i<pages.length;i++) {
 
             if (current_page === pages[i]) {
-                html += '<li class="active disabled"><a href="' + path + '?pid=' + pid + '&page=' + pages[i] + '&total_on_page=' + total_on_page + '" disabled>' + pages[i] + '</a></li>';
+
+                html += '<li class="active disabled">';
+                html += '<a href="' + path + query_string + '&page=' + pages[i] + '&total_on_page=' + total_on_page + '" disabled>' + pages[i] + '</a>';
+                html += '</li>';
+
             } else {
-                html += '<li><a href="' + path + '?pid=' + pid + '&page=' + pages[i] + '&total_on_page=' + total_on_page + '">' + pages[i] + '</a></li>';
+
+                html += '<li>';
+                html += '<a href="' + path + query_string + '&page=' + pages[i] + '&total_on_page=' + total_on_page + '">' + pages[i] + '</a>';
+                html += '</li>';
             }
         }
 
         // create next link
         if (current_page < total_pages) {
+
             current_page = (parseInt(current_page) + 1);
-            html += '<li><a href="' + path + '?pid=' + pid + '&page=' + current_page + '&total_on_page=' + total_on_page + '">Next</a></li>';
+
+            html += '<li>';
+            html += '<a href="' + path + query_string + '&page=' + current_page + '&total_on_page=' + total_on_page + '">Next</a>';
+            html += '</li>';
         }
 
         // create last link
         if (total_pages > 10 && current_page !== total_pages) {
-            html += '<li><a href="' + path + '?pid=' + pid + '&page=' + total_pages + '&total_on_page=' + total_on_page + '">Last</a></li>';
+
+            html += '<li>';
+            html += '<a href="' + path + query_string + '&page=' + total_pages + '&total_on_page=' + total_on_page + '">Last</a>';
+            html += '</li>';
         }
 
         html += '</ul>';
@@ -289,6 +320,25 @@ const helperModule = (function () {
             domModule.html('#message', '');
             document.querySelector('#upload-button').disabled = false;
         }
+    };
+
+    /**
+     * Makes content visible only after it is fully rendered on page
+     * @param selector
+     * @param timeout
+     */
+    obj.onLoadVisibility = function (selector, timeout) {
+
+        document.addEventListener("DOMContentLoaded", function() {
+
+            setTimeout(function() {
+
+                if (document.querySelector(selector) !== null) {
+                    document.querySelector(selector).style.visibility = 'visible';
+                }
+
+            }, timeout);
+        });
     };
 
     obj.init = function () {

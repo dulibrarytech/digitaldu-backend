@@ -21,6 +21,7 @@ const statsModule = (function () {
     'use strict';
 
     const api = configModule.getApi();
+    const endpoints = apiModule.endpoints();
     let obj = {};
 
     /**
@@ -55,7 +56,7 @@ const statsModule = (function () {
     obj.getStats = function () {
 
         let token = userModule.getUserToken();
-        let url = api + '/api/admin/v1/stats',
+        let url = api + endpoints.stats,
             request = new Request(url, {
                 method: 'GET',
                 mode: 'cors',

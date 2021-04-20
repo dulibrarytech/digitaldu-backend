@@ -1,5 +1,4 @@
 <% include partials/header.ejs %>
-
 <body class="nav-md">
 <div class="container body">
     <div class="main_container">
@@ -8,107 +7,68 @@
                 <div class="navbar nav_title" style="border: 0;">
                     <% include partials/app-name.ejs %>
                 </div>
-
                 <div class="clearfix"></div>
-
-                <!-- menu profile quick info -->
                 <% include partials/menu-profile.ejs %>
-                <!-- /menu profile quick info -->
-
                 <br>
-
-                <!-- sidebar menu -->
                 <% include partials/nav.ejs %>
-                <!-- /sidebar menu -->
-
-                <!-- /menu footer buttons -->
                 <% include partials/sidebar-footer.ejs %>
-                <!-- /menu footer buttons -->
             </div>
         </div>
-
-        <!-- top navigation -->
         <% include partials/top-nav.ejs %>
-        <!-- /top navigation -->
-
-        <!-- page content -->
         <div class="right_col" role="main">
-            <div class="">
-
-                <div class="page-title">
-                    <div class="title_left">
-                        <h3> Thumbnail Update <span id="object-type"></span></h3>
-                    </div>
-                    <!--
-                    <div class="title_right">
-                        <% include partials/search.ejs %>
-                    </div>
-                    -->
+            <div class="page-title">
+                <div class="title_left">
+                    <h3> Thumbnail Update <span id="object-type"></span></h3>
                 </div>
-
-                <div class="clearfix"></div>
-
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="x_panel">
-                            <div class="x_title">
-                                <h2 id="is-member-of-collection"></h2>
-                                <ul class="nav navbar-right">
-                                    <li id="to-upload-menu-item"></li>
-                                </ul>
-                                <!--
-                                <ul class="nav navbar-right panel_toolbox"><!-- panel_toolbox --
-                                    <li id="to-upload-menu-item">
-                                        <!-- class="dropdown"
-                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-bars"></i></a>
-                                        -->
-                                        <!--
-                                        <ul class="dropdown-menu" role="menu">
-                                            <li id="to-upload-menu-item"></li>
-                                        </ul>
-                                        --
-                                    </li>
-                                </ul>-->
-                                <div class="clearfix"></div>
-                            </div>
-                            <div class="x_content">
-                                <div id="message"></div>
-                                <form id="collection-thumbnail-update-form">
-
-                                    <div class="form-group">
-                                        <label for="thumbnail-url">* Object PID OR Thumbnail URL</label>
-                                        <p>e.g.</p>
-                                        <p style="background-color:#4DA5DF;color:#FFF;width:350px;padding:3px;">Object PID = 814fb4df-78dd-4f4b-bd70-62143935def6</p>
-                                        <p style="background-color:#4DA5DF;color:#FFF;width:550px;padding:3px;">URL = https://i.pinimg.com/originals/10/7a/97/107a97ca5bd4a571edcebec54a66fc32.jpg</p>
-                                        <input name="thumbnail_url" type="text" class="form-control" id="thumbnail-url" required>
-                                    </div>
-
-                                    <br>
-                                    <button type="button" class="btn btn-primary" id="update-thumbnail-button" onclick="collectionsModule.updateThumbnail();"><i class="fa fa-save"></i>&nbsp;Save</button>
-                                </form>
-                            </div>
+            </div>
+            <div class="clearfix"></div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="x_panel">
+                        <div class="x_title">
+                            <h2 id="collection-name"></h2>
+                            <ul class="nav navbar-right">
+                                <li id="to-upload-menu-item"></li>
+                            </ul>
+                            <div class="clearfix"></div>
+                        </div>
+                        <div class="x_content">
+                            <div id="message"></div>
+                            <form id="collection-thumbnail-update-form">
+                                <div class="form-group">
+                                    <label for="thumbnail-url">* Object PID OR Thumbnail URL</label>
+                                    <p>e.g.</p>
+                                    <p style="background-color:#4DA5DF;color:#FFF;width:350px;padding:3px;">Object PID =
+                                        814fb4df-78dd-4f4b-bd70-62143935def6</p>
+                                    <p style="background-color:#4DA5DF;color:#FFF;width:550px;padding:3px;">URL =
+                                        https://i.pinimg.com/originals/10/7a/97/107a97ca5bd4a571edcebec54a66fc32.jpg</p>
+                                    <input name="thumbnail_url" type="text" class="form-control" id="thumbnail-url"
+                                           required>
+                                </div>
+                                <br>
+                                <button type="button" class="btn btn-primary" id="update-thumbnail-button"
+                                        onclick="collectionsModule.updateThumbnail();"><i class="fa fa-save"></i>&nbsp;Save
+                                </button>
+                            </form>
                         </div>
                     </div>
-                </div> <!-- end row -->
+                </div>
             </div>
         </div>
-        <!-- /page content -->
-        <!-- footer content -->
         <% include partials/footer.ejs %>
-        <!-- /footer content -->
     </div>
-
-    <script src="../../vendors/jquery/dist/jquery.min.js"></script>
-    <script src="../../js/validator/jquery.validate.js"></script>
-    <script src="../../vendors/bootstrap/dist/js/bootstrap.min.js"></script>
-    <script src="../../vendors/nprogress/nprogress.js"></script>
-    <script src="../../js/dompurify/purify.min.js"></script>
+    <script src="../../libs/jquery/dist/jquery.min.js"></script>
+    <script src="../../libs/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="../../libs/nprogress/nprogress.js"></script>
+    <script src="../../libs/validator/jquery.validate.js"></script>
+    <script src="../../libs/dompurify/purify.min.js"></script>
     <script src="../../assets/js/theme_sidebar.js"></script>
     <script src="../../app/dom.module.js"></script>
     <script src="../../app/config.module.js"></script>
+    <script src="../../app/api.module.js"></script>
     <script src="../../app/helper.module.js"></script>
-    <script src="../../app/metadata.module.js"></script>
     <script src="../../app/http.module.js"></script>
+    <script src="../../app/metadata.module.js"></script>
     <script src="../../app/user.module.js"></script>
     <script src="../../app/objects.module.js"></script>
     <script src="../../app/collections.module.js"></script>

@@ -21,6 +21,7 @@ const qaModule = (function () {
     'use strict';
 
     const api = configModule.getApi();
+    const endpoints = apiModule.endpoints();
     let obj = {};
     let local_file_count;
 
@@ -29,7 +30,7 @@ const qaModule = (function () {
      */
     obj.getReadyFolders = function () {
 
-        let url = api + '/api/v1/qa/list-ready';
+        let url = api + endpoints.qa_list;
         let token = userModule.getUserToken();
         let request = new Request(url, {
             method: 'GET',
@@ -116,7 +117,7 @@ const qaModule = (function () {
         domModule.html('#qa-on-ready', html);
         domModule.hide('#qa-folders-tbl');
 
-        let url = api + '/api/v1/qa/run-qa?folder=' + folder;
+        let url = api + endpoints.qa_run + '?folder=' + folder;
         let token = userModule.getUserToken();
         let request = new Request(url, {
             method: 'GET',
@@ -293,7 +294,7 @@ const qaModule = (function () {
         domModule.html('#processing-message', '<em>Checking collection...</em>');
 
         let token = userModule.getUserToken();
-        let url = api + '/api/v1/qa/check-collection?uri=/repositories/2/' + uri,
+        let url = api + endpoints.qa_check_collection + '?uri=/repositories/2/' + uri,
             request = new Request(url, {
                 method: 'GET',
                 headers: {
@@ -317,7 +318,7 @@ const qaModule = (function () {
                         obj.is_member_of_collection = configModule.getRootPid();
 
                         let token = userModule.getUserToken();
-                        let url = api + '/api/admin/v1/repo/object',
+                        let url = api + endpoints.repo_object,
                             request = new Request(url, {
                                 method: 'POST',
                                 headers: {
@@ -333,7 +334,6 @@ const qaModule = (function () {
                             if (response.status === 201) {
 
                                 response.json().then(function (data) {
-                                    console.log(data);
                                     domModule.html('#collection-title', 'Collection created.');
                                     checkCollection(uri, folder);
                                 });
@@ -361,7 +361,6 @@ const qaModule = (function () {
                     } else {
 
                         domModule.html('#collection-title', data.title);
-                        // domModule.val('#resource-uri', uri);
                         moveToIngest(data.pid, folder);
                     }
                 });
@@ -397,7 +396,7 @@ const qaModule = (function () {
         domModule.html('#processing-message', '<em>Preparing packages for ingest...</em>');
 
         let token = userModule.getUserToken();
-        let url = api + '/api/v1/qa/move-to-ingest?pid=' + pid + '&folder=' + folder,
+        let url = api + endpoints.qa_move_to_ingest + '?pid=' + pid + '&folder=' + folder,
             request = new Request(url, {
                 method: 'GET',
                 headers: {
@@ -412,9 +411,6 @@ const qaModule = (function () {
             if (response.status === 200) {
 
                 response.json().then(function (data) {
-
-                    // let message = '<div class="alert alert-success"><strong>' + data.message + '</strong><br>Package <strong><a href="/dashboard/import?collection=' + pid + '">' + pid + '</a></strong> is ready to be imported.</div>';
-                    // domModule.html('#qa-on-ready', message);
                     domModule.html('#processing-message', '<strong>Packages moved to ingest folder.</strong>');
                     moveToSftp(pid, folder);
                 });
@@ -450,7 +446,7 @@ const qaModule = (function () {
         domModule.html('#processing-message', '<em>Uploading to Archivematica SFTP server...</em>');
 
         let token = userModule.getUserToken();
-        let url = api + '/api/v1/qa/move-to-sftp?pid=' + pid + '&folder=' + folder,
+        let url = api + endpoints.qa_move_to_sftp + '?pid=' + pid + '&folder=' + folder,
             request = new Request(url, {
                 method: 'GET',
                 headers: {
@@ -511,7 +507,7 @@ const qaModule = (function () {
         domModule.html('#processing-message', '<em>Checking SFTP Upload...</em>');
 
         let token = userModule.getUserToken();
-        let url = api + '/api/v1/qa/upload-status?pid=' + pid + '&local_file_count=' + local_file_count,
+        let url = api + endpoints.qa_upload_status + '?pid=' + pid + '&local_file_count=' + local_file_count,
             request = new Request(url, {
                 method: 'GET',
                 headers: {
@@ -534,7 +530,7 @@ const qaModule = (function () {
                         let html = '<p><em>Uploading...</em></p><ul>';
 
                         for (let i = 0; i<data.data[0].length;i++) {
-                            let file_upload = data.data[0][i]; // .splice(0, 1)
+                            let file_upload = data.data[0][i];
                             html += '<li>' + file_upload + '</li>';
                         }
 
@@ -578,7 +574,7 @@ const qaModule = (function () {
         }
 
         let token = userModule.getUserToken();
-        let url = api + '/api/admin/v1/repo/object',
+        let url = api + endpoints.repo_object,
             request = new Request(url, {
                 method: 'POST',
                 headers: {

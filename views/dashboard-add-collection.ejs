@@ -1,5 +1,4 @@
 <% include partials/header.ejs %>
-
 <body class="nav-md">
 <div class="container body">
     <div class="main_container">
@@ -21,7 +20,7 @@
 
                 <div class="page-title">
                     <div class="title_left">
-                        <h3> Add Collection</h3>
+                        <h3 id="collection-type"> Add Collection</h3>
                     </div>
                     <div class="title_right">
                         <% include partials/search.ejs %>
@@ -32,7 +31,7 @@
                     <div class="col-md-12">
                         <div class="x_panel">
                             <div class="x_title">
-                                <h2></h2>
+                                <h2 id="collection-name"></h2>
                                 <ul class="nav navbar-right"></ul>
                                 <div class="clearfix"></div>
                             </div>
@@ -65,15 +64,15 @@
         </div>
         <% include partials/footer.ejs %>
     </div>
-
-    <script src="../../vendors/jquery/dist/jquery.min.js"></script>
-    <script src="../../js/validator/jquery.validate.js"></script>
-    <script src="../../vendors/bootstrap/dist/js/bootstrap.min.js"></script>
-    <script src="../../vendors/nprogress/nprogress.js"></script>
-    <script src="../../js/dompurify/purify.min.js"></script>
+    <script src="../../libs/jquery/dist/jquery.min.js"></script>
+    <script src="../../libs/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="../../libs/nprogress/nprogress.js"></script>
+    <script src="../../libs/validator/jquery.validate.js"></script>
+    <script src="../../libs/dompurify/purify.min.js"></script>
     <script src="../../assets/js/theme_sidebar.js"></script>
     <script src="../../app/dom.module.js"></script>
     <script src="../../app/config.module.js"></script>
+    <script src="../../app/api.module.js"></script>
     <script src="../../app/helper.module.js"></script>
     <script src="../../app/http.module.js"></script>
     <script src="../../app/user.module.js"></script>

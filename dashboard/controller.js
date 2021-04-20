@@ -18,7 +18,8 @@
 
 'use strict';
 
-const CONFIG = require('../config/config');
+const CONFIG = require('../config/config'),
+    TEMPLATE_CACHE = require('express-template-cache');
 
 exports.get_dashboard_home = function (req, res) {
     res.render('dashboard-home', {
@@ -29,17 +30,8 @@ exports.get_dashboard_home = function (req, res) {
     });
 };
 
-exports.get_dashboard_collections = function (req, res) {
-    res.render('dashboard-collections', {
-        host: CONFIG.host,
-        appname: CONFIG.appName,
-        appversion: CONFIG.appVersion,
-        organization: CONFIG.organization
-    });
-};
-
 exports.get_dashboard_collection_add_form = function (req, res) {
-    res.render('dashboard-add-collection', {
+    res.renderStatic('dashboard-add-collection', {
         host: CONFIG.host,
         appname: CONFIG.appName,
         appversion: CONFIG.appVersion,
@@ -75,7 +67,7 @@ exports.delete_dashboard_object = function (req, res) {
 };
 
 exports.update_dashboard_thumbnail = function (req, res) {
-    res.render('dashboard-update-thumbnail', {
+    res.renderStatic('dashboard-update-thumbnail', {
         host: CONFIG.host,
         appname: CONFIG.appName,
         appversion: CONFIG.appVersion,
@@ -138,7 +130,7 @@ exports.get_dashboard_user_detail = function (req, res) {
 };
 
 exports.get_dashboard_user_add_form = function (req, res) {
-    res.render('dashboard-add-user', {
+    res.renderStatic('dashboard-add-user', {
         host: CONFIG.host,
         appname: CONFIG.appName,
         appversion: CONFIG.appVersion,
@@ -165,7 +157,7 @@ exports.get_dashboard_user_delete_form = function (req, res) {
 };
 
 exports.get_dashboard_search = function (req, res) {
-    res.render('dashboard-search-results', {
+    res.render('dashboard-objects', {
         host: CONFIG.host,
         appname: CONFIG.appName,
         appversion: CONFIG.appVersion,
@@ -174,7 +166,7 @@ exports.get_dashboard_search = function (req, res) {
 };
 
 exports.get_dashboard_upload = function (req, res) {
-    res.render('dashboard-upload', {
+    res.renderStatic('dashboard-upload', {
         host: CONFIG.host,
         appname: CONFIG.appName,
         appversion: CONFIG.appVersion,

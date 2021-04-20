@@ -25,9 +25,6 @@ module.exports = function (app) {
     app.route('/dashboard/home')
         .get(DASHBOARD.get_dashboard_home);
 
-    app.route('/dashboard/collections')
-        .get(DASHBOARD.get_dashboard_collections);
-
     app.route('/dashboard/collections/add')
         .get(DASHBOARD.get_dashboard_collection_add_form);
 
@@ -36,6 +33,9 @@ module.exports = function (app) {
 
     app.route('/dashboard/objects/unpublished')
         .get(DASHBOARD.get_dashboard_unpublished_objects);
+
+    app.route('/dashboard/objects/search')
+        .get(DASHBOARD.get_dashboard_search);
 
     app.route('/dashboard/object/thumbnail')
         .get(DASHBOARD.update_dashboard_thumbnail);
@@ -70,9 +70,11 @@ module.exports = function (app) {
     app.route('/dashboard/users/delete')
         .get(DASHBOARD.get_dashboard_user_delete_form);
 
-    app.route('/dashboard/search')
-        .get(DASHBOARD.get_dashboard_search);
-
     app.route('/dashboard/qa')
         .get(DASHBOARD.get_dashboard_qa);
+
+    /*
+    app.route('/dashboard/collections')
+        .get(DASHBOARD.get_dashboard_collections);
+    */
 };
