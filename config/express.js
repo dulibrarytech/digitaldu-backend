@@ -25,7 +25,8 @@ const HTTP = require('http'),
     METHODOVERRIDE = require('method-override'),
     HELMET = require('helmet'),
     XSS = require('../libs/dom'),
-    CACHE = require('../libs/cache');
+    CACHE = require('../libs/cache'),
+    DIRS = require('../libs/directories');
 
 module.exports = function() {
 
@@ -71,4 +72,5 @@ module.exports = function() {
     require('../qa/routes.js')(APP);
 
     CACHE.clear_cache();
+    DIRS.check_directories();
 };
