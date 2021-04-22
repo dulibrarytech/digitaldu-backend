@@ -147,9 +147,11 @@ exports.get_object_info = function (data, callback) {
     let dip_path = data.dip_path;
 
     // change extension from tif to jp2 (There are no direct references to jp2 files in Duracloud)
+    /* TODO: REMOVE
     if (data.file.indexOf('tif') !== -1 || data.file.indexOf('tiff') !== -1) {
         data.file = data.file.replace('tif', 'jpg');
     }
+     */
 
     let endpoint = 'https://' + CONFIG.duraCloudUser + ':' + CONFIG.duraCloudPwd + '@' + CONFIG.duraCloudApi + 'dip-store/' + dip_path + '/objects/' + data.uuid + '-' + data.file;
 
@@ -340,6 +342,61 @@ exports.get_thumbnail = function (tn, callback) {
                 error: true,
                 status: 200,
                 data: missing_tn
+            });
+        }
+
+    })();
+};
+
+/**
+ * Sends object data to convert service
+ * @param data
+ */
+exports.convert_service = function(data) {
+
+    let service = CONFIG.convertService;
+    let service_api_key = CONFIG.convertServiceApiKey;
+    let endpoint;
+
+    if (data.mime_type === 'image/tiff') {
+        endpoint = '/api/v1/convert/tiff';
+    }
+
+    if (endpoint === undefined) {
+        LOGGER.module().info('INFO: [/duracloud/lib (convert_service)] Conversion not required.');
+        return false;
+    }
+
+    let url = service + endpoint + '?api_key=' + service_api_key;
+
+    (async () => {
+
+        try {
+
+            let response = await HTTP.post(url, data, {
+                timeout: '25000',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.status !== 201) {
+
+                LOGGER.module().error('ERROR: [/libs/duracloud lib (convert_service)] unable to convert file.');
+
+            } else if (response.status === 201) {
+                LOGGER.module().info('INFO: [/duracloud/lib (convert_service)] ' + response.data.data);
+            }
+
+            return false;
+
+        } catch (error) {
+
+            LOGGER.module().error('ERROR: [/duracloud/lib (convert_service)] convert failed. Request failed: ' + error);
+
+            callback({
+                error: true,
+                message: 'ERROR: [/duracloud/lib (convert_service)] convert failed. Request failed: ' + error
             });
         }
 
