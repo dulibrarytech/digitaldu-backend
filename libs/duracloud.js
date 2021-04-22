@@ -145,14 +145,6 @@ exports.get_object_info = function (data, callback) {
     'use strict';
 
     let dip_path = data.dip_path;
-
-    // change extension from tif to jp2 (There are no direct references to jp2 files in Duracloud)
-    /* TODO: REMOVE
-    if (data.file.indexOf('tif') !== -1 || data.file.indexOf('tiff') !== -1) {
-        data.file = data.file.replace('tif', 'jpg');
-    }
-     */
-
     let endpoint = 'https://' + CONFIG.duraCloudUser + ':' + CONFIG.duraCloudPwd + '@' + CONFIG.duraCloudApi + 'dip-store/' + dip_path + '/objects/' + data.uuid + '-' + data.file;
 
     (async () => {
