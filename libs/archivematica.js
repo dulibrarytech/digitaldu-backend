@@ -46,12 +46,12 @@ exports.ping_api = function (callback) {
 
             if (response.status !== 200) {
 
-                LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_api)] unable to ping archivematica.');
+                LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_api)] unable to ping Archivematica.');
 
                 callback({
                     error: true,
                     status: 'down',
-                    message: error
+                    message: 'ERROR: [/libs/archivematica lib (ping_api)] Unable to ping Archivematica'
                 });
 
             } else if (response.status === 200) {
@@ -66,12 +66,12 @@ exports.ping_api = function (callback) {
 
         } catch (error) {
 
-            LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_api)] unable to ping archivematica. Request failed: ' + error);
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_api)] unable to ping Archivematica. Request failed: ' + error);
 
             callback({
                 error: true,
                 status: 'down',
-                message: 'ERROR: [/libs/archivematica lib (ping_api)] Unable to ping archivematica'
+                message: 'ERROR: [/libs/archivematica lib (ping_api)] Unable to ping Archivematica'
             });
         }
 
@@ -103,12 +103,12 @@ exports.ping_storage_api = function (callback) {
 
             if (response.status !== 200) {
 
-                LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_storage_api)] unable to ping archivematica storage api.');
+                LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_storage_api)] unable to ping Archivematica storage api.');
 
                 callback({
                     error: true,
                     status: 'down',
-                    message: error
+                    message: 'ERROR: [/libs/archivematica lib (ping_storage_api)] unable to ping Archivematica storage api.'
                 });
 
             } else if (response.status === 200) {
