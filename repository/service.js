@@ -72,11 +72,73 @@ exports.ping_services = function (req, callback) {
         });
     }
 
+    function ping_handle_server(obj, callback) {
+
+        (async () => {
+
+            try {
+
+                let endpoint = CONFIG.handleHost.replace('handle-service-0.6', '');
+                let response = await HTTP.get(endpoint, {
+                    timeout: 25000
+                });
+
+                if (response.status !== 200) {
+                    LOGGER.module().error('ERROR: [/repository/service module (ping_handle_server)] Unable to ping handle server.');
+                    obj.handle_server = 'down';
+                } else if (response.status === 200) {
+                    obj.handle_server = 'up';
+                }
+
+                callback(null, obj);
+                return false;
+
+            } catch(error) {
+                LOGGER.module().error('ERROR: [/repository/service module (ping_handle_server)] Unable to ping handle server.');
+                obj.handle_server = 'down';
+                callback(null, obj);
+            }
+
+        })();
+    }
+
+    function ping_convert_service(obj, callback) {
+
+        (async () => {
+
+            try {
+
+                let endpoint = CONFIG.convertService;
+                let response = await HTTP.get(endpoint, {
+                    timeout: 25000
+                });
+
+                if (response.status !== 200) {
+                    LOGGER.module().error('ERROR: [/repository/service module (ping_convert_service)] Unable to ping convert service.');
+                    obj.ingest_convert_service = 'down';
+                } else if (response.status === 200) {
+                    obj.ingest_convert_service = 'up';
+                }
+
+                callback(null, obj);
+                return false;
+
+            } catch(error) {
+                LOGGER.module().error('ERROR: [/repository/service module (ping_convert_service)] Unable to ping convert service.');
+                obj.ingest_convert_service = 'down';
+                callback(null, obj);
+            }
+
+        })();
+    }
+
     ASYNC.waterfall([
         ping_archivematica,
         ping_archivematica_storage,
         ping_archivesspace,
-        ping_duracloud
+        ping_duracloud,
+        ping_handle_server,
+        ping_convert_service
     ], function (error, results) {
 
         if (error) {
