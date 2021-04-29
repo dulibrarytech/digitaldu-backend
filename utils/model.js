@@ -22,6 +22,7 @@ const CONFIG = require('../config/config'),
     HTTP = require('../libs/http'),
     ASYNC = require('async'),
     LOGGER = require('../libs/log4'),
+    CACHE = require('../libs/cache'),
     DB = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects';
 
@@ -31,6 +32,8 @@ const CONFIG = require('../config/config'),
  * @param callback
  */
 exports.reindex = function (req, callback) {
+
+    CACHE.clear_cache();
 
     function check_indexes(callback) {
 
@@ -269,6 +272,8 @@ exports.reindex = function (req, callback) {
             republish('collection');
             republish('object');
         }
+
+        CACHE.clear_cache();
     });
 
     callback({

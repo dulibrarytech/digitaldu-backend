@@ -4,7 +4,7 @@
   "description": "Digital Repository back-end",
   "main": "repo.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "NODE_ENV=test mocha"
   },
   "author": "fernando.reyes@du.edu",
   "license": "Apache",

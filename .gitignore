@@ -90,7 +90,7 @@ logs
 logs/*.log
 logs/*.gz
 tmp
-tests
+test
 *.sql
 public/tn/*.*
 public/tn_cache/*.*

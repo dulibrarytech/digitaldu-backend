@@ -35,8 +35,6 @@ module.exports = function() {
 
     let view_cache = true;
 
-    SERVER.listen(process.env.APP_PORT);
-
     if (process.env.NODE_ENV === 'development') {
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
         view_cache = false;
@@ -73,4 +71,8 @@ module.exports = function() {
 
     CACHE.clear_cache();
     DIRS.check_directories();
+
+    SERVER.listen(process.env.APP_PORT);
+
+    return APP;
 };

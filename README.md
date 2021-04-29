@@ -32,7 +32,7 @@ if it doesn't work the first time delete the node_modules folder and npm install
 have mysql 5.7
 add .env file in root folder
 add mysql schema and db "repo" and "repo_queue" to db, import .sql export
-in git repo run "node repo.js"
+in git repo run "node test-repo.js"
 http://localhost:8000/login
 http://localhost:8000/dashboard/collections
 ```
