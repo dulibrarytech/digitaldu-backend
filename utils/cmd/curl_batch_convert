@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# set env var - export API_KEY="<api-key>"
+
+curl -X POST \
+  'http://localhost:8000/api/admin/v1/utils/batch_convert?api_key='${API_KEY} \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -H 'cache-control: no-cache' \
+  -d mime_type=image/tiff

@@ -366,7 +366,7 @@ exports.convert_service = function(data) {
         try {
 
             let response = await HTTP.post(url, data, {
-                timeout: '25000',
+                timeout: '60000',
                 headers: {
                     'Content-Type': 'application/json'
                 }

@@ -36,4 +36,7 @@ module.exports = function (app) {
 
     app.route('/api/admin/v1/utils/clear_cache')
         .post(TOKEN.verify, UTILS.clear_cache);
+
+    app.route('/api/admin/v1/utils/batch_convert')
+        .post(TOKEN.verify, UTILS.batch_convert);
 };

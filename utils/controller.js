@@ -39,3 +39,9 @@ exports.clear_cache = function (req, res) {
         message: 'Cache Cleared.'
     });
 };
+
+exports.batch_convert = function (req, res) {
+    UTILS.batch_convert(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
