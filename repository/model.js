@@ -704,7 +704,6 @@ exports.publish_objects = function (req, callback) {
         DB(REPO_OBJECTS)
             .where({
                 pid: obj.is_member_of_collection,
-                is_published: 0,
                 is_active: 1
             })
             .update({

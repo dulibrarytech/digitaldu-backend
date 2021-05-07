@@ -3,7 +3,7 @@
 # set env var - export API_KEY="<api-key>"
 
 curl -X POST \
-  'http://localhost:8000/api/admin/v1/indexer?api_key='${API_KEY} \
+  'http://localhost:8000/api/admin/v1/utils/batch_convert?api_key='${API_KEY} \
   -H 'Content-Type: application/x-www-form-urlencoded' \
   -H 'cache-control: no-cache' \
-  -d sip_uuid=7789029c-c026-4bb1-92fc-e110943a0694
+  -d mime_type=image/tiff

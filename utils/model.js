@@ -22,8 +22,12 @@ const CONFIG = require('../config/config'),
     HTTP = require('../libs/http'),
     ASYNC = require('async'),
     LOGGER = require('../libs/log4'),
+    CACHE = require('../libs/cache'),
+    DURACLOUD = require('../libs/duracloud'),
     DB = require('../config/db')(),
-    REPO_OBJECTS = 'tbl_objects';
+    DBQ = require('../config/dbqueue')(),
+    REPO_OBJECTS = 'tbl_objects',
+    CONVERT_QUEUE = 'tbl_convert_queue';
 
 /**
  * reindexes all repository records
@@ -31,6 +35,8 @@ const CONFIG = require('../config/config'),
  * @param callback
  */
 exports.reindex = function (req, callback) {
+
+    CACHE.clear_cache();
 
     function check_indexes(callback) {
 
@@ -269,6 +275,8 @@ exports.reindex = function (req, callback) {
             republish('collection');
             republish('object');
         }
+
+        CACHE.clear_cache();
     });
 
     callback({
@@ -340,4 +348,248 @@ const republish = function (object_type) {
             LOGGER.module().fatal('FATAL: [/import/utils module (reindex/republish_collection/publish_collection)] Unable to get object ' + error);
             throw 'FATAL: [/import/utils module (reindex/republish_collection/publish_collection)] Unable to get object ' + error;
         });
+};
+
+/**
+ * Retrieves files
+ * @param req
+ * @param callback
+ */
+exports.batch_convert = function (req, callback) {
+
+    let mime_type = req.body.mime_type;
+
+    if (mime_type === undefined || mime_type.length === 0) {
+
+        callback({
+            status: 400,
+            message: 'Bad request.'
+        });
+
+        return false;
+    }
+
+    /**
+     * Gets all compound objects
+     */
+    function get_compounds_objects() {
+
+        let whereObj = {
+            mime_type: mime_type,
+            is_active: 1,
+            is_compound: 1
+        };
+
+        DB(REPO_OBJECTS)
+            .select('sip_uuid', 'display_record', 'file_name')
+            .where(whereObj)
+            .orderBy('id', 'desc')
+            .then(function (data) {
+
+                let timer1 = setInterval(function () {
+
+                    console.log(data.length);
+
+                    if (data.length === 0) {
+                        clearInterval(timer1);
+                        console.log('Compound objects complete!');
+                        setTimeout(function() {
+                            console.log('Starting conversions...');
+                            convert();
+                        }, 35000);
+                        return false;
+                    }
+
+                    let record = data.pop();
+                    let json = JSON.parse(record.display_record);
+                    let obj = {};
+                    let full_path_arr = [];
+
+                    obj.sip_uuid = json.pid;
+
+                    // package up request data
+                    for (let i = 0; i < json.display_record.parts.length; i++) {
+
+                        // object_name is used to name the file
+                        let full_path = json.display_record.parts[i].object;
+
+                        if (full_path === null) {
+                            return false;
+                        }
+
+                        if (full_path !== undefined && full_path.indexOf('jp2') !== -1) {
+                            full_path = full_path.replace('jp2', 'tif');
+                        }
+
+                        full_path_arr.push(full_path);
+                    }
+
+                    obj.full_paths = full_path_arr;
+
+                    let request_obj = {};
+                    request_obj.sip_uuid = obj.sip_uuid
+
+                    let timer2 = setInterval(function () {
+
+                        if (obj.full_paths.length === 0) {
+                            clearInterval(timer2);
+                            return false;
+                        }
+
+                        let full_path = obj.full_paths.pop();
+
+                        if (full_path === undefined) {
+                            return false;
+                        }
+
+                        request_obj.full_path = full_path;
+
+                        let arr = full_path.split('/');
+                        let object_name = arr[arr.length - 1];
+
+                        if (object_name !== undefined && object_name.indexOf('tif') !== -1) {
+                            object_name = object_name.replace('tif', 'jpg');
+                        }
+
+                        request_obj.object_name = object_name;
+                        request_obj.mime_type = mime_type;
+
+                        save_to_queue(request_obj);
+
+                    }, 100);
+
+                }, 500);
+
+                return null;
+            })
+            .catch(function (error) {
+                LOGGER.module().fatal('FATAL: [/import/utils module (batch_convert/get_compounds_objects)] Unable to get compound objects ' + error);
+                throw 'FATAL: [/import/utils module (batch_convert/get_compounds_objects)] Unable to get compound objects ' + error;
+            });
+    }
+
+    /**
+     * Gets all non-compound objects
+     */
+    function get_objects() {
+
+        let whereObj = {
+            mime_type: mime_type,
+            is_active: 1,
+            is_compound: 0
+        };
+
+        DB(REPO_OBJECTS)
+            .select('sip_uuid','file_name')
+            .where(whereObj)
+            .orderBy('id', 'desc')
+            .then(function (data) {
+
+                let timer1 = setInterval(function () {
+
+                    console.log(data.length);
+
+                    if (data.length === 0) {
+                        clearInterval(timer1);
+                        get_compounds_objects();
+                        console.log('objects complete!');
+                        return false;
+                    }
+
+                    let record = data.pop();
+                    let full_path;
+                    let object_name;
+                    let obj = {};
+
+                    obj.sip_uuid = record.sip_uuid;
+
+                    if (record.file_name === null) {
+                        return false;
+                    }
+
+                    if (record.file_name !== undefined && record.file_name.indexOf('jp2') !== -1) {
+                        full_path = record.file_name.replace('jp2', 'tif');
+                    }
+
+                    if (full_path === undefined) {
+                        return false;
+                    }
+
+                    obj.full_path = full_path;
+
+                    let arr = full_path.split('/');
+                    object_name = arr[arr.length - 1];
+
+                    if (object_name !== undefined && object_name.indexOf('tif') !== -1) {
+                        object_name = object_name.replace('tif', 'jpg');
+                    }
+
+                    obj.object_name = object_name;
+                    obj.mime_type = mime_type;
+
+                    save_to_queue(obj);
+
+                }, 20);
+
+                return null;
+            })
+            .catch(function (error) {
+                LOGGER.module().fatal('FATAL: [/import/utils module (batch_convert/get_objects)] Unable to get objects ' + error);
+                throw 'FATAL: [/import/utils module (batch_convert/get_objects)] Unable to get objects ' + error;
+            });
+    }
+
+    /**
+     * Saves convert data to queue
+     * @param obj
+     */
+    function save_to_queue(obj) {
+
+        DBQ(CONVERT_QUEUE)
+            .insert(obj)
+            .then(function (data) {
+                console.log(data);
+                return null;
+            })
+            .catch(function (error) {
+                LOGGER.module().fatal('FATAL: [/import/utils module (batch_convert/save_to_queue)] Unable to save objects ' + error);
+                throw 'FATAL: [/import/utils module (batch_convert/save_to_queue)] Unable to save objects ' + error;
+            });
+    }
+
+    /**
+     * Sends request to convert service
+     */
+    function convert() {
+
+        DBQ(CONVERT_QUEUE)
+            .select('sip_uuid','full_path', 'object_name', 'mime_type')
+            .then(function (data) {
+
+                let timer = setInterval(function () {
+
+                    console.log(data.length);
+
+                    if (data.length === 0) {
+                        clearInterval(timer);
+                        console.log('objects converted!');
+                        return false;
+                    }
+
+                    let record = data.pop();
+                    DURACLOUD.convert_service(record);
+
+                }, 6000);
+
+                return null;
+            })
+            .catch(function (error) {
+                LOGGER.module().fatal('FATAL: [/import/utils module (batch_convert/convert)] Unable to send convert request ' + error);
+                throw 'FATAL: [/import/utils module (batch_convert/convert)] Unable to send convert request ' + error;
+            });
+    }
+
+    // TODO: have option to choose between the two to begin the process
+    get_objects();
+    // convert();
 };

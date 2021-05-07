@@ -4,7 +4,7 @@
   "description": "Digital Repository back-end",
   "main": "repo.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "NODE_ENV=test mocha"
   },
   "author": "fernando.reyes@du.edu",
   "license": "Apache",
@@ -26,7 +26,7 @@
     "jsdom": "^16.4.0",
     "jsonwebtoken": "^8.5.1",
     "knex": "^0.21.16",
-    "lodash": "^4.17.20",
+    "lodash": "^4.17.21",
     "log4js": "^4.5.1",
     "memory-cache": "^0.2.0",
     "method-override": "^2.3.10",
@@ -40,5 +40,10 @@
     "ssh2-sftp-client": "^3.1.0",
     "validator": "^8.2.0",
     "xmldoc": "^1.1.2"
+  },
+  "devDependencies": {
+    "chai": "^4.3.4",
+    "mocha": "^8.3.2",
+    "supertest": "^6.1.3"
   }
 }
