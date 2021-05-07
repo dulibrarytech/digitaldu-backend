@@ -590,24 +590,6 @@ exports.batch_convert = function (req, callback) {
     }
 
     // TODO: have option to choose between the two to begin the process
-    // get_objects();
-    convert();
+    get_objects();
+    // convert();
 };
-
-/*
-    data:  {
-        pid: '2a478eb4-e8fe-4048-8ffa-469aa2dfcb3e',
-        *sip_uuid: '2a478eb4-e8fe-4048-8ffa-469aa2dfcb3e',
-        is_member_of_collection: 'a5efb5d1-0484-429c-95a5-15c12ff40ca0',
-        dip_path: 'ec1f/0da1/609c/4a58/b91f/0464/2cf3/6b2a/a5efb5d1-0484-429c-95a5-15c12ff40ca0_B002.16.0202.00001_transfer_2-2a478eb4-e8fe-4048-8ffa-469aa2dfcb3e',
-        file: 'B002.16.0202.00001.tif',
-        *uuid: 'e224402a-c6b1-45ff-8ed9-d2dc699a4736',
-        uri: '/repositories/2/archival_objects/57019',
-        mods_id: '57019',
-        mime_type: 'image/tiff',
-        checksum: 'e66e62248969f41a313f4c0a855419db',
-        file_size: '3626830',
-        *file_name: 'ec1f/0da1/609c/4a58/b91f/0464/2cf3/6b2a/a5efb5d1-0484-429c-95a5-15c12ff40ca0_B002.16.0202.00001_transfer_2-2a478eb4-e8fe-4048-8ffa-469aa2dfcb3e/objects/e224402a-c6b1-45ff-8ed9-d2dc699a4736-B002.16.0202.00001.tif',
-        thumbnail: 'ec1f/0da1/609c/4a58/b91f/0464/2cf3/6b2a/a5efb5d1-0484-429c-95a5-15c12ff40ca0_B002.16.0202.00001_transfer_2-2a478eb4-e8fe-4048-8ffa-469aa2dfcb3e/thumbnails/e224402a-c6b1-45ff-8ed9-d2dc699a4736.jpg'
-    }
-     */
