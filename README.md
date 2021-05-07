@@ -26,15 +26,14 @@ All other content is released under [CC-BY-4.0](https://creativecommons.org/lice
 ### Local Environment Setup
 
 ```
-go into digitaldu-backend
+Have MySql 5.5 - 5.7
+Have ElasticSearch 7.10
+cd into digitaldu-backend
 npm install
-if it doesn't work the first time delete the node_modules folder and npm install
-have mysql 5.7
-add .env file in root folder
-add mysql schema and db "repo" and "repo_queue" to db, import .sql export
-in git repo run "node test-repo.js"
+Add .env file in root folder (see .env-example)
+Import mysql schemas "repo" and "repo_queue" to db, schemas found in db folder.  Change extensions from .txt to .sql
+run "node repo.js"
 http://localhost:8000/login
-http://localhost:8000/dashboard/collections
 ```
 
 ### Maintainers
