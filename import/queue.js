@@ -968,9 +968,9 @@ exports.create_repo_record = function (req, callback) {
 
                 obj.full_path = obj.file_name;
                 obj.object_name = obj.uuid + '-' + obj.file;
-
                 DURACLOUD.convert_service(obj);
-
+                delete obj.full_path;
+                delete obj.object_name;
                 callback(null, obj);
             });
 
