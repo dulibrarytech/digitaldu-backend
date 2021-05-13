@@ -87,5 +87,6 @@ module.exports = {
     tnServiceApiKey: process.env.TN_SERVICE_API_KEY,
     tnUploadPath: process.env.TN_UPLOAD_PATH,
     convertService: process.env.CONVERT_SERVICE,
-    convertServiceApiKey: process.env.CONVERT_SERVICE_API_KEY
+    convertServiceApiKey: process.env.CONVERT_SERVICE_API_KEY,
+    nodeEnv: process.env.NODE_ENV
 };

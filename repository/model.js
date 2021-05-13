@@ -553,7 +553,7 @@ exports.create_collection_object = function (req, callback) {
 
     function get_handle(obj, callback) {
 
-        if (obj.pid === null || obj.dupe === true) {
+        if (obj.pid === null || obj.dupe === true || CONFIG.nodeEnv !== 'production') {
             obj.handle = null;
             callback(null, obj);
             return false;
