@@ -4,7 +4,7 @@
   "description": "Digital Repository back-end",
   "main": "repo.js",
   "scripts": {
-    "test": "NODE_ENV=test mocha"
+    "test": "NODE_ENV=test mocha --delay"
   },
   "author": "fernando.reyes@du.edu",
   "license": "Apache",

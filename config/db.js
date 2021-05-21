@@ -18,17 +18,24 @@
 
 'use strict';
 
-const CONFIG = require('../config/config'),
-    DB = require('knex')({
-        client: 'mysql2',
-        connection: {
-            host: CONFIG.dbHost,
-            user: CONFIG.dbUser,
-            password: CONFIG.dbPassword,
-            database: CONFIG.dbName
-        }
+const CONFIG = require('../config/config');
+
+let dbName = CONFIG.dbName;
+console.log(CONFIG.nodeEnv);
+if (CONFIG.nodeEnv === 'test') {
+    dbName = 'repo_test';
+}
+
+const DB = require('knex')({
+    client: 'mysql2',
+    connection: {
+        host: CONFIG.dbHost,
+        user: CONFIG.dbUser,
+        password: CONFIG.dbPassword,
+        database: dbName
+    }
 });
 
 module.exports = function () {
-  return DB;
+    return DB;
 };
