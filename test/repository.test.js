@@ -25,8 +25,8 @@ const APP = require('../repo'),
     EXPECT = CHAI.expect,
     API_KEY = CONFIG.apiKey;
 
-const USERNAME = '871095226',
-    EMAIL = 'fernando.reyes@du.edu',
+const USERNAME = process.env.USERNAME,
+    EMAIL = process.env.EMAIL,
     FIRST_NAME = 'Tester',
     LAST_NAME = 'Testerson',
     PASSWORD = process.env.PASSWORD,
@@ -68,7 +68,7 @@ setTimeout(function () {
         });
 
         after(function () {
-            // DBM.down();
+            DBM.down();
         });
 
         // 1.) Create test user
