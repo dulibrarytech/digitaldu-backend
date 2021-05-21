@@ -33,10 +33,6 @@ const USERNAME = process.env.USERNAME,
     TEST_URI = '/repositories/2/resources/496',
     ROOT_PID = 'codu:root';
 
-// TEST_PID = '7bfde7d5-25ce-42b2-8d35-4fe43c2adc1a', // TODO: figure out how to reuse
-// TEST_TN = '33bd/7546/3504/44ce/9ee9/456b/2c54/e894/65f0742e-2894-4e43-a8b5-43362469fd51_M450.05.00003_transfer-2d786332-1f3e-4027-8188-f8520ed68164/thumbnails/476dd07a-2c7b-4326-af0f-9936b7bf17a6.jpg',
-// TEST_TN_UUID = '759b50d8-c6af-4f3e-9fc8-2fb389d05b2c';
-
 const USER = {
     du_id: USERNAME,
     email: EMAIL,
