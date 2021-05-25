@@ -93,3 +93,4 @@ tmp
 *.sql
 public/tn/*.*
 public/tn_cache/*.*
+test/mocks/test_packages/
