@@ -50,7 +50,8 @@ const endpoints = {
     repo_object_thumbnail: '/api/admin/v1/repo/object/thumbnail', // GET, POST
     repo_object_tn: '/api/admin/v1/repo/object/tn', // GET
     repo_object_viewer: '/api/admin/v1/repo/object/viewer', // GET
-    repo_publish: '/api/admin/v1/repo/publish' // POST
+    repo_publish: '/api/admin/v1/repo/publish', // POST
+    import_list: '/api/admin/v1/import/list' // GET
 };
 
 DBM.up();
@@ -182,8 +183,31 @@ setTimeout(function () {
         });
 
         // 7.) Import objects
+        describe('GET Import package list: Gets list of import packages', function () {
+            it('Test endpoint: ' + endpoints.import_list, function (done) {
 
+                DB('tbl_objects')
+                    .select('sip_uuid')
+                    .where({
+                        object_type: 'collection',
+                        is_active: 1
+                    }).limit(1)
+                    .then(function(record) {
 
+                        let package_name = record[0].sip_uuid;
+
+                        REQUEST(APP)
+                            .get(endpoints.import_list + '?collection=' + package_name + '&api_key=' + API_KEY)
+                            .end(function (error, res) {
+                                EXPECT(res.statusCode).to.equal(200);
+                                done();
+                            });
+                    })
+                    .catch(function(error) {
+                        console.log(error);
+                    });
+            });
+        });
 
         /*
         describe('GET Repository objects: Gets all objects', function () {

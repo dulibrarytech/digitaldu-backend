@@ -21,7 +21,8 @@ const CONFIG = require('../config/config'),
     HTTP = require('axios'),
     QS = require('querystring'),
     TIMEMOUT = 35000,
-    LOGGER = require('../libs/log4');
+    LOGGER = require('../libs/log4'),
+    TEST = require('../test/mocks/archivematica-mock');
 
 /**
  * Pings archivematica api to check availability
@@ -146,6 +147,15 @@ exports.list = function (folder, callback) {
 
     'use strict';
 
+    if (CONFIG.nodeEnv === 'test') {
+
+        TEST.list(folder, function(data) {
+            callback(data);
+        });
+
+        return false;
+    }
+
     const sftp = new CLIENT();
 
     sftp.connect({
@@ -182,6 +192,15 @@ exports.list = function (folder, callback) {
 exports.start_transfer = function (transferObj, callback) {
 
     'use strict';
+
+    if (CONFIG.nodeEnv === 'test') {
+
+        TEST.start_transfer(transferObj, function(data) {
+            callback(data);
+        });
+
+        return false;
+    }
 
     let transferSource = CONFIG.archivematicaTransferSource,
         sftpPath = CONFIG.sftpRemotePath,
