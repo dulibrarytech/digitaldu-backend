@@ -21,7 +21,7 @@
 const CONFIG = require('../config/config');
 
 let dbName = CONFIG.dbName;
-console.log(CONFIG.nodeEnv);
+
 if (CONFIG.nodeEnv === 'test') {
     dbName = 'repo_test';
 }

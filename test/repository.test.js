@@ -51,7 +51,9 @@ const endpoints = {
     repo_object_tn: '/api/admin/v1/repo/object/tn', // GET
     repo_object_viewer: '/api/admin/v1/repo/object/viewer', // GET
     repo_publish: '/api/admin/v1/repo/publish', // POST
-    import_list: '/api/admin/v1/import/list' // GET
+    import_list: '/api/admin/v1/import/list', // GET
+    import_queue_objects: '/api/admin/v1/import/queue_objects' // POST
+    // import_start_transfer: '/api/admin/v1/import/start_transfer' // POST -- starts by calling queue_objects
 };
 
 DBM.up();
@@ -182,7 +184,7 @@ setTimeout(function () {
             });
         });
 
-        // 7.) Import objects
+        // 7.) List import objects
         describe('GET Import package list: Gets list of import packages', function () {
             it('Test endpoint: ' + endpoints.import_list, function (done) {
 
@@ -200,6 +202,37 @@ setTimeout(function () {
                             .get(endpoints.import_list + '?collection=' + package_name + '&api_key=' + API_KEY)
                             .end(function (error, res) {
                                 EXPECT(res.statusCode).to.equal(200);
+                                done();
+                            });
+                    })
+                    .catch(function(error) {
+                        console.log(error);
+                    });
+            });
+        });
+
+        // 8.) Save import queue objects
+        describe('POST Queue repository import object', function () {
+            it('Test endpoint: ' + endpoints.import_queue_objects, function (done) {
+
+                DB('tbl_objects')
+                    .select('sip_uuid')
+                    .where({
+                        object_type: 'collection',
+                        is_active: 1
+                    }).limit(1)
+                    .then(function(record) {
+
+                        let data = {
+                            collection: record[0].sip_uuid
+                        };
+
+                        REQUEST(APP)
+                            .post(endpoints.import_queue_objects + '?api_key=' + API_KEY)
+                            .send(data)
+                            .set('Content-Type', 'application/json')
+                            .end(function (error, res) {
+                                EXPECT(res.statusCode).to.equal(201);
                                 done();
                             });
                     })

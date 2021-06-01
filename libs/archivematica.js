@@ -238,6 +238,7 @@ exports.start_transfer = function (transferObj, callback) {
                 });
 
             } else if (response.status === 200) {
+                console.log(JSON.stringify(response.data));
                 callback(JSON.stringify(response.data));
             }
 

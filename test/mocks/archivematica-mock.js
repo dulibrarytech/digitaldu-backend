@@ -61,6 +61,8 @@ exports.start_transfer = function (transferObj, callback) {
 
     // TODO: move assets to package folder
     console.log(transferObj);
+    callback('hello');
+    return false;
 
     fs.rename('./test/mocks/test_packages/B002.16.0202.00001', './test/mocks/' + transferObj.is_member_of_collection, function(error) {
 
