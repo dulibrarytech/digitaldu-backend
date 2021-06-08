@@ -593,3 +593,241 @@ exports.batch_convert = function (req, callback) {
     get_objects();
     // convert();
 };
+
+/**
+ * fix records with missing object paths
+ */
+exports.batch_fix = function () {
+
+    const archivematica = require('../libs/archivematica'),
+        archivespace = require('../libs/archivespace'),
+        duracloud = require('../libs/duracloud'),
+        modslibdisplay = require('../libs/display-record'),
+        metslib = require('../libs/mets'),
+        importlib = require('../libs/transfer-ingest');
+
+    async function get_display_records() {
+        return await DB(REPO_OBJECTS).select('sip_uuid','display_record').where({object_type: 'object'});
+    }
+
+    function find_broken_display_records(data) {
+
+        let timer = setInterval(function () {
+
+            if (data.length === 0) {
+                clearInterval(timer);
+                console.log('done');
+                setTimeout(function() {
+                    fix_broken_display_records();
+                }, 5000);
+                return false;
+            }
+
+            let record = data.pop();
+            let display_record = JSON.parse(record.display_record);
+
+            if (display_record !== null && display_record.pid !== undefined) {
+                console.log(display_record.pid);
+            }
+
+            if (display_record !== null && display_record.object === undefined) {
+
+                console.log('BROKEN: ', display_record.pid);
+
+                DB('tbl_fix_object_paths')
+                    .insert({
+                        pid: display_record.pid,
+                        old_display_record: JSON.stringify(display_record)
+                    })
+                    .then(function (data) {
+                        console.log(data);
+                    })
+                    .catch(function (error) {
+                        LOGGER.module().fatal('FATAL: [/utils/model module (find_broken_display_records)] unable to save record ' + error);
+                    });
+
+                get_mets(display_record.pid);
+            }
+
+        }, 250);
+    }
+
+    function get_mets(sip_uuid) {
+
+        console.log('getting mets...');
+
+        archivematica.get_dip_path(sip_uuid, function (dip_path) {
+
+            let obj = {};
+            obj.dip_path = dip_path;
+            obj.sip_uuid = sip_uuid;
+
+            duracloud.get_mets(obj, function (response) {
+
+                if (response.error !== undefined && response.error === true) {
+                    console.log(response.error);
+                    // logger.module().error('ERROR: [/import/queue module (import_dip/archivematica.get_dip_path/duracloud.get_mets)] unable to get mets');
+                }
+
+                let metsResults = metslib.process_mets(obj.sip_uuid, obj.dip_path, response.mets);
+
+                importlib.save_mets_data(metsResults, function (result) {
+                    console.log(result);
+                });
+
+            });
+
+        });
+    }
+
+    function fix_broken_display_records() {
+
+        DBQ('tbl_duracloud_queue')
+            .select('*')
+            .where({
+                type: 'object'
+            })
+            .then(function (data) {
+
+                let timer = setInterval(function () {
+
+                    console.log(data.length);
+
+                    if (data.length === 0) {
+                        clearInterval(timer);
+                        console.log('done!');
+                        setTimeout(function() {
+                            fix_display_records();
+                        }, 5000);
+
+                        return false;
+                    }
+
+                    let record = data.pop();
+                    let object_path = record.dip_path + '/objects/' + record.uuid + '-' + record.file;
+
+                    DB('tbl_fix_object_paths')
+                        .where({
+                            pid: record.sip_uuid
+                        })
+                        .update({
+                            object_path: object_path
+                        })
+                        .then(function(data) {
+                            console.log(data);
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+
+                }, 50);
+
+                return null;
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+    }
+
+    function fix_display_records() {
+
+        DB('tbl_fix_object_paths')
+            .select('*')
+            .then(function (data) {
+
+                let timer = setInterval(function () {
+
+                    console.log(data.length);
+
+                    if (data.length === 0) {
+                        clearInterval(timer);
+                        console.log('done!');
+                        return false;
+                    }
+
+                    let record = data.pop();
+                    let old_display_record = JSON.parse(record.old_display_record);
+                    old_display_record.object = record.object_path;
+                    let display_record = old_display_record;
+
+                    DB('tbl_fix_object_paths')
+                        .where({
+                            pid: record.pid
+                        })
+                        .update({
+                            display_record: JSON.stringify(display_record)
+                        })
+                        .then(function(data) {
+                            console.log(data);
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+
+                }, 100);
+
+                return null;
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+
+    }
+
+    function update_display_records() {
+
+        DB('tbl_fix_object_paths')
+            .select('*')
+            .then(function (data) {
+
+                let timer = setInterval(function () {
+
+                    console.log(data.length);
+
+                    if (data.length === 0) {
+                        clearInterval(timer);
+                        console.log('done!');
+                        return false;
+                    }
+
+                    let record = data.pop();
+                    let display_record = record.display_record;
+
+                    DB('tbl_objects')
+                        .where({
+                            pid: record.pid
+                        })
+                        .update({
+                            display_record: display_record
+                        })
+                        .then(function(data) {
+                            console.log(data);
+                        })
+                        .catch(function (error) {
+                            console.log(error);
+                        });
+
+                }, 100);
+
+                return null;
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+
+    }
+
+    (async function(){
+
+        try {
+
+            // let data = await get_display_records();
+            // find_broken_display_records(data);
+            update_display_records();
+
+        } catch(error) {
+            console.log(error);
+        }
+
+    })();
+};

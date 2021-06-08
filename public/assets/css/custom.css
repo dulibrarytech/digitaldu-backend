@@ -1545,10 +1545,6 @@ span.right {
     cursor: pointer;
 }
 
-.sidebar-footer a:hover {
-    background:; /* TODO #425567 hovers over footer icons */
-}
-
 .tile_count {
     margin-bottom: 20px;
     margin-top: 20px
