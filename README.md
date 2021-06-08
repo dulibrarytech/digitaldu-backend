@@ -61,6 +61,7 @@ http://localhost:8000/login
 
 ## Releases
 * v1.0.0-beta [release]() [notes]()
+* v1.1.0 [release]() [notes]()
 
 
 ## Contact
