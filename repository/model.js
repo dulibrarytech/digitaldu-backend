@@ -196,7 +196,6 @@ function update_display_record(obj, callback) {
 
         if (response.error === true) {
             LOGGER.module().error('ERROR: [/repository/model module (update_display_record)] unable to get display record.');
-            obj.error = true;
         } else if (response.error === false) {
 
             let display_record = JSON.parse(response.data[0].display_record);
@@ -247,6 +246,7 @@ const unindex = function(sip_uuid, callback) {
         }
 
         callback(result);
+
     })();
 };
 
