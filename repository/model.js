@@ -817,6 +817,11 @@ exports.publish_objects = function (req, callback) {
 
             callback(null, obj);
         });
+
+        let pidObj = {};
+        pidObj.sip_uuid = match_phrase.pid;
+
+        update_display_record(pidObj, function() {});
     }
 
     function update_collection_object_records(obj, callback) {
@@ -880,6 +885,8 @@ exports.publish_objects = function (req, callback) {
                                 return false;
                             }
                         });
+
+                        update_display_record(record, function() {});
                     }
 
                 }, 150);
@@ -1143,6 +1150,11 @@ exports.unpublish_objects = function (req, callback) {
 
             callback(null, obj);
         });
+
+        let pidObj = {};
+        pidObj.pid = pid;
+
+        update_display_record(pidObj, function() {});
     }
 
     // unpublish entire collection - unpublish objects
@@ -1192,6 +1204,11 @@ exports.unpublish_objects = function (req, callback) {
 
                             return false;
                         });
+
+                        let pidObj = {};
+                            pidObj.pid = record.sip_uuid;
+
+                        update_display_record(pidObj, function() {});
 
                     } else {
 
@@ -1331,8 +1348,6 @@ exports.unpublish_objects = function (req, callback) {
             callback(null, obj);
             return false;
         }
-
-        // TODO: update display record here
 
         DB(REPO_OBJECTS)
             .where({
