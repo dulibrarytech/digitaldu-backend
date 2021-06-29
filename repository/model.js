@@ -168,6 +168,59 @@ const del = function (sip_uuid, callback) {
 };
 
 /**
+ * Updates display record after publish status changed
+ * @param obj
+ * @param callback
+ */
+function update_display_record(obj, callback) {
+
+    let pid;
+    let is_published;
+
+    if (obj.sip_uuid !== undefined) {
+        pid = obj.sip_uuid // publish
+        is_published = 1;
+    } else if (obj.pid !== undefined) {
+        pid = obj.pid;  // unpublish
+        is_published = 0;
+    }
+
+    (async () => {
+
+        let response = await HTTP.get({
+            endpoint: '/api/admin/v1/repo/object',
+            params: {
+                pid: pid
+            }
+        });
+
+        if (response.error === true) {
+            LOGGER.module().error('ERROR: [/repository/model module (update_display_record)] unable to get display record.');
+        } else if (response.error === false) {
+
+            let display_record = JSON.parse(response.data[0].display_record);
+            display_record.is_published = is_published;
+
+            DB(REPO_OBJECTS)
+                .where({
+                    pid: pid,
+                    is_active: 1
+                })
+                .update({
+                    display_record: JSON.stringify(display_record)
+                })
+                .then(function () {})
+                .catch(function(error) {
+                    LOGGER.module().error('ERROR: [/repository/model module (update_display_record)] unable to update display record. ' + error);
+                });
+        }
+
+        callback(null, obj);
+
+    })();
+}
+
+/**
  * Removes record from admin and public indexes - part of record delete process
  * @param sip_uuid
  * @param callback
@@ -193,6 +246,7 @@ const unindex = function(sip_uuid, callback) {
         }
 
         callback(result);
+
     })();
 };
 
@@ -213,6 +267,10 @@ exports.get_display_record = function (req, callback) {
         });
 
         return false;
+
+    } else if (pid.length > 1) {
+        // workaround for http bug that creates array instead of string
+        pid = pid[0];
     }
 
     DB(REPO_OBJECTS)
@@ -759,6 +817,11 @@ exports.publish_objects = function (req, callback) {
 
             callback(null, obj);
         });
+
+        let pidObj = {};
+        pidObj.sip_uuid = match_phrase.pid;
+
+        update_display_record(pidObj, function() {});
     }
 
     function update_collection_object_records(obj, callback) {
@@ -822,6 +885,8 @@ exports.publish_objects = function (req, callback) {
                                 return false;
                             }
                         });
+
+                        update_display_record(record, function() {});
                     }
 
                 }, 150);
@@ -1020,6 +1085,7 @@ exports.publish_objects = function (req, callback) {
             get_collection_uuid,
             check_collection,
             update_object_record,
+            update_display_record,
             update_object_doc,
             publish_object
         ], function (error, results) {
@@ -1084,6 +1150,11 @@ exports.unpublish_objects = function (req, callback) {
 
             callback(null, obj);
         });
+
+        let pidObj = {};
+        pidObj.pid = pid;
+
+        update_display_record(pidObj, function() {});
     }
 
     // unpublish entire collection - unpublish objects
@@ -1133,6 +1204,11 @@ exports.unpublish_objects = function (req, callback) {
 
                             return false;
                         });
+
+                        let pidObj = {};
+                            pidObj.pid = record.sip_uuid;
+
+                        update_display_record(pidObj, function() {});
 
                     } else {
 
@@ -1324,7 +1400,8 @@ exports.unpublish_objects = function (req, callback) {
         ASYNC.waterfall([
             unpublish_object,
             update_object_doc,
-            update_object_record
+            update_object_record,
+            update_display_record
         ], function (error, results) {
 
             if (error) {

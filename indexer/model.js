@@ -99,7 +99,7 @@ exports.get_index_record = function (req, callback) {
 
             SERVICE.index_record({
                 index: elasticSearchIndex,
-                id: record.pid.replace('codu:', ''),
+                id: record.pid,
                 body: record
             }, function (response) {
 
@@ -217,7 +217,7 @@ exports.index_records = function (req, callback) {
 
                     SERVICE.index_record({
                         index: index_name,
-                        id: record.pid.replace('codu:', ''), // TODO: remove replace
+                        id: record.pid,
                         body: record
                     }, function (response) {
 
