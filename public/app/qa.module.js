@@ -48,12 +48,15 @@ const qaModule = (function () {
                 response.json().then(function (data) {
 
                     domModule.html('#message', null);
+                    qaModule.renderReadyFolders(data);
 
+                    /*
                     if (data.length === 0) {
                         domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No folders found.</div>');
                     } else {
                         qaModule.renderReadyFolders(data);
                     }
+                     */
                 });
 
             } else if (response.status === 401) {
@@ -104,6 +107,14 @@ const qaModule = (function () {
 
         domModule.html('#qa-folders', html);
         domModule.html('.loading', null);
+
+        setTimeout(function() {
+            $('#qa-folders-tbl').DataTable({
+                'order': [[0, 'desc']],
+                'lengthMenu': [[10, 25, 50, -1], [10, 25, 50, 'All']]
+            });
+        }, 150);
+
     };
 
     /**
@@ -444,6 +455,7 @@ const qaModule = (function () {
     const moveToSftp = function (pid, folder) {
 
         domModule.html('#processing-message', '<em>Uploading to Archivematica SFTP server...</em>');
+        return false;
 
         let token = userModule.getUserToken();
         let url = api + endpoints.qa_move_to_sftp + '?pid=' + pid + '&folder=' + folder,

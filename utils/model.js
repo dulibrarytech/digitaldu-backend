@@ -831,3 +831,6 @@ exports.batch_fix = function () {
 
     })();
 };
+
+// TODO: delete ES record curl -X DELETE "localhost:9200/document-index/_doc/1"
+// curl -X DELETE "http://domain/:9200/repo_admin/_doc/07dce309-1281-47c4-b35e-ea0b6e847829"
