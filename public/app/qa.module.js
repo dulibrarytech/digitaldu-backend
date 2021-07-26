@@ -110,7 +110,7 @@ const qaModule = (function () {
 
         setTimeout(function() {
             $('#qa-folders-tbl').DataTable({
-                'order': [[0, 'desc']],
+                'order': [[0, 'asc']],
                 'lengthMenu': [[10, 25, 50, -1], [10, 25, 50, 'All']]
             });
         }, 150);
