@@ -35,16 +35,19 @@
                                 <div id="message"></div>
                                 <div id="ready"></div>
                                 <div id="qa-on-ready"></div>
+                            </div>
+
                                 <table id="qa-folders-tbl" class="table table-striped table-bordered">
                                     <thead>
                                     <tr>
-                                        <th style="text-align: center; vertical-align: middle">Folder Name</th>
-                                        <th style="text-align: center; vertical-align: middle">Action</th>
+                                        <th>Package</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
                                     </tr>
                                     </thead>
                                     <tbody id="qa-folders"></tbody>
                                 </table>
-                                <!-- panels -->
+                                <!-- TODO: refactor panels -->
                                 <div class="row">
                                     <div class="col-md-4" id="qa-results-missing-files-panel" style="display: none">
                                         <div class="x_panel">
@@ -65,26 +68,27 @@
                                         </div>
                                     </div>
                                     <!-- Move to table OR alert bar -->
+                                    <!--
                                     <div class="col-md-4" style="display: none" id="qa-status-panel">
                                         <div class="x_panel">
                                             <div class="x_title">
-                                                <h3>QA Status</h3>
+                                                <h3>Upload Status</h3>
                                                 <div class="clearfix"></div>
                                             </div>
                                             <p id="collection-title"></p>
                                             <p id="qa-package-size"></p>
                                             <div id="processing-message"></div>
                                             <div class="x_content" id="qa-collection-form-content">
-                                                <!-- Active when new form needs to be created -->
-                                                <!--
+                                                !-- Active when new form needs to be created --
+
                                                 <form id="qa-collection-form">
                                                     <label for="resource-uri" id="resource-uri-display"></label>
                                                     <input id="resource-uri" type="hidden" value="">
                                                 </form>
-                                                -->
+                                                --
                                             </div>
                                         </div>
-                                    </div>
+                                    </div>-->
                                 </div>
                             </div>
                         </div>
