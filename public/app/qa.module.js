@@ -84,18 +84,23 @@ const qaModule = (function () {
             return false;
         }
 
-        data = data.sort().reverse();
-
-        for (let i = 0; i < data.length; i++) {
+        for (let prop in data) {
 
             html += '<tr>';
+            // collection folder name
             html += '<td style="text-align: left;vertical-align: middle; width: 55%">';
-            html += '<small>' + data[i] + '</small>';
+            html += '<small>' + prop + '</small>';
             html += '</td>';
+            // package count
+            html += '<td style="text-align: left;vertical-align: middle; width: 8%">';
+            html += '<small>' + data[prop] + '</small>';
+            html += '</td>';
+            // Status column
             html += '<td style="text-align: left;vertical-align: middle; width: 30%">';
-            html += '<small id="collection-title"></small>&nbsp;<small id="qa-package-size"></small>&nbsp;<small id="' + data[i] + '"></small>';
+            html += '<small id="collection-title"></small>&nbsp;<small id="qa-package-size"></small>&nbsp;<small id="' + prop + '"></small>';
             html += '</td>';
-            html += '<td style="text-align: center;vertical-align: middle; width: 15%"><a href="#" type="button" class="btn btn-sm btn-default" onclick="qaModule.runQAonReady(\'' + data[i] + '\')"><i class="fa fa-cogs"></i> Run QA</a></td>';
+            // Action button column
+            html += '<td style="text-align: center;vertical-align: middle; width: 15%"><a href="#" type="button" class="btn btn-sm btn-default run-qa" onclick="qaModule.runQAonReady(\'' + prop + '\')"><i class="fa fa-cogs"></i> Run QA</a></td>';
             html += '</tr>';
         }
 
@@ -111,16 +116,13 @@ const qaModule = (function () {
     };
 
     /**
-     * Renders missing items
+     * Runs QA on packages and renders problems if any
      * @param folder
      * @returns {boolean}
      */
     obj.runQAonReady = function (folder) {
 
-        // let html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; Running QA... <em>This may take a while depending on the size of the collection</em>.</strong></div>';
-        // domModule.html('#qa-on-ready', html);
-        // domModule.hide('#qa-folders-tbl');
-        domModule.html('#' + folder, 'Running QA...');
+        domModule.html('#' + folder, '<strong><em>Running QA...</em></strong>');
 
         // send folder name in request
         let url = api + endpoints.qa_run + '?folder=' + folder;
@@ -170,7 +172,7 @@ const qaModule = (function () {
      * @returns {boolean}
      */
     const renderQAresults = function (data, folder) {
-        console.log(data);
+
         domModule.html('#' + folder, 'QA Complete.');
 
         let file_errors = '';
@@ -259,11 +261,7 @@ const qaModule = (function () {
             domModule.html('#' + folder, '&nbsp;<strong><i class="fa fa-exclamation-circle" style="color: red"></i>&nbsp;Errors Found.</strong>&nbsp;' + file_errors + '<br>' + uri_errors + '<br>');
         }
 
-        // domModule.html('#qa-results-missing-files-content', file_errors);
-        // domModule.html('#qa-results-missing-uris-content', uri_errors);
-        domModule.html('#qa-package-size', '(' + format_package_size(package_size) + ' - ' + local_file_count + ' files.)');
-        // domModule.show('#qa-results-missing-files-panel');
-        // domModule.show('#qa-results-missing-uris-panel');
+        domModule.html('#qa-package-size', '(' + format_package_size(package_size) + ' - ' + local_file_count + ' files.)<br>');
 
         if (errors.length === 0) {
 
@@ -275,7 +273,6 @@ const qaModule = (function () {
             let uri_part = parts.pop().replace('_', '/');
 
             checkCollection(uri_part, folder);
-            // domModule.show('#qa-status-panel');
         }
     };
 
@@ -305,7 +302,7 @@ const qaModule = (function () {
                 response.json().then(function (data) {
 
                     if (data.length === 0) {
-                        // TODO: change to #folder
+
                         domModule.html('#collection-title', 'Creating collection...');
 
                         let obj = {};
@@ -329,7 +326,6 @@ const qaModule = (function () {
                             if (response.status === 201) {
 
                                 response.json().then(function (data) {
-                                    // TODO: change to #folder
                                     domModule.html('#collection-title', 'Collection created.');
                                     checkCollection(uri, folder);
                                 });
@@ -355,9 +351,8 @@ const qaModule = (function () {
                         httpModule.req(request, callback);
 
                     } else {
-
-                        // TODO: change to #folder
-                        domModule.html('#collection-title', data.title);
+                        domModule.html('#ready', '<h2>' + data.title + '</h2>');
+                        domModule.html('#collection-title', data.title + '<br>');
                         moveToIngest(data.pid, folder);
                     }
                 });
@@ -454,16 +449,15 @@ const qaModule = (function () {
             });
 
         const callback = function (response) {
-
+            console.log(response);
             if (response.status === 200) {
 
                 response.json().then(function (data) {
 
                     let timer = setInterval(function() {
 
-                        checkSftpUploadStatus(pid, function(results) {
+                        checkSftpUploadStatus(pid, folder, function(results) {
 
-                            console.log('upload status: ', results);
                             clearInterval(timer);
 
                             setTimeout(function() {
@@ -474,7 +468,7 @@ const qaModule = (function () {
                             }, 60000);
 
                         });
-                    }, 30000);
+                    }, 60000*10);
                 });
 
                 return false;
@@ -502,9 +496,9 @@ const qaModule = (function () {
      * Checks status of sftp upload
      * @param pid
      */
-    const checkSftpUploadStatus = function(pid, cb) {
-        console.log(pid);
-        domModule.html('#processing-message', '<em>Checking SFTP Upload...</em>');
+    const checkSftpUploadStatus = function(pid, folder, cb) {
+
+        domModule.html('#' + folder, '<strong><em>Checking SFTP Upload...</em></strong>');
 
         let token = userModule.getUserToken();
         let url = api + endpoints.qa_upload_status + '?pid=' + pid + '&local_file_count=' + local_file_count,
@@ -522,7 +516,7 @@ const qaModule = (function () {
             if (response.status === 200) {
 
                 response.json().then(function (data) {
-                    console.log('upload status cb: ', data);
+
                     if (data.message === 'upload_complete') {
                         cb('complete');
                     } else if (data.message === 'in_progress') {
@@ -535,8 +529,8 @@ const qaModule = (function () {
                         }
 
                         html += '</ul>';
-                        console.log(html);
-                        domModule.html('#processing-message', html);
+
+                        domModule.html('#' + folder, html);
                     }
                 });
 
