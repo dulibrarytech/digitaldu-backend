@@ -97,7 +97,7 @@ const qaModule = (function () {
             html += '</td>';
             // Status column
             html += '<td style="text-align: left;vertical-align: middle; width: 30%">';
-            html += '<small id="collection-title"></small>&nbsp;<small id="qa-package-size"></small>&nbsp;<small id="' + prop + '"></small>';
+            html += '<small id="collection-title-' + prop + '"></small>&nbsp;<small id="qa-package-size-' + prop + '"></small>&nbsp;<small id="' + prop + '"></small>';
             html += '</td>';
             // Action button column
             html += '<td style="text-align: center;vertical-align: middle; width: 15%"><a href="#" type="button" class="btn btn-sm btn-default run-qa" onclick="qaModule.runQAonReady(\'' + prop + '\')"><i class="fa fa-cogs"></i> Run QA</a></td>';
@@ -261,7 +261,7 @@ const qaModule = (function () {
             domModule.html('#' + folder, '&nbsp;<strong><i class="fa fa-exclamation-circle" style="color: red"></i>&nbsp;Errors Found.</strong>&nbsp;' + file_errors + '<br>' + uri_errors + '<br>');
         }
 
-        domModule.html('#qa-package-size', '(' + format_package_size(package_size) + ' - ' + local_file_count + ' files.)<br>');
+        domModule.html('#qa-package-size-' + folder, '(' + format_package_size(package_size) + ' - ' + local_file_count + ' files.)<br>');
 
         if (errors.length === 0) {
 
@@ -303,7 +303,7 @@ const qaModule = (function () {
 
                     if (data.length === 0) {
 
-                        domModule.html('#collection-title', 'Creating collection...');
+                        domModule.html('#collection-title-' + folder, 'Creating collection...');
 
                         let obj = {};
                         obj.uri = '/repositories/2/' + uri;
@@ -326,7 +326,7 @@ const qaModule = (function () {
                             if (response.status === 201) {
 
                                 response.json().then(function (data) {
-                                    domModule.html('#collection-title', 'Collection created.');
+                                    domModule.html('#collection-title-' + folder, 'Collection created.');
                                     checkCollection(uri, folder);
                                 });
 
@@ -352,7 +352,7 @@ const qaModule = (function () {
 
                     } else {
                         domModule.html('#ready', '<h2>' + data.title + '</h2>');
-                        domModule.html('#collection-title', data.title + '<br>');
+                        domModule.html('#collection-title-' + folder, data.title + '<br>');
                         moveToIngest(data.pid, folder);
                     }
                 });
@@ -435,7 +435,7 @@ const qaModule = (function () {
      */
     const moveToSftp = function (pid, folder) {
 
-        domModule.html('#' + folder, '<strong><em>Uploading to Archivematica SFTP server...</em></strong>');
+        domModule.html('#' + folder, '<strong><em>Preparing packages for upload to Archivematica SFTP server...</em></strong>');
 
         let token = userModule.getUserToken();
         let url = api + endpoints.qa_move_to_sftp + '?pid=' + pid + '&folder=' + folder,
@@ -449,7 +449,7 @@ const qaModule = (function () {
             });
 
         const callback = function (response) {
-            console.log(response);
+
             if (response.status === 200) {
 
                 response.json().then(function (data) {
@@ -468,7 +468,7 @@ const qaModule = (function () {
                             }, 60000);
 
                         });
-                    }, 60000*10);
+                    }, 30000);  // 60000*2
                 });
 
                 return false;
@@ -498,7 +498,7 @@ const qaModule = (function () {
      */
     const checkSftpUploadStatus = function(pid, folder, cb) {
 
-        domModule.html('#' + folder, '<strong><em>Checking SFTP Upload...</em></strong>');
+        domModule.html('#' + folder, '<strong><em>Checking SFTP Upload status...</em></strong>');
 
         let token = userModule.getUserToken();
         let url = api + endpoints.qa_upload_status + '?pid=' + pid + '&local_file_count=' + local_file_count,
@@ -516,17 +516,34 @@ const qaModule = (function () {
             if (response.status === 200) {
 
                 response.json().then(function (data) {
-
+                    console.log(data);
                     if (data.message === 'upload_complete') {
                         cb('complete');
                     } else if (data.message === 'in_progress') {
 
                         let html = '<p><em>Uploading...</em></p><ul>';
 
-                        for (let i = 0; i<data.data[0].length;i++) {
-                            let file_upload = data.data[0][i];
-                            html += '<li>' + file_upload + '</li>';
+                        html += '<p>' + data.remote_file_count + ' out of ' + data.local_file_count + ' files (' + data.remote_package_size + ')</p>';
+
+                        // TODO: add to status column
+                        console.log(data.remote_file_count);
+                        console.log(data.local_file_count);
+                        console.log(data.remote_package_size);
+                        console.log(data.file_names[0]);
+
+                        let tmp = data.file_names[0].split('/');
+                        let file_upload = tmp[tmp.length - 1];
+                        html += '<li>' + file_upload + '</li>';
+
+                        /*
+                        for (let i = 0; i<data.file_names[0].length;i++) {
+                            let file_upload = data.file_names[data.file_names.length - 1];
+                            // let tmp = data.file_names[0][i].split('/');
+                            // let file_upload = tmp[tmp.length - 1]
+                            // html += '<li>' + file_upload + '</li>';
                         }
+
+                         */
 
                         html += '</ul>';
 
