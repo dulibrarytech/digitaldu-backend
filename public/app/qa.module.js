@@ -54,15 +54,15 @@ const qaModule = (function () {
 
                 response.json().then(function (response) {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Permission denied.');
-                    domModule.html('.loading', null);
+                    // domModule.html('.loading', null);
                 });
 
             } else if (response.status === 500) {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). QA Service is unavailable.');
-                domModule.html('.loading', null);
+                // domModule.html('.loading', null);
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to get ready folders.');
-                domModule.html('.loading', null);
+                // domModule.html('.loading', null);
             }
         };
 
@@ -105,9 +105,9 @@ const qaModule = (function () {
         }
 
         domModule.html('#qa-folders', html);
-        domModule.html('.loading', null);
+        // domModule.html('.loading', null);
 
-        setTimeout(function() {
+        setTimeout(function () {
             $('#qa-folders-tbl').DataTable({
                 'order': [[0, 'asc']],
                 'lengthMenu': [[10, 25, 50, -1], [10, 25, 50, 'All']]
@@ -435,7 +435,7 @@ const qaModule = (function () {
      */
     const moveToSftp = function (pid, folder) {
 
-        domModule.html('#' + folder, '<strong><em>Preparing packages for upload to Archivematica SFTP server...</em></strong>');
+        domModule.html('#' + folder, '<strong><em>Uploading packages to Archivematica SFTP server...</em></strong>');
 
         let token = userModule.getUserToken();
         let url = api + endpoints.qa_move_to_sftp + '?pid=' + pid + '&folder=' + folder,
@@ -454,13 +454,13 @@ const qaModule = (function () {
 
                 response.json().then(function (data) {
 
-                    let timer = setInterval(function() {
+                    let timer = setInterval(function () {
 
-                        checkSftpUploadStatus(pid, folder, function(results) {
+                        checkSftpUploadStatus(pid, folder, function (results) {
 
                             clearInterval(timer);
 
-                            setTimeout(function() {
+                            setTimeout(function () {
                                 window.onbeforeunload = null;
                                 let message = '<div class="alert alert-success">Package <strong><a href="/dashboard/import?collection=' + pid + '">' + pid + '</a></strong> is ready to be imported.</div>';
                                 domModule.html('#qa-on-ready', message);
@@ -496,7 +496,7 @@ const qaModule = (function () {
      * Checks status of sftp upload
      * @param pid
      */
-    const checkSftpUploadStatus = function(pid, folder, cb) {
+    const checkSftpUploadStatus = function (pid, folder, cb) {
 
         domModule.html('#' + folder, '<strong><em>Checking SFTP Upload status...</em></strong>');
 
@@ -516,7 +516,7 @@ const qaModule = (function () {
             if (response.status === 200) {
 
                 response.json().then(function (data) {
-                    console.log(data);
+
                     if (data.message === 'upload_complete') {
                         cb('complete');
                     } else if (data.message === 'in_progress') {
@@ -525,26 +525,9 @@ const qaModule = (function () {
 
                         html += '<p>' + data.remote_file_count + ' out of ' + data.local_file_count + ' files (' + data.remote_package_size + ')</p>';
 
-                        // TODO: add to status column
-                        console.log(data.remote_file_count);
-                        console.log(data.local_file_count);
-                        console.log(data.remote_package_size);
-                        console.log(data.file_names[0]);
-
                         let tmp = data.file_names[0].split('/');
                         let file_upload = tmp[tmp.length - 1];
                         html += '<li>' + file_upload + '</li>';
-
-                        /*
-                        for (let i = 0; i<data.file_names[0].length;i++) {
-                            let file_upload = data.file_names[data.file_names.length - 1];
-                            // let tmp = data.file_names[0][i].split('/');
-                            // let file_upload = tmp[tmp.length - 1]
-                            // html += '<li>' + file_upload + '</li>';
-                        }
-
-                         */
-
                         html += '</ul>';
 
                         domModule.html('#' + folder, html);

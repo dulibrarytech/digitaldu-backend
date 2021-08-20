@@ -24,13 +24,12 @@
             <div class="clearfix"></div>
             <div class="row">
                 <div class="col-md-12">
-                    <div class="x_panel">
+                    <div class="x_panel" style="visibility: hidden">
                         <div class="x_title">
                             <ul class="nav navbar-right"></ul>
                             <div class="clearfix"></div>
                         </div>
                         <div class="x_content">
-                            <p class="loading"><strong><em>Loading...</em></strong></p>
                             <div id="message"></div>
                             <div id="ready"><p><strong>The QA process validates ingest packages and uploads them to the Archivematica SFTP server.</strong></p></div>
                             <div id="qa-on-ready"></div>
@@ -74,6 +73,7 @@
 <script src="../../app/qa.module.js"></script>
 <script>
     qaModule.init();
+    helperModule.onLoadVisibility('.x_panel', 250);
 </script>
 </body>
 </html>
