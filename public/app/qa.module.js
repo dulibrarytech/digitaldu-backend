@@ -54,15 +54,12 @@ const qaModule = (function () {
 
                 response.json().then(function (response) {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Permission denied.');
-                    // domModule.html('.loading', null);
                 });
 
             } else if (response.status === 500) {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). QA Service is unavailable.');
-                // domModule.html('.loading', null);
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to get ready folders.');
-                // domModule.html('.loading', null);
             }
         };
 
@@ -98,14 +95,14 @@ const qaModule = (function () {
             // Status column
             html += '<td style="text-align: left;vertical-align: middle; width: 30%">';
             html += '<small id="collection-title-' + prop + '"></small>&nbsp;<small id="qa-package-size-' + prop + '"></small>&nbsp;<small id="' + prop + '"></small>';
+            html += '<p id="upload-status-' + prop + '"></p>';
             html += '</td>';
             // Action button column
-            html += '<td style="text-align: center;vertical-align: middle; width: 15%"><a href="#" type="button" class="btn btn-sm btn-default run-qa" onclick="qaModule.runQAonReady(\'' + prop + '\')"><i class="fa fa-cogs"></i> Run QA</a></td>';
+            html += '<td style="text-align: center;vertical-align: middle; width: 15%"><a href="#" type="button" class="btn btn-sm btn-default run-qa" onclick="qaModule.runQAonReady(\'' + prop + '\')"><i class="fa fa-cogs"></i> <span>Run QA/Upload</span></a></td>';
             html += '</tr>';
         }
 
         domModule.html('#qa-folders', html);
-        // domModule.html('.loading', null);
 
         setTimeout(function () {
             $('#qa-folders-tbl').DataTable({
@@ -122,7 +119,8 @@ const qaModule = (function () {
      */
     obj.runQAonReady = function (folder) {
 
-        domModule.html('#' + folder, '<strong><em>Running QA...</em></strong>');
+        domModule.hide('.run-qa');
+        domModule.html('#' + folder, '<strong><em>Running QA and package upload process...</em></strong>');
 
         // send folder name in request
         let url = api + endpoints.qa_run + '?folder=' + folder;
@@ -185,6 +183,7 @@ const qaModule = (function () {
         // Renders when package is empty
         if (data.file_results.length === 0 && data.errors.length > 0) {
             domModule.html('#' + folder, '<i class="fa fa-exclamation-circle" style="color: red"></i> ' + data.message);
+            domModule.show('.run-qa');
             return false;
         }
 
@@ -194,6 +193,7 @@ const qaModule = (function () {
 
         if (data.file_results.length === 0 || data.file_results.local_file_count === undefined) {
             domModule.html('#' + folder, '<i class="fa fa-exclamation-circle" style="color: red"></i> <strong>QA failed. Unable to get package file counts.</strong>');
+            domModule.show('.run-qa');
             return false;
         } else {
             local_file_count = data.file_results.local_file_count;
@@ -201,6 +201,7 @@ const qaModule = (function () {
 
         if (data.file_results.errors.length !== 0) {
 
+            domModule.show('.run-qa');
             file_error = true;
             file_errors += '<p><strong>The following packages have problems with object files:</strong></p>';
 
@@ -227,6 +228,7 @@ const qaModule = (function () {
 
         if (data.uri_errors.length !== 0) {
 
+            domModule.show('.run-qa');
             uri_error = true;
             uri_errors += '<strong>The following packages are missing uri.txt files:</strong><br>';
 
@@ -464,7 +466,14 @@ const qaModule = (function () {
                                 window.onbeforeunload = null;
                                 let message = '<div class="alert alert-success">Package <strong><a href="/dashboard/import?collection=' + pid + '">' + pid + '</a></strong> is ready to be imported.</div>';
                                 domModule.html('#qa-on-ready', message);
+                                domModule.html('#collection-title-' + folder, null);
+                                domModule.html('#package-size-' + folder, null);
                                 domModule.html('#' + folder, '<strong>Complete.</strong>');
+                                // TODO: call endpoint to move sftp data to 003 ingest folder
+                                setTimeout(function () {
+                                    window.location.replace('/dashboard/import?collection=' + pid);
+                                }, 7000);
+
                             }, 60000);
 
                         });
@@ -498,8 +507,6 @@ const qaModule = (function () {
      */
     const checkSftpUploadStatus = function (pid, folder, cb) {
 
-        domModule.html('#' + folder, '<strong><em>Checking SFTP Upload status...</em></strong>');
-
         let token = userModule.getUserToken();
         let url = api + endpoints.qa_upload_status + '?pid=' + pid + '&local_file_count=' + local_file_count,
             request = new Request(url, {
@@ -521,13 +528,13 @@ const qaModule = (function () {
                         cb('complete');
                     } else if (data.message === 'in_progress') {
 
-                        let html = '<p><em>Uploading...</em></p><ul>';
-
+                        let file_upload = data.file_names.pop();
+                        let tmp = file_upload.split('/');
+                        let file = tmp[tmp.length - 1];
+                        let html = '<p><strong><em>Uploading packages to Archivematica SFTP server...</em></strong></p>';
+                        html += '<ul>';
                         html += '<p>' + data.remote_file_count + ' out of ' + data.local_file_count + ' files (' + data.remote_package_size + ')</p>';
-
-                        let tmp = data.file_names[0].split('/');
-                        let file_upload = tmp[tmp.length - 1];
-                        html += '<li>' + file_upload + '</li>';
+                        html += '<li>' + file + '</li>';
                         html += '</ul>';
 
                         domModule.html('#' + folder, html);
