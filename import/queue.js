@@ -28,6 +28,7 @@ const CONFIG = require('../config/config'),
     HANDLES = require('../libs/handles'),
     ARCHIVEMATICA = require('../libs/archivematica'),
     DURACLOUD = require('../libs/duracloud'),
+    TRANSCRIPTS = require('../libs/transcripts'),
     LOGGER = require('../libs/log4'),
     ASYNC = require('async'),
     MOMENT = require('moment'),
@@ -1223,7 +1224,21 @@ exports.create_repo_record = function (req, callback) {
         });
     }
 
+    // TODO: transcript ingest
     // 13.)
+    function get_transcript(obj, callback) {
+
+        console.log(obj);
+        // TODO: get mod record and find call number (identifier)
+        // /api/v1/transcript?api_key=8dFSweim2RyTQ7RyFo52TlW4l72DLVh0&transcript=B002_01_0107_0071_003
+        TRANSCRIPTS.get(obj.sip_uuid, function (result) {
+            obj.transcript = result;
+            console.log(obj);
+            callback(null, obj);
+        });
+    }
+
+    // 14.)
     function index(obj, callback) {
 
         if (obj.failed !== undefined && obj.failed === true) {
@@ -1263,7 +1278,7 @@ exports.create_repo_record = function (req, callback) {
         })();
     }
 
-    // 14.)
+    // 15.)
     function cleanup_queue(obj, callback) {
 
         LOGGER.module().info('INFO: [/import/queue module (create_repo_record/cleanup_queue)] cleaning up local queue ' + obj.sip_uuid);

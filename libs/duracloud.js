@@ -303,7 +303,7 @@ exports.get_thumbnail = function (tn, callback) {
 
             let response = await HTTP.get(endpoint, {
                 timeout: TIMEOUT,
-                headers: HEADER
+                responseType: 'arraybuffer'
             });
 
             if (response.status !== 200) {
@@ -317,11 +317,7 @@ exports.get_thumbnail = function (tn, callback) {
                 });
 
             } else if (response.status === 200) {
-                callback({
-                    error: false,
-                    status: 200,
-                    data: response.data
-                });
+                callback(response.data);
             }
 
             return false;
