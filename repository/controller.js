@@ -113,10 +113,12 @@ exports.ping = function (req, res) {
 exports.get_thumbnail = function (req, res) {
     SERVICE.get_thumbnail(req, function (data) {
 
-        if (data.error === true) {
+        res.set('Content-Type', 'image/jpeg');
+
+        if (data.error !== undefined && data.error === true) {
             res.sendFile(PATH.join(__dirname, '../public', data.data));
         } else {
-            res.status(data.status).end(data.data, 'binary');
+            res.end(data, 'binary');
         }
     });
 };

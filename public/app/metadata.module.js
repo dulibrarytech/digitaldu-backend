@@ -383,7 +383,6 @@ const metadataModule = (function () {
                     parts += '<li><strong>Only showing ' + i + ' out of ' + DOMPurify.sanitize(record.display_record.parts.length) + ' parts.</strong></li>';
                     break;
                 } else {
-
                     parts += '<li>' + DOMPurify.sanitize(record.display_record.parts[i].title) + ' ( ' + DOMPurify.sanitize(record.display_record.parts[i].type) + ' ) order: ' + DOMPurify.sanitize(record.display_record.parts[i].order);
 
                     let tn = helperModule.getTn(DOMPurify.sanitize(record.display_record.parts[i].thumbnail), '');
