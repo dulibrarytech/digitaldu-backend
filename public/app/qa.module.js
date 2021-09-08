@@ -46,29 +46,20 @@ const qaModule = (function () {
             if (response.status === 200) {
 
                 response.json().then(function (data) {
-
                     domModule.html('#message', null);
-
-                    if (data.length === 0) {
-                        domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No folders found.</div>');
-                    } else {
-                        qaModule.renderReadyFolders(data);
-                    }
+                    qaModule.renderReadyFolders(data);
                 });
 
             } else if (response.status === 401) {
 
                 response.json().then(function (response) {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Permission denied.');
-                    domModule.html('.loading', null);
                 });
 
             } else if (response.status === 500) {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). QA Service is unavailable.');
-                domModule.html('.loading', null);
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to get ready folders.');
-                domModule.html('.loading', null);
             }
         };
 
@@ -90,33 +81,48 @@ const qaModule = (function () {
             return false;
         }
 
-        data = data.sort().reverse();
-
-        for (let i = 0; i < data.length; i++) {
+        for (let prop in data) {
 
             html += '<tr>';
-            html += '<td style="text-align: left;vertical-align: middle;">';
-            html += data[i];
+            // collection folder name
+            html += '<td style="text-align: left;vertical-align: middle; width: 55%">';
+            html += '<small>' + prop + '</small>';
             html += '</td>';
-            html += '<td style="text-align: center;vertical-align: middle;"><a href="#" type="button" class="btn btn-sm btn-default" onclick="qaModule.runQAonReady(\'' + data[i] + '\')"><i class="fa fa-cogs"></i> Run QA on packages</a></td>';
+            // package count
+            html += '<td style="text-align: left;vertical-align: middle; width: 8%">';
+            html += '<small>' + data[prop] + '</small>';
+            html += '</td>';
+            // Status column
+            html += '<td style="text-align: left;vertical-align: middle; width: 30%">';
+            html += '<small id="collection-title-' + prop + '"></small>&nbsp;<small id="qa-package-size-' + prop + '"></small>&nbsp;<small id="' + prop + '"></small>';
+            html += '<p id="upload-status-' + prop + '"></p>';
+            html += '</td>';
+            // Action button column
+            html += '<td style="text-align: center;vertical-align: middle; width: 15%"><a href="#" type="button" class="btn btn-sm btn-default run-qa" onclick="qaModule.runQAonReady(\'' + prop + '\')"><i class="fa fa-cogs"></i> <span>Run QA/Upload</span></a></td>';
             html += '</tr>';
         }
 
         domModule.html('#qa-folders', html);
-        domModule.html('.loading', null);
+
+        setTimeout(function () {
+            $('#qa-folders-tbl').DataTable({
+                'order': [[0, 'asc']],
+                'lengthMenu': [[10, 25, 50, -1], [10, 25, 50, 'All']]
+            });
+        }, 150);
     };
 
     /**
-     * Renders missing items
+     * Runs QA on packages and renders problems if any
      * @param folder
      * @returns {boolean}
      */
     obj.runQAonReady = function (folder) {
 
-        let html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; Running QA... <em>This may take a while depending on the size of the collection</em>.</strong></div>';
-        domModule.html('#qa-on-ready', html);
-        domModule.hide('#qa-folders-tbl');
+        domModule.hide('.run-qa');
+        domModule.html('#' + folder, '<strong><em>Running QA and package upload process...</em></strong>');
 
+        // send folder name in request
         let url = api + endpoints.qa_run + '?folder=' + folder;
         let token = userModule.getUserToken();
         let request = new Request(url, {
@@ -165,25 +171,19 @@ const qaModule = (function () {
      */
     const renderQAresults = function (data, folder) {
 
+        domModule.html('#' + folder, 'QA Complete.');
+
         let file_errors = '';
         let uri_errors = '';
+        let file_error = false;
+        let uri_error = false;
         let package_size;
         let errors = [];
 
+        // Renders when package is empty
         if (data.file_results.length === 0 && data.errors.length > 0) {
-
-            domModule.html('#message', '<div class="alert alert-danger"><strong>' + data.message + '</strong></a></div>');
-            domModule.html('#qa-on-ready', null);
-
-            let html = '<ul>';
-
-            for (let i=0;i<data.errors.length;i++) {
-                html += '<li>' + data.errors[i] + '</li>';
-            }
-
-            html += '</ul>';
-            html+= '<p><br><a href="/dashboard/qa" type="button"><i class="fa fa-arrow-left"></i> Return to folder list</a></p>';
-            domModule.html('#ready', html);
+            domModule.html('#' + folder, '<i class="fa fa-exclamation-circle" style="color: red"></i> ' + data.message);
+            domModule.show('.run-qa');
             return false;
         }
 
@@ -192,20 +192,17 @@ const qaModule = (function () {
         }
 
         if (data.file_results.length === 0 || data.file_results.local_file_count === undefined) {
-            domModule.html('#message', '<div class="alert alert-danger"><strong>QA failed. Unable to get package file counts.</strong></a></div>');
-            domModule.html('#qa-on-ready', null);
+            domModule.html('#' + folder, '<i class="fa fa-exclamation-circle" style="color: red"></i> <strong>QA failed. Unable to get package file counts.</strong>');
+            domModule.show('.run-qa');
             return false;
         } else {
             local_file_count = data.file_results.local_file_count;
         }
 
-        if (data.file_results.errors.length === 0) {
+        if (data.file_results.errors.length !== 0) {
 
-            file_errors += '<p><strong><i class="fa fa-check-circle"></i> No missing objects in packages.</strong></p>';
-
-        } else {
-
-            domModule.html('#qa-on-ready', null);
+            domModule.show('.run-qa');
+            file_error = true;
             file_errors += '<p><strong>The following packages have problems with object files:</strong></p>';
 
             for (let i = 0; i < data.file_results.errors.length; i++) {
@@ -213,14 +210,14 @@ const qaModule = (function () {
                 if (data.file_results.errors[i].error !== undefined && data.file_results.errors[i].file !== undefined) {
                     file_errors += '<article class="media event">';
                     file_errors += '<div class="media-body">';
-                    file_errors += '<p><i class="fa fa-exclamation-circle"></i> ' + data.file_results.errors[i].file + ' - Error: ' + data.file_results.errors[i].error + '</p>';
+                    file_errors += '<p><i class="fa fa-exclamation-circle" style="color: red"></i> ' + data.file_results.errors[i].file + ' - Error: ' + data.file_results.errors[i].error + '</p>';
                     file_errors += '<p></p>';
                     file_errors += '</div>';
                     file_errors += '</article>';
                 } else {
                     file_errors += '<article class="media event">';
                     file_errors += '<div class="media-body">';
-                    file_errors += '<p><i class="fa fa-exclamation-circle"></i> ' + data.file_results.errors[i] + '</p>';
+                    file_errors += '<p><i class="fa fa-exclamation-circle" style="color: red"></i> ' + data.file_results.errors[i] + '</p>';
                     file_errors += '</div>';
                     file_errors += '</article>';
                 }
@@ -229,19 +226,16 @@ const qaModule = (function () {
             errors.push('-1');
         }
 
-        if (data.uri_errors.length === 0) {
+        if (data.uri_errors.length !== 0) {
 
-            uri_errors += '<p><strong><i class="fa fa-check-circle"></i> No missing uri.txt files in packages.</strong></p>';
-
-        } else {
-
-            domModule.html('#qa-on-ready', null);
-            uri_errors += '<p><strong>The following packages are missing uri.txt files:</strong></p>';
+            domModule.show('.run-qa');
+            uri_error = true;
+            uri_errors += '<strong>The following packages are missing uri.txt files:</strong><br>';
 
             for (let i = 0; i < data.uri_errors.length; i++) {
                 uri_errors += '<article class="media event">';
                 uri_errors += '<div class="media-body">';
-                uri_errors += '<p><i class="fa fa-exclamation-circle"></i> ' + data.uri_errors[i] + '</p>';
+                uri_errors += '<p><i class="fa fa-exclamation-circle" style="color: red"></i> ' + data.uri_errors[i] + '</p>';
                 uri_errors += '</div>';
                 uri_errors += '</article>';
             }
@@ -264,12 +258,12 @@ const qaModule = (function () {
         }
 
         domModule.html('#ready', '<h2>' + folder + '</h2>');
-        domModule.html('#qa-folders', null);
-        domModule.html('#qa-results-missing-files-content', file_errors);
-        domModule.html('#qa-results-missing-uris-content', uri_errors);
-        domModule.html('#qa-package-size', 'Collection size: ' + format_package_size(package_size) + ' - ' + local_file_count + ' files.');
-        domModule.show('#qa-results-missing-files-panel');
-        domModule.show('#qa-results-missing-uris-panel');
+
+        if (file_error === true || uri_error === true) {
+            domModule.html('#' + folder, '&nbsp;<strong><i class="fa fa-exclamation-circle" style="color: red"></i>&nbsp;Errors Found.</strong>&nbsp;' + file_errors + '<br>' + uri_errors + '<br>');
+        }
+
+        domModule.html('#qa-package-size-' + folder, '(' + format_package_size(package_size) + ' - ' + local_file_count + ' files.)<br>');
 
         if (errors.length === 0) {
 
@@ -281,7 +275,6 @@ const qaModule = (function () {
             let uri_part = parts.pop().replace('_', '/');
 
             checkCollection(uri_part, folder);
-            domModule.show('#qa-status-panel');
         }
     };
 
@@ -291,7 +284,7 @@ const qaModule = (function () {
      */
     const checkCollection = function (uri, folder) {
 
-        domModule.html('#processing-message', '<em>Checking collection...</em>');
+        domModule.html('#' + folder, '<strong><em>Checking collection...</em></strong>');
 
         let token = userModule.getUserToken();
         let url = api + endpoints.qa_check_collection + '?uri=/repositories/2/' + uri,
@@ -312,7 +305,8 @@ const qaModule = (function () {
 
                     if (data.length === 0) {
 
-                        domModule.html('#collection-title', 'Creating collection...');
+                        domModule.html('#collection-title-' + folder, 'Creating collection...');
+
                         let obj = {};
                         obj.uri = '/repositories/2/' + uri;
                         obj.is_member_of_collection = configModule.getRootPid();
@@ -334,7 +328,7 @@ const qaModule = (function () {
                             if (response.status === 201) {
 
                                 response.json().then(function (data) {
-                                    domModule.html('#collection-title', 'Collection created.');
+                                    domModule.html('#collection-title-' + folder, 'Collection created.');
                                     checkCollection(uri, folder);
                                 });
 
@@ -359,8 +353,8 @@ const qaModule = (function () {
                         httpModule.req(request, callback);
 
                     } else {
-
-                        domModule.html('#collection-title', data.title);
+                        domModule.html('#ready', '<h2>' + data.title + '</h2>');
+                        domModule.html('#collection-title-' + folder, data.title + '<br>');
                         moveToIngest(data.pid, folder);
                     }
                 });
@@ -393,7 +387,7 @@ const qaModule = (function () {
      */
     const moveToIngest = function (pid, folder) {
 
-        domModule.html('#processing-message', '<em>Preparing packages for ingest...</em>');
+        domModule.html('#' + folder, '<strong><em>Preparing packages for ingest...</em></strong>');
 
         let token = userModule.getUserToken();
         let url = api + endpoints.qa_move_to_ingest + '?pid=' + pid + '&folder=' + folder,
@@ -411,7 +405,7 @@ const qaModule = (function () {
             if (response.status === 200) {
 
                 response.json().then(function (data) {
-                    domModule.html('#processing-message', '<strong>Packages moved to ingest folder.</strong>');
+                    domModule.html('#' + folder, '<strong>Packages moved to ingest folder.</strong>');
                     moveToSftp(pid, folder);
                 });
 
@@ -443,7 +437,7 @@ const qaModule = (function () {
      */
     const moveToSftp = function (pid, folder) {
 
-        domModule.html('#processing-message', '<em>Uploading to Archivematica SFTP server...</em>');
+        domModule.html('#' + folder, '<strong><em>Uploading packages to Archivematica SFTP server...</em></strong>');
 
         let token = userModule.getUserToken();
         let url = api + endpoints.qa_move_to_sftp + '?pid=' + pid + '&folder=' + folder,
@@ -462,19 +456,28 @@ const qaModule = (function () {
 
                 response.json().then(function (data) {
 
-                    let timer = setInterval(function() {
-                        checkSftpUploadStatus(pid, function(results) {
+                    let timer = setInterval(function () {
+
+                        checkSftpUploadStatus(pid, folder, function (results) {
+
                             clearInterval(timer);
 
-                            setTimeout(function() {
+                            setTimeout(function () {
                                 window.onbeforeunload = null;
                                 let message = '<div class="alert alert-success">Package <strong><a href="/dashboard/import?collection=' + pid + '">' + pid + '</a></strong> is ready to be imported.</div>';
                                 domModule.html('#qa-on-ready', message);
-                                domModule.html('#processing-message', '<strong>Complete.</strong>');
+                                domModule.html('#collection-title-' + folder, null);
+                                domModule.html('#package-size-' + folder, null);
+                                domModule.html('#' + folder, '<strong>Complete.</strong>');
+                                // TODO: call endpoint to move sftp data to 003 ingest folder
+                                setTimeout(function () {
+                                    window.location.replace('/dashboard/import?collection=' + pid);
+                                }, 7000);
+
                             }, 60000);
 
                         });
-                    }, 30000);
+                    }, 30000);  // 60000*2
                 });
 
                 return false;
@@ -502,9 +505,7 @@ const qaModule = (function () {
      * Checks status of sftp upload
      * @param pid
      */
-    const checkSftpUploadStatus = function(pid, cb) {
-
-        domModule.html('#processing-message', '<em>Checking SFTP Upload...</em>');
+    const checkSftpUploadStatus = function (pid, folder, cb) {
 
         let token = userModule.getUserToken();
         let url = api + endpoints.qa_upload_status + '?pid=' + pid + '&local_file_count=' + local_file_count,
@@ -527,16 +528,16 @@ const qaModule = (function () {
                         cb('complete');
                     } else if (data.message === 'in_progress') {
 
-                        let html = '<p><em>Uploading...</em></p><ul>';
-
-                        for (let i = 0; i<data.data[0].length;i++) {
-                            let file_upload = data.data[0][i];
-                            html += '<li>' + file_upload + '</li>';
-                        }
-
+                        let file_upload = data.file_names.pop();
+                        let tmp = file_upload.split('/');
+                        let file = tmp[tmp.length - 1];
+                        let html = '<p><strong><em>Uploading packages to Archivematica SFTP server...</em></strong></p>';
+                        html += '<ul>';
+                        html += '<p>' + data.remote_file_count + ' out of ' + data.local_file_count + ' files (' + data.remote_package_size + ')</p>';
+                        html += '<li>' + file + '</li>';
                         html += '</ul>';
 
-                        domModule.html('#processing-message', html);
+                        domModule.html('#' + folder, html);
                     }
                 });
 

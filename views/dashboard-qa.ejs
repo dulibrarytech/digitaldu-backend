@@ -16,82 +16,41 @@
         </div>
         <% include partials/top-nav.ejs %>
         <div class="right_col" role="main">
-            <div class="">
-                <div class="page-title">
-                    <div class="title_left">
-                        <h3> QA</h3>
-                    </div>
+            <div class="page-title">
+                <div class="title_left">
+                    <h3> Ingest package QA and Upload</h3>
                 </div>
-                <div class="clearfix"></div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="x_panel">
-                            <div class="x_title">
-                                <ul class="nav navbar-right"></ul>
-                                <div class="clearfix"></div>
-                            </div>
-                            <div class="x_content">
-                                <p class="loading"><strong><em>Loading...</em></strong></p>
-                                <div id="message"></div>
-                                <div id="ready"></div>
-                                <div id="qa-on-ready"></div>
-                                <table id="qa-folders-tbl" class="table table-striped table-bordered">
-                                    <thead>
-                                    <tr>
-                                        <th style="text-align: center; vertical-align: middle">Folder Name</th>
-                                        <th style="text-align: center; vertical-align: middle">Action</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody id="qa-folders"></tbody>
-                                </table>
-                                <!-- panels -->
-                                <div class="row">
-                                    <div class="col-md-4" id="qa-results-missing-files-panel" style="display: none">
-                                        <div class="x_panel">
-                                            <div class="x_title">
-                                                <h3>Object <small>issues</small></h3>
-                                                <div class="clearfix"></div>
-                                            </div>
-                                            <div class="x_content" id="qa-results-missing-files-content"></div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4" id="qa-results-missing-uris-panel" style="display: none">
-                                        <div class="x_panel">
-                                            <div class="x_title">
-                                                <h3>URI.txt <small>issues</small></h3>
-                                                <div class="clearfix"></div>
-                                            </div>
-                                            <div class="x_content" id="qa-results-missing-uris-content"></div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4" style="display: none" id="qa-status-panel">
-                                        <div class="x_panel">
-                                            <div class="x_title">
-                                                <h3>QA Status</h3>
-                                                <div class="clearfix"></div>
-                                            </div>
-                                            <p id="collection-title"></p>
-                                            <p id="qa-package-size"></p>
-                                            <div id="processing-message"></div>
-                                            <div class="x_content" id="qa-collection-form-content">
-                                                <!-- Active when new form needs to be created -->
-                                                <!--
-                                                <form id="qa-collection-form">
-                                                    <label for="resource-uri" id="resource-uri-display"></label>
-                                                    <input id="resource-uri" type="hidden" value="">
-                                                </form>
-                                                -->
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+            </div>
+            <div class="clearfix"></div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="x_panel" style="visibility: hidden">
+                        <div class="x_title">
+                            <ul class="nav navbar-right"></ul>
+                            <div class="clearfix"></div>
                         </div>
+                        <div class="x_content">
+                            <div id="message"></div>
+                            <div id="ready"><p><strong>The QA process validates ingest packages and uploads them to the Archivematica SFTP server.</strong></p></div>
+                            <div id="qa-on-ready"></div>
+                        </div>
+                        <table id="qa-folders-tbl" class="table table-striped table-bordered">
+                            <thead>
+                            <tr>
+                                <th>Collection Folder</th>
+                                <th>Packages</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                            </thead>
+                            <tbody id="qa-folders"></tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 </div>
 <% include partials/footer.ejs %>
 </div>
@@ -102,6 +61,7 @@
 <script src="../../libs/dompurify/purify.min.js"></script>
 <script src="../../libs/moment/moment.min.js"></script>
 <script src="../../libs/moment/moment.timezone.js"></script>
+<script src="../../libs/datatables/datatables.min.js"></script>
 <script src="../../assets/js/theme_sidebar.js"></script>
 <script src="../../app/dom.module.js"></script>
 <script src="../../app/config.module.js"></script>
@@ -113,6 +73,7 @@
 <script src="../../app/qa.module.js"></script>
 <script>
     qaModule.init();
+    helperModule.onLoadVisibility('.x_panel', 250);
 </script>
 </body>
 </html>

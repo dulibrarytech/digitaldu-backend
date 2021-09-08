@@ -29,11 +29,11 @@ const CONFIG = require('../config/config'),
  * @param req
  * @param callback
  */
-exports.get_list_ready = function(req, callback) {
+exports.get_list_ready = function (req, callback) {
 
     let qaUrl = CONFIG.qaUrl + '/api/v1/qa/list-ready?api_key=' + CONFIG.qaApiKey;
 
-    (async() => {
+    (async () => {
 
         try {
 
@@ -72,17 +72,21 @@ exports.get_list_ready = function(req, callback) {
  * @param req
  * @param callback
  */
-exports.get_ready_folder = function(req, callback) {
+exports.get_ready_folder = function (req, callback) {
 
     let folder = req.query.folder;
     let qaUrl = CONFIG.qaUrl + '/api/v1/qa/run-qa?folder=' + folder + '&api_key=' + CONFIG.qaApiKey;
 
-    (async() => {
+    (async () => {
 
         try {
 
             let response = await HTTP.get(qaUrl, {
-                timeout: 25000,
+                httpAgent: new KA.Agent({
+                    keepAlive: true,
+                    maxSockets: 1,
+                    keepAliveMsecs: 3000
+                }),
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -120,18 +124,23 @@ exports.get_ready_folder = function(req, callback) {
  * @param req
  * @param callback
  */
-exports.move_to_ingest = function(req, callback) {
+exports.move_to_ingest = function (req, callback) {
 
     let pid = req.query.pid;
     let folder = req.query.folder;
     let qaUrl = CONFIG.qaUrl + '/api/v1/qa/move-to-ingest?pid=' + pid + '&folder=' + folder + '&api_key=' + CONFIG.qaApiKey;
 
-    (async() => {
+    (async () => {
 
         try {
 
             let response = await HTTP.get(qaUrl, {
-                // httpAgent: new KA.Agent({ keepAlive: true }),
+                httpAgent: new KA.Agent({
+                    keepAlive: true,
+                    maxSockets: 1,
+                    keepAliveMsecs: 3000
+                }),
+                timeout: 60000 * 30,
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -169,17 +178,22 @@ exports.move_to_ingest = function(req, callback) {
  * @param req
  * @param callback
  */
-exports.move_to_sftp = function(req, callback) {
+exports.move_to_sftp = function (req, callback) {
 
     let pid = req.query.pid;
     let folder = req.query.folder;
     let qaUrl = CONFIG.qaUrl + '/api/v1/qa/move-to-sftp?pid=' + pid + '&folder=' + folder + '&api_key=' + CONFIG.qaApiKey;
 
-    (async() => {
+    (async () => {
 
         try {
 
             let response = await HTTP.get(qaUrl, {
+                httpAgent: new KA.Agent({
+                    keepAlive: true,
+                    maxSockets: 1,
+                    keepAliveMsecs: 3000
+                }),
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -213,24 +227,28 @@ exports.move_to_sftp = function(req, callback) {
  * @param req
  * @param callback
  */
-exports.upload_status = function(req, callback) {
+exports.upload_status = function (req, callback) {
 
     let pid = req.query.pid;
     let local_file_count = req.query.local_file_count;
     let qaUrl = CONFIG.qaUrl + '/api/v1/qa/upload-status?pid=' + pid + '&local_file_count=' + local_file_count + '&api_key=' + CONFIG.qaApiKey;
 
-    (async() => {
+    (async () => {
 
         try {
 
             let response = await HTTP.get(qaUrl, {
+                httpAgent: new KA.Agent({
+                    keepAlive: true,
+                    maxSockets: 1,
+                    keepAliveMsecs: 3000
+                }),
                 headers: {
                     'Content-Type': 'application/json'
                 }
             });
 
             if (response.status === 200) {
-                // LOGGER.module().info('INFO: [/qa/service module (upload_status)] Uploading to sftp');
 
                 callback({
                     status: 200,
