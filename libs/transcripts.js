@@ -31,6 +31,7 @@ const HTTP = require("../libs/http");
 exports.get = function (sip_uuid) {
 
     // TODO: async/await
+
     DB(REPO_OBJECTS)
         .select('mods')
         .where({
