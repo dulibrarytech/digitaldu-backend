@@ -19,66 +19,40 @@
 'use strict';
 
 const CONFIG = require('../config/config'),
-    DB = require('../config/db')(),
     LOGGER = require('../libs/log4'),
-    REPO_OBJECTS = 'tbl_objects';
-const HTTP = require("../libs/http");
+    HTTP = require('axios'),
+    TIMEMOUT = 35000;
 
 /**
- *
- * @param call_number
+ * Gets transcript
+ * @param data
  */
-exports.get = function (sip_uuid) {
+exports.get = function (data, callback) {
 
-    // TODO: async/await
+    let mods = JSON.parse(data);
+    let call_number = mods.identifiers.map(function (obj) {
 
-    DB(REPO_OBJECTS)
-        .select('mods')
-        .where({
-            sip_uuid: sip_uuid,
-        })
-        .then(function (data) {
+        if (obj.type === 'local') {
+            return obj.identifier;
+        }
+    });
 
-            console.log(data);
+    (async () => {
 
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/libs/transcript lib (get)] Unable to get mods record ' + error);
-            return false;
+        let endpoint = CONFIG.transcriptService + '/api/v1/transcript?call_number=' + call_number + '&api_key=' + CONFIG.transcriptServiceApiKey;
+        let response = await HTTP.get(endpoint, {
+            timeout: TIMEMOUT,
+            headers: {
+                'Content-Type': 'application/json'
+            }
         });
 
-    /*
-        (async () => {
-
-            let params = {
-                transcript: 'callNumber'
-            };
-
-            let response = await HTTP.get({
-                endpoint: '/api/v1/transcript',
-                params: params
-            });
-
-            if (response.error === true) {
-                // TODO: Update record here
-                // LOGGER.module().fatal('FATAL: [/import/queue module (import_dip/archivematica.get_dip_path/duracloud.get_mets/TRANSFER_INGEST.save_mets_data)] create repo record request error.');
-                // throw 'FATAL: [/import/queue module (import_dip/archivematica.get_dip_path/duracloud.get_mets/TRANSFER_INGEST.save_mets_data)] create repo record request error.';
-            } else if (response.data.status === 200) {
-                callback(null, obj);
-            }
-
-        })();
-
-         */
-
-    /*
-    "identifiers": [
-        {
-            "type": "local",
-            "identifier": "B002.01.0098.0002.00020"
+        if (response.status === 200) {
+            callback(response.data.transcript);
+        } else {
+            LOGGER.module().error('ERROR: [/libs/transcript lib (get)] Unable to get transcript.');
+            callback('error');
         }
-    ],
 
-     */
-
+    })();
 };

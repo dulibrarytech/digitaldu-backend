@@ -969,7 +969,7 @@ exports.create_repo_record = function (req, callback) {
 
                 obj.full_path = obj.file_name;
                 obj.object_name = obj.uuid + '-' + obj.file;
-                DURACLOUD.convert_service(obj);
+                // TODO: test DURACLOUD.convert_service(obj);
                 delete obj.full_path;
                 delete obj.object_name;
                 callback(null, obj);
@@ -1224,17 +1224,17 @@ exports.create_repo_record = function (req, callback) {
         });
     }
 
-    // TODO: transcript ingest
     // 13.)
     function get_transcript(obj, callback) {
 
-        console.log(obj);
-        // TODO: get mod record and find call number (identifier)
-        // /api/v1/transcript?api_key=8dFSweim2RyTQ7RyFo52TlW4l72DLVh0&transcript=B002_01_0107_0071_003
-        TRANSCRIPTS.get(obj.sip_uuid, function (result) {
-            obj.transcript = result;
-            console.log(obj);
-            callback(null, obj);
+        TRANSCRIPTS.get(obj.mods, function (result) {
+
+            if (result === 'error') {
+                callback(null, obj);
+            } else {
+                obj.transcript = result;
+                callback(null, obj);
+            }
         });
     }
 
@@ -1310,6 +1310,7 @@ exports.create_repo_record = function (req, callback) {
         get_handle,
         create_display_record,
         create_repo_record,
+        get_transcript,
         index,
         cleanup_queue
     ], function (error, results) {
