@@ -19,21 +19,24 @@
 'use strict';
 
 const CONFIG = require('../config/config'),
+    DB = require('../config/db')(),
     LOGGER = require('../libs/log4'),
     HTTP = require('axios'),
+    REPO_OBJECTS = 'tbl_objects',
     TIMEMOUT = 35000;
 
 /**
  * Gets transcript
- * @param data
+ * @param obj
+ * @param callback
  */
-exports.get = function (data, callback) {
+exports.get = function (obj, callback) {
 
-    let mods = JSON.parse(data);
-    let call_number = mods.identifiers.map(function (obj) {
+    let mods = JSON.parse(obj.mods);
+    let call_number = mods.identifiers.map(function (node) {
 
-        if (obj.type === 'local') {
-            return obj.identifier;
+        if (node.type === 'local') {
+            return node.identifier;
         }
     });
 
@@ -48,11 +51,35 @@ exports.get = function (data, callback) {
         });
 
         if (response.status === 200) {
+            save(obj.sip_uuid, response.data.transcript);
             callback(response.data.transcript);
         } else {
-            LOGGER.module().error('ERROR: [/libs/transcript lib (get)] Unable to get transcript.');
-            callback('error');
+            LOGGER.module().info('INFO: [/libs/transcript lib (get)] No transcript found for this record.');
+            callback('no_transcript');
         }
 
     })();
+};
+
+/**
+ * Save transcript to repo record
+ * @param obj
+ */
+const save = function (sip_uuid, transcript) {
+
+    DB(REPO_OBJECTS)
+        .where({
+            sip_uuid: sip_uuid
+        })
+        .update({
+            transcript: transcript
+        })
+        .then(function(data) {
+            console.log(data);
+            callback(true);
+        })
+        .catch(function (error) {
+            LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (update_queue)] unable to update queue ' + error);
+            throw 'FATAL: [/libs/transfer-ingest lib (update_queue)] unable to update queue ' + error;
+        });
 };

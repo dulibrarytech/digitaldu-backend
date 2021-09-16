@@ -1226,10 +1226,10 @@ exports.create_repo_record = function (req, callback) {
 
     // 13.)
     function get_transcript(obj, callback) {
+        // TODO: pass in full obj
+        TRANSCRIPTS.get(obj, function (result) {
 
-        TRANSCRIPTS.get(obj.mods, function (result) {
-
-            if (result === 'error') {
+            if (result === 'no_transcript') {
                 callback(null, obj);
             } else {
                 obj.transcript = result;
@@ -1270,6 +1270,7 @@ exports.create_repo_record = function (req, callback) {
                 LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/index)] indexer error.');
                 return false;
             } else if (response.data.status === 201) {
+                // TODO: save to db record here
                 obj.indexed = true;
                 callback(null, obj);
                 return false;
