@@ -969,7 +969,7 @@ exports.create_repo_record = function (req, callback) {
 
                 obj.full_path = obj.file_name;
                 obj.object_name = obj.uuid + '-' + obj.file;
-                // TODO: test DURACLOUD.convert_service(obj);
+                DURACLOUD.convert_service(obj);
                 delete obj.full_path;
                 delete obj.object_name;
                 callback(null, obj);
@@ -1141,8 +1141,22 @@ exports.create_repo_record = function (req, callback) {
     }
 
     // 11.)
-    function create_display_record(obj, callback) {
+    function get_transcript(obj, callback) {
 
+        TRANSCRIPTS.get(obj, function (result) {
+
+            if (result === 'no_transcript') {
+                callback(null, obj);
+            } else {
+                obj.transcript = result;
+                callback(null, obj);
+            }
+        });
+    }
+
+    // 12.)
+    function create_display_record(obj, callback) {
+        console.log(obj);
         if (obj.failed !== undefined && obj.failed === true) {
             callback(null, obj);
             return false;
@@ -1202,7 +1216,7 @@ exports.create_repo_record = function (req, callback) {
         });
     }
 
-    // 12.)
+    // 13.)
     function create_repo_record(obj, callback) {
 
         if (obj.failed !== undefined && obj.failed === true) {
@@ -1221,20 +1235,6 @@ exports.create_repo_record = function (req, callback) {
 
         TRANSFER_INGEST.create_repo_record(obj, function (result) {
             callback(null, obj);
-        });
-    }
-
-    // 13.)
-    function get_transcript(obj, callback) {
-        // TODO: pass in full obj
-        TRANSCRIPTS.get(obj, function (result) {
-
-            if (result === 'no_transcript') {
-                callback(null, obj);
-            } else {
-                obj.transcript = result;
-                callback(null, obj);
-            }
         });
     }
 
@@ -1270,7 +1270,6 @@ exports.create_repo_record = function (req, callback) {
                 LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/index)] indexer error.');
                 return false;
             } else if (response.data.status === 201) {
-                // TODO: save to db record here
                 obj.indexed = true;
                 callback(null, obj);
                 return false;
@@ -1309,9 +1308,9 @@ exports.create_repo_record = function (req, callback) {
         get_token,
         get_mods,
         get_handle,
+        get_transcript,
         create_display_record,
         create_repo_record,
-        get_transcript,
         index,
         cleanup_queue
     ], function (error, results) {
