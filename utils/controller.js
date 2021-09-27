@@ -46,6 +46,12 @@ exports.batch_convert = function (req, res) {
     });
 };
 
+exports.load_transcripts = function (req, res) {
+    UTILS.load_transcripts(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
 exports.batch_fix = function (req, res) {
     UTILS.batch_fix(req, function (data) {
         res.status(data.status).send(data.data);

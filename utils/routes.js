@@ -40,6 +40,9 @@ module.exports = function (app) {
     app.route('/api/admin/v1/utils/batch_convert')
         .post(TOKEN.verify, UTILS.batch_convert);
 
+    app.route('/api/admin/v1/utils/load_transcripts')
+        .post(TOKEN.verify, UTILS.batch_convert);
+
     app.route('/api/admin/v1/utils/batch_fix')
         .post(TOKEN.verify, UTILS.batch_fix);
 };

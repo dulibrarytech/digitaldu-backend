@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2021 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ const CONFIG = require('../config/config'),
     TIMEMOUT = 35000;
 
 /**
- * Gets transcript
+ * Gets transcript during ingest process
  * @param obj
  * @param callback
  */
@@ -62,8 +62,9 @@ exports.get = function (obj, callback) {
 };
 
 /**
- * Save transcript to repo record
- * @param obj
+ * Save transcript to repo DB record during ingest process
+ * @param sip_uuid
+ * @param transcript
  */
 const save = function (sip_uuid, transcript) {
 
@@ -82,4 +83,45 @@ const save = function (sip_uuid, transcript) {
             LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (update_queue)] unable to update queue ' + error);
             throw 'FATAL: [/libs/transfer-ingest lib (update_queue)] unable to update queue ' + error;
         });
+};
+
+/**
+ * Loads transcripts from transcript service
+ */
+exports.load = function () {
+
+    // TODO: get all transcripts from service
+    // 1.) gets array of folder names containing call numbers
+    // 2.) Loop through call numbers (folder names)
+
+    /*
+    let mods = JSON.parse(obj.mods);
+    let call_number = mods.identifiers.map(function (node) {
+
+        if (node.type === 'local') {
+            return node.identifier;
+        }
+    });
+
+     */
+
+    (async () => {
+
+        let endpoint = CONFIG.transcriptService + '/api/v1/transcript?call_number=' + call_number + '&api_key=' + CONFIG.transcriptServiceApiKey;
+        let response = await HTTP.get(endpoint, {
+            timeout: TIMEMOUT,
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.status === 200) {
+            save(obj.sip_uuid, response.data.transcript);
+            callback(response.data.transcript);
+        } else {
+            LOGGER.module().info('INFO: [/libs/transcript lib (get)] No transcript found for this record.');
+            callback('no_transcript');
+        }
+
+    })();
 };

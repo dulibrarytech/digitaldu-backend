@@ -28,6 +28,7 @@ const CONFIG = require('../config/config'),
     ARCHIVEMATICA = require('../libs/archivematica'),
     SERVICE = require('../repository/service'),
     LOGGER = require('../libs/log4'),
+    CACHE = require('../libs/cache'),
     DB = require('../config/db')(),
     DBQ = require('../config/dbqueue')(),
     REPO_OBJECTS = 'tbl_objects',
@@ -112,7 +113,7 @@ const update_fragment = function (sip_uuid, is_published, callback) {
  * @param sip_uuid
  * @param callback
  */
-const index = function(sip_uuid, callback) {
+const index = function (sip_uuid, callback) {
 
     (async () => {
 
@@ -209,8 +210,9 @@ function update_display_record(obj, callback) {
                 .update({
                     display_record: JSON.stringify(display_record)
                 })
-                .then(function () {})
-                .catch(function(error) {
+                .then(function () {
+                })
+                .catch(function (error) {
                     LOGGER.module().error('ERROR: [/repository/model module (update_display_record)] unable to update display record. ' + error);
                 });
         }
@@ -225,7 +227,7 @@ function update_display_record(obj, callback) {
  * @param sip_uuid
  * @param callback
  */
-const unindex = function(sip_uuid, callback) {
+const unindex = function (sip_uuid, callback) {
 
     (async () => {
 
@@ -326,112 +328,78 @@ exports.update_thumbnail = function (req, callback) {
         .then(function (data) {
 
             // Get existing record from repository
-            DB(REPO_OBJECTS)
-                .select('*')
-                .where({
-                    pid: obj.pid,
-                    is_active: 1
-                })
-                .then(function (data) {
+            MODS.get_display_record_data(obj.pid, function (recordObj) {
 
-                    if (data.length === 0) {
-                        LOGGER.module().info('INFO: [/repository/model module (update_thumbnail)] There were no repository records found to update');
-                        return false;
-                    }
+                MODS.create_display_record(recordObj, function (result) {
 
-                    let recordObj = {};
-                    recordObj.pid = VALIDATOR.escape(data[0].pid);
-                    recordObj.is_member_of_collection = VALIDATOR.escape(data[0].is_member_of_collection);
-                    recordObj.object_type = VALIDATOR.escape(data[0].object_type);
-                    recordObj.sip_uuid = VALIDATOR.escape(data[0].sip_uuid);
-                    recordObj.handle = data[0].handle;
-                    recordObj.entry_id = data[0].entry_id;
-                    recordObj.thumbnail = data[0].thumbnail;
-                    recordObj.object = data[0].file_name;
-                    recordObj.mime_type = data[0].mime_type;
-                    recordObj.mods = data[0].mods;
-                    recordObj.is_published = data[0].is_published;
+                    let tmp = JSON.parse(result);
 
-                    MODS.create_display_record(recordObj, function (result) {
+                    if (tmp.is_compound === 1 && tmp.object_type !== 'collection') {
 
-                        let tmp = JSON.parse(result);
+                        let currentRecord = JSON.parse(data[0].display_record),
+                            currentCompoundParts = currentRecord.display_record.parts;
 
-                        if (tmp.is_compound === 1 && tmp.object_type !== 'collection') {
+                        delete tmp.display_record.parts;
+                        delete tmp.compound;
 
-                            let currentRecord = JSON.parse(data[0].display_record),
-                                currentCompoundParts = currentRecord.display_record.parts;
-
-                            delete tmp.display_record.parts;
-                            delete tmp.compound;
-
-                            if (currentCompoundParts !== undefined) {
-                                tmp.display_record.parts = currentCompoundParts;
-                                tmp.compound = currentCompoundParts;
-                            }
-
-                            obj.display_record = JSON.stringify(tmp);
-
-                        } else if (tmp.is_compound === 0 || tmp.object_type === 'collection') {
-                            obj.display_record = result;
+                        if (currentCompoundParts !== undefined) {
+                            tmp.display_record.parts = currentCompoundParts;
+                            tmp.compound = currentCompoundParts;
                         }
 
-                        DB(REPO_OBJECTS)
-                            .where({
-                                is_member_of_collection: recordObj.is_member_of_collection,
-                                pid: recordObj.pid,
-                                is_active: 1
-                            })
-                            .update({
-                                display_record: obj.display_record
-                            })
-                            .then(function (data) {
+                        obj.display_record = JSON.stringify(tmp);
 
-                                index(recordObj.sip_uuid, function(result) {
+                    } else if (tmp.is_compound === 0 || tmp.object_type === 'collection') {
+                        obj.display_record = result;
+                    }
 
-                                    if (result.error === true) {
-                                        LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail.');
+                    let where_obj = {
+                        is_member_of_collection: recordObj.is_member_of_collection,
+                        pid: recordObj.pid,
+                        is_active: 1
+                    };
 
-                                        callback({
-                                            error: true,
-                                            error_message: 'ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail.'
-                                        });
+                    MODS.update_display_record(where_obj, obj.display_record, function (result) {
 
-                                        if (recordObj.is_published === 1) {
+                        index(recordObj.sip_uuid, function (result) {
 
-                                            // wait to make sure updated admin record is ready
-                                            setTimeout(function () {
+                            if (result.error === true) {
+                                LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail.');
 
-                                                let match_phrase = {
-                                                    'pid': recordObj.sip_uuid
-                                                };
-
-                                                reindex(match_phrase, function (result) {
-
-                                                    if (result.error === true) {
-                                                        LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail ' + response.error);
-                                                    }
-
-                                                    return false;
-                                                });
-                                            }, 7000);
-                                        }
-                                    }
-
-                                    return false;
+                                callback({
+                                    error: true,
+                                    error_message: 'ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail.'
                                 });
-                            })
-                            .catch(function (error) {
-                                LOGGER.module().fatal('FATAL: [/repository/model module (update_thumbnail/create_display_record/MODS.create_display_record)] unable to update display record ' + error);
-                                throw 'FATAL: [/repository/model module (update_thumbnail/create_display_record/MODS.create_display_record)] unable to update display record ' + error;
-                            });
-                    });
+                            }
 
-                    return null;
-                })
-                .catch(function (error) {
-                    LOGGER.module().fatal('FATAL: [/repository/model module (update_thumbnail)] unable to get mods update records ' + error);
-                    throw 'FATAL: [/repository/model module (update_thumbnail)] unable to get mods update records ' + error;
+                            if (recordObj.is_published === 1) {
+
+                                // wait to make sure updated admin record is ready
+                                setTimeout(function () {
+
+                                    let match_phrase = {
+                                        'pid': recordObj.sip_uuid
+                                    };
+
+                                    reindex(match_phrase, function (result) {
+
+                                        if (result.error === true) {
+                                            LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail ' + response.error);
+                                        }
+
+                                        return false;
+                                    });
+
+                                    CACHE.clear_cache();
+
+                                }, 7000);
+                            }
+
+                            return false;
+                        });
+                    });
                 });
+            });
 
             callback({
                 status: 201,
@@ -685,7 +653,7 @@ exports.create_collection_object = function (req, callback) {
             return false;
         }
 
-        index(obj.sip_uuid, function(result) {
+        index(obj.sip_uuid, function (result) {
 
             if (result.error === true) {
                 LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/index_collection)] unable to index collection record.');
@@ -821,7 +789,8 @@ exports.publish_objects = function (req, callback) {
         let pidObj = {};
         pidObj.sip_uuid = match_phrase.pid;
 
-        update_display_record(pidObj, function() {});
+        update_display_record(pidObj, function () {
+        });
     }
 
     function update_collection_object_records(obj, callback) {
@@ -886,7 +855,8 @@ exports.publish_objects = function (req, callback) {
                             }
                         });
 
-                        update_display_record(record, function() {});
+                        update_display_record(record, function () {
+                        });
                     }
 
                 }, 150);
@@ -1154,7 +1124,8 @@ exports.unpublish_objects = function (req, callback) {
         let pidObj = {};
         pidObj.pid = pid;
 
-        update_display_record(pidObj, function() {});
+        update_display_record(pidObj, function () {
+        });
     }
 
     // unpublish entire collection - unpublish objects
@@ -1206,9 +1177,10 @@ exports.unpublish_objects = function (req, callback) {
                         });
 
                         let pidObj = {};
-                            pidObj.pid = record.sip_uuid;
+                        pidObj.pid = record.sip_uuid;
 
-                        update_display_record(pidObj, function() {});
+                        update_display_record(pidObj, function () {
+                        });
 
                     } else {
 
@@ -1502,7 +1474,7 @@ exports.reset_display_record = function (req, callback) {
     function admin_index(obj, callback) {
 
         // update admin index
-        index(obj.sip_uuid, function(result) {
+        index(obj.sip_uuid, function (result) {
 
             if (result.error === true) {
                 LOGGER.module().error('ERROR: [/repository/model module (reset_display_record/admin_index)] indexer error.');
@@ -1522,7 +1494,7 @@ exports.reset_display_record = function (req, callback) {
         if (obj.is_published === 1) {
 
             // update public index
-            index(obj.sip_uuid, function(result) {
+            index(obj.sip_uuid, function (result) {
 
                 if (result.error === true) {
                     LOGGER.module().error('ERROR: [/repository/model module (reset_display_record/admin_index)] indexer error.');

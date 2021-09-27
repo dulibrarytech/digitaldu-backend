@@ -310,6 +310,90 @@ exports.batch_update_metadata = function (req, callback) {
             let sip_uuid = record.sip_uuid;
             let mods = record.mods;
 
+            // TODO: rewrite using display record lib
+            // TODO: test
+            // TODO: rethink mods arg here can I pass it into create display record directly instead?
+            MODS.get_display_record_data(sip_uuid, function(recordObj) {
+
+                console.log('recordObj: ', recordObj);
+
+                // override mods property
+                recordObj.mods = mods;
+
+                MODS.create_display_record(recordObj, function (result) {
+
+                    let tmp = JSON.parse(result);
+                    let display_record;
+
+                    if (tmp.is_compound === 1 && tmp.object_type !== 'collection') {
+
+                        let currentRecord = JSON.parse(data[0].display_record),
+                            currentCompoundParts = currentRecord.display_record.parts;
+
+                        let updatedParts = tmp.display_record.parts.filter(function (elem) {
+
+                            for (let i = 0; i < currentCompoundParts.length; i++) {
+
+                                if (elem.title === currentCompoundParts[i].title) {
+                                    elem.caption = currentCompoundParts[i].caption;
+                                    elem.object = currentCompoundParts[i].object;
+                                    elem.thumbnail = currentCompoundParts[i].thumbnail;
+                                    return elem;
+                                }
+                            }
+
+                        });
+
+                        delete tmp.display_record.parts;
+                        delete tmp.compound;
+
+                        if (currentCompoundParts !== undefined) {
+                            tmp.display_record.parts = updatedParts;
+                            tmp.compound = updatedParts;
+                        }
+
+                        display_record = JSON.stringify(tmp);
+
+                    } else if (tmp.is_compound === 0 || tmp.object_type === 'collection') {
+                        display_record = result;
+                    }
+
+                    let where_obj = {
+                        sip_uuid: sip_uuid
+                    };
+
+                    MODS.update_display_record(where_obj, display_record, function(result) {
+                        console.log(result);
+                        update_index(sip_uuid, recordObj.is_published);
+                    });
+
+                    // TODO: move to function
+                    /*
+                    DB(REPO_OBJECTS)
+                        .where({
+                            sip_uuid: sip_uuid
+                        })
+                        .update({
+                            display_record: display_record
+                        })
+                        .then(function (data) {
+
+                            if (data === 1) {
+                                LOGGER.module().info('INFO: [/import/model module (update_object_metadata_record/display_record_updates)] ' + sip_uuid + ' display record updated');
+                                update_index(sip_uuid, recordObj.is_published);
+                            }
+
+                            return null;
+                        })
+                        .catch(function (error) {
+                            LOGGER.module().error('ERROR: [/import/model module (update_object_metadata_record/display_record_updates)] unable to update display record ' + error);
+                        });
+
+                     */
+                });
+            });
+
+            /*
             DB(REPO_OBJECTS)
                 .select('*')
                 .where({
@@ -333,6 +417,7 @@ exports.batch_update_metadata = function (req, callback) {
                     recordObj.thumbnail = data[0].thumbnail;
                     recordObj.object = data[0].file_name;
                     recordObj.mime_type = data[0].mime_type;
+                    recordObj.transcript = data[0].transcript;
                     recordObj.is_published = data[0].is_published;
                     recordObj.mods = mods;
 
@@ -401,6 +486,8 @@ exports.batch_update_metadata = function (req, callback) {
                     LOGGER.module().fatal('FATAL: [/import/model module (update_object_metadata_record/display_record_updates)] Unable to get display record ' + error);
                     throw 'FATAL: [/import/model module (update_object_metadata_record/display_record_updates)] Unable to get display record ' + error;
                 });
+
+             */
 
         }, 500);
     }

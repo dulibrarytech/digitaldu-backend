@@ -23,6 +23,7 @@ const CONFIG = require('../config/config'),
     ASYNC = require('async'),
     LOGGER = require('../libs/log4'),
     CACHE = require('../libs/cache'),
+    TRANSCRIPTS = require('../libs/transcripts'),
     DURACLOUD = require('../libs/duracloud'),
     DB = require('../config/db')(),
     DBQ = require('../config/dbqueue')(),
@@ -348,6 +349,13 @@ const republish = function (object_type) {
             LOGGER.module().fatal('FATAL: [/import/utils module (reindex/republish_collection/publish_collection)] Unable to get object ' + error);
             throw 'FATAL: [/import/utils module (reindex/republish_collection/publish_collection)] Unable to get object ' + error;
         });
+};
+
+/**
+ * Loads transcripts from transcript service
+ */
+exports.load_transcripts = function () {
+    TRANSCRIPTS.load();
 };
 
 /**
