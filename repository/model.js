@@ -370,6 +370,8 @@ exports.update_thumbnail = function (req, callback) {
                                     error: true,
                                     error_message: 'ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail.'
                                 });
+
+                                return false;
                             }
 
                             if (recordObj.is_published === 1) {

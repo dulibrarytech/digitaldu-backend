@@ -64,6 +64,8 @@ exports.create_display_record = function (obj, callback) {
 
     'use strict';
 
+    console.log('create display record: ', obj);
+
     let mods = obj.mods,
         record = {},
         metadata;
@@ -72,12 +74,15 @@ exports.create_display_record = function (obj, callback) {
     record.is_member_of_collection = obj.is_member_of_collection;
     record.handle = obj.handle;
     record.thumbnail = obj.thumbnail;
-    record.object = obj.file_name;
+    // record.object = obj.file_name;
+    record.object = obj.object;
     record.mime_type = obj.mime_type;
-    record.uri = obj.uri;
     record.object_type = obj.object_type;
-    record.transcript = obj.transcript;
     record.is_published = obj.is_published;
+
+    if (obj.transcript !== undefined) {
+        record.transcript = obj.transcript;
+    }
 
     metadata = JSON.parse(mods);
 
@@ -86,6 +91,8 @@ exports.create_display_record = function (obj, callback) {
     } else {
         record.is_compound = 0;
     }
+
+    record.uri = metadata.uri;
 
     if (metadata.parts !== undefined && metadata.parts.length > 0) {
 
