@@ -134,7 +134,7 @@ const importModule = (function () {
             let display_record = JSON.parse(data[i].display_record);
             let token = userModule.getUserToken();
 
-            html += '<td width="5%" ' + alignTd + '><a href="/dashboard/objects/unpublished?pid=' + DOMPurify.sanitize(data[i].is_member_of_collection) + '" title="Allows you to publish all unpublished records in this collection"><i class="fa fa-cloud-upload"></i></a></td>';
+            html += '<td width="5%" ' + alignTd + '><a href="/dashboard/objects/unpublished?pid=' + DOMPurify.sanitize(data[i].is_member_of_collection) + '&unpublished" title="Allows you to publish all unpublished records in this collection"><i class="fa fa-cloud-upload"></i></a></td>';
             html += '<td width="25%" ' + alignTd + '>' + DOMPurify.sanitize(data[i].collection_title) + '</td>';
 
             if (data[i].sip_uuid !== null) {

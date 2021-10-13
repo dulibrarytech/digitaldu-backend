@@ -365,32 +365,9 @@ exports.get_unpublished_admin_objects = function (req, callback) {
     }
 
     let is_member_of_collection = req.query.pid,
-        page = 0, // req.query.page,
+        page = 0,
         total_on_page = 10000,
         sort = 'title.keyword:asc';
-
-    /*
-    if (req.query.total_on_page !== undefined) {
-        total_on_page = req.query.total_on_page;
-    }
-
-     */
-
-    /*
-    if (req.query.sort !== undefined) {
-        sort = req.query.sort;
-    }
-
-     */
-
-    /*
-    if (page === undefined) {
-        page = 0;
-    } else {
-        page = (page - 1) * total_on_page;
-    }
-
-     */
 
     let query = {
         'query': {
