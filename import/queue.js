@@ -1141,8 +1141,22 @@ exports.create_repo_record = function (req, callback) {
     }
 
     // 11.)
-    function create_display_record(obj, callback) {
+    function get_transcript(obj, callback) {
 
+        TRANSCRIPTS.get(obj, function (result) {
+
+            if (result === 'no_transcript') {
+                callback(null, obj);
+            } else {
+                obj.transcript = result;
+                callback(null, obj);
+            }
+        });
+    }
+
+    // 12.)
+    function create_display_record(obj, callback) {
+        console.log(obj);
         if (obj.failed !== undefined && obj.failed === true) {
             callback(null, obj);
             return false;
@@ -1202,7 +1216,7 @@ exports.create_repo_record = function (req, callback) {
         });
     }
 
-    // 12.)
+    // 13.)
     function create_repo_record(obj, callback) {
 
         if (obj.failed !== undefined && obj.failed === true) {
@@ -1220,20 +1234,6 @@ exports.create_repo_record = function (req, callback) {
         delete obj.error;
 
         TRANSFER_INGEST.create_repo_record(obj, function (result) {
-            callback(null, obj);
-        });
-    }
-
-    // TODO: transcript ingest
-    // 13.)
-    function get_transcript(obj, callback) {
-
-        console.log(obj);
-        // TODO: get mod record and find call number (identifier)
-        // /api/v1/transcript?api_key=8dFSweim2RyTQ7RyFo52TlW4l72DLVh0&transcript=B002_01_0107_0071_003
-        TRANSCRIPTS.get(obj.sip_uuid, function (result) {
-            obj.transcript = result;
-            console.log(obj);
             callback(null, obj);
         });
     }
@@ -1308,6 +1308,7 @@ exports.create_repo_record = function (req, callback) {
         get_token,
         get_mods,
         get_handle,
+        get_transcript,
         create_display_record,
         create_repo_record,
         index,

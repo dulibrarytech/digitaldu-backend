@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2021 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -21,63 +21,107 @@
 const CONFIG = require('../config/config'),
     DB = require('../config/db')(),
     LOGGER = require('../libs/log4'),
-    REPO_OBJECTS = 'tbl_objects';
-const HTTP = require("../libs/http");
+    HTTP = require('axios'),
+    REPO_OBJECTS = 'tbl_objects',
+    TIMEMOUT = 35000;
 
 /**
- *
- * @param call_number
+ * Gets transcript during ingest process
+ * @param obj
+ * @param callback
  */
-exports.get = function (sip_uuid) {
+exports.get = function (obj, callback) {
 
-    // TODO: async/await
-    DB(REPO_OBJECTS)
-        .select('mods')
-        .where({
-            sip_uuid: sip_uuid,
-        })
-        .then(function (data) {
+    let mods = JSON.parse(obj.mods);
+    let call_number = mods.identifiers.map(function (node) {
 
-            console.log(data);
+        if (node.type === 'local') {
+            return node.identifier;
+        }
+    });
 
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/libs/transcript lib (get)] Unable to get mods record ' + error);
-            return false;
+    (async () => {
+
+        let endpoint = CONFIG.transcriptService + '/api/v1/transcript?call_number=' + call_number + '&api_key=' + CONFIG.transcriptServiceApiKey;
+        let response = await HTTP.get(endpoint, {
+            timeout: TIMEMOUT,
+            headers: {
+                'Content-Type': 'application/json'
+            }
         });
 
-    /*
-        (async () => {
-
-            let params = {
-                transcript: 'callNumber'
-            };
-
-            let response = await HTTP.get({
-                endpoint: '/api/v1/transcript',
-                params: params
-            });
-
-            if (response.error === true) {
-                // TODO: Update record here
-                // LOGGER.module().fatal('FATAL: [/import/queue module (import_dip/archivematica.get_dip_path/duracloud.get_mets/TRANSFER_INGEST.save_mets_data)] create repo record request error.');
-                // throw 'FATAL: [/import/queue module (import_dip/archivematica.get_dip_path/duracloud.get_mets/TRANSFER_INGEST.save_mets_data)] create repo record request error.';
-            } else if (response.data.status === 200) {
-                callback(null, obj);
-            }
-
-        })();
-
-         */
-
-    /*
-    "identifiers": [
-        {
-            "type": "local",
-            "identifier": "B002.01.0098.0002.00020"
+        if (response.status === 200) {
+            save(obj.sip_uuid, response.data.transcript);
+            callback(response.data.transcript);
+        } else {
+            LOGGER.module().info('INFO: [/libs/transcript lib (get)] No transcript found for this record.');
+            callback('no_transcript');
         }
-    ],
+
+    })();
+};
+
+/**
+ * Save transcript to repo DB record during ingest process
+ * @param sip_uuid
+ * @param transcript
+ */
+const save = function (sip_uuid, transcript) {
+
+    DB(REPO_OBJECTS)
+        .where({
+            sip_uuid: sip_uuid
+        })
+        .update({
+            transcript: transcript
+        })
+        .then(function(data) {
+            console.log(data);
+            callback(true);
+        })
+        .catch(function (error) {
+            LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (update_queue)] unable to update queue ' + error);
+            throw 'FATAL: [/libs/transfer-ingest lib (update_queue)] unable to update queue ' + error;
+        });
+};
+
+/**
+ * Loads transcripts from transcript service
+ */
+exports.load = function () {
+
+    // TODO: get all transcripts from service
+    // 1.) gets array of folder names containing call numbers
+    // 2.) Loop through call numbers (folder names)
+
+    /*
+    let mods = JSON.parse(obj.mods);
+    let call_number = mods.identifiers.map(function (node) {
+
+        if (node.type === 'local') {
+            return node.identifier;
+        }
+    });
 
      */
 
+    (async () => {
+
+        let endpoint = CONFIG.transcriptService + '/api/v1/transcript?call_number=' + call_number + '&api_key=' + CONFIG.transcriptServiceApiKey;
+        let response = await HTTP.get(endpoint, {
+            timeout: TIMEMOUT,
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.status === 200) {
+            save(obj.sip_uuid, response.data.transcript);
+            callback(response.data.transcript);
+        } else {
+            LOGGER.module().info('INFO: [/libs/transcript lib (get)] No transcript found for this record.');
+            callback('no_transcript');
+        }
+
+    })();
 };

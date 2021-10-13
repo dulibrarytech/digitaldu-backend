@@ -33,6 +33,18 @@ exports.reindex = function (req, res) {
     });
 };
 
+exports.reindex_backend = function (req, res) {
+    UTILS.reindex_backend(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.reindex_frontend = function (req, res) {
+    UTILS.reindex_frontend(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
 exports.clear_cache = function (req, res) {
     CACHE.clear_cache();
     res.status(200).send({
@@ -42,6 +54,12 @@ exports.clear_cache = function (req, res) {
 
 exports.batch_convert = function (req, res) {
     UTILS.batch_convert(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.load_transcripts = function (req, res) {
+    UTILS.load_transcripts(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };

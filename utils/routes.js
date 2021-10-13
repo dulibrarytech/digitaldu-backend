@@ -34,12 +34,21 @@ module.exports = function (app) {
     app.route('/api/admin/v1/utils/reindex')
         .post(TOKEN.verify, UTILS.reindex);
 
+    app.route('/api/admin/v1/utils/reindex/backend')
+        .post(TOKEN.verify, UTILS.reindex_backend);
+
+    app.route('/api/admin/v1/utils/reindex/frontend')
+        .post(TOKEN.verify, UTILS.reindex_frontend);
+
     app.route('/api/admin/v1/utils/clear_cache')
         .post(TOKEN.verify, UTILS.clear_cache);
 
     app.route('/api/admin/v1/utils/batch_convert')
         .post(TOKEN.verify, UTILS.batch_convert);
 
+    app.route('/api/admin/v1/utils/load_transcripts')
+        .post(TOKEN.verify, UTILS.batch_convert);
+
     app.route('/api/admin/v1/utils/batch_fix')
-        .post(TOKEN.verify, UTILS.batch_fix);
+        .post(UTILS.batch_fix); // TOKEN.verify,
 };

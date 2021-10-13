@@ -61,9 +61,9 @@ module.exports = {
     archivematicaStorageApi: process.env.ARCHIVEMATICA_STORAGE_API,
     archivematicaStorageUsername: process.env.ARCHIVEMATICA_STORAGE_USERNAME,
     archivematicaStorageApiKey: process.env.ARCHIVEMATICA_STORAGE_API_KEY,
-    archivematicaPipeline: process.env.ARCHIVEMATICA_PIPELINE,
-    archivematicaUserId: process.env.ARCHIVEMATICA_USERID,
-    archivematicaUserEmail: process.env.ARCHIVEMATICA_USER_EMAIL,
+    // archivematicaPipeline: process.env.ARCHIVEMATICA_PIPELINE,
+    // archivematicaUserId: process.env.ARCHIVEMATICA_USERID,
+    // archivematicaUserEmail: process.env.ARCHIVEMATICA_USER_EMAIL,
     archivespaceHost: process.env.ARCHIVESPACE_HOST,
     archivespaceRepositoryid: process.env.ARCHIVESPACE_REPOSITORY_ID,
     archivespaceUser: process.env.ARCHIVESPACE_USER,
@@ -87,5 +87,7 @@ module.exports = {
     tnServiceApiKey: process.env.TN_SERVICE_API_KEY,
     tnUploadPath: process.env.TN_UPLOAD_PATH,
     convertService: process.env.CONVERT_SERVICE,
-    convertServiceApiKey: process.env.CONVERT_SERVICE_API_KEY
+    convertServiceApiKey: process.env.CONVERT_SERVICE_API_KEY,
+    transcriptService: process.env.TRANSCRIPT_SERVICE,
+    transcriptServiceApiKey: process.env.TRANSCRIPT_SERVICE_API_KEY
 };
