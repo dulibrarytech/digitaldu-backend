@@ -366,6 +366,7 @@ const objectsModule = (function () {
 
         let is_member_of_collection = helperModule.getParameterByName('pid'),
             q = helperModule.getParameterByName('q'),
+            unpublished = helperModule.getParameterByName('unpublished'),
             total_records = DOMPurify.sanitize(data.total.value),
             html = '',
             add_collection_link;
@@ -418,8 +419,11 @@ const objectsModule = (function () {
             html += '<hr>';
         }
 
-        html += helperModule.pagination(is_member_of_collection, total_records);
-        domModule.html('#pagination', helperModule.pagination(is_member_of_collection, total_records));
+        if (unpublished === null) {
+            html += helperModule.pagination(is_member_of_collection, total_records);
+            domModule.html('#pagination', helperModule.pagination(is_member_of_collection, total_records));
+        }
+
         domModule.html('#objects', html);
     };
 
