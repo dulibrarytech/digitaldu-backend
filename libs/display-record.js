@@ -74,7 +74,6 @@ exports.create_display_record = function (obj, callback) {
     record.is_member_of_collection = obj.is_member_of_collection;
     record.handle = obj.handle;
     record.thumbnail = obj.thumbnail;
-    // record.object = obj.file_name;
     record.object = obj.object;
     record.mime_type = obj.mime_type;
     record.object_type = obj.object_type;
