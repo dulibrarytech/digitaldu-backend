@@ -142,13 +142,18 @@ const metadataModule = (function () {
             }
 
             if (is_published === 1) {
+                menu += '<div id="status-published-' + record.pid + '">';
                 menu += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
                 menu += '<p><a id="unpublish-' + record.pid + '" href="#' + record.pid + '" onclick="objectsModule.unpublishObject(\'' + DOMPurify.sanitize(record.pid) + '\', \'object\'); return false;"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
+                menu += '</div>';
             } else if (is_published === 0) {
+                menu += '<div id="status-unpublished-' + record.pid + '">';
                 menu += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
                 menu += '<p><a id="publish-' + record.pid + '" href="#' + record.pid + '" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(record.pid) + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
                 menu += '<p><a href="/dashboard/object/delete?pid=' +  DOMPurify.sanitize(record.pid) + '"><i class="fa fa-trash"></i>&nbsp;Delete</a></p>';
+                menu += '</div>';
             }
+
 
             menu += '<p><a id="update-' + record.pid + '" href="#' + record.pid + '" onclick="objectsModule.updateMetadata(\'' + DOMPurify.sanitize(record.pid) + '\', \'object\'); return false;"><i class="fa fa-code"></i>&nbsp;Update Metadata</a></p>';
         }

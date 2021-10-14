@@ -29,7 +29,7 @@ const collectionsModule = (function () {
      * @param pid
      */
     obj.getCollectionName = function (pid) {
-        console.log(pid);
+
         if (pid === null) {
             return false;
         }
@@ -62,7 +62,7 @@ const collectionsModule = (function () {
             if (response.status === 200) {
 
                 response.json().then(function (data) {
-                    console.log(data);
+
                     if (data.length === 0) {
                         return domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-info-circle"></i> Collection name not found.</div>');
                     }

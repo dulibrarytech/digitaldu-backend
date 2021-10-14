@@ -270,11 +270,11 @@ exports.get_display_record = function (req, callback) {
 
         return false;
 
-    } /* else if (pid.length > 1) {
-        // TODO: bug appears to have been fixed in the http library - will confirm
+    } else if (Array.isArray(pid)) {
+        // TODO: bug appears to be caused by http wrapper <-- from publishing process
         // workaround for http bug that creates array instead of string
         pid = pid[0];
-    } */
+    }
 
     DB(REPO_OBJECTS)
         .select('display_record')

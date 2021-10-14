@@ -201,6 +201,16 @@ const domModule = (function () {
     };
 
     /**
+     * Changes element id value
+     * @param currentId
+     * @param newId
+     */
+    obj.id = function(currentId, newId) {
+        let elem = document.getElementById(currentId);
+        elem.id = newId;
+    };
+
+    /**
      * Gets element reference by selector
      * @param selector
      * @returns {Element}
