@@ -792,8 +792,7 @@ exports.publish_objects = function (req, callback) {
         let pidObj = {};
         pidObj.sip_uuid = match_phrase.pid;
 
-        update_display_record(pidObj, function () {
-        });
+        update_display_record(pidObj, function () {});
     }
 
     function update_collection_object_records(obj, callback) {

@@ -25,7 +25,8 @@ const CONFIG = require('../config/config'),
     FS = require('fs'),
     ES_MAPPINGS = './indexer/mappings.json',
     CLIENT = new ES.Client({
-        host: CONFIG.elasticSearch
+        host: CONFIG.elasticSearch,
+        requestTimeout: 30000*4
     });
 
 /**

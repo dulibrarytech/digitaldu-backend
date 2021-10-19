@@ -216,6 +216,8 @@ exports.index_records = function (req, callback) {
                         record.created = data[0].created;
                     }
 
+                    console.log('indexing: ', record.pid);
+
                     SERVICE.index_record({
                         index: index_name,
                         id: record.pid,

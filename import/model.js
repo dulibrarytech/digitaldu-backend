@@ -1482,7 +1482,7 @@ exports.get_import_complete = function (req, callback) {
         .where({
             is_active: 1,
             is_complete: 1,
-            is_published: 0,
+            // is_published: 0,
             object_type: 'object'
         })
         .orderBy('created', 'asc')

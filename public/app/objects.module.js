@@ -308,7 +308,7 @@ const objectsModule = (function () {
     };
 
     /**
-     * Publishes all newly imported objects in batch
+     * Publishes all unpublished objects in a collection
      */
     obj.publishAllObjects = function () {
 
@@ -343,7 +343,7 @@ const objectsModule = (function () {
 
                 setTimeout(function () {
                     domModule.html('#message', null);
-                    location.replace('/dashboard/import/complete')
+                    // location.replace('/dashboard/import/complete')
                 }, 10000);
 
             } else if (response.status === 401) {

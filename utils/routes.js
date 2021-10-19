@@ -50,5 +50,5 @@ module.exports = function (app) {
         .post(TOKEN.verify, UTILS.batch_convert);
 
     app.route('/api/admin/v1/utils/batch_fix')
-        .post(UTILS.batch_fix); // TOKEN.verify,
+        .post(TOKEN.verify, UTILS.batch_fix);
 };
