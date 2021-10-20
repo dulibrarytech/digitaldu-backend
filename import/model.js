@@ -1477,12 +1477,12 @@ const update_db_mods = function (sip_uuid, mods, callback) {
 exports.get_import_complete = function (req, callback) {
 
     DB(REPO_OBJECTS)
-        .select('id', 'sip_uuid', 'is_member_of_collection', 'pid', 'handle', 'mods_id', 'mods', 'display_record', 'thumbnail', 'file_name', 'mime_type', 'created')
+        // .select('id', 'sip_uuid', 'is_member_of_collection', 'pid', 'handle', 'mods_id', 'mods', 'display_record', 'thumbnail', 'file_name', 'mime_type', 'created')
+        .select('id', 'sip_uuid', 'is_member_of_collection', 'pid', 'handle', 'mods_id', 'mods', 'display_record', 'thumbnail', 'file_name', 'mime_type', 'is_published', 'created')
         .whereRaw('DATE(created) BETWEEN NOW() - INTERVAL 30 DAY AND NOW()')
         .where({
             is_active: 1,
             is_complete: 1,
-            // is_published: 0,
             object_type: 'object'
         })
         .orderBy('created', 'asc')

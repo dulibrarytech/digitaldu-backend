@@ -508,6 +508,7 @@ exports.reindex_backend = function (req, callback) {
 
         var timer = setInterval(function () {
             monitor();
+            CACHE.clear_cache();
         }, 10000);
     }
 

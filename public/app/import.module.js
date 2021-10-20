@@ -134,7 +134,6 @@ const importModule = (function () {
             let display_record = JSON.parse(data[i].display_record);
             let token = userModule.getUserToken();
 
-            // html += '<td width="5%" ' + alignTd + '><a href="/dashboard/objects/unpublished?pid=' + DOMPurify.sanitize(data[i].is_member_of_collection) + '&unpublished" title="Allows you to publish all unpublished records in this collection"><i class="fa fa-cloud-upload"></i></a></td>';
             html += '<td width="25%" ' + alignTd + '>' + DOMPurify.sanitize(data[i].collection_title) + '</td>';
 
             if (data[i].sip_uuid !== null) {
@@ -153,6 +152,13 @@ const importModule = (function () {
             }
 
             html += '<td width="15%" ' + alignTd + '>' + DOMPurify.sanitize(moment(data[i].created).tz('America/Denver').format('MM-DD-YYYY, h:mm:ss a')) + '</td>';
+
+            if (data[i].is_published === 0) {
+                html += '<td id="publish-import-' + data[i].pid + '" width="5%" ' + alignTd + '><a href="#" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(data[i].sip_uuid) + '\', \'object\'); return false;" title="Publish record"><i class="fa fa-cloud-upload"></i></a></td>';
+            } else if (data[i].is_published === 1) {
+                html += '<td id="publish-import-' + data[i].pid + '" width="5%" ' + alignTd + ' title="Published"><i class="fa fa-cloud"></i></td>';
+            }
+
             html += '</tr>';
         }
 

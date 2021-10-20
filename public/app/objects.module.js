@@ -103,6 +103,8 @@ const objectsModule = (function () {
         };
 
         domModule.html('#publish-' + pid, '<em><i class="fa fa-exclamation-circle"></i> Publishing...</em>');
+        // handles DOM changes on completed import page
+        domModule.html('#publish-import-' + pid, '<em><i class="fa fa-exclamation-circle"></i> Publishing...</em>');
 
         let url = api + endpoints.repo_publish,
             token = userModule.getUserToken(),
@@ -121,12 +123,24 @@ const objectsModule = (function () {
             if (response.status === 201) {
 
                 setTimeout(function () {
-                    domModule.html('#publish-' + pid, null);
+
+                    let elemId = document.getElementById('publish-' + pid);
                     let published = '';
-                    published += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
-                    published += '<p><a id="unpublish-' + pid + '" href="#' + pid + '" onclick="objectsModule.unpublishObject(\'' + DOMPurify.sanitize(pid) + '\', \'object\'); return false;"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
-                    domModule.html('#status-unpublished-' + pid, published);
-                    domModule.id('status-unpublished-' + pid, 'status-published-' + pid);
+
+                    if (elemId !== null) {
+                        domModule.html('#publish-' + pid, null);
+                        published += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
+                        published += '<p><a id="unpublish-' + pid + '" href="#' + pid + '" onclick="objectsModule.unpublishObject(\'' + DOMPurify.sanitize(pid) + '\', \'object\'); return false;"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
+                        domModule.html('#status-unpublished-' + pid, published);
+                        domModule.id('status-unpublished-' + pid, 'status-published-' + pid);
+                    } else {
+                        // handles DOM changes on completed import page
+                        let status = '<small>Publishing...</small>';
+                        domModule.html('#publish-import-' + pid, status);
+                        published = '<i class="fa fa-cloud"></i>';
+                        domModule.html('#publish-import-' + pid, published);
+                    }
+
                 }, 5000);
 
             } else if (response.status === 418) {
