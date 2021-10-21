@@ -74,10 +74,15 @@ exports.create_display_record = function (obj, callback) {
     record.is_member_of_collection = obj.is_member_of_collection;
     record.handle = obj.handle;
     record.thumbnail = obj.thumbnail;
-    record.object = obj.object;
     record.mime_type = obj.mime_type;
     record.object_type = obj.object_type;
     record.is_published = obj.is_published;
+
+    if (obj.file_name !== undefined) {
+        record.object = obj.file_name;  // import process
+    } else {
+        record.object = obj.object;
+    }
 
     if (obj.transcript !== undefined) {
         record.transcript = obj.transcript;
