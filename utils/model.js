@@ -251,6 +251,7 @@ exports.reindex = function (req, callback) {
 
         var timer = setInterval(function () {
             monitor();
+            CACHE.clear_cache();
         }, 10000);
     }
 
