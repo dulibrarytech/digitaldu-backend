@@ -206,7 +206,7 @@ const metadataModule = (function () {
         let uri = '';
 
         if (record.display_record.uri !== undefined) {
-            uri += '<ul><li><strong>Uri:</strong>&nbsp;' + DOMPurify.sanitize(record.display_record.uri) + '</li></ul>';
+            uri += '<ul><li><strong>Uri:</strong>&nbsp;<a href="' + configModule.getASpace() + DOMPurify.sanitize(record.display_record.uri) + '" target="_blank">' + DOMPurify.sanitize(record.display_record.uri) + '</a>&nbsp;&nbsp;<i class="fa fa-external-link"></i></li></ul>';
         }
 
         return uri;
