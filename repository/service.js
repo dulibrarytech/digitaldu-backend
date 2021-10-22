@@ -93,7 +93,7 @@ exports.ping_services = function (req, callback) {
                 callback(null, obj);
                 return false;
 
-            } catch(error) {
+            } catch (error) {
                 LOGGER.module().error('ERROR: [/repository/service module (ping_handle_server)] Unable to ping handle server.');
                 obj.handle_server = 'down';
                 callback(null, obj);
@@ -123,7 +123,7 @@ exports.ping_services = function (req, callback) {
                 callback(null, obj);
                 return false;
 
-            } catch(error) {
+            } catch (error) {
                 LOGGER.module().error('ERROR: [/repository/service module (ping_convert_service)] Unable to ping convert service.');
                 obj.ingest_convert_service = 'down';
                 callback(null, obj);
@@ -235,7 +235,7 @@ exports.get_tn = function (req, callback) {
 
             return false;
 
-        } catch(error) {
+        } catch (error) {
 
             LOGGER.module().error('ERROR: [/repository/service module (get_tn)] Unable to get thumbnail from TN service. Request failed: ' + error);
 
@@ -414,7 +414,7 @@ exports.get_unpublished_admin_objects = function (req, callback) {
  * @param obj
  * @param callback
  */
-exports.get_mods = function(obj, callback) {
+exports.get_mods = function (obj, callback) {
 
     ARCHIVESSPACE.get_mods(obj.mods_id, obj.session, function (result) {
 

@@ -305,14 +305,8 @@ const objectsModule = (function () {
             if (response.status === 200) {
 
                 response.json().then(function (data) {
-
                     domModule.html('#message', null);
-
-                    if (data.length === 0) {
-                        domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No records found.</div>');
-                    } else {
-                        objectsModule.renderDisplayRecords(data);
-                    }
+                    objectsModule.renderDisplayRecords(data);
                 });
 
             } else {
@@ -359,7 +353,6 @@ const objectsModule = (function () {
 
                 setTimeout(function () {
                     domModule.html('#message', null);
-                    // location.replace('/dashboard/import/complete')
                 }, 10000);
 
             } else if (response.status === 401) {
@@ -391,7 +384,7 @@ const objectsModule = (function () {
         let is_member_of_collection = helperModule.getParameterByName('pid'),
             q = helperModule.getParameterByName('q'),
             unpublished = helperModule.getParameterByName('unpublished'),
-            total_records = DOMPurify.sanitize(data.total.value),
+            total_records = data.total.value,
             html = '',
             add_collection_link;
 
@@ -412,11 +405,10 @@ const objectsModule = (function () {
             add_collection_link = '';
         }
 
-        // TODO: add conditional
         domModule.html('#add-collection-link', add_collection_link);
 
-        if (data.total.value === 0) {
-            html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; No unpublished objects found in this collection.</strong></div>';
+        if (total_records === 0) {
+            html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; No records found.</strong></div>';
             domModule.html('#objects', html);
             return false;
         }
@@ -565,7 +557,7 @@ const objectsModule = (function () {
 
     obj.init = function () {
 
-        domModule.html('#message', 'Loading...');
+        domModule.html('#message', '<strong><em>Loading...</em></strong>');
 
         if (helperModule.getParameterByName('q') === null) {
             objectsModule.getObjects();
