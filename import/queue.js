@@ -1156,7 +1156,7 @@ exports.create_repo_record = function (req, callback) {
 
     // 12.)
     function create_display_record(obj, callback) {
-        console.log(obj);
+
         if (obj.failed !== undefined && obj.failed === true) {
             callback(null, obj);
             return false;
@@ -1308,7 +1308,7 @@ exports.create_repo_record = function (req, callback) {
         get_token,
         get_mods,
         get_handle,
-        // get_transcript,
+        get_transcript,
         create_display_record,
         create_repo_record,
         index,

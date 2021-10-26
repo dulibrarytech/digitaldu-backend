@@ -76,7 +76,6 @@ const save = function (sip_uuid, transcript) {
             transcript: transcript
         })
         .then(function(data) {
-            console.log(data);
             callback(true);
         })
         .catch(function (error) {
