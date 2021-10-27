@@ -184,3 +184,12 @@ exports.get_dashboard_qa = function (req, res) {
         organization: CONFIG.organization
     });
 };
+
+exports.get_dashboard_transcript = function (req, res) {
+    res.render('dashboard-transcript', {
+        host: CONFIG.host,
+        appname: CONFIG.appName,
+        appversion: CONFIG.appVersion,
+        organization: CONFIG.organization
+    });
+};

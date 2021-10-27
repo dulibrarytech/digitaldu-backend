@@ -506,7 +506,7 @@ const objectsModule = (function () {
         obj.pid = helperModule.getParameterByName('pid');
         obj.delete_reason = domModule.val('#delete-reason', null) + '  --deleted by ' + userModule.getUserFullName();
 
-        let url = api + endpoints.repo_object,
+        let url = api + endpoints.repo_object + '?pid=' + obj.pid,
             token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'DELETE',
@@ -549,6 +549,78 @@ const objectsModule = (function () {
 
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to delete object.');
+            }
+        };
+
+        httpModule.req(request, callback);
+    };
+
+    obj.getTranscript = function () {
+
+        let sip_uuid = helperModule.getParameterByName('sip_uuid');
+        let url = api + endpoints.repo_object + '?pid=' + sip_uuid;
+        let mode = helperModule.getParameterByName('mode');
+        let token = userModule.getUserToken(),
+            request = new Request(url, {
+                method: 'GET',
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+        const callback = function (response) {
+
+            if (response.status === 200) {
+
+                response.json().then(function (data) {
+
+                    domModule.html('#message', null);
+
+                    if (data.length === 0) {
+                        domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> Transcript not found.</div>');
+                    } else if (data.msg !== undefined) {
+                        domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> Index is not available.</div>');
+                    } else {
+
+                        let record = data.pop();
+                        let recordObj = record.display_record;
+                        let display_record = JSON.parse(recordObj);
+
+                        document.querySelector('#title').innerHTML = display_record.display_record.title;
+
+                        if (mode === 'view') {
+                            document.querySelector('#edit-transcript').innerHTML = '<a href="/dashboard/transcript?mode=edit&sip_uuid=' + sip_uuid + '">Edit Transcript</a>';
+                            document.querySelector('#record-transcript').innerHTML = display_record.transcript;
+                        } else if (mode === 'add') {
+                            document.querySelector('#transcript-form').style.display = 'block';
+                        } else if (mode === 'edit') {
+                            document.querySelector('#transcript-form').style.display = 'block';
+                            document.querySelector('#transcript').value = display_record.transcript;
+                        }
+
+                        console.log(display_record.display_record);
+                        console.log(display_record.display_record.uri);
+
+
+
+                    }
+                });
+
+            } else if (response.status === 401) {
+
+                response.json().then(function (response) {
+
+                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
+
+                    setTimeout(function () {
+                        window.location.replace('/login');
+                    }, 4000);
+                });
+
+            } else {
+                helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to get objects.');
             }
         };
 

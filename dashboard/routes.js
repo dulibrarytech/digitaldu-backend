@@ -73,8 +73,7 @@ module.exports = function (app) {
     app.route('/dashboard/qa')
         .get(DASHBOARD.get_dashboard_qa);
 
-    /*
-    app.route('/dashboard/collections')
-        .get(DASHBOARD.get_dashboard_collections);
-    */
+    app.route('/dashboard/transcript')
+        .get(DASHBOARD.get_dashboard_transcript);
+
 };
