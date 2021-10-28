@@ -107,11 +107,15 @@ const metadataModule = (function () {
             menu += '<p><small style="background: skyblue; padding: 3px; color: white">Collection</small></p>';
 
             if (is_published === 1) {
+                menu += '<div id="status-published-' + record.pid + '">';
                 menu += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
                 menu += '<p><a id="unpublish-' + record.pid + '" href="#' + record.pid + '" onclick="objectsModule.unpublishObject(\'' + DOMPurify.sanitize(record.pid) + '\', \'collection\'); return false;"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
+                menu += '</div>';
             } else if (is_published === 0) {
+                menu += '<div id="status-unpublished-' + record.pid + '">';
                 menu += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
                 menu += '<p><a id="publish-' + record.pid + '" href="#' + record.pid + '" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(record.pid) + '\', \'collection\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
+                menu += '</div>';
             }
 
             menu += '<p><a href="' + api + '/dashboard/objects/unpublished?pid=' + DOMPurify.sanitize(record.pid) + '&unpublished"><i class="fa fa-info-circle"></i>&nbsp;Unpublished objects</a></p>';

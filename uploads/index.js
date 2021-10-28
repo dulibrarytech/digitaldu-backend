@@ -104,7 +104,7 @@ module.exports = function (app) {
 
             let data = {
                 'pid': pid,
-                'thumbnail_url':  req.protocol + '://' + req.headers.host + '/tn/' + pid + '.jpg'
+                'thumbnail_url':  'https://' + req.headers.host + '/tn/' + pid + '.jpg'
             };
 
             let response = await HTTP.post({
