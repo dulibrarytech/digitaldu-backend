@@ -64,8 +64,6 @@ exports.create_display_record = function (obj, callback) {
 
     'use strict';
 
-    console.log('create display record: ', obj);
-
     let mods = obj.mods,
         record = {},
         metadata;
