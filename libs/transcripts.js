@@ -76,11 +76,11 @@ const save = function (sip_uuid, transcript) {
             transcript: transcript
         })
         .then(function(data) {
-            callback(true);
+            console.log(data);
         })
         .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (update_queue)] unable to update queue ' + error);
-            throw 'FATAL: [/libs/transfer-ingest lib (update_queue)] unable to update queue ' + error;
+            LOGGER.module().fatal('FATAL: [/libs/transcript lib (get)] unable to save transcript ' + error);
+            throw 'FATAL: [/libs/transcript lib (get)] unable to save transcript ' + error;
         });
 };
 
