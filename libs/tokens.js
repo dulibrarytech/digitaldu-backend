@@ -20,7 +20,8 @@
 
 const CONFIG = require('../config/config'),
     JWT = require('jsonwebtoken'),
-    LOGGER = require('../libs/log4');
+    LOGGER = require('../libs/log4'),
+    VALIDATOR = require("validator");
 
 /**
  * Creates session token
@@ -51,7 +52,7 @@ exports.verify = function (req, res, next) {
     let token = req.headers['x-access-token'] || req.query.t;
     let key = req.query.api_key;
 
-    if (token !== undefined) {
+    if (token !== undefined && VALIDATOR.isJWT(token)) {
 
         JWT.verify(token, CONFIG.tokenSecret, function (error, decoded) {
 
@@ -70,18 +71,32 @@ exports.verify = function (req, res, next) {
             next();
         });
 
-    } else if (key !== undefined)  {
+    } else if (key !== undefined && key === CONFIG.apiKey)  {
 
-        if (key === CONFIG.apiKey) {
-            next();
-            return false;
-        } else {
+        let api_key = key;
 
-            LOGGER.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify api key');
+        if (Array.isArray(key)) {
+            api_key = key.pop();
+        }
 
+        if (!VALIDATOR.isAlphanumeric(api_key)) {
             res.status(401).send({
                 message: 'Unauthorized request'
             });
+
+            return false;
         }
+
+        req.query.api_key = api_key;
+
+        next();
+
+    } else {
+
+        LOGGER.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify api key');
+
+        res.status(401).send({
+            message: 'Unauthorized request'
+        });
     }
 };
