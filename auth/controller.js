@@ -25,71 +25,42 @@ const CONFIG = require('../config/config'),
 
 exports.login = function (req, res) {
 
-    if (req.body !== undefined) {
+    let username = req.body.username;
+    let password = req.body.password;
 
-        let username = req.body.username.trim(),
-            password = req.body.password.trim();
+    SERVICE.authenticate(username, password, function (isAuth) {
 
-        if (username.length === 0) {
+        if (isAuth.auth === true) {
 
-            res.status(401).send({
-                message: 'Authenticate failed. Please enter your DU ID.'
-            });
+            let token = TOKEN.create(username);
+            token = encodeURIComponent(token);
 
-            return false;
+            /* check if user has access to repo */
+            USER.check_auth_user(username, function (result) {
 
-        } else if (password.length === 0) {
+                if (result.auth === true) {
 
-            res.status(401).send({
-                message: 'Authenticate failed. Please enter your passcode.'
-            });
-
-            return false;
-
-        } else if (isNaN(username) === true) {
-
-            res.status(401).send({
-                message: 'Authenticate failed due to invalid username.  Please enter a DU ID. i.e. 871******'
-            });
-
-            return false;
-
-        } else {
-
-            SERVICE.authenticate(username, password, function (isAuth) {
-
-                if (isAuth.auth === true) {
-
-                    let token = TOKEN.create(username);
-                    token = encodeURIComponent(token);
-
-                    /* check if user has access to repo */
-                    USER.check_auth_user(username, function (result) {
-
-                        if (result.auth === true) {
-
-                            res.status(200).send({
-                                message: 'Authenticated',
-                                redirect: '/dashboard/home?t=' + token + '&uid=' + result.data
-                            });
-
-                        } else {
-
-                            res.status(401).send({
-                                message: 'Authenticate failed.'
-                            });
-                        }
+                    res.status(200).send({
+                        message: 'Authenticated',
+                        redirect: '/dashboard/home?t=' + token + '&uid=' + result.data
                     });
 
-                } else if (isAuth.auth === false) {
+                } else {
 
                     res.status(401).send({
                         message: 'Authenticate failed.'
                     });
                 }
             });
+
+        } else if (isAuth.auth === false) {
+
+            res.status(401).send({
+                message: 'Authenticate failed.'
+            });
         }
-    }
+    });
+
 };
 
 exports.login_form = function (req, res) {
