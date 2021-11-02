@@ -69,6 +69,7 @@ const reindex = function (match_phrase, callback) {
         }
 
         callback(result);
+
     })();
 };
 
@@ -105,6 +106,7 @@ const update_fragment = function (sip_uuid, is_published, callback) {
         }
 
         callback(result);
+
     })();
 };
 
@@ -136,6 +138,7 @@ const index = function (sip_uuid, callback) {
         }
 
         callback(result);
+
     })();
 };
 
@@ -165,6 +168,7 @@ const del = function (sip_uuid, callback) {
         }
 
         callback(result);
+
     })();
 };
 
@@ -261,7 +265,7 @@ exports.get_display_record = function (req, callback) {
 
     let pid = req.query.pid;
 
-    if (pid === undefined || pid.length === 0) {
+    if (pid === undefined || pid.length === 0 || !VALIDATOR.isUUID(pid)) {
         callback({
             status: 400,
             message: 'Bad request.',

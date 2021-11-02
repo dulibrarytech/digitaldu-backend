@@ -52,6 +52,7 @@ module.exports = function() {
     APP.use(EXPRESS.static('./public'));
     APP.use(XSS.sanitize_req_query);
     APP.use(XSS.sanitize_req_body);
+    APP.use(XSS.validate_uuid);
     APP.set('views', './views');
     APP.set('view engine', 'ejs');
     APP.set('view cache', view_cache);

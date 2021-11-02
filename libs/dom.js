@@ -74,3 +74,42 @@ exports.sanitize_req_query = function(req, res, next) {
 
     next();
 };
+
+/** TODO: consolidate sip_uuid / pid
+ * Validates uuids in query string
+ * @param req
+ * @param res
+ * @param next
+ */
+exports.validate_uuid = function(req, res, next) {
+
+    if (req.query.sip_uuid !== undefined && Array.isArray(req.query.sip_uuid)) {
+        req.query.sip_uuid = req.query.sip_uuid.pop();
+    } else if (req.query.pid !== undefined && Array.isArray(req.query.pid)) {
+        req.query.pid = req.query.pid.pop();
+    }
+
+    if (Object.entries(req.query).length !== 0 && req.query.sip_uuid !== undefined) {
+
+        if (VALIDATOR.isUUID(req.query.sip_uuid)) {
+            next();
+        } else {
+            res.status(404).send({
+                message: 'Resource not found.'
+            });
+        }
+
+    } else if (Object.entries(req.query).length !== 0 && req.query.pid !== undefined) {
+
+        if (VALIDATOR.isUUID(req.query.pid) || req.query.pid === 'codu:root') {
+            next();
+        } else {
+            res.status(404).send({
+                message: 'Resource not found.'
+            });
+        }
+
+    } else {
+        next();
+    }
+};
