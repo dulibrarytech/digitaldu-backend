@@ -664,8 +664,14 @@ const userModule = (function () {
             } else if (response.status === 401) {
 
                 response.json().then(function (response) {
-                    document.querySelector('#login-button').disabled = false;
-                    helperModule.renderError(DOMPurify.sanitize(response.message));
+
+                    if (response.errors !== undefined && Array.isArray(response.errors)) {
+                        helperModule.renderError(DOMPurify.sanitize(response.errors[0].message));
+                        document.querySelector('#login-button').disabled = false;
+                    } else {
+                        document.querySelector('#login-button').disabled = false;
+                        helperModule.renderError(DOMPurify.sanitize(response.message));
+                    }
                 });
 
             } else {

@@ -24,18 +24,6 @@ const CONFIG = require('../config/config'),
 
 exports.authenticate = function (username, password, callback) {
 
-    if (isNaN(username) === true || password.length === 0) {
-
-        let errorObj = {
-            status: 400,
-            success: false,
-            message: 'Bad request.'
-        };
-
-        callback(errorObj);
-        return false;
-    }
-
     (async () => {
 
         let data = {
