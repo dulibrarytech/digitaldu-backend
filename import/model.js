@@ -76,7 +76,7 @@ exports.batch_update_metadata = function (req, callback) {
 
         DB(REPO_OBJECTS)
             .select('sip_uuid')
-            .limit(10)  // TODO: test
+            .limit(10)
             .where({
                 object_type: 'object',
                 is_active: true,
@@ -309,14 +309,11 @@ exports.batch_update_metadata = function (req, callback) {
             let sip_uuid = record.sip_uuid;
             let mods = record.mods;
 
-            // TODO: test
             MODS.get_display_record_data(sip_uuid, function(recordObj) {
-
-                console.log('recordObj: ', recordObj);
 
                 // override mods property
                 recordObj.mods = mods;
-                // TODO: object property is being deleted here
+
                 MODS.create_display_record(recordObj, function (result) {
 
                     let tmp = JSON.parse(result);
@@ -363,129 +360,8 @@ exports.batch_update_metadata = function (req, callback) {
                         console.log('update_display_record: ', result);
                         update_index(sip_uuid, recordObj.is_published);
                     });
-
-                    // TODO: move to function
-                    /*
-                    DB(REPO_OBJECTS)
-                        .where({
-                            sip_uuid: sip_uuid
-                        })
-                        .update({
-                            display_record: display_record
-                        })
-                        .then(function (data) {
-
-                            if (data === 1) {
-                                LOGGER.module().info('INFO: [/import/model module (update_object_metadata_record/display_record_updates)] ' + sip_uuid + ' display record updated');
-                                update_index(sip_uuid, recordObj.is_published);
-                            }
-
-                            return null;
-                        })
-                        .catch(function (error) {
-                            LOGGER.module().error('ERROR: [/import/model module (update_object_metadata_record/display_record_updates)] unable to update display record ' + error);
-                        });
-
-                     */
                 });
             });
-
-            /*
-            DB(REPO_OBJECTS)
-                .select('*')
-                .where({
-                    sip_uuid: sip_uuid,
-                    is_active: 1
-                })
-                .then(function (data) {
-
-                    if (data.length === 0) {
-                        LOGGER.module().info('INFO: [/import/model module (update_object_metadata_record/display_record_updates)] unable to update display record');
-                        return false;
-                    }
-
-                    let recordObj = {};
-                    recordObj.pid = data[0].pid;
-                    recordObj.is_member_of_collection = data[0].is_member_of_collection;
-                    recordObj.object_type = data[0].object_type;
-                    recordObj.sip_uuid = data[0].sip_uuid;
-                    recordObj.handle = data[0].handle;
-                    recordObj.entry_id = data[0].entry_id;
-                    recordObj.thumbnail = data[0].thumbnail;
-                    recordObj.object = data[0].file_name;
-                    recordObj.mime_type = data[0].mime_type;
-                    recordObj.transcript = data[0].transcript;
-                    recordObj.is_published = data[0].is_published;
-                    recordObj.mods = mods;
-
-                    MODS.create_display_record(recordObj, function (result) {
-
-                        let tmp = JSON.parse(result);
-                        let display_record;
-
-                        if (tmp.is_compound === 1 && tmp.object_type !== 'collection') {
-
-                            let currentRecord = JSON.parse(data[0].display_record),
-                                currentCompoundParts = currentRecord.display_record.parts;
-
-                            let updatedParts = tmp.display_record.parts.filter(function (elem) {
-
-                                for (let i = 0; i < currentCompoundParts.length; i++) {
-
-                                    if (elem.title === currentCompoundParts[i].title) {
-                                        elem.caption = currentCompoundParts[i].caption;
-                                        elem.object = currentCompoundParts[i].object;
-                                        elem.thumbnail = currentCompoundParts[i].thumbnail;
-                                        return elem;
-                                    }
-                                }
-
-                            });
-
-                            delete tmp.display_record.parts;
-                            delete tmp.compound;
-
-                            if (currentCompoundParts !== undefined) {
-                                tmp.display_record.parts = updatedParts;
-                                tmp.compound = updatedParts;
-                            }
-
-                            display_record = JSON.stringify(tmp);
-
-                        } else if (tmp.is_compound === 0 || tmp.object_type === 'collection') {
-                            display_record = result;
-                        }
-
-                        DB(REPO_OBJECTS)
-                            .where({
-                                sip_uuid: sip_uuid
-                            })
-                            .update({
-                                display_record: display_record
-                            })
-                            .then(function (data) {
-
-                                if (data === 1) {
-                                    LOGGER.module().info('INFO: [/import/model module (update_object_metadata_record/display_record_updates)] ' + sip_uuid + ' display record updated');
-                                    update_index(sip_uuid, recordObj.is_published);
-                                }
-
-                                return null;
-                            })
-                            .catch(function (error) {
-                                LOGGER.module().error('ERROR: [/import/model module (update_object_metadata_record/display_record_updates)] unable to update display record ' + error);
-                            });
-                    });
-
-                    return null;
-                })
-                .catch(function (error) {
-                    LOGGER.module().fatal('FATAL: [/import/model module (update_object_metadata_record/display_record_updates)] Unable to get display record ' + error);
-                    throw 'FATAL: [/import/model module (update_object_metadata_record/display_record_updates)] Unable to get display record ' + error;
-                });
-
-             */
-
         }, 500);
     }
 
@@ -778,31 +654,6 @@ exports.update_object_metadata_record = function (req, callback) {
 
             MODS.create_display_record(recordObj, function (result) {
 
-                /* TODO: result code from repository/model
-                let tmp = JSON.parse(result);
-
-                if (tmp.is_compound === 1 && tmp.object_type !== 'collection') {
-
-                    let currentRecord = JSON.parse(data[0].display_record),
-                        currentCompoundParts = currentRecord.display_record.parts;
-
-                    delete tmp.display_record.parts;
-                    delete tmp.compound;
-
-                    if (currentCompoundParts !== undefined) {
-                        tmp.display_record.parts = currentCompoundParts;
-                        tmp.compound = currentCompoundParts;
-                    }
-
-                    obj.display_record = JSON.stringify(tmp);
-
-                } else if (tmp.is_compound === 0 || tmp.object_type === 'collection') {
-                    obj.display_record = result;
-                }
-
-                 */
-                // TODO: compare code (above/below) repository/model and import/model
-                // TODO:... test
                 let tmp = JSON.parse(result);
 
                 if (tmp.is_compound === 1 && tmp.object_type !== 'collection') {
@@ -860,111 +711,6 @@ exports.update_object_metadata_record = function (req, callback) {
                 });
             });
         });
-
-        /////////////////////
-
-        // TODO: refactor
-        /*
-        DB(REPO_OBJECTS)
-            .select('*')
-            .where({
-                mods_id: obj.mods_id,
-                is_active: 1
-            })
-            .then(function (data) {
-
-                if (data.length === 0) {
-                    LOGGER.module().info('INFO: [/import/model module (update_object_metadata_record/update_display_record)] unable to update display record');
-                    return false;
-                }
-
-                let recordObj = {};
-                recordObj.pid = data[0].pid;
-                recordObj.is_member_of_collection = data[0].is_member_of_collection;
-                recordObj.object_type = data[0].object_type;
-                recordObj.sip_uuid = data[0].sip_uuid;
-                recordObj.handle = data[0].handle;
-                recordObj.entry_id = data[0].entry_id;
-                recordObj.thumbnail = data[0].thumbnail;
-                recordObj.object = data[0].file_name;
-                recordObj.mime_type = data[0].mime_type;
-                recordObj.is_published = data[0].is_published;
-                recordObj.mods = obj.mods;
-
-                MODS.create_display_record(recordObj, function (result) {
-
-                    let tmp = JSON.parse(result);
-
-                    if (tmp.is_compound === 1 && tmp.object_type !== 'collection') {
-
-                        let currentRecord = JSON.parse(data[0].display_record),
-                            currentCompoundParts = currentRecord.display_record.parts;
-
-                        let updatedParts = tmp.display_record.parts.filter(function (elem) {
-
-                            for (let i = 0; i < currentCompoundParts.length; i++) {
-
-                                if (elem.title === currentCompoundParts[i].title) {
-                                    elem.caption = currentCompoundParts[i].caption;
-                                    elem.object = currentCompoundParts[i].object;
-                                    elem.thumbnail = currentCompoundParts[i].thumbnail;
-                                    return elem;
-                                }
-                            }
-
-                        });
-
-                        delete tmp.display_record.parts;
-                        delete tmp.compound;
-
-                        if (currentCompoundParts !== undefined) {
-                            tmp.display_record.parts = updatedParts;
-                            tmp.compound = updatedParts;
-                        }
-
-                        obj.display_record = JSON.stringify(tmp);
-
-                    } else if (tmp.is_compound === 0 || tmp.object_type === 'collection') {
-
-                        obj.display_record = result;
-
-                    }
-
-                    DB(REPO_OBJECTS)
-                        .where({
-                            sip_uuid: obj.sip_uuid
-                        })
-                        .update({
-                            display_record: obj.display_record
-                        })
-                        .then(function (data) {
-
-                            if (data === 1) {
-                                LOGGER.module().info('INFO: [/import/model module (update_object_metadata_record/update_display_record)] ' + obj.sip_uuid + ' display record updated');
-                                obj.is_published = recordObj.is_published;
-                                callback(null, obj);
-                            } else {
-                                obj.updated = false;
-                                callback(null, obj);
-                            }
-
-                            return null;
-                        })
-                        .catch(function (error) {
-                            LOGGER.module().error('ERROR: [/import/model module (update_object_metadata_record/update_display_record)] unable to update display record ' + error);
-                            obj.updated = false;
-                            callback(null, obj);
-                        });
-                });
-
-                return null;
-            })
-            .catch(function (error) {
-                LOGGER.module().fatal('FATAL: [/import/model module (update_object_metadata_record/update_display_record)] Unable to get display record ' + error);
-                throw 'FATAL: [/import/model module (update_object_metadata_record/update_display_record)] Unable to get display record ' + error;
-            });
-
-         */
     }
 
     // 5.)
@@ -1164,7 +910,6 @@ exports.update_collection_metadata_record = function (req, callback) {
             if (obj.prev_mods === data.mods) {
 
                 LOGGER.module().info('INFO: no update required for record ' + obj.sip_uuid);
-                // TODO: log update message to db
 
                 if (obj.single_record !== undefined && obj.single_record === true) {
 
@@ -1213,8 +958,6 @@ exports.update_collection_metadata_record = function (req, callback) {
         }
 
         let mods = obj.mods;
-
-        // TODO: log update message to db
 
         update_db_mods(obj.sip_uuid, mods, function (result) {
             obj.updated = result;
@@ -1518,7 +1261,7 @@ exports.get_import_complete = function (req, callback) {
                         response.push(record);
                     })
                     .catch(function(error) {
-                        console.log(error);
+                        LOGGER.module().error('ERROR: [/import/model module (get_import_complete)] unable to get completed import records ' + error);
                     });
 
             }, 10);
