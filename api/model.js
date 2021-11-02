@@ -22,41 +22,10 @@ const ASYNC = require('async'),
     LOGGER = require('../libs/log4'),
     DB = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects',
-    REPO_TRANSCRIPTS = 'tbl_transcripts';
+    VALIDATOR = require('validator');
 
 // http://localhost:8000/api/v1/uuids?start=2019-08-20&end=2019-09-18
 // http://localhost:8000/api/v1/uuids?uri=/repositories/2/archival_objects/112120
-/**
- * Gets transcript
- * @param req
- * @param callback
- */
-exports.get_transcript = function (req, callback) {
-
-    let sip_uuid = req.query.uuid;
-    let type = req.query.type;
-
-    DB(REPO_TRANSCRIPTS)
-        .select('*')
-        .where({
-            sip_uuid: sip_uuid,
-        })
-        .then(function (data) {
-
-            if (data.length > 0) {
-                // TODO: add content type to header
-                callback({
-                    status: 200,
-                    data: data[0][type]
-                });
-            }
-
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/api/model module (get_transcript)] api database error ' + error);
-            return false;
-        });
-};
 
 /**
  * Gets repository uuids, uris and handles
@@ -69,6 +38,22 @@ exports.get_uuids = function (req, callback) {
         end = req.query.end,
         uri = req.query.uri,
         sql = 'DATE(created) = CURRENT_DATE';
+
+    if (start !== undefined && Array.isArray(start)) {
+        start = start.pop();
+    }
+
+    if (end !== undefined && Array.isArray(end)) {
+        end = end.pop();
+    }
+
+    if (uri !== undefined && Array.isArray(uri)) {
+        uri = uri.pop();
+    }
+
+    if (uri !== undefined) {
+        uri = VALIDATOR.unescape(uri);
+    }
 
     function get_collection_uuids(callback) {
 
