@@ -47,6 +47,7 @@ exports.get_display_record_data = function (sip_uuid, callback) {
             recordObj.transcript = data[0].transcript;
             recordObj.is_published = data[0].is_published;
             recordObj.mods = data[0].mods;
+            console.log(recordObj.mods);
             callback(recordObj);
         })
         .catch(function(error) {
@@ -107,7 +108,7 @@ exports.create_display_record = function (obj, callback) {
     }
 
     if (metadata.title !== undefined || metadata.title !== null) {
-        record.title = metadata.title;
+        record.title = escape(metadata.title);
     }
 
     if (metadata.names !== undefined) {
@@ -146,6 +147,7 @@ exports.create_display_record = function (obj, callback) {
     }
 
     record.display_record = JSON.parse(obj.mods);
+    record.display_record.title = escape(record.display_record.title);
     callback(JSON.stringify(record));
 };
 

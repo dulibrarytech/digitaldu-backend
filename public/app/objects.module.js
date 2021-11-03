@@ -555,6 +555,9 @@ const objectsModule = (function () {
         httpModule.req(request, callback);
     };
 
+    /**
+     * Gets transcript for edit form
+     */
     obj.getTranscript = function () {
 
         let sip_uuid = helperModule.getParameterByName('sip_uuid');
@@ -621,6 +624,64 @@ const objectsModule = (function () {
 
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to get objects.');
+            }
+        };
+
+        httpModule.req(request, callback);
+    };
+
+    /**
+     * Add transcript to record
+     * @returns {boolean}
+     */
+    obj.addTranscript = function () {
+
+        let pid = helperModule.getParameterByName('pid');
+
+        if (pid === null) {
+            return false;
+        }
+
+        domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> <em>Saving Transcript...</em></div>');
+
+        let obj = {
+            pid: pid,
+            transcript: '' // TODO: get from form
+        };
+
+        let url = api + endpoints.repo_publish, // TODO:...
+            token = userModule.getUserToken(),
+            request = new Request(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                body: JSON.stringify(obj),
+                mode: 'cors'
+            });
+
+        const callback = function (response) {
+
+            if (response.status === 201) {
+
+                setTimeout(function () {
+                    domModule.html('#message', null);
+                }, 10000);
+
+            } else if (response.status === 401) {
+
+                response.json().then(function (response) {
+
+                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
+
+                    setTimeout(function () {
+                        window.location.replace('/login');
+                    }, 4000);
+                });
+
+            } else {
+                helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to add transcript.');
             }
         };
 
