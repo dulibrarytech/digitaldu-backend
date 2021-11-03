@@ -16,6 +16,7 @@
 
 'use strict';
 
+const VALIDATOR = require('validator');
 const Ajv = require('ajv');
 const ajv = new Ajv();
 
@@ -167,6 +168,11 @@ exports.validate_user = function (req, res, next) {
         errors.push({
             field: 'email',
             message: 'email required.'
+        });
+    } else if (!VALIDATOR.isEmail(req.body.email)) {
+        errors.push({
+            field: 'email',
+            message: 'A valid email is required.'
         });
     }
 

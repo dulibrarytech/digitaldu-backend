@@ -230,6 +230,8 @@ exports.save_user = function (req, callback) {
                 return false;
             }
 
+            userObj.email = userObj.email.toLowerCase();
+
             DB(USERS)
                 .insert(userObj)
                 .then(function (data) {
