@@ -280,23 +280,14 @@ exports.get_display_record = function (req, callback) {
         pid = pid[0];
     }
 
-    DB(REPO_OBJECTS)
-        .select('display_record')
-        .where({
-            pid: pid,
-            is_active: 1
-        })
-        .then(function (data) {
-            callback({
-                status: 200,
-                message: 'Object retrieved.',
-                data: data
-            });
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/repository/model module (get_display_record)] Unable to get display record ' + error);
-            throw 'FATAL: [/repository/model module (get_display_record)] Unable to get display record ' + error;
+    MODS.get_db_display_record_data(pid, function(data) {
+
+        callback({
+            status: 200,
+            message: 'Object retrieved.',
+            data: data
         });
+    });
 };
 
 /**

@@ -20,8 +20,107 @@ const DB = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects',
     LOGGER = require("../libs/log4");
 
+exports.get_db_display_record_data = function (pid, callback) {
+
+    DB(REPO_OBJECTS)
+        .select('display_record')
+        .where({
+            pid: pid,
+            is_active: 1
+        })
+        .then(function (data) {
+
+            let record_data = data.pop();
+            let display_record = JSON.parse(record_data.display_record);
+            display_record.title = unescape(display_record.title);
+            display_record.display_record.title = unescape(display_record.display_record.title);
+            data.push({display_record: JSON.stringify(display_record)});
+            callback(data);
+        })
+        .catch(function (error) {
+            LOGGER.module().error('ERROR: [/libs/display-record lib (get_display_record_data)] Unable to get display record ' + error);
+        });
+};
+
 /**
- * Gets display record data
+ * Gets display record for indexing
+ * @param sip_uuid
+ * @param callback
+ */
+exports.get_index_display_record_data = function (sip_uuid, callback) {
+
+    DB(REPO_OBJECTS)
+        .select('*')
+        .where({
+            sip_uuid: sip_uuid,
+            is_active: 1
+        })
+        .then(function (data) {
+
+            let record = JSON.parse(data[0].display_record);
+
+            if (record.display_record.jsonmodel_type !== undefined && record.display_record.jsonmodel_type === 'resource') {
+
+                let collection_record = {};
+                collection_record.pid = data[0].pid;
+                collection_record.uri = data[0].uri;
+                collection_record.is_member_of_collection = data[0].is_member_of_collection;
+                collection_record.handle = data[0].handle;
+                collection_record.object_type = data[0].object_type;
+                collection_record.title = record.display_record.title;
+                collection_record.thumbnail = data[0].thumbnail;
+                collection_record.is_published = data[0].is_published;
+                collection_record.date = data[0].created;
+
+                // get collection abstract
+                if (record.display_record.notes !== undefined) {
+
+                    for (let i=0;i<record.display_record.notes.length;i++) {
+
+                        if (record.display_record.notes[i].type === 'abstract') {
+                            collection_record.abstract = record.display_record.notes[i].content.toString();
+                        }
+                    }
+                }
+
+                collection_record.display_record = {
+                    title: record.display_record.title,
+                    abstract: collection_record.abstract
+                };
+
+                record = collection_record;
+
+            } else {
+                record.title = unescape(record.title);
+                record.display_record.title = unescape(record.display_record.title);
+
+                if (record.display_record.language !== undefined) {
+
+                    if (typeof record.display_record.language !== 'object') {
+
+                        let language = {
+                            language: record.display_record.language
+                        };
+
+                        record.display_record.t_language = language;
+                        delete record.display_record.language;
+
+                    } else {
+                        record.display_record.t_language = record.display_record.language;
+                        delete record.display_record.language;
+                    }
+                }
+            }
+
+            callback(record);
+        })
+        .catch(function (error) {
+            LOGGER.module().error('ERROR: [/libs/display-record lib (get_display_record_data)] unable to get display record data for indexing ' + error);
+        });
+};
+
+/**
+ * Gets display record data (preps data before creating display record)
  * @param sip_uuid
  * @param callback
  */
@@ -47,7 +146,6 @@ exports.get_display_record_data = function (sip_uuid, callback) {
             recordObj.transcript = data[0].transcript;
             recordObj.is_published = data[0].is_published;
             recordObj.mods = data[0].mods;
-            console.log(recordObj.mods);
             callback(recordObj);
         })
         .catch(function(error) {

@@ -688,6 +688,131 @@ const objectsModule = (function () {
         httpModule.req(request, callback);
     };
 
+    /**
+     * Gets image data to retrieve from image server
+     */
+    obj.get_image_data = function () {
+
+        let pid = helperModule.getParameterByName('pid');
+        let url = api + endpoints.repo_object + '?pid=' + pid;
+        let token = userModule.getUserToken(),
+            request = new Request(url, {
+                method: 'GET',
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+        const callback = function (response) {
+
+            if (response.status === 200) {
+
+                response.json().then(function (data) {
+
+                    domModule.html('#message', null);
+                    let record = data.pop();
+                    let recordObj = JSON.parse(record.display_record);
+
+                    if (recordObj.mime_type === 'image/tiff') {
+
+                        if (recordObj.is_compound === 0) {
+
+                            let objectPath = recordObj.object;
+                            let objArr = objectPath.split('/');
+                            let fileName;
+                            let imageArr = [];
+
+                            if (objectPath.indexOf('.jp2') !== -1) {
+                                objectPath = objectPath.replace('.jp2', '.tif');
+                            }
+
+                            if (objArr[objArr.length - 1].indexOf('.tif') !== -1) {
+                                fileName = objArr[objArr.length - 1].replace('.tif', '.jpg');
+                            } else if (objArr[objArr.length - 1].indexOf('.jp2') !== -1) {
+                                fileName = objArr[objArr.length - 1].replace('.jp2', '.jpg');
+                            }
+
+                            let image = api + apiModule.endpoints().repo_object_image + '?sip_uuid=' + pid + '&full_path=' + objectPath + '&object_name=' + fileName + '&mime_type=image/tiff&t=' + token;
+
+                            imageArr.push({
+                                title: fileName,
+                                src: image,
+                                button: 'Download Image',
+                                onclick: Spotlight.download
+                            });
+
+                            document.querySelector('#objects').innerHTML = `<a class="spotlight" href="${image}"></a>`;
+                            Spotlight.show(imageArr, {
+                                preload: true
+                            });
+
+                        } else if (recordObj.is_compound === 1) {
+
+                            if (recordObj.display_record.parts.length > 0) {
+
+                                let parts = recordObj.display_record.parts;
+                                let imageArr = [];
+                                let fragment = '';
+
+                                for (let i=0;i<parts.length;i++) {
+
+                                    let objArr = parts[i].object.split('/');
+                                    let objectPath = parts[i].object;
+                                    let fileName;
+
+                                    if (objectPath.indexOf('.jp2') !== -1) {
+                                        objectPath = objectPath.replace('.jp2', '.tif');
+                                    }
+
+                                    if (objArr[objArr.length - 1].indexOf('.tif') !== -1) {
+                                        fileName = objArr[objArr.length - 1].replace('.tif', '.jpg');
+                                    } else if (objArr[objArr.length - 1].indexOf('.jp2') !== -1) {
+                                        fileName = objArr[objArr.length - 1].replace('.jp2', '.jpg');
+                                    }
+
+                                    let image = api + apiModule.endpoints().repo_object_image + '?sip_uuid=' + pid + '&full_path=' + objectPath + '&object_name=' + fileName + '&mime_type=image/tiff&t=' + token;
+
+                                    imageArr.push({
+                                        title: fileName,
+                                        src: image,
+                                        button: 'Download Image',
+                                        onclick: Spotlight.download
+                                    });
+
+                                    fragment += `<a class="spotlight" href="${image}"></a>`;
+                                }
+
+                                document.querySelector('#objects').innerHTML = fragment;
+                                Spotlight.show(imageArr, {
+                                    preload: true
+                                });
+                            }
+                        }
+                    }
+                });
+
+            } else if (response.status === 401) {
+
+                response.json().then(function (response) {
+
+                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
+
+                    setTimeout(function () {
+                        window.location.replace('/login');
+                    }, 4000);
+                });
+
+            } else {
+                helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to get record.');
+            }
+        };
+
+        httpModule.req(request, callback);
+
+    };
+
     obj.init = function () {
 
         domModule.html('#message', '<strong><em>Loading...</em></strong>');
@@ -697,6 +822,9 @@ const objectsModule = (function () {
         } else {
             objectsModule.search();
         }
+
+        // TODO: attach event to add transcript button
+        // TODO: check if add transcript exists
     };
 
     return obj;

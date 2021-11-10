@@ -26,10 +26,12 @@ const CONFIG = require('../config/config'),
     LOGGER = require('../libs/log4'),
     CACHE = require('../libs/cache'),
     ASYNC = require('async'),
+    VALIDATOR = require('validator'),
     ES = require('elasticsearch'),
     CLIENT = new ES.Client({
         host: CONFIG.elasticSearch
     });
+const {file} = require("elasticsearch/src/lib/loggers");
 
 /**
  * Pings third-party services to determine availability
@@ -162,7 +164,7 @@ exports.ping_services = function (req, callback) {
  */
 exports.get_thumbnail = function (req, callback) {
 
-    let tn = req.query.tn;
+    let tn = VALIDATOR.unescape(req.query.tn);
 
     if (tn === undefined || tn.length === 0) {
 
@@ -179,17 +181,21 @@ exports.get_thumbnail = function (req, callback) {
     });
 };
 
-/**
+/** DEPRECATED
  * Gets thumbnail from TN service
+ * @param req
  * @param tn
  * @param callback
  */
 exports.get_tn = function (req, callback) {
 
-    let uuid = req.query.uuid,
-        type = req.query.type;
+    let uuid = req.query.uuid;
 
-    if (uuid === undefined || uuid.length === 0 || type === undefined) {
+    if (req.query.type !== undefined) {
+        let type = VALIDATOR.unescape(req.query.type);
+    }
+
+    if (uuid === undefined || uuid.length === 0) {
 
         callback({
             status: 400,
@@ -250,7 +256,76 @@ exports.get_tn = function (req, callback) {
 };
 
 /**
- * Gets object viewer
+ * Gets image from image server
+ * @param req
+ * @param callback
+ */
+exports.get_image = function (req, callback) {
+
+    let is_bad_request = false;
+
+    if (req.query.sip_uuid === undefined || req.query.sip_uuid.length === 0) {
+        is_bad_request = true;
+    } else if (req.query.full_path === undefined || req.query.full_path.length === 0) {
+        is_bad_request = true;
+    } else if (req.query.object_name === undefined || req.query.object_name.length === 0) {
+        is_bad_request = true;
+    } else if (req.query.mime_type === undefined || req.query.mime_type.length === 0) {
+        is_bad_request = true;
+    }
+
+    if (is_bad_request === true) {
+
+        callback({
+            status: 400,
+            message: 'Bad request.'
+        });
+
+        return false;
+    }
+
+    let object_data = {
+        sip_uuid: req.query.sip_uuid,
+        full_path: VALIDATOR.unescape(req.query.full_path),
+        object_name: req.query.object_name,
+        mime_type: VALIDATOR.unescape(req.query.mime_type)
+    };
+
+    (async () => {
+
+        try {
+
+            let endpoint = CONFIG.convertService + '/api/v1/image?filename=' + object_data.object_name + '&api_key=' + CONFIG.convertServiceApiKey;
+            let response = await HTTP.get(endpoint, {
+                timeout: 45000,
+                responseType: 'arraybuffer'
+            });
+
+            if (response.status === 200) {
+                callback({
+                    error: false,
+                    status: 200,
+                    data: response.data
+                });
+            }
+
+            return false;
+
+        } catch (error) {
+
+            LOGGER.module().error('ERROR: [/repository/service module (get_image)] Unable to get image: ' + error);
+            LOGGER.module().info('INFO: [/repository/service module (get_image)] Sending data to image convert service');
+            // create missing file
+            setTimeout(function() {
+                DURACLOUD.convert_service(object_data);
+            }, 5000);
+        }
+
+    })();
+};
+
+/**
+ * Gets object viewer for non-images
  * @param req
  * @param callback
  */

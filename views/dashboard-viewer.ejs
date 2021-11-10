@@ -1,0 +1,46 @@
+<% include partials/header.ejs %>
+<link rel="stylesheet" href="../libs/viewerjs/css/spotlight.min.css">
+<body class="nav-md">
+<div class="container body">
+    <div class="main_container">
+        <div class="col-md-3 left_col">
+            <div class="left_col scroll-view">
+                <div class="navbar nav_title" style="border: 0;">
+                    <% include partials/app-name.ejs %>
+                </div>
+                <div class="clearfix"></div>
+                <% include partials/menu-profile.ejs %>
+                <br>
+                <% include partials/nav.ejs %>
+                <% include partials/sidebar-footer.ejs %>
+            </div>
+        </div>
+        <% include partials/top-nav.ejs %>
+        <div class="right_col" role="main">
+            <div id="message"></div>
+            <div id="image-viewer">
+                <div class="row">
+                    <div id="objects"></div>
+                </div>
+
+            </div>
+        </div>
+        <% include partials/footer.ejs %>
+    </div>
+</div>
+<script src="../libs/jquery/dist/jquery.min.js"></script>
+<script src="../libs/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="../libs/nprogress/nprogress.js"></script>
+<script src="../libs/dompurify/purify.min.js"></script>
+<script src="../libs/viewerjs/js/spotlight.min.js"></script>
+<script src="../assets/js/theme_sidebar.js"></script>
+<script src="../app/dom.module.js"></script>
+<script src="../app/config.module.js"></script>
+<script src="../app/api.module.js"></script>
+<script src="../app/helper.module.js"></script>
+<script src="../app/http.module.js"></script>
+<script src="../app/user.module.js"></script>
+<script src="../app/objects.module.js"></script>
+<script>objectsModule.get_image_data();</script>
+</body>
+</html>

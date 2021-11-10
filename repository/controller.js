@@ -98,6 +98,13 @@ exports.get_tn = function (req, res) {
     }
 };
 
+exports.get_image = function (req, res) {
+    SERVICE.get_image(req, function (data) {
+        res.set('Content-Type', 'image/jpeg');
+        res.end(data.data, 'binary');
+    });
+};
+
 exports.get_viewer = function (req, res) {
     SERVICE.get_viewer(req, function (data) {
         res.redirect(data.data);

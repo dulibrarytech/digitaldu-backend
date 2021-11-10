@@ -40,6 +40,9 @@ module.exports = function (app) {
     app.route('/api/admin/v1/repo/object/tn')
         .get(TOKEN.verify, REPO.get_tn);
 
+    app.route('/api/admin/v1/repo/object/image')
+        .get(TOKEN.verify, REPO.get_image);
+
     app.route('/api/admin/v1/repo/object/viewer')
         .get(TOKEN.verify, REPO.get_viewer);
 

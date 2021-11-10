@@ -19,7 +19,7 @@
 'use strict';
 
 const CONFIG = require('../config/config'),
-    ARCHIVESSPACE = require('../libs/archivespace'),
+    // ARCHIVESSPACE = require('../libs/archivespace'),
     HTTP = require('axios'),
     KA = require('http'),
     LOGGER = require('../libs/log4');
@@ -104,7 +104,7 @@ exports.get_ready_folder = function (req, callback) {
             } else {
 
                 callback({
-                    status: 404, // ?
+                    status: 404,
                     data: []
                 });
 
@@ -158,7 +158,7 @@ exports.move_to_ingest = function (req, callback) {
             } else {
 
                 callback({
-                    status: 404, // ?
+                    status: 404,
                     data: []
                 });
 

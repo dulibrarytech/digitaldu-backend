@@ -21,6 +21,7 @@
 const CONFIG = require('../config/config'),
     SERVICE = require('../indexer/service'),
     VALIDATOR = require('validator'),
+    MODS = require('../libs/display-record'),
     DB = require('../config/db')(),
     LOGGER = require('../libs/log4'),
     REPO_OBJECTS = 'tbl_objects';
@@ -51,82 +52,32 @@ exports.get_index_record = function (req, callback) {
         elasticSearchIndex = CONFIG.elasticSearchBackIndex;
     }
 
-    DB(REPO_OBJECTS)
-        .select('*')
-        .where({
-            sip_uuid: sip_uuid,
-            is_active: 1
-        })
-        .then(function (data) {
+    MODS.get_index_display_record_data(sip_uuid, function(record) {
 
-            let record = JSON.parse(data[0].display_record);
+        SERVICE.index_record({
+            index: elasticSearchIndex,
+            id: record.pid,
+            body: record
+        }, function (response) {
 
-            if (record.display_record.jsonmodel_type !== undefined && record.display_record.jsonmodel_type === 'resource') {
+            if (response.result === 'created' || response.result === 'updated') {
 
-                let collection_record = {};
-                collection_record.pid = data[0].pid;
-                collection_record.uri = data[0].uri;
-                collection_record.is_member_of_collection = data[0].is_member_of_collection;
-                collection_record.handle = data[0].handle;
-                collection_record.object_type = data[0].object_type;
-                collection_record.title = record.display_record.title;
-                collection_record.thumbnail = data[0].thumbnail;
-                collection_record.is_published = data[0].is_published;
-                collection_record.date = data[0].created;
-
-                // get collection abstract
-                if (record.display_record.notes !== undefined) {
-
-                    for (let i=0;i<record.display_record.notes.length;i++) {
-
-                        if (record.display_record.notes[i].type === 'abstract') {
-                            collection_record.abstract = record.display_record.notes[i].content.toString();
-                        }
-                    }
-                }
-
-                collection_record.display_record = {
-                    title: record.display_record.title,
-                    abstract: collection_record.abstract
-                };
-
-                record = collection_record;
+                callback({
+                    status: 201,
+                    message: 'record indexed'
+                });
 
             } else {
-                record.title = unescape(record.title);
-                record.display_record.title = unescape(record.display_record.title);
-                record.display_record.t_language = record.display_record.language;
-                delete record.display_record.language;
+
+                LOGGER.module().error('ERROR: [/indexer/model module (get_index_record)] unable to index record');
+
+                callback({
+                    status: 201,
+                    message: 'record not indexed'
+                });
             }
-
-            SERVICE.index_record({
-                index: elasticSearchIndex,
-                id: record.pid,
-                body: record
-            }, function (response) {
-
-                if (response.result === 'created' || response.result === 'updated') {
-
-                    callback({
-                        status: 201,
-                        message: 'record indexed'
-                    });
-
-                } else {
-
-                    LOGGER.module().error('ERROR: [/indexer/model module (get_index_record)] unable to index record');
-
-                    callback({
-                        status: 201,
-                        message: 'record not indexed'
-                    });
-                }
-            });
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/indexer/model module (get_index_record)] unable get index record ' + error);
-            throw 'FATAL: [/indexer/model module (get_index_record)] unable get index record ' + error;
         });
+    });
 };
 
 /**
@@ -148,8 +99,7 @@ exports.index_records = function (req, callback) {
     function index (index_name) {
 
         DB(REPO_OBJECTS)
-            // .select('pid', 'is_member_of_collection', 'uri', 'handle', 'object_type', 'display_record', 'thumbnail', 'file_name', 'is_published', 'created')
-            .select('*')
+            .select('pid')
             .where({
                 is_indexed: 0,
                 is_active: 1
@@ -160,63 +110,14 @@ exports.index_records = function (req, callback) {
             .limit(1)
             .then(function (data) {
 
-                if (data.length > 0) {
+                if (data === undefined) {
+                    index(index_name);
+                    return false;
+                }
 
-                    let record = JSON.parse(data[0].display_record);
+                let pid = data[0].pid;
 
-                    // collection record
-                    if (record.display_record.jsonmodel_type !== undefined && record.display_record.jsonmodel_type === 'resource') {
-
-                        let collection_record = {};
-                        collection_record.pid = VALIDATOR.escape(data[0].pid);
-                        collection_record.uri = data[0].uri;
-                        collection_record.is_member_of_collection = VALIDATOR.escape(data[0].is_member_of_collection);
-                        collection_record.handle = data[0].handle;
-                        collection_record.object_type = VALIDATOR.escape(data[0].object_type);
-                        collection_record.title = record.display_record.title;
-                        collection_record.thumbnail = data[0].thumbnail;
-                        collection_record.is_published = data[0].is_published;
-                        collection_record.date = data[0].created;
-
-                        // get collection abstract
-                        if (record.display_record.notes !== undefined) {
-
-                            for (let i=0;i<record.display_record.notes.length;i++) {
-
-                                if (record.display_record.notes[i].type === 'abstract') {
-                                    collection_record.abstract = record.display_record.notes[i].content.toString();
-                                }
-                            }
-                        }
-
-                        collection_record.display_record = {
-                            title: record.display_record.title,
-                            abstract: collection_record.abstract
-                        };
-
-                        record = collection_record;
-
-                    } else {
-
-                        if (record.display_record.language !== undefined) {
-
-                            if (typeof record.display_record.language !== 'object') {
-
-                                let language = {
-                                    language: record.display_record.language
-                                };
-
-                                record.display_record.t_language = language;
-                                delete record.display_record.language;
-
-                            } else {
-                                record.display_record.t_language = record.display_record.language;
-                                delete record.display_record.language;
-                            }
-                        }
-
-                        record.created = data[0].created;
-                    }
+                MODS.get_index_display_record_data(pid, function(record) {
 
                     console.log('indexing: ', record.pid);
 
@@ -258,10 +159,7 @@ exports.index_records = function (req, callback) {
                             LOGGER.module().error('ERROR: [/indexer/model module (index_records)] unable to index record');
                         }
                     });
-
-                } else {
-                    LOGGER.module().info('INFO: [/indexer/model module (index_records)] indexing complete');
-                }
+                });
             })
             .catch(function (error) {
                 LOGGER.module().error('ERROR: [/indexer/model module (index_records)] unable to get record ' + error);

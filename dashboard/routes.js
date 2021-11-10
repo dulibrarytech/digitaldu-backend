@@ -76,4 +76,6 @@ module.exports = function (app) {
     app.route('/dashboard/transcript')
         .get(DASHBOARD.get_dashboard_transcript);
 
+    app.route('/dashboard/viewer')
+        .get(DASHBOARD.get_dashboard_viewer);
 };

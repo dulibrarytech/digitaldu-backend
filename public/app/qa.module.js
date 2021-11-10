@@ -113,7 +113,7 @@ const qaModule = (function () {
     };
 
     /**
-     * Runs QA on packages and renders problems if any
+     * Runs QA on packages
      * @param folder
      * @returns {boolean}
      */

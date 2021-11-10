@@ -18,9 +18,9 @@
 
 'use strict';
 
-const CONFIG = require('../config/config'),
-    LOGGER = require('../libs/log4'),
+const VALIDATOR = require('validator'),
     DB = require('../config/db')(),
+    LOGGER = require('../libs/log4'),
     REPO_OBJECTS = 'tbl_objects';
 
 /**
@@ -30,7 +30,7 @@ const CONFIG = require('../config/config'),
  */
 exports.check_collection = function(req, callback) {
 
-    let uri = req.query.uri;
+    let uri = VALIDATOR.unescape(req.query.uri);
 
     DB(REPO_OBJECTS)
         .select('display_record')

@@ -193,3 +193,12 @@ exports.get_dashboard_transcript = function (req, res) {
         organization: CONFIG.organization
     });
 };
+
+exports.get_dashboard_viewer = function (req, res) {
+    res.render('dashboard-viewer', {
+        host: CONFIG.host,
+        appname: CONFIG.appName,
+        appversion: CONFIG.appVersion,
+        organization: CONFIG.organization
+    });
+};

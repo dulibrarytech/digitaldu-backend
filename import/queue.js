@@ -735,17 +735,11 @@ exports.import_dip = function (req, callback) {
  */
 exports.create_repo_record = function (req, callback) {
 
-    var sip_uuid;
-
-    if (req.query.sip_uuid !== 'string') {
-        sip_uuid = req.query.sip_uuid.pop();
-    } else {
-        sip_uuid = req.query.sip_uuid;
-    }
+    var sip_uuid = req.query.sip_uuid;
 
     if (sip_uuid === undefined || sip_uuid === null) {
         // no need to move forward if sip_uuid is missing
-        // TODO: log to fail queue
+        // TODO: log to fail queue - DELETE object from Archivematica
         LOGGER.module().error('ERROR: [/import/queue module (create_repo_record)] sip uuid undefined');
 
         callback({

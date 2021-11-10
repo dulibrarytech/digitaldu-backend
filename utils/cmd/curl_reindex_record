@@ -6,4 +6,4 @@ curl -X POST \
   'http://localhost:8000/api/admin/v1/indexer?api_key='${API_KEY} \
   -H 'Content-Type: application/x-www-form-urlencoded' \
   -H 'cache-control: no-cache' \
-  -d sip_uuid=34eca438-f881-47cf-aaf8-61afa3199725
+  -d sip_uuid=091f5749-bc05-452e-a53b-7d7c6f6d2d91

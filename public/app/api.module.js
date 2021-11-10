@@ -33,8 +33,9 @@ const apiModule = (function () {
             repo_objects: '/api/admin/v1/repo/objects',
             repo_object_thumbnail: '/api/admin/v1/repo/object/thumbnail', // gets thumbnails from duracloud
             repo_object_tn: '/api/admin/v1/repo/object/tn', // gets thumbnails from local TN service
+            repo_object_image: '/api/admin/v1/repo/object/image', // gets images from image server
             repo_ping_services: '/api/admin/v1/repo/ping/services',
-            repo_object_viewer: '/api/admin/v1/repo/object/viewer',
+            repo_object_viewer: '/api/admin/v1/repo/object/viewer',  // renders viewer non-images
             repo_publish: '/api/admin/v1/repo/publish',
             repo_unpublish: '/api/admin/v1/repo/unpublish',
             repo_object_unpublished: '/api/admin/v1/repo/object/unpublished',
