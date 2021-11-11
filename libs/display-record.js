@@ -17,6 +17,7 @@
  */
 
 const DB = require('../config/db')(),
+    VALIDATOR = require('validator'),
     REPO_OBJECTS = 'tbl_objects',
     LOGGER = require("../libs/log4");
 
@@ -39,6 +40,7 @@ exports.get_db_display_record_data = function (pid, callback) {
             let display_record = JSON.parse(record_data.display_record);
             display_record.title = unescape(display_record.title);
             display_record.display_record.title = unescape(display_record.display_record.title);
+            display_record.transcript = VALIDATOR.unescape(display_record.transcript);
             data.push({display_record: JSON.stringify(display_record)});
             callback(data);
         })

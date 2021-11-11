@@ -641,7 +641,7 @@ const objectsModule = (function () {
 
         let obj = {
             sip_uuid: sip_uuid,
-            transcript: domModule.val('#transcript', null)
+            transcript: CKEDITOR.instances.transcript.getData()
         };
 
         let url = api + endpoints.repo_transcript,

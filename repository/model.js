@@ -1638,7 +1638,7 @@ exports.delete_object = function (req, callback) {
 };
 
 /**
- * Adds transcript to existing record
+ * Adds transcript to existing record and re-indexes
  * @param req
  * @param callback
  */
@@ -1666,7 +1666,7 @@ exports.save_transcript = function (req, callback) {
 
             if (data === 1) {
 
-                LOGGER.module().info('INFO: [/repository/model module (add_transcript)] Transcript saved');
+                LOGGER.module().info('INFO: [/repository/model module (add_transcript)] Transcript saved to DB');
 
                 MODS.get_display_record_data(sip_uuid, function(obj) {
                     MODS.create_display_record(obj, function(display_record) {
@@ -1725,7 +1725,7 @@ exports.save_transcript = function (req, callback) {
 
                             } else {
                                 callback({
-                                    status: 200, // TODO:...
+                                    status: 200,
                                     message: 'Transcript not Saved.'
                                 });
                             }
