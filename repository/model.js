@@ -30,9 +30,9 @@ const CONFIG = require('../config/config'),
     LOGGER = require('../libs/log4'),
     CACHE = require('../libs/cache'),
     DB = require('../config/db')(),
-    DBQ = require('../config/dbqueue')(),
-    REPO_OBJECTS = 'tbl_objects',
-    ARCHIVESSPACE_QUEUE = 'tbl_archivesspace_queue';
+    REPO_OBJECTS = 'tbl_objects';
+    // DBQ = require('../config/dbqueue')(),
+    // ARCHIVESSPACE_QUEUE = 'tbl_archivesspace_queue';
 
 /**
  * Moves records from admin to public index
@@ -409,51 +409,6 @@ exports.update_thumbnail = function (req, callback) {
         .catch(function (error) {
             LOGGER.module().fatal('FATAL: [/repository/model module (update_thumbnail)] unable to update mods records ' + error);
             throw 'FATAL: [/repository/model module (update_thumbnail)] unable to update mods records ' + error;
-        });
-};
-
-/**
- * Updates MODS record in db
- * @param record
- * @param updated_record
- * @param obj
- * @param callback
- */
-const update_mods = function (record, updated_record, obj, callback) {
-
-    DB(REPO_OBJECTS)
-        .where({
-            mods_id: record.mods_id,
-            is_active: 1
-        })
-        .update({
-            mods: updated_record.mods,
-            display_record: obj.display_record
-        })
-        .then(function (data) {
-
-            DBQ(ARCHIVESSPACE_QUEUE)
-                .where({
-                    mods_id: record.mods_id
-                })
-                .update({
-                    is_updated: 1
-                })
-                .then(function (data) {
-                    obj.updates = true;
-                    callback(obj);
-                    return null;
-                })
-                .catch(function (error) {
-                    LOGGER.module().fatal('FATAL: [/repository/model module (update_mods)] unable to update mods records ' + error);
-                    throw 'FATAL: [/repository/model module (update_mods)] unable to update mods records ' + error;
-                });
-
-            return null;
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/repository/model module (update_mods)] unable to update mods records ' + error);
-            throw 'FATAL: [/repository/model module (update_mods)] unable to update mods records ' + error;
         });
 };
 
@@ -852,8 +807,7 @@ exports.publish_objects = function (req, callback) {
                             }
                         });
 
-                        update_display_record(record, function () {
-                        });
+                        update_display_record(record, function () {});
                     }
 
                 }, 150);
@@ -1682,3 +1636,153 @@ exports.delete_object = function (req, callback) {
         message: 'Delete object.'
     });
 };
+
+/**
+ * Adds transcript to existing record
+ * @param req
+ * @param callback
+ */
+exports.save_transcript = function (req, callback) {
+
+    let sip_uuid = req.body.sip_uuid;
+    let transcript = req.body.transcript;
+
+    if (sip_uuid === undefined || transcript === undefined) {
+
+        callback({
+            status: 400,
+            message: 'Bad Request.'
+        });
+    }
+
+    DB(REPO_OBJECTS)
+        .where({
+            pid: sip_uuid
+        })
+        .update({
+            transcript: transcript
+        })
+        .then(function (data) {
+
+            if (data === 1) {
+
+                LOGGER.module().info('INFO: [/repository/model module (add_transcript)] Transcript saved');
+
+                MODS.get_display_record_data(sip_uuid, function(obj) {
+                    MODS.create_display_record(obj, function(display_record) {
+
+                        let where_obj = {
+                            sip_uuid: sip_uuid
+                        };
+
+                        let record = JSON.parse(display_record);
+
+                        if (record.is_published === 1) {
+                            // remove from public index and admin index
+                            unindex(sip_uuid, function(result) {
+                                if (result.error === true) {
+                                    LOGGER.module().error('ERROR: [/repository/model module (save_transcript)] Unable to remove record (transcript) from index.');
+                                }
+                            });
+                        }
+
+                        MODS.update_display_record(where_obj, display_record, function(result) {
+
+                            if (result.error === false) {
+
+                                setTimeout(function() {
+
+                                    index(sip_uuid, function(result) {
+
+                                        if (result.error === true) {
+                                            LOGGER.module().error('ERROR: [/repository/model module (save_transcript)] Unable to index record.');
+                                        }
+
+                                        let match_phrase = {
+                                            'pid': sip_uuid
+                                        };
+
+                                        setTimeout(function() {
+
+                                            // moves updated record to public index if already published
+                                            reindex(match_phrase, function (result) {
+
+                                                if (result.error === true) {
+                                                    LOGGER.module().error('ERROR: [/repository/model module (save_transcript)] unable to copy record to public index.');
+                                                }
+                                            });
+
+                                            callback({
+                                                status: 201,
+                                                message: 'Transcript Saved.'
+                                            });
+
+                                        }, 3000);
+
+                                    });
+
+                                }, 3000);
+
+                            } else {
+                                callback({
+                                    status: 200, // TODO:...
+                                    message: 'Transcript not Saved.'
+                                });
+                            }
+                        });
+                    });
+                });
+            }
+        })
+        .catch(function (error) {
+            LOGGER.module().fatal('FATAL: [/repository/model module (add_transcript)] Unable to save transcript ' + error);
+            throw 'FATAL: [/repository/model module (add_transcript)] Unable to save transcript ' + error;
+        });
+};
+
+
+/**
+ * Updates MODS record in db
+ * @param record
+ * @param updated_record
+ * @param obj
+ * @param callback
+
+const update_mods = function (record, updated_record, obj, callback) {
+
+    DB(REPO_OBJECTS)
+        .where({
+            mods_id: record.mods_id,
+            is_active: 1
+        })
+        .update({
+            mods: updated_record.mods,
+            display_record: obj.display_record
+        })
+        .then(function (data) {
+
+            DBQ(ARCHIVESSPACE_QUEUE)
+                .where({
+                    mods_id: record.mods_id
+                })
+                .update({
+                    is_updated: 1
+                })
+                .then(function (data) {
+                    obj.updates = true;
+                    callback(obj);
+                    return null;
+                })
+                .catch(function (error) {
+                    LOGGER.module().fatal('FATAL: [/repository/model module (update_mods)] unable to update mods records ' + error);
+                    throw 'FATAL: [/repository/model module (update_mods)] unable to update mods records ' + error;
+                });
+
+            return null;
+        })
+        .catch(function (error) {
+            LOGGER.module().fatal('FATAL: [/repository/model module (update_mods)] unable to update mods records ' + error);
+            throw 'FATAL: [/repository/model module (update_mods)] unable to update mods records ' + error;
+        });
+};
+ */

@@ -111,6 +111,12 @@ exports.get_viewer = function (req, res) {
     });
 };
 
+exports.save_transcript = function (req, res) {
+    REPO.save_transcript(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
 exports.ping = function (req, res) {
     SERVICE.ping_services(req, function (data) {
         res.status(data.status).send(data.data);

@@ -46,14 +46,17 @@ module.exports = function (app) {
     app.route('/api/admin/v1/repo/object/viewer')
         .get(TOKEN.verify, REPO.get_viewer);
 
+    app.route('/api/admin/v1/repo/object/unpublished')
+        .get(TOKEN.verify, REPO.get_unpublished_admin_objects);
+
+    app.route('/api/admin/v1/repo/object/transcript')
+        .put(TOKEN.verify, REPO.save_transcript);
+
     app.route('/api/admin/v1/repo/publish')
         .post(TOKEN.verify, REPO.publish_objects);
 
     app.route('/api/admin/v1/repo/unpublish')
         .post(TOKEN.verify, REPO.unpublish_objects);
-
-    app.route('/api/admin/v1/repo/object/unpublished')
-        .get(TOKEN.verify, REPO.get_unpublished_admin_objects);
 
     app.route('/api/admin/v1/repo/metadata/reset')
         .post(TOKEN.verify, REPO.reset_display_record);

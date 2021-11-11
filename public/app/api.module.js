@@ -39,6 +39,7 @@ const apiModule = (function () {
             repo_publish: '/api/admin/v1/repo/publish',
             repo_unpublish: '/api/admin/v1/repo/unpublish',
             repo_object_unpublished: '/api/admin/v1/repo/object/unpublished',
+            repo_transcript: '/api/admin/v1/repo/object/transcript',
             search: '/api/admin/v1/search',
             import_metadata_collection: '/api/admin/v1/import/metadata/collection',
             import_metadata_object: '/api/admin/v1/import/metadata/object',

@@ -75,7 +75,7 @@ exports.sanitize_req_query = function(req, res, next) {
     next();
 };
 
-/** TODO: consolidate sip_uuid / pid
+/**
  * Validates uuids in query string
  * @param req
  * @param res

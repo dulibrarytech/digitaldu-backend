@@ -20,6 +20,11 @@ const DB = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects',
     LOGGER = require("../libs/log4");
 
+/**
+ * Gets display record to render in UI
+ * @param pid
+ * @param callback
+ */
 exports.get_db_display_record_data = function (pid, callback) {
 
     DB(REPO_OBJECTS)

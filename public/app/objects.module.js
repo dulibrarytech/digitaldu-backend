@@ -591,23 +591,18 @@ const objectsModule = (function () {
                         let recordObj = record.display_record;
                         let display_record = JSON.parse(recordObj);
 
-                        document.querySelector('#title').innerHTML = display_record.display_record.title;
+                        domModule.html('#title', display_record.display_record.title);
+                        document.querySelector('#transcript-form-save-button').addEventListener('click', objectsModule.saveTranscript);
 
                         if (mode === 'view') {
-                            document.querySelector('#edit-transcript').innerHTML = '<a href="/dashboard/transcript?mode=edit&sip_uuid=' + sip_uuid + '">Edit Transcript</a>';
-                            document.querySelector('#record-transcript').innerHTML = display_record.transcript;
+                            domModule.html('#edit-transcript', '<a href="/dashboard/transcript?mode=edit&sip_uuid=' + sip_uuid + '">Edit Transcript</a>');
+                            domModule.html('#record-transcript', display_record.transcript);
                         } else if (mode === 'add') {
                             document.querySelector('#transcript-form').style.display = 'block';
                         } else if (mode === 'edit') {
                             document.querySelector('#transcript-form').style.display = 'block';
-                            document.querySelector('#transcript').value = display_record.transcript;
+                            domModule.val('#transcript', display_record.transcript);
                         }
-
-                        console.log(display_record.display_record);
-                        console.log(display_record.display_record.uri);
-
-
-
                     }
                 });
 
@@ -631,28 +626,28 @@ const objectsModule = (function () {
     };
 
     /**
-     * Add transcript to record
+     * Save transcript to record
      * @returns {boolean}
      */
-    obj.addTranscript = function () {
+    obj.saveTranscript = function () {
 
-        let pid = helperModule.getParameterByName('pid');
+        let sip_uuid = helperModule.getParameterByName('sip_uuid');
 
-        if (pid === null) {
+        if (sip_uuid === null) {
             return false;
         }
 
         domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> <em>Saving Transcript...</em></div>');
 
         let obj = {
-            pid: pid,
-            transcript: '' // TODO: get from form
+            sip_uuid: sip_uuid,
+            transcript: domModule.val('#transcript', null)
         };
 
-        let url = api + endpoints.repo_publish, // TODO:...
+        let url = api + endpoints.repo_transcript,
             token = userModule.getUserToken(),
             request = new Request(url, {
-                method: 'POST',
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
@@ -822,9 +817,6 @@ const objectsModule = (function () {
         } else {
             objectsModule.search();
         }
-
-        // TODO: attach event to add transcript button
-        // TODO: check if add transcript exists
     };
 
     return obj;
