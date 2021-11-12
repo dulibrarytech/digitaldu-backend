@@ -31,8 +31,6 @@ const CONFIG = require('../config/config'),
     CACHE = require('../libs/cache'),
     DB = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects';
-    // DBQ = require('../config/dbqueue')(),
-    // ARCHIVESSPACE_QUEUE = 'tbl_archivesspace_queue';
 
 /**
  * Moves records from admin to public index
@@ -77,6 +75,7 @@ const reindex = function (match_phrase, callback) {
  * Updates published status
  * @param sip_uuid
  * @param is_published
+ * @param callback
  */
 const update_fragment = function (sip_uuid, is_published, callback) {
 
@@ -1668,68 +1667,77 @@ exports.save_transcript = function (req, callback) {
 
                 LOGGER.module().info('INFO: [/repository/model module (add_transcript)] Transcript saved to DB');
 
-                MODS.get_display_record_data(sip_uuid, function(obj) {
-                    MODS.create_display_record(obj, function(display_record) {
+                MODS.get_db_display_record_data(sip_uuid, function(data) {
 
-                        let where_obj = {
-                            sip_uuid: sip_uuid
-                        };
+                    let record = JSON.parse(data[0].display_record);
+                    record.transcript = transcript;
 
-                        let record = JSON.parse(display_record);
+                    let where_obj = {
+                        sip_uuid: sip_uuid,
+                        is_active: 1
+                    };
 
-                        if (record.is_published === 1) {
-                            // remove from public index and admin index
-                            unindex(sip_uuid, function(result) {
-                                if (result.error === true) {
-                                    LOGGER.module().error('ERROR: [/repository/model module (save_transcript)] Unable to remove record (transcript) from index.');
+                    MODS.update_display_record(where_obj, JSON.stringify(record),function(result) {
+
+                        (async () => {
+
+                            let data = {
+                                'sip_uuid': sip_uuid,
+                                'fragment': {
+                                    doc: {
+                                        transcript: transcript
+                                    }
                                 }
-                            });
-                        }
+                            };
 
-                        MODS.update_display_record(where_obj, display_record, function(result) {
+                            let response = await HTTP.put({
+                                endpoint: '/api/admin/v1/indexer/update_fragment',
+                                data: data
+                            });
+
+                            let result = {};
+
+                            if (response.error === true) {
+                                LOGGER.module().error('ERROR: [/repository/model module (update_fragment)] unable to update transcript.');
+                                result.error = true;
+                            } else if (response.data.status === 201) {
+                                result.error = false;
+                            }
 
                             if (result.error === false) {
 
-                                setTimeout(function() {
+                                if (record.is_published === 1) {
 
-                                    index(sip_uuid, function(result) {
+                                    let match_phrase = {
+                                        'pid': sip_uuid
+                                    };
 
-                                        if (result.error === true) {
-                                            LOGGER.module().error('ERROR: [/repository/model module (save_transcript)] Unable to index record.');
-                                        }
+                                    setTimeout(function() {
 
-                                        let match_phrase = {
-                                            'pid': sip_uuid
-                                        };
+                                        // moves updated record to public index if already published
+                                        reindex(match_phrase, function (result) {
 
-                                        setTimeout(function() {
+                                            if (result.error === true) {
+                                                LOGGER.module().error('ERROR: [/repository/model module (save_transcript)] unable to copy record to public index.');
+                                            }
+                                        });
 
-                                            // moves updated record to public index if already published
-                                            reindex(match_phrase, function (result) {
+                                    }, 3000);
+                                }
 
-                                                if (result.error === true) {
-                                                    LOGGER.module().error('ERROR: [/repository/model module (save_transcript)] unable to copy record to public index.');
-                                                }
-                                            });
+                                callback({
+                                    status: 201,
+                                    message: 'Transcript Saved.'
+                                });
 
-                                            callback({
-                                                status: 201,
-                                                message: 'Transcript Saved.'
-                                            });
-
-                                        }, 3000);
-
-                                    });
-
-                                }, 3000);
-
-                            } else {
+                            } else if (result.error === true) {
                                 callback({
                                     status: 200,
                                     message: 'Transcript not Saved.'
                                 });
                             }
-                        });
+
+                        })();
                     });
                 });
             }
@@ -1739,50 +1747,3 @@ exports.save_transcript = function (req, callback) {
             throw 'FATAL: [/repository/model module (add_transcript)] Unable to save transcript ' + error;
         });
 };
-
-
-/**
- * Updates MODS record in db
- * @param record
- * @param updated_record
- * @param obj
- * @param callback
-
-const update_mods = function (record, updated_record, obj, callback) {
-
-    DB(REPO_OBJECTS)
-        .where({
-            mods_id: record.mods_id,
-            is_active: 1
-        })
-        .update({
-            mods: updated_record.mods,
-            display_record: obj.display_record
-        })
-        .then(function (data) {
-
-            DBQ(ARCHIVESSPACE_QUEUE)
-                .where({
-                    mods_id: record.mods_id
-                })
-                .update({
-                    is_updated: 1
-                })
-                .then(function (data) {
-                    obj.updates = true;
-                    callback(obj);
-                    return null;
-                })
-                .catch(function (error) {
-                    LOGGER.module().fatal('FATAL: [/repository/model module (update_mods)] unable to update mods records ' + error);
-                    throw 'FATAL: [/repository/model module (update_mods)] unable to update mods records ' + error;
-                });
-
-            return null;
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/repository/model module (update_mods)] unable to update mods records ' + error);
-            throw 'FATAL: [/repository/model module (update_mods)] unable to update mods records ' + error;
-        });
-};
- */

@@ -28,6 +28,14 @@ const DB = require('../config/db')(),
  */
 exports.get_db_display_record_data = function (pid, callback) {
 
+    if (pid === undefined || typeof pid !== 'string') {
+        callback({
+            error: true,
+            message: 'Missing pid | Unable to get display record'
+        });
+        return false;
+    }
+
     DB(REPO_OBJECTS)
         .select('display_record')
         .where({
