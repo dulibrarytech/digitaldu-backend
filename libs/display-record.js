@@ -40,12 +40,16 @@ exports.get_db_display_record_data = function (pid, callback) {
             let display_record = JSON.parse(record_data.display_record);
             display_record.title = unescape(display_record.title);
             display_record.display_record.title = unescape(display_record.display_record.title);
-            display_record.transcript = VALIDATOR.unescape(display_record.transcript);
+
+            if (display_record.transcript !== undefined && display_record.transcript.length !== 0) {
+                display_record.transcript = VALIDATOR.unescape(display_record.transcript);
+            }
+
             data.push({display_record: JSON.stringify(display_record)});
             callback(data);
         })
         .catch(function (error) {
-            LOGGER.module().error('ERROR: [/libs/display-record lib (get_display_record_data)] Unable to get display record ' + error);
+            LOGGER.module().error('ERROR: [/libs/display-record lib (get_db_display_record_data)] Unable to get display record ' + error);
         });
 };
 

@@ -65,7 +65,7 @@ const metadataModule = (function () {
                 tn = api + endpoints.repo_object_tn + '?uuid=' + DOMPurify.sanitize(record.thumbnail) + '&type=' + DOMPurify.sanitize(record.mime_type) + '&t=' + token;
             }
 
-        } else if(record.object_type === 'object') {
+        } else if(record.object_type === 'object' && tn.length !== 0) {
             tn = api + endpoints.repo_object_tn + '?uuid=' + DOMPurify.sanitize(record.pid) + '&type=' + DOMPurify.sanitize(record.mime_type) + '&t=' + token;
         }
 
