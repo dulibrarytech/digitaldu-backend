@@ -181,10 +181,9 @@ exports.get_thumbnail = function (req, callback) {
     });
 };
 
-/** DEPRECATED
+/**
  * Gets thumbnail from TN service
  * @param req
- * @param tn
  * @param callback
  */
 exports.get_tn = function (req, callback) {

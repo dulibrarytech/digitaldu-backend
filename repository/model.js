@@ -34,7 +34,7 @@ const CONFIG = require('../config/config'),
 
 /**
  * Moves records from admin to public index
- * @param req
+ * @param match_phrase
  * @param callback
  */
 const reindex = function (match_phrase, callback) {
