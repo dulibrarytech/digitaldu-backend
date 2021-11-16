@@ -20,7 +20,6 @@
 
 const CONFIG = require('../config/config'),
     SERVICE = require('../indexer/service'),
-    VALIDATOR = require('validator'),
     MODS = require('../libs/display-record'),
     DB = require('../config/db')(),
     LOGGER = require('../libs/log4'),

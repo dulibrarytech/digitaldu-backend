@@ -87,7 +87,7 @@ exports.get_index_display_record_data = function (sip_uuid, callback) {
                 collection_record.is_member_of_collection = data[0].is_member_of_collection;
                 collection_record.handle = data[0].handle;
                 collection_record.object_type = data[0].object_type;
-                collection_record.title = record.display_record.title;
+                collection_record.title = unescape(record.display_record.title);
                 collection_record.thumbnail = data[0].thumbnail;
                 collection_record.is_published = data[0].is_published;
                 collection_record.date = data[0].created;
@@ -104,7 +104,7 @@ exports.get_index_display_record_data = function (sip_uuid, callback) {
                 }
 
                 collection_record.display_record = {
-                    title: record.display_record.title,
+                    title: unescape(record.display_record.title),
                     abstract: collection_record.abstract
                 };
 
