@@ -6,4 +6,4 @@ curl -X POST \
   'http://localhost:8000/api/admin/v1/repo/metadata/reset?api_key='${API_KEY} \
   -H 'Content-Type: application/x-www-form-urlencoded' \
   -H 'cache-control: no-cache' \
-  -d pid=814fb4df-78dd-4f4b-bd70-62143935def6
+  -d pid=34eca438-f881-47cf-aaf8-61afa3199725

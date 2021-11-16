@@ -33,6 +33,7 @@ const metadataModule = (function () {
 
         let display = '';
         display += createTitle(record);
+        display += createHandle(record);
         display += createPid(record);
         display += createUri(record);
         display += createDates(record);
@@ -200,6 +201,24 @@ const metadataModule = (function () {
         }
 
         return title;
+    }
+
+    /**
+     * Creates handle fragment
+     * @param record
+     * @returns {*}
+     */
+    function createHandle(record) {
+
+        let handle = '';
+
+        if (record.display_record.handle !== undefined) { // object  &nbsp;&nbsp;<i class="fa fa-copy"></i>
+            handle += '<ul><li><strong>Handle:</strong>&nbsp;' + DOMPurify.sanitize(record.display_record.handle) + '</li></ul>';
+        } else if (record.handle !== undefined) { // collection
+            handle += '<ul><li><strong>Handle:</strong>&nbsp;' + DOMPurify.sanitize(record.handle) + '</li></ul>';
+        }
+
+        return handle;
     }
 
     /**
