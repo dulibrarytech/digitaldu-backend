@@ -593,6 +593,7 @@ const objectsModule = (function () {
 
                         domModule.html('#title', display_record.display_record.title);
                         document.querySelector('#transcript-form-save-button').addEventListener('click', objectsModule.saveTranscript);
+                        // TODO: document.querySelector('#transcript-form-cancel-button').addEventListener('click', cancel);
 
                         if (mode === 'view') {
                             domModule.html('#edit-transcript', '<a href="/dashboard/transcript?mode=edit&sip_uuid=' + sip_uuid + '">Edit Transcript</a>');
