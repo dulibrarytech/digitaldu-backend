@@ -1370,10 +1370,16 @@ exports.reset_display_record = function (req, callback) {
         return false;
     }
 
+    /*
     function get_data(callback) {
 
         let obj = {};
         let sip_uuid = req.body.pid;
+
+        MODS.get_db_display_record_data(sip_uuid, function(data) {
+            obj.data = data[0].display_record;
+            callback(null, obj);
+        });
 
         // single record
         DB(REPO_OBJECTS)
@@ -1383,6 +1389,7 @@ exports.reset_display_record = function (req, callback) {
                 is_active: 1
             })
             .then(function (data) {
+                console.log(data);
                 obj.data = data;
                 callback(null, obj);
             })
@@ -1392,14 +1399,30 @@ exports.reset_display_record = function (req, callback) {
             });
     }
 
+     */
+
+    /*
     function create_display_record(obj, callback) {
 
-        let record = obj.data.pop();
-
+        // let record = obj.data.pop();
+        let record = obj.data;
+        console.log(record);
         MODS.create_display_record(record, function (display_record) {
 
             let recordObj = JSON.parse(display_record);
+            let where_obj = {
+                is_member_of_collection: recordObj.is_member_of_collection,
+                pid: recordObj.pid,
+                is_active: 1
+            };
 
+            MODS.update_display_record(where_obj, display_record, function() {
+                obj.sip_uuid = recordObj.pid;
+                obj.is_published = recordObj.is_published;
+                callback(null, obj);
+            });
+
+            /*
             DB(REPO_OBJECTS)
                 .where({
                     is_member_of_collection: recordObj.is_member_of_collection,
@@ -1418,11 +1441,39 @@ exports.reset_display_record = function (req, callback) {
                     LOGGER.module().fatal('FATAL: [/repository/model module (reset_display_record/create_display_record/MODS.create_display_record)] unable to save collection record ' + error);
                     throw 'FATAL: [/repository/model module (reset_display_record/create_display_record/MODS.create_display_record)] unable to save collection record ' + error;
                 });
+
+             *
+        });
+    }
+     */
+
+    function create_display_record(callback) {
+
+        let obj = {};
+        let sip_uuid = req.body.pid;
+
+        MODS.get_display_record_data(sip_uuid, function(record) {
+
+            MODS.create_display_record(record, function (display_record) {
+
+                let recordObj = JSON.parse(display_record);
+                let where_obj = {
+                    is_member_of_collection: recordObj.is_member_of_collection,
+                    pid: recordObj.pid,
+                    is_active: 1
+                };
+
+                MODS.update_display_record(where_obj, JSON.stringify(display_record), function(result) {
+                    obj.sip_uuid = recordObj.pid;
+                    obj.is_published = recordObj.is_published;
+                    callback(null, obj);
+                });
+            });
         });
     }
 
     function admin_index(obj, callback) {
-
+        console.log('admin_index: ', obj);
         // update admin index
         index(obj.sip_uuid, function (result) {
 
@@ -1465,7 +1516,7 @@ exports.reset_display_record = function (req, callback) {
     }
 
     ASYNC.waterfall([
-        get_data,
+        // get_data,
         create_display_record,
         admin_index,
         public_index
@@ -1476,12 +1527,19 @@ exports.reset_display_record = function (req, callback) {
         }
 
         LOGGER.module().info('INFO: [/repository/model module (reset_display_record/async.waterfall)] display record reset');
+
+        callback({
+            status: 201,
+            message: 'Display record(s) updated.'
+        });
     });
 
+    /*
     callback({
         status: 201,
         message: 'updating display record(s).'
     });
+     */
 };
 
 /**

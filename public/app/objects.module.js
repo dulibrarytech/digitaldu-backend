@@ -644,6 +644,8 @@ const objectsModule = (function () {
             transcript: CKEDITOR.instances.transcript.getData()
         };
 
+        domModule.hide('#transcript-form');
+
         let url = api + endpoints.repo_transcript,
             token = userModule.getUserToken(),
             request = new Request(url, {
@@ -661,7 +663,7 @@ const objectsModule = (function () {
             if (response.status === 201) {
 
                 setTimeout(function () {
-                    domModule.html('#message', null);
+                    window.location.replace('/dashboard/transcript?mode=view&sip_uuid=' + sip_uuid);
                 }, 10000);
 
             } else if (response.status === 401) {
@@ -676,6 +678,7 @@ const objectsModule = (function () {
                 });
 
             } else {
+                domModule.show('#transcript-form');
                 helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to add transcript.');
             }
         };

@@ -46,10 +46,11 @@ exports.get_db_display_record_data = function (pid, callback) {
 
             let record_data = data.pop();
             let display_record = JSON.parse(record_data.display_record);
+
             display_record.title = unescape(display_record.title);
             display_record.display_record.title = unescape(display_record.display_record.title);
 
-            if (display_record.transcript !== undefined && display_record.transcript.length !== 0) {
+            if (display_record.transcript !== undefined && display_record.transcript !== null && display_record.transcript.length !== 0) {
                 display_record.transcript = VALIDATOR.unescape(display_record.transcript);
             }
 
@@ -284,14 +285,14 @@ exports.update_display_record = function (obj, display_record, callback) {
         .then(function (data) {
 
             if (data === 1) {
-                LOGGER.module().info('INFO: [/libs/display-record lib (get_display_record_data)] display record updated');
+                LOGGER.module().info('INFO: [/libs/display-record lib (update_display_record)] display record updated');
                 callback({error: false});
             }
 
-            return null;
+            return false;
         })
         .catch(function (error) {
-            LOGGER.module().error('ERROR: [/libs/display-record lib (get_display_record_data)] unable to update display record ' + error);
+            LOGGER.module().error('ERROR: [/libs/display-record lib (update_display_record)] unable to update display record ' + error);
             callback({error: true});
         });
 };

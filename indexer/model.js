@@ -110,7 +110,7 @@ exports.index_records = function (req, callback) {
             .limit(1)
             .then(function (data) {
 
-                if (data === undefined) {
+                if (data === undefined || data.length === 0) {
                     index(index_name);
                     return false;
                 }
@@ -334,7 +334,7 @@ exports.unindex_admin_record = function (req, callback) {
 
     SERVICE.unindex_record({
         index: CONFIG.elasticSearchBackIndex,
-        id: pid.replace('codu:', '')
+        id: pid
     }, function (response) {
 
         if (response.result === 'deleted') {
@@ -379,7 +379,6 @@ exports.republish_record = function (req, callback) {
     function index (pid, index_name) {
 
         DB(REPO_OBJECTS)
-            // .select('pid', 'is_member_of_collection', 'uri', 'handle', 'object_type', 'display_record', 'thumbnail', 'file_name', 'is_published', 'created')
             .select('*')
             .where({
                 pid: pid,
@@ -401,11 +400,11 @@ exports.republish_record = function (req, callback) {
                     if (record.display_record.jsonmodel_type !== undefined && record.display_record.jsonmodel_type === 'resource') {
 
                         let collection_record = {};
-                        collection_record.pid = VALIDATOR.escape(data[0].pid);
+                        collection_record.pid = data[0].pid;
                         collection_record.uri = data[0].uri;
-                        collection_record.is_member_of_collection = VALIDATOR.escape(data[0].is_member_of_collection);
+                        collection_record.is_member_of_collection = data[0].is_member_of_collection;
                         collection_record.handle = data[0].handle;
-                        collection_record.object_type = VALIDATOR.escape(data[0].object_type);
+                        collection_record.object_type = data[0].object_type;
                         collection_record.title = record.display_record.title;
                         collection_record.thumbnail = data[0].thumbnail;
                         collection_record.is_published = data[0].is_published;
