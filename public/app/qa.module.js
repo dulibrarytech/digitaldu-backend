@@ -98,7 +98,7 @@ const qaModule = (function () {
             html += '<p id="upload-status-' + prop + '"></p>';
             html += '</td>';
             // Action button column
-            html += '<td style="text-align: center;vertical-align: middle; width: 15%"><a href="#" type="button" class="btn btn-sm btn-default run-qa" onclick="qaModule.runQAonReady(\'' + prop + '\')"><i class="fa fa-cogs"></i> <span>Run QA/Upload</span></a></td>';
+            html += '<td style="text-align: center;vertical-align: middle; width: 15%"><a href="#" type="button" class="btn btn-sm btn-default run-qa" onclick="qaModule.runQAonReady(\'' + prop + '\')"><i class="fa fa-cogs"></i> <span>Upload</span></a></td>';
             html += '</tr>';
         }
 

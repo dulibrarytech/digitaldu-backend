@@ -1142,7 +1142,7 @@ exports.create_repo_record = function (req, callback) {
             if (result === 'no_transcript') {
                 callback(null, obj);
             } else {
-                obj.transcript = result;
+                obj.transcript = JSON.stringify(result);
                 callback(null, obj);
             }
         });

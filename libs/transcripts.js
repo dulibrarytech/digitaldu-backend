@@ -68,6 +68,10 @@ exports.get = function (obj, callback) {
  */
 const save = function (sip_uuid, transcript) {
 
+    if (typeof transcript === 'object') {
+        transcript = JSON.stringify(transcript);
+    }
+
     DB(REPO_OBJECTS)
         .where({
             sip_uuid: sip_uuid
