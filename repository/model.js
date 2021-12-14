@@ -1074,8 +1074,7 @@ exports.unpublish_objects = function (req, callback) {
         let pidObj = {};
         pidObj.pid = pid;
 
-        update_display_record(pidObj, function () {
-        });
+        update_display_record(pidObj, function () {});
     }
 
     // unpublish entire collection - unpublish objects
@@ -1129,8 +1128,7 @@ exports.unpublish_objects = function (req, callback) {
                         let pidObj = {};
                         pidObj.pid = record.sip_uuid;
 
-                        update_display_record(pidObj, function () {
-                        });
+                        update_display_record(pidObj, function () {});
 
                     } else {
 

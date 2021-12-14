@@ -65,7 +65,7 @@ exports.batch_update_metadata = function (req, callback) {
                         data: data
                     });
 
-                    if (response.data === null || response.data.status  === 404) {
+                    if (response.data === null || response.data.status === 404) {
 
                         LOGGER.module().error('ERROR: [/import/model module (BATCH: update_metadata_record)] Unable to update metadata record: ' + data.sip_uuid);
 
@@ -88,7 +88,7 @@ exports.batch_update_metadata = function (req, callback) {
                                 LOGGER.module().error('ERROR: [/import/model module (update_metadata)] unable to update metadata record ' + error);
                             });
 
-                        setTimeout(function() {
+                        setTimeout(function () {
                             console.log('Archival Object is missing - updating next record...');
                             update_metadata_record();
                         }, REQUEST_TIME_INTERVAL);
@@ -115,7 +115,7 @@ exports.batch_update_metadata = function (req, callback) {
                                 LOGGER.module().error('ERROR: [/import/model module (update_metadata)] unable to update metadata record ' + error);
                             });
 
-                        setTimeout(function() {
+                        setTimeout(function () {
                             console.log('updating next record...');
                             update_metadata_record();
                         }, REQUEST_TIME_INTERVAL);
@@ -159,8 +159,8 @@ exports.batch_update_metadata = function (req, callback) {
  * Batch updates all metadata records in the repository via ArchivesSpace
  * @param req
  * @param callback
- */
-exports.batch_update_metadata_ = function (req, callback) {
+
+ exports.batch_update_metadata_ = function (req, callback) {
 
     function reset_update_flags(callback) {
 
@@ -615,6 +615,7 @@ exports.batch_update_metadata_ = function (req, callback) {
         message: 'Batch updating metadata records...'
     });
 };
+ */
 
 /**
  * updates single metadata record
@@ -896,28 +897,45 @@ exports.update_object_metadata_record = function (req, callback) {
 
         if (obj.is_published === 1) {
 
-            // update public index
             (async () => {
 
                 let data = {
-                    'sip_uuid': obj.sip_uuid,
-                    'publish': true
+                    'pid': obj.sip_uuid,
+                    'type': 'object'
                 };
 
                 let response = await HTTP.post({
-                    endpoint: '/api/admin/v1/indexer',
+                    endpoint: '/api/admin/v1/repo/unpublish',
                     data: data
                 });
 
                 if (response.error === true) {
-                    LOGGER.module().error('ERROR: [/import/model module (update_object_metadata_record/update_public_index)] indexer error');
+                    LOGGER.module().error('ERROR: [/import/model module (update_object_metadata_record/update_public_index)] indexer error. Unable to unpublish old record');
                 } else {
-                    LOGGER.module().info('INFO: [/import/model module (update_object_metadata_record/update_public_index)] ' + obj.sip_uuid + ' indexed');
-                    obj.admin_index = true;
-                    callback(null, obj);
-                }
 
-                return false;
+                    LOGGER.module().info('INFO: [/import/model module (update_object_metadata_record/update_public_index)] ' + obj.sip_uuid + ' unpublished');
+                    // obj.admin_index = true;
+                    setTimeout(function () {
+
+                        let data = {
+                            'pid': obj.sip_uuid,
+                            'type': 'object'
+                        };
+
+                        let response = HTTP.post({
+                            endpoint: '/api/admin/v1/repo/publish',
+                            data: data
+                        });
+
+                        if (response.error === true) {
+                            LOGGER.module().error('ERROR: [/import/model module (update_object_metadata_record/update_public_index)] indexer error.  Unable to publish updated record.');
+                        } else {
+                            LOGGER.module().info('INFO: [/import/model module (update_object_metadata_record/update_public_index)] ' + obj.sip_uuid + ' updated and republished.');
+                            // obj.admin_index = true;
+                            callback(null, obj);
+                        }
+                    }, 5000);
+                }
 
             })();
         }
