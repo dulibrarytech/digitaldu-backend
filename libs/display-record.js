@@ -164,6 +164,7 @@ exports.get_display_record_data = function (sip_uuid, callback) {
             recordObj.object = data[0].file_name;
             recordObj.mime_type = data[0].mime_type;
             recordObj.transcript = data[0].transcript;
+            recordObj.transcript_search = data[0].transcript_search;
             recordObj.is_published = data[0].is_published;
             recordObj.mods = data[0].mods;
             callback(recordObj);
@@ -195,17 +196,30 @@ exports.create_display_record = function (obj, callback) {
     record.object_type = obj.object_type;
     record.is_published = obj.is_published;
 
+    metadata = JSON.parse(mods);
+
     if (obj.file_name !== undefined) {
         record.object = obj.file_name;  // import process
     } else {
         record.object = obj.object;
     }
 
-    if (obj.transcript !== undefined) {
-        record.transcript = obj.transcript;
+    if (obj.transcript !== undefined && obj.transcript !== null) {
+
+        let transcript_arr = JSON.parse(obj.transcript);
+
+        for (let i=0;i<metadata.parts.length;i++) {
+            for (let j=0;j<transcript_arr.length;j++) {
+                if (transcript_arr[j].call_number === metadata.parts[i].title.replace('.tif', '')) {
+                    metadata.parts[i].transcript = transcript_arr[j].transcript_text;
+                }
+            }
+        }
     }
 
-    metadata = JSON.parse(mods);
+    if (obj.transcript_search !== undefined && obj.transcript_search !== null) {
+        record.transcript_search = obj.transcript_search;
+    }
 
     if (metadata.is_compound !== undefined && metadata.is_compound === true) {
         record.is_compound = 1;
@@ -224,6 +238,8 @@ exports.create_display_record = function (obj, callback) {
             }
         }
     }
+
+    record.parts = metadata.parts;
 
     if (metadata.title !== undefined || metadata.title !== null) {
         record.title = escape(metadata.title);
@@ -249,7 +265,7 @@ exports.create_display_record = function (obj, callback) {
         record.f_subjects = subjectsArr;
     }
 
-    if (metadata.notes !== undefined) {
+    if (metadata.notes !== undefined && metadata.notes.length > 0) {
 
         let notes = metadata.notes;
 

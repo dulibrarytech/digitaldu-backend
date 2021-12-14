@@ -27,14 +27,140 @@ const CONFIG = require('../config/config'),
     VALIDATOR = require('validator'),
     DB = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects',
-    CACHE = require('../libs/cache');
+    CACHE = require('../libs/cache'),
+    REQUEST_TIME_INTERVAL = 10000;
+
+
+/**
+ * Batch updates all metadata records in the repository via ArchivesSpace
+ */
+exports.batch_update_metadata = function (req, callback) {
+
+    function update_metadata_record() {
+
+        DB(REPO_OBJECTS)
+            .select('sip_uuid')
+            .limit(1)
+            .orderBy('id', 'desc')
+            .where({
+                object_type: 'object',
+                is_active: 1,
+                is_updated: 0
+            })
+            .then(function (record) {
+
+                if (record === undefined || record.length === 0) {
+                    console.log('Updates complete.');
+                    return false;
+                }
+
+                (async () => {
+
+                    let data = {
+                        'sip_uuid': record[0].sip_uuid
+                    };
+
+                    let response = await HTTP.put({
+                        endpoint: '/api/admin/v1/import/metadata/object',
+                        data: data
+                    });
+
+                    if (response.data === null || response.data.status  === 404) {
+
+                        LOGGER.module().error('ERROR: [/import/model module (BATCH: update_metadata_record)] Unable to update metadata record: ' + data.sip_uuid);
+
+                        DB(REPO_OBJECTS)
+                            .where({
+                                sip_uuid: data.sip_uuid
+                            })
+                            .update({
+                                is_updated: 1
+                            })
+                            .then(function (data) {
+
+                                if (data === 1) {
+                                    LOGGER.module().info('INFO: [/import/model module (BATCH: update_metadata_record)] Reset update flag');
+                                }
+
+                                return false;
+                            })
+                            .catch(function (error) {
+                                LOGGER.module().error('ERROR: [/import/model module (update_metadata)] unable to update metadata record ' + error);
+                            });
+
+                        setTimeout(function() {
+                            console.log('Archival Object is missing - updating next record...');
+                            update_metadata_record();
+                        }, REQUEST_TIME_INTERVAL);
+
+                    } else if (response.data.status === 201) {
+
+                        // update is_updated flag here
+                        DB(REPO_OBJECTS)
+                            .where({
+                                sip_uuid: data.sip_uuid
+                            })
+                            .update({
+                                is_updated: 1
+                            })
+                            .then(function (data) {
+
+                                if (data === 1) {
+                                    LOGGER.module().info('INFO: [/import/model module (BATCH: update_metadata_record)] Metadata record update flag reset');
+                                }
+
+                                return false;
+                            })
+                            .catch(function (error) {
+                                LOGGER.module().error('ERROR: [/import/model module (update_metadata)] unable to update metadata record ' + error);
+                            });
+
+                        setTimeout(function() {
+                            console.log('updating next record...');
+                            update_metadata_record();
+                        }, REQUEST_TIME_INTERVAL);
+                    }
+
+                })();
+
+                return false;
+            })
+            .catch(function (error) {
+                LOGGER.module().error('ERROR: [/import/model module (batch_update_metadata/get_batch_records)] ' + error);
+                throw 'ERROR: [/import/model module (batch_update_metadata/get_batch_records)] ' + error;
+            });
+    }
+
+    let whereObj = {};
+    whereObj.is_active = 1;
+
+    DB(REPO_OBJECTS)
+        .where(whereObj)
+        .update({
+            is_updated: 0
+        })
+        .then(function (data) {
+            // start updates here
+            update_metadata_record();
+            return false;
+        })
+        .catch(function (error) {
+            LOGGER.module().error('ERROR: [/import/model module (batch_update_metadata/reset_update_flags)] ' + error);
+            throw 'ERROR: [/import/model module (batch_update_metadata/reset_update_flags)] ' + error;
+        });
+
+    callback({
+        status: 201,
+        message: 'Batch updating metadata records...'
+    });
+};
 
 /**
  * Batch updates all metadata records in the repository via ArchivesSpace
  * @param req
  * @param callback
  */
-exports.batch_update_metadata = function (req, callback) {
+exports.batch_update_metadata_ = function (req, callback) {
 
     function reset_update_flags(callback) {
 
@@ -183,7 +309,7 @@ exports.batch_update_metadata = function (req, callback) {
             return false;
         }
 
-        (async() => {
+        (async () => {
 
             let response = await HTTP.get({
                 endpoint: '/api/admin/v1/import/metadata/session'
@@ -297,7 +423,7 @@ exports.batch_update_metadata = function (req, callback) {
             return false;
         }
 
-        let timer = setInterval(function() {
+        let timer = setInterval(function () {
 
             if (obj.updates.length === 0) {
                 clearInterval(timer);
@@ -309,7 +435,7 @@ exports.batch_update_metadata = function (req, callback) {
             let sip_uuid = record.sip_uuid;
             let mods = record.mods;
 
-            MODS.get_display_record_data(sip_uuid, function(recordObj) {
+            MODS.get_display_record_data(sip_uuid, function (recordObj) {
 
                 // override mods property
                 recordObj.mods = mods;
@@ -356,7 +482,7 @@ exports.batch_update_metadata = function (req, callback) {
                         sip_uuid: sip_uuid
                     };
 
-                    MODS.update_display_record(where_obj, display_record, function(result) {
+                    MODS.update_display_record(where_obj, display_record, function (result) {
                         console.log('update_display_record: ', result);
                         update_index(sip_uuid, recordObj.is_published);
                     });
@@ -368,7 +494,7 @@ exports.batch_update_metadata = function (req, callback) {
     function update_index(sip_uuid, is_published) {
 
         // update admin index
-        (async() => {
+        (async () => {
 
             let data = {
                 'sip_uuid': sip_uuid
@@ -432,7 +558,7 @@ exports.batch_update_metadata = function (req, callback) {
             throw 'ERROR: [/import/model module (batch_update_metadata/async.waterfall)] ' + error;
         }
 
-        (async() => {
+        (async () => {
 
             let data = {
                 'session': results.session
@@ -458,9 +584,9 @@ exports.batch_update_metadata = function (req, callback) {
             return false;
         }
 
-        setTimeout(function() {
+        setTimeout(function () {
 
-            (async() => {
+            (async () => {
 
                 let data = {
                     status: 'IN_PROGRESS'
@@ -517,7 +643,7 @@ exports.update_object_metadata_record = function (req, callback) {
 
         if (session === undefined) {
 
-            (async() => {
+            (async () => {
 
                 let response = await HTTP.get({
                     endpoint: '/api/admin/v1/import/metadata/session'
@@ -588,14 +714,13 @@ exports.update_object_metadata_record = function (req, callback) {
                 return false;
             }
 
-            // move to local helper
             if (obj.prev_mods === data.mods) {
 
                 LOGGER.module().info('INFO: no update required for record ' + obj.sip_uuid);
 
                 if (obj.single_record !== undefined && obj.single_record === true) {
 
-                    (async() => {
+                    (async () => {
 
                         let data = {
                             'session': obj.session
@@ -650,67 +775,82 @@ exports.update_object_metadata_record = function (req, callback) {
             return false;
         }
 
-        MODS.get_display_record_data(obj.pid, function (recordObj) {
+        DB(REPO_OBJECTS)
+            .select('mods', 'display_record')
+            .where({
+                sip_uuid: obj.sip_uuid
+            })
+            .then(function (data) {
 
-            MODS.create_display_record(recordObj, function (result) {
+                let mods;
+                let display_record;
+                let subjects = [];
 
-                let tmp = JSON.parse(result);
+                for (let i = 0; i < data.length; i++) {
+                    mods = data[i].mods;
+                    display_record = data[i].display_record;
+                }
 
-                if (tmp.is_compound === 1 && tmp.object_type !== 'collection') {
+                mods = JSON.parse(mods); // load updated records
+                display_record = JSON.parse(display_record); // load existing display record
 
-                    let currentRecord = JSON.parse(data[0].display_record),
-                        currentCompoundParts = currentRecord.display_record.parts;
+                if (mods.is_compound === true && display_record.object_type !== 'collection') {
+                    delete mods.parts;  // remove parts
+                    mods.parts = display_record.display_record.parts; // apply existing parts to new mods record
+                }
 
-                    let updatedParts = tmp.display_record.parts.filter(function (elem) {
+                if (display_record.title !== mods.title) {
+                    display_record.title = escape(mods.title);
+                }
 
-                        for (let i = 0; i < currentCompoundParts.length; i++) {
-
-                            if (elem.title === currentCompoundParts[i].title) {
-                                elem.caption = currentCompoundParts[i].caption;
-                                elem.object = currentCompoundParts[i].object;
-                                elem.thumbnail = currentCompoundParts[i].thumbnail;
-                                return elem;
+                if (mods.notes !== undefined && mods.notes.length > 0) {
+                    for (let i = 0; i < mods.notes.length; i++) {
+                        if (mods.notes[i].type === 'abstract') {
+                            if (mods.notes[i].type !== display_record.abstract) {
+                                display_record.abstract = mods.notes[i].content;
                             }
                         }
+                    }
+                }
 
-                    });
+                if (mods.subjects !== undefined && mods.subjects.length > 0) {
 
-                    delete tmp.display_record.parts;
-                    delete tmp.compound;
-
-                    if (currentCompoundParts !== undefined) {
-                        tmp.display_record.parts = updatedParts;
-                        tmp.compound = updatedParts;
+                    for (let i = 0; i < mods.subjects.length; i++) {
+                        subjects.push(mods.subjects[i].title);
                     }
 
-                    obj.display_record = JSON.stringify(tmp);
-
-                } else if (tmp.is_compound === 0 || tmp.object_type === 'collection') {
-
-                    obj.display_record = result;
-
+                    if (JSON.stringify(subjects) !== JSON.stringify(display_record.f_subjects)) {
+                        display_record.f_subjects = subjects;
+                    }
                 }
+
+                display_record.display_record = mods; // apply new mods to display record
 
                 let where_obj = {
                     sip_uuid: obj.sip_uuid
                 };
 
-                MODS.update_display_record(where_obj, obj.display_record, function (result) {
+                MODS.update_display_record(where_obj, JSON.stringify(display_record), function (result) {
 
                     if (result.error === true) {
-                        LOGGER.module().error('ERROR: [/import/model module (create_display_record)] unable to update display record.');
+                        LOGGER.module().error('ERROR: [/import/model module (MODS.update_display_record)] unable to update display record.');
                         obj.updated = false;
                         callback({
                             error: true,
-                            error_message: 'ERROR: [/import/model module (create_display_record)] unable to update display record.'
+                            error_message: 'ERROR: [/import/model module (MODS.update_display_record)] unable to update display record.'
                         });
                     }
 
-                    obj.is_published = recordObj.is_published;
-
+                    obj.is_published = display_record.is_published;
+                    callback(null, obj);
                 });
+
+                return null;
+            })
+            .catch(function (error) {
+                LOGGER.module().fatal('FATAL: [/import/model module (MODS.update_display_record)] unable to update display record. ' + error);
+                throw 'FATAL: [/import/model module (MODS.update_display_record)] unable to update display record. ' + error;
             });
-        });
     }
 
     // 5.)
@@ -722,7 +862,7 @@ exports.update_object_metadata_record = function (req, callback) {
         }
 
         // update admin index
-        (async() => {
+        (async () => {
 
             let data = {
                 'sip_uuid': obj.sip_uuid
@@ -757,7 +897,7 @@ exports.update_object_metadata_record = function (req, callback) {
         if (obj.is_published === 1) {
 
             // update public index
-            (async() => {
+            (async () => {
 
                 let data = {
                     'sip_uuid': obj.sip_uuid,
@@ -797,10 +937,11 @@ exports.update_object_metadata_record = function (req, callback) {
             LOGGER.module().error('ERROR: [/import/model module (update_object_metadata_record/async.waterfall)] ' + error);
         }
 
-    });
+        CACHE.clear_cache();
 
-    callback({
-        status: 201
+        callback({
+            status: 201
+        });
     });
 };
 
@@ -833,7 +974,7 @@ exports.update_collection_metadata_record = function (req, callback) {
 
         if (session === undefined) {
 
-            (async() => {
+            (async () => {
 
                 let response = await HTTP.get({
                     endpoint: '/api/admin/v1/import/metadata/session'
@@ -913,7 +1054,7 @@ exports.update_collection_metadata_record = function (req, callback) {
 
                 if (obj.single_record !== undefined && obj.single_record === true) {
 
-                    (async() => {
+                    (async () => {
 
                         let data = {
                             'session': obj.session
@@ -1080,7 +1221,7 @@ exports.update_collection_metadata_record = function (req, callback) {
         }
 
         // update admin index
-        (async() => {
+        (async () => {
 
             let data = {
                 'sip_uuid': obj.sip_uuid
@@ -1114,7 +1255,7 @@ exports.update_collection_metadata_record = function (req, callback) {
         if (obj.is_published === 1) {
 
             // update public index
-            (async() => {
+            (async () => {
 
                 let data = {
                     'sip_uuid': obj.sip_uuid,
@@ -1156,7 +1297,7 @@ exports.update_collection_metadata_record = function (req, callback) {
 
         if (results.session !== null) {
 
-            (async() => {
+            (async () => {
 
                 let data = {
                     'session': results.session
@@ -1233,7 +1374,7 @@ exports.get_import_complete = function (req, callback) {
             let response = [];
 
             // Get collection names
-            let timer = setInterval(function() {
+            let timer = setInterval(function () {
 
                 if (data.length === 0) {
                     clearInterval(timer);
@@ -1250,7 +1391,7 @@ exports.get_import_complete = function (req, callback) {
                 let record = data.pop();
 
                 DB(REPO_OBJECTS)
-                    .select( 'mods')
+                    .select('mods')
                     .where({
                         pid: record.is_member_of_collection,
                         object_type: 'collection'
@@ -1260,7 +1401,7 @@ exports.get_import_complete = function (req, callback) {
                         record.collection_title = mods.title;
                         response.push(record);
                     })
-                    .catch(function(error) {
+                    .catch(function (error) {
                         LOGGER.module().error('ERROR: [/import/model module (get_import_complete)] unable to get completed import records ' + error);
                     });
 

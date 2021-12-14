@@ -980,6 +980,37 @@ exports.get_compound_object_parts = function (sip_uuid, parts, callback) {
 };
 
 /**
+ * Saves compounds parts to DB
+ * @param obj
+ */
+exports.save_compound_parts = function (obj) {
+
+    let sip_uuid = obj.sip_uuid;
+    let json = JSON.parse(obj.display_record);
+    let display_record = json.display_record;
+
+    DB(REPO_OBJECTS)
+        .where({
+            object_type: 'object',
+            sip_uuid: sip_uuid
+        })
+        .update({
+            compound_parts: JSON.stringify(display_record.parts)
+        })
+        .then(function (data) {
+
+            if (data === 1) {
+                LOGGER.module().info('INFO: [/libs/transfer-ingest lib (save_compound_parts)] compound parts saved');
+            }
+
+            return false;
+        })
+        .catch(function (error) {
+            LOGGER.module().error('ERROR: [/libs/transfer-ingest lib (save_compound_parts)] unable to save compound parts ' + error);
+        });
+};
+
+/**
  * Clears out failed record(s) in import queue
  * @param obj
  * @param callback

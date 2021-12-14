@@ -51,8 +51,15 @@ exports.get = function (obj, callback) {
         });
 
         if (response.status === 200) {
-            save(obj.sip_uuid, response.data.transcript);
-            callback(response.data.transcript);
+
+            // TODO: response.data.transcripts - check if array/object
+            let transcript_search = response.data.transcript_search;        // for search - save to index
+            let transcript_obj = {};
+
+            transcript_obj.transcripts = response.data.transcripts;  // display and edits - save to DB
+            transcript_obj.transcript_search = transcript_search;
+            save(obj.sip_uuid, JSON.stringify(transcript_obj));
+            callback(transcript_obj);
         } else {
             LOGGER.module().info('INFO: [/libs/transcript lib (get)] No transcript found for this record.');
             callback('no_transcript');
@@ -67,10 +74,6 @@ exports.get = function (obj, callback) {
  * @param transcript
  */
 const save = function (sip_uuid, transcript) {
-
-    if (typeof transcript === 'object') {
-        transcript = JSON.stringify(transcript);
-    }
 
     DB(REPO_OBJECTS)
         .where({

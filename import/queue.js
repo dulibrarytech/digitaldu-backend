@@ -960,10 +960,11 @@ exports.create_repo_record = function (req, callback) {
                 obj.file_size = response.headers['content-length'];
                 obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file;
                 obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
-
                 obj.full_path = obj.file_name;
                 obj.object_name = obj.uuid + '-' + obj.file;
-                DURACLOUD.convert_service(obj);
+
+                // TODO: account for compound parts array. Move?
+                // DURACLOUD.convert_service(obj);
                 delete obj.full_path;
                 delete obj.object_name;
                 callback(null, obj);
@@ -1142,7 +1143,8 @@ exports.create_repo_record = function (req, callback) {
             if (result === 'no_transcript') {
                 callback(null, obj);
             } else {
-                obj.transcript = JSON.stringify(result);
+                obj.transcript = JSON.stringify(result.transcripts);
+                obj.transcript_search = JSON.stringify(result.transcript_search);
                 callback(null, obj);
             }
         });
@@ -1171,11 +1173,12 @@ exports.create_repo_record = function (req, callback) {
 
             if (tmp.is_compound === 1) {
 
-                let parts = tmp.display_record.parts;
+                let parts = tmp.parts;
 
                 TRANSFER_INGEST.get_compound_object_parts(obj.sip_uuid, parts, function (compound) {
 
-                    tmp.compound = compound;
+                    delete tmp.parts // remove additional parts array
+                    tmp.display_record.parts = compound;
                     obj.is_compound = 1;
                     obj.display_record = JSON.stringify(tmp);
                     callback(null, obj);
@@ -1230,6 +1233,11 @@ exports.create_repo_record = function (req, callback) {
         TRANSFER_INGEST.create_repo_record(obj, function (result) {
             callback(null, obj);
         });
+
+        TRANSFER_INGEST.save_compound_parts(obj);
+        console.log(obj);
+        // TODO: test...
+        // DURACLOUD.convert_service(obj);
     }
 
     // 14.)

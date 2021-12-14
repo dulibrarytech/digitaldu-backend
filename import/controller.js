@@ -104,7 +104,7 @@ exports.update_collection_metadata_record = function(req, res) {
 
 exports.update_object_metadata_record = function(req, res) {
     MODEL.update_object_metadata_record(req, function(data) {
-        res.status(data.status).send(data.data);
+        res.status(data.status).send(data);
     });
 };
 

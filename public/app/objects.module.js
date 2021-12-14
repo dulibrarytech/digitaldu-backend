@@ -591,13 +591,48 @@ const objectsModule = (function () {
                         let recordObj = record.display_record;
                         let display_record = JSON.parse(recordObj);
 
+                        // TODO: account for multiple transcripts
+                        // TODO: show along side images
                         domModule.html('#title', display_record.display_record.title);
                         document.querySelector('#transcript-form-save-button').addEventListener('click', objectsModule.saveTranscript);
                         // TODO: document.querySelector('#transcript-form-cancel-button').addEventListener('click', cancel);
 
+                        Array.prototype.findCallNumber = function(call_number) {
+
+                            for(let i = 0; i < this.length;i++) {
+                                if(this[i].indexOf(call_number) !== -1)
+                                    return this[i];
+                            }
+
+                            return -1;
+                        };
+
+                        let images_arr = [];
+
+                        for (let i=0;i<display_record.compound.length;i++) {
+                            images_arr.push(display_record.compound[i].object);
+                        }
+
                         if (mode === 'view') {
+
+                            let transcript_arr = JSON.parse(display_record.transcript);
+                            let html = '';
+
+                            for (let i=0;i<transcript_arr.length;i++) {
+
+                                let objectPath = images_arr.findCallNumber(transcript_arr[i].call_number);
+                                let objArr = objectPath.split('/');
+                                let fileName = objArr[objArr.length - 1].replace('tif', 'jpg');
+                                let img = api + apiModule.endpoints().repo_object_image + '?sip_uuid=' + sip_uuid + '&full_path=' + objectPath + '&object_name=' + fileName + '&mime_type=image/tiff&t=' + token;
+
+                                html += `<h4>${transcript_arr[i].call_number}</h4>
+                                        <p><img src="${img}" alt="${transcript_arr[i].call_number}" width="500px""></p>
+                                        <p>${transcript_arr[i].transcript_text}</p>`;
+                            }
+
                             domModule.html('#edit-transcript', '<a href="/dashboard/transcript?mode=edit&sip_uuid=' + sip_uuid + '">Edit Transcript</a>');
-                            domModule.html('#record-transcript', display_record.transcript);
+                            domModule.html('#record-transcript', html);
+
                         } else if (mode === 'add') {
                             document.querySelector('#transcript-form').style.display = 'block';
                         } else if (mode === 'edit') {
@@ -690,7 +725,7 @@ const objectsModule = (function () {
     /**
      * Gets image data to retrieve from image server
      */
-    obj.get_image_data = function () {
+    obj.getImageData = function () {
 
         let pid = helperModule.getParameterByName('pid');
         let url = api + endpoints.repo_object + '?pid=' + pid;

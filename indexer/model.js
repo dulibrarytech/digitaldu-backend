@@ -394,7 +394,7 @@ exports.republish_record = function (req, callback) {
                 if (data.length > 0) {
 
                     let record = JSON.parse(data[0].display_record);
-
+                    // TODO: update to use display record lib
                     // collection record
                     if (record.display_record.jsonmodel_type !== undefined && record.display_record.jsonmodel_type === 'resource') {
 
