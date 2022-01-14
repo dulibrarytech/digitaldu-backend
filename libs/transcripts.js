@@ -42,26 +42,32 @@ exports.get = function (obj, callback) {
 
     (async () => {
 
-        let endpoint = CONFIG.transcriptService + '/api/v1/transcript?call_number=' + call_number + '&api_key=' + CONFIG.transcriptServiceApiKey;
-        let response = await HTTP.get(endpoint, {
-            timeout: TIMEMOUT,
-            headers: {
-                'Content-Type': 'application/json'
+        try {
+
+            let endpoint = CONFIG.transcriptService + '/api/v1/transcript?call_number=' + call_number + '&api_key=' + CONFIG.transcriptServiceApiKey;
+            let response = await HTTP.get(endpoint, {
+                timeout: TIMEMOUT,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.status === 200) {
+
+                // TODO: response.data.transcripts - check if array/object
+                let transcript_search = response.data.transcript_search;        // for search - save to index
+                let transcript_obj = {};
+
+                transcript_obj.transcripts = response.data.transcripts;  // display and edits - save to DB
+                transcript_obj.transcript_search = transcript_search;
+                save(obj.sip_uuid, JSON.stringify(transcript_obj));
+                callback(transcript_obj);
+            } else {
+                LOGGER.module().info('INFO: [/libs/transcript lib (get)] No transcript found for this record.');
+                callback('no_transcript');
             }
-        });
-
-        if (response.status === 200) {
-
-            // TODO: response.data.transcripts - check if array/object
-            let transcript_search = response.data.transcript_search;        // for search - save to index
-            let transcript_obj = {};
-
-            transcript_obj.transcripts = response.data.transcripts;  // display and edits - save to DB
-            transcript_obj.transcript_search = transcript_search;
-            save(obj.sip_uuid, JSON.stringify(transcript_obj));
-            callback(transcript_obj);
-        } else {
-            LOGGER.module().info('INFO: [/libs/transcript lib (get)] No transcript found for this record.');
+        } catch (error) {
+            LOGGER.module().info('INFO: [/libs/transcript lib (get)] No transcript found for this record. ' + error);
             callback('no_transcript');
         }
 
@@ -82,7 +88,7 @@ const save = function (sip_uuid, transcript) {
         .update({
             transcript: transcript
         })
-        .then(function(data) {
+        .then(function (data) {
             console.log(data);
         })
         .catch(function (error) {

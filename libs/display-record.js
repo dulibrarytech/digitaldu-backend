@@ -69,74 +69,83 @@ exports.get_db_display_record_data = function (pid, callback) {
  */
 exports.get_index_display_record_data = function (sip_uuid, callback) {
 
-    DB(REPO_OBJECTS)
-        .select('*')
-        .where({
-            sip_uuid: sip_uuid,
-            is_active: 1
-        })
-        .then(function (data) {
+    setTimeout(function() {
 
-            let record = JSON.parse(data[0].display_record);
+        DB(REPO_OBJECTS)
+            .select('*')
+            .where({
+                sip_uuid: sip_uuid,
+                is_active: 1
+            })
+            .then(function (data) {
 
-            if (record.display_record.jsonmodel_type !== undefined && record.display_record.jsonmodel_type === 'resource') {
+                if (data.length === 0) {
+                    callback('no_data');
+                    return false;
+                }
 
-                let collection_record = {};
-                collection_record.pid = data[0].pid;
-                collection_record.uri = data[0].uri;
-                collection_record.is_member_of_collection = data[0].is_member_of_collection;
-                collection_record.handle = data[0].handle;
-                collection_record.object_type = data[0].object_type;
-                collection_record.title = unescape(record.display_record.title);
-                collection_record.thumbnail = data[0].thumbnail;
-                collection_record.is_published = data[0].is_published;
-                collection_record.date = data[0].created;
+                let record = JSON.parse(data[0].display_record);
 
-                // get collection abstract
-                if (record.display_record.notes !== undefined) {
+                if (record.display_record.jsonmodel_type !== undefined && record.display_record.jsonmodel_type === 'resource') {
 
-                    for (let i=0;i<record.display_record.notes.length;i++) {
+                    let collection_record = {};
+                    collection_record.pid = data[0].pid;
+                    collection_record.uri = data[0].uri;
+                    collection_record.is_member_of_collection = data[0].is_member_of_collection;
+                    collection_record.handle = data[0].handle;
+                    collection_record.object_type = data[0].object_type;
+                    collection_record.title = unescape(record.display_record.title);
+                    collection_record.thumbnail = data[0].thumbnail;
+                    collection_record.is_published = data[0].is_published;
+                    collection_record.date = data[0].created;
 
-                        if (record.display_record.notes[i].type === 'abstract') {
-                            collection_record.abstract = record.display_record.notes[i].content.toString();
+                    // get collection abstract
+                    if (record.display_record.notes !== undefined) {
+
+                        for (let i=0;i<record.display_record.notes.length;i++) {
+
+                            if (record.display_record.notes[i].type === 'abstract') {
+                                collection_record.abstract = record.display_record.notes[i].content.toString();
+                            }
+                        }
+                    }
+
+                    collection_record.display_record = {
+                        title: unescape(record.display_record.title),
+                        abstract: collection_record.abstract
+                    };
+
+                    record = collection_record;
+
+                } else {
+                    record.title = unescape(record.title);
+                    record.display_record.title = unescape(record.display_record.title);
+
+                    if (record.display_record.language !== undefined) {
+
+                        if (typeof record.display_record.language !== 'object') {
+
+                            let language = {
+                                language: record.display_record.language
+                            };
+
+                            record.display_record.t_language = language;
+                            delete record.display_record.language;
+
+                        } else {
+                            record.display_record.t_language = record.display_record.language;
+                            delete record.display_record.language;
                         }
                     }
                 }
 
-                collection_record.display_record = {
-                    title: unescape(record.display_record.title),
-                    abstract: collection_record.abstract
-                };
+                callback(record);
+            })
+            .catch(function (error) {
+                LOGGER.module().error('ERROR: [/libs/display-record lib (get_display_record_data)] unable to get display record data for indexing ' + error);
+            });
 
-                record = collection_record;
-
-            } else {
-                record.title = unescape(record.title);
-                record.display_record.title = unescape(record.display_record.title);
-
-                if (record.display_record.language !== undefined) {
-
-                    if (typeof record.display_record.language !== 'object') {
-
-                        let language = {
-                            language: record.display_record.language
-                        };
-
-                        record.display_record.t_language = language;
-                        delete record.display_record.language;
-
-                    } else {
-                        record.display_record.t_language = record.display_record.language;
-                        delete record.display_record.language;
-                    }
-                }
-            }
-
-            callback(record);
-        })
-        .catch(function (error) {
-            LOGGER.module().error('ERROR: [/libs/display-record lib (get_display_record_data)] unable to get display record data for indexing ' + error);
-        });
+    }, 5000);
 };
 
 /**

@@ -981,13 +981,10 @@ exports.get_compound_object_parts = function (sip_uuid, parts, callback) {
 
 /**
  * Saves compounds parts to DB
- * @param obj
+ * @param sip_uuid
+ * @param parts
  */
-exports.save_compound_parts = function (obj) {
-
-    let sip_uuid = obj.sip_uuid;
-    let json = JSON.parse(obj.display_record);
-    let display_record = json.display_record;
+exports.save_compound_parts = function (sip_uuid, parts) {
 
     DB(REPO_OBJECTS)
         .where({
@@ -995,7 +992,7 @@ exports.save_compound_parts = function (obj) {
             sip_uuid: sip_uuid
         })
         .update({
-            compound_parts: JSON.stringify(display_record.parts)
+            compound_parts: JSON.stringify(parts)
         })
         .then(function (data) {
 

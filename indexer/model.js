@@ -118,6 +118,11 @@ exports.index_records = function (req, callback) {
 
                 MODS.get_index_display_record_data(pid, function(record) {
 
+                    if (record === 'no_data') {
+                        LOGGER.module().error('ERROR: [/indexer/model module (MODS.get_index_display_record_data)] record not found.');
+                        return false;
+                    }
+
                     console.log('indexing: ', record.pid);
 
                     SERVICE.index_record({

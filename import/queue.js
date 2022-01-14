@@ -963,8 +963,6 @@ exports.create_repo_record = function (req, callback) {
                 obj.full_path = obj.file_name;
                 obj.object_name = obj.uuid + '-' + obj.file;
 
-                // TODO: account for compound parts array. Move?
-                // DURACLOUD.convert_service(obj);
                 delete obj.full_path;
                 delete obj.object_name;
                 callback(null, obj);
@@ -1231,13 +1229,73 @@ exports.create_repo_record = function (req, callback) {
         delete obj.error;
 
         TRANSFER_INGEST.create_repo_record(obj, function (result) {
-            callback(null, obj);
+            if (result === false) {
+                console.log('ERROR: Unable to create repo record.');
+                return false;
+            }
         });
 
-        TRANSFER_INGEST.save_compound_parts(obj);
-        console.log(obj);
-        // TODO: test...
-        // DURACLOUD.convert_service(obj);
+        let display_record = JSON.parse(obj.display_record);
+        let parts = display_record.display_record.parts; // loop and get object property value
+
+        if (obj.is_compound !== undefined && obj.is_compound === 1) {
+
+            let dataArr = [];
+            console.log(parts);
+            TRANSFER_INGEST.save_compound_parts(obj.sip_uuid, parts);
+
+            for (let i=0;i<parts.length;i++) {
+
+                let dataObj = {};
+                let tmp = parts[i].object.split('/');
+                let object_name = tmp[tmp.length - 1];
+
+                dataObj.sip_uuid = obj.sip_uuid;
+                dataObj.mime_type = obj.mime_type;
+                dataObj.full_path = parts[i].object;
+
+                if (object_name.indexOf('.tif') !== -1) {
+                    object_name = object_name.replace('.tif', '.jpg');
+                } else if (object_name.indexOf('.jp2') !== -1) {
+                    object_name = object_name.replace('.jp2', '.jpg');
+                }
+
+                dataObj.object_name = object_name;
+                dataArr.push(dataObj);
+            }
+
+            let timer = setInterval(function() {
+
+                if (dataArr.length === 0) {
+                    clearInterval(timer);
+                    callback(null, obj);
+                    return false;
+                }
+
+                let data = dataArr.pop();
+                DURACLOUD.convert_service(data);
+
+            }, 5000);
+
+        } else if (obj.is_compound === 0 || obj.is_compound === undefined) {
+
+            let data = {};
+            let tmp = obj.file_name.split('/');
+            data.sip_uuid = obj.sip_uuid;
+            data.full_path = obj.file_name;
+            data.object_name = tmp[tmp.length - 1];
+
+            if (data.object_name.indexOf('.tif') !== -1) {
+                data.object_name = data.object_name.replace('.tif', '.jpg');
+            } else if (data.object_name.indexOf('.jp2') !== -1) {
+                data.object_name = data.object_name.replace('.jp2', '.jpg');
+            }
+
+            data.mime_type = obj.mime_type;
+            DURACLOUD.convert_service(data);
+            callback(null, obj);
+            return false;
+        }
     }
 
     // 14.)
