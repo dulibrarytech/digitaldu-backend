@@ -145,7 +145,7 @@ exports.get_index_display_record_data = function (sip_uuid, callback) {
                 LOGGER.module().error('ERROR: [/libs/display-record lib (get_display_record_data)] unable to get display record data for indexing ' + error);
             });
 
-    }, 5000);
+    }, 0);
 };
 
 /**

@@ -23,6 +23,7 @@ const CONFIG = require('../config/config'),
     MODS = require('../libs/display-record'),
     DB = require('../config/db')(),
     LOGGER = require('../libs/log4'),
+    INDEX_TIMER = CONFIG.indexTimer,
     REPO_OBJECTS = 'tbl_objects';
 
 /**
@@ -110,7 +111,6 @@ exports.index_records = function (req, callback) {
             .then(function (data) {
 
                 if (data === undefined || data.length === 0) {
-                    index(index_name);
                     return false;
                 }
 
@@ -147,7 +147,7 @@ exports.index_records = function (req, callback) {
                                         setTimeout(function () {
                                             // index next record
                                             index(index_name);
-                                        }, CONFIG.indexTimer);
+                                        }, INDEX_TIMER);
 
                                     } else {
                                         LOGGER.module().error('ERROR: [/indexer/model module (index_records)] more than one record was updated');
@@ -482,7 +482,7 @@ exports.republish_record = function (req, callback) {
                                         setTimeout(function () {
                                             // index next record
                                             index(index_name);
-                                        }, CONFIG.indexTimer);
+                                        }, INDEX_TIMER);
 
                                     } else {
                                         LOGGER.module().error('ERROR: [/indexer/model module (republish_record)] more than one record was updated');

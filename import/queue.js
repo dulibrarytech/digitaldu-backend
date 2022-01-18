@@ -1241,7 +1241,6 @@ exports.create_repo_record = function (req, callback) {
         if (obj.is_compound !== undefined && obj.is_compound === 1) {
 
             let dataArr = [];
-            console.log(parts);
             TRANSFER_INGEST.save_compound_parts(obj.sip_uuid, parts);
 
             for (let i=0;i<parts.length;i++) {
@@ -1313,29 +1312,33 @@ exports.create_repo_record = function (req, callback) {
         }
 
         /*
-         Send request to index repository record
-         */
-        (async() => {
+            Send request to index repository record
+        */
+        setTimeout(function() {
 
-            let data = {
-                'sip_uuid': obj.sip_uuid
-            };
+            (async() => {
 
-            let response = await HTTP.post({
-                endpoint: '/api/admin/v1/indexer',
-                data: data
-            });
+                let data = {
+                    'sip_uuid': obj.sip_uuid
+                };
 
-            if (response.error === true) {
-                LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/index)] indexer error.');
-                return false;
-            } else if (response.data.status === 201) {
-                obj.indexed = true;
-                callback(null, obj);
-                return false;
-            }
+                let response = await HTTP.post({
+                    endpoint: '/api/admin/v1/indexer',
+                    data: data
+                });
 
-        })();
+                if (response.error === true) {
+                    LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/index)] indexer error.');
+                    return false;
+                } else if (response.data.status === 201) {
+                    obj.indexed = true;
+                    callback(null, obj);
+                    return false;
+                }
+
+            })();
+
+        }, 5000);
     }
 
     // 15.)
