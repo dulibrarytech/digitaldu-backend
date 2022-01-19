@@ -21,7 +21,7 @@
 const HTTP = require('axios'),
     CONFIG = require('../config/config'),
     LOGGER = require('../libs/log4'),
-    TIMEOUT = 45000;
+    TIMEOUT = 60000;
 
 /**
  * constructs query string
