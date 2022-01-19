@@ -18,7 +18,7 @@
 
 const CONFIG = require('../config/config'),
     HTTP = require('axios'),
-    TIMEOUT = 55000,
+    TIMEOUT = 60000*3,
     LOGGER = require('../libs/log4');
 
 /**
@@ -102,7 +102,7 @@ exports.get_mods = function (id, session, callback) {
 
     // TODO: refactor to make use of full uri by default for both resources and archival_objects
     let apiUrl = CONFIG.archivespaceHost + '/repositories/' + CONFIG.archivespaceRepositoryid + '/archival_objects/' + id + '/repository';
-
+    console.log(apiUrl);
     // check if id is a collection uri
     let uri = id.split('/');
 
