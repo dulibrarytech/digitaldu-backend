@@ -847,7 +847,7 @@ exports.create_repo_record = function (req, callback) {
             obj.dip_path = dc_data.dip_path;
             obj.file = dc_data.file;
             obj.uuid = dc_data.uuid;
-
+            console.log('dc data mime type: ', dc_data.mime_type);
             if (dc_data.mime_type === undefined || dc_data.mime_type === null) {
                 obj.mime_type = MIME_TYPE.get_mime_type(obj.file);
             } else {
@@ -897,7 +897,7 @@ exports.create_repo_record = function (req, callback) {
             } else {
 
                 let manifest = MANIFEST.process_manifest(response);
-
+                console.log('obj.file in manifest: ', obj.file);
                 obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file + '.dura-manifest';
                 obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
                 obj.manifest = true;

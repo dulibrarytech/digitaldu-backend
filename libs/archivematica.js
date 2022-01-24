@@ -20,7 +20,7 @@ const CONFIG = require('../config/config'),
     CLIENT = require('ssh2-sftp-client'),
     HTTP = require('axios'),
     QS = require('querystring'),
-    TIMEMOUT = 35000,
+    TIMEMOUT = 60000*15,
     LOGGER = require('../libs/log4');
 
 /**
