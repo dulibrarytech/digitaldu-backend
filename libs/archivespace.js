@@ -143,6 +143,8 @@ exports.get_mods = function (id, session, callback) {
 
             } else {
 
+                LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed (' + response + ')');
+
                 callback({
                     error: true,
                     mods: response
@@ -157,7 +159,7 @@ exports.get_mods = function (id, session, callback) {
 
                 callback({
                     error: true,
-                    error_message: 'ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed - error object is null ' + error
+                    error_message: 'ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed - error object is null'
                 });
 
                 return false;

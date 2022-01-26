@@ -307,7 +307,7 @@ exports.start_transfer = function (req, callback) {
                         endpoint: '/api/admin/v1/import/approve_transfer',
                         data: data
                     });
-
+                    console.log('transfer approval response: ', response);
                     if (response.error === true) {
                         LOGGER.module().fatal('FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_transfer)] http error. unable to approve transfer.');
                         throw 'FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_transfer)] http error. unable to approve transfer.';

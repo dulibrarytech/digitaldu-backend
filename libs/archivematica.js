@@ -282,7 +282,7 @@ exports.approve_transfer = function (transferFolder, callback) {
         } catch (error) {
 
             LOGGER.module().error('ERROR: [/libs/archivematica lib (approve_transfer)] unable to approve transfer. Request failed: ' + error);
-
+            // TODO: clear ingest queue / add error message to fail queue
             callback({
                 error: true,
                 message: 'ERROR: [/libs/archivematica lib (approve_transfer)] unable to approve transfer. Request failed: ' + error
