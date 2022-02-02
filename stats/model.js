@@ -19,7 +19,7 @@
 'use strict';
 
 const ASYNC = require('async'),
-    DB =require('../config/db')(),
+    DB = require('../config/db')(),
     LOGGER = require('../libs/log4'),
     REPO_OBJECTS = 'tbl_objects';
 
@@ -190,6 +190,10 @@ exports.get_stats = function (req, callback) {
                 mime_type: 'audio/x-wav',
                 is_active: 1
             })
+            .orWhere({
+                mime_type: 'audio/mpeg',
+                is_active: 1
+            })
             .then(function (data) {
 
                 results.total_audio_count = data[0].total_audio_count;
@@ -210,6 +214,14 @@ exports.get_stats = function (req, callback) {
                 mime_type: 'video/mp4',
                 is_active: 1
             })
+            .orWhere({
+                mime_type: 'video/quicktime',
+                is_active: 1
+            })
+            .orWhere({
+                mime_type: 'video/mpeg',
+                is_active: 1
+            })
             .then(function (data) {
 
                 results.total_video_count = data[0].total_video_count;
@@ -222,3 +234,18 @@ exports.get_stats = function (req, callback) {
             });
     }
 };
+
+/*
+.where({
+    mime_type: 'image/tiff',
+    is_active: 1
+})
+    .orWhere({
+        mime_type: 'image/jpeg',
+        is_active: 1
+    })
+    .orWhere({
+        mime_type: 'image/png',
+        is_active: 1
+    })
+    */
