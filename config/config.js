@@ -64,6 +64,7 @@ module.exports = {
     archivematicaPipeline: process.env.ARCHIVEMATICA_PIPELINE,
     archivematicaUserId: process.env.ARCHIVEMATICA_USERID,
     archivematicaUserEmail: process.env.ARCHIVEMATICA_USER_EMAIL,
+    archivematicaTransferTimeout: process.env.ARCHIVEMATICA_TRANSFER_TIMEOUT,
     archivespaceHost: process.env.ARCHIVESPACE_HOST,
     archivespaceRepositoryid: process.env.ARCHIVESPACE_REPOSITORY_ID,
     archivespaceUser: process.env.ARCHIVESPACE_USER,

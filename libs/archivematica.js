@@ -20,7 +20,7 @@ const CONFIG = require('../config/config'),
     CLIENT = require('ssh2-sftp-client'),
     HTTP = require('axios'),
     QS = require('querystring'),
-    TIMEMOUT = 60000*15,
+    TIMEMOUT = CONFIG.archivematicaTransferTimeout,
     LOGGER = require('../libs/log4');
 
 /**
