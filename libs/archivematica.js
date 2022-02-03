@@ -138,6 +138,114 @@ exports.ping_storage_api = function (callback) {
 };
 
 /**
+ * Gets DIP storage usage
+ * @param callback
+ */
+exports.get_dip_storage_usage = function (callback) {
+
+    'use strict';
+
+    let endpoint = CONFIG.archivematicaStorageApi + 'v2/space/' + CONFIG.archivematicaDipStorage;
+
+    (async () => {
+
+        try {
+
+            let response = await HTTP.get(endpoint, {
+                timeout: TIMEMOUT,
+                headers: {
+                    'Authorization': 'ApiKey ' + CONFIG.archivematicaStorageUsername + ':' + CONFIG.archivematicaStorageApiKey
+                }
+            });
+
+            if (response.status !== 200) {
+
+                LOGGER.module().error('ERROR: [/libs/archivematica lib (get_dip_storage_usage)] unable to get DIP storage usage.');
+
+                callback({
+                    error: true,
+                    message: 'ERROR: [/libs/archivematica lib (get_dip_storage_usage)] unable to get DIP storage usage.'
+                });
+
+            } else if (response.status === 200) {
+
+                callback({
+                    error: false,
+                    message: 'Archivematica/DuraCloud DIP storage usage',
+                    data: response.data.used
+                });
+            }
+
+            return false;
+
+        } catch (error) {
+
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_dip_storage_usage)] unable to get DIP storage usage. ' + error);
+
+            callback({
+                error: true,
+                message: 'ERROR: [/libs/archivematica lib (get_dip_storage_usage)] unable to get DIP storage usage.'
+            });
+        }
+
+    })();
+};
+
+/**
+ * Gets AIP storage usage
+ * @param callback
+ */
+exports.get_aip_storage_usage = function (callback) {
+
+    'use strict';
+
+    let endpoint = CONFIG.archivematicaStorageApi + 'v2/space/' + CONFIG.archivematicaAipStorage;
+
+    (async () => {
+
+        try {
+
+            let response = await HTTP.get(endpoint, {
+                timeout: TIMEMOUT,
+                headers: {
+                    'Authorization': 'ApiKey ' + CONFIG.archivematicaStorageUsername + ':' + CONFIG.archivematicaStorageApiKey
+                }
+            });
+
+            if (response.status !== 200) {
+
+                LOGGER.module().error('ERROR: [/libs/archivematica lib (get_aip_storage_usage)] unable to get AIP storage usage.');
+
+                callback({
+                    error: true,
+                    message: 'ERROR: [/libs/archivematica lib (get_aip_storage_usage)] unable to get AIP storage usage.'
+                });
+
+            } else if (response.status === 200) {
+
+                callback({
+                    error: false,
+                    message: 'Archivematica/DuraCloud AIP storage usage',
+                    data: response.data.used
+                });
+            }
+
+            return false;
+
+        } catch (error) {
+
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_aip_storage_usage)] unable to get AIP storage usage. ' + error);
+
+            callback({
+                error: true,
+                message: 'ERROR: [/libs/archivematica lib (get_aip_storage_usage)] unable to get AIP storage usage.'
+            });
+        }
+
+    })();
+};
+
+/**
  * List the files and folders on the FTP server
  * @param folder
  * @param callback

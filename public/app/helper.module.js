@@ -341,6 +341,20 @@ const helperModule = (function () {
         });
     };
 
+    obj.format_package_size = function (bytes, decimals = 2) {
+
+        if (bytes === 0) {
+            return '0 Bytes';
+        }
+
+        const K = 1024;
+        const DM = decimals < 0 ? 0 : decimals;
+        const SIZES = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+        const I = Math.floor(Math.log(bytes) / Math.log(K));
+
+        return parseFloat((bytes / Math.pow(K, I)).toFixed(DM)) + ' ' + SIZES[I];
+    }
+
     obj.init = function () {
         npProgress();
     };

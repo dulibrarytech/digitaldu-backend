@@ -30,6 +30,8 @@ const statsModule = (function () {
      */
     const renderStats = function (data) {
 
+        let total_duracloud_usage = (data.dip_storage_usage + data.aip_storage_usage);
+
         domModule.html('#published-collection-count', DOMPurify.sanitize(data.published_collection_count.toLocaleString('en')));
         domModule.html('#total-collection-count', DOMPurify.sanitize(data.total_collection_count.toLocaleString('en')));
         domModule.html('#published-object-count', DOMPurify.sanitize(data.published_object_count.toLocaleString('en')));
@@ -38,6 +40,9 @@ const statsModule = (function () {
         domModule.html('#total-pdf-count', DOMPurify.sanitize(data.total_pdf_count.toLocaleString('en')));
         domModule.html('#total-audio-count', DOMPurify.sanitize(data.total_audio_count.toLocaleString('en')));
         domModule.html('#total-video-count', DOMPurify.sanitize(data.total_video_count.toLocaleString('en')));
+        domModule.html('#total-dip-usage', DOMPurify.sanitize(helperModule.format_package_size(data.dip_storage_usage)));
+        domModule.html('#total-aip-usage', DOMPurify.sanitize(helperModule.format_package_size(data.aip_storage_usage)));
+        domModule.html('#total-dc-usage', DOMPurify.sanitize(helperModule.format_package_size(total_duracloud_usage)));
 
         // clear loading... messages
         domModule.html('#loading-published-collection-count', null);
@@ -48,6 +53,9 @@ const statsModule = (function () {
         domModule.html('#loading-pdf-count', null);
         domModule.html('#loading-audio-count', null);
         domModule.html('#loading-video-count', null);
+        domModule.html('#loading-dip-usage', null);
+        domModule.html('#loading-aip-usage', null);
+        domModule.html('#loading-dc-usage', null);
     };
 
     /**

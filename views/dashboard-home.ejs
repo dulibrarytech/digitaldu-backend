@@ -86,6 +86,32 @@
                         </div>
                     </div>
                 </div>
+                <div class="row top_tiles">
+                    <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
+                        <div class="tile-stats">
+                            <div class="icon"><i class="fa fa fa-file"></i></div>
+                            <div class="count" id="total-dip-usage" title="DIP storage consist of access files. i.e. jpg, txt, pdf">...</div>
+                            <h3>Total<br>DuraCloud DIP Store Usage</h3>
+                            <p id="loading-dip-usage"><strong>Loading...</strong></p>
+                        </div>
+                    </div>
+                    <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
+                        <div class="tile-stats">
+                            <div class="icon"><i class="fa fa fa-file"></i></div>
+                            <div class="count" id="total-aip-usage" title="AIP storage consists of master files. i.e. tiff, wav, pdf">...</div>
+                            <h3>Total<br>DuraCloud AIP Store Usage</h3>
+                            <p id="loading-aip-usage"><strong>Loading...</strong></p>
+                        </div>
+                    </div>
+                    <div class="animated flipInY col-lg-3 col-md-3 col-sm-6 col-xs-12">
+                        <div class="tile-stats">
+                            <div class="icon"><i class="fa fa fa-file"></i></div>
+                            <div class="count" id="total-dc-usage" title="Total storage used on DuraCloud archive service. (DIP + AIP)">...</div>
+                            <h3>Total<br>DuraCloud Storage Used</h3>
+                            <p id="loading-dc-usage"><strong>Loading...</strong></p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <% include partials/footer.ejs %>

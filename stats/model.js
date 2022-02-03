@@ -21,6 +21,7 @@
 const ASYNC = require('async'),
     DB = require('../config/db')(),
     LOGGER = require('../libs/log4'),
+    ARCHIVEMATICA = require('../libs/archivematica'),
     REPO_OBJECTS = 'tbl_objects';
 
 exports.get_stats = function (req, callback) {
@@ -33,7 +34,9 @@ exports.get_stats = function (req, callback) {
         getTotalImageCount,
         getTotalPdfCount,
         getTotalAudioCount,
-        getTotalVideoCount
+        getTotalVideoCount,
+        getDipStorageUsage,
+        getAipStorageUsage
     ], function (error, results) {
 
         if (error) {
@@ -233,19 +236,21 @@ exports.get_stats = function (req, callback) {
                 throw 'FATAL: [/stats/model module (get_stats/getTotalVideoCount)] unable to get total video count ' + error;
             });
     }
-};
 
-/*
-.where({
-    mime_type: 'image/tiff',
-    is_active: 1
-})
-    .orWhere({
-        mime_type: 'image/jpeg',
-        is_active: 1
-    })
-    .orWhere({
-        mime_type: 'image/png',
-        is_active: 1
-    })
-    */
+    function getDipStorageUsage(results, callback) {
+
+        ARCHIVEMATICA.get_dip_storage_usage(function(result) {
+            results.dip_storage_usage = result.data
+            callback(null, results);
+        });
+
+    }
+
+    function getAipStorageUsage(results, callback) {
+
+        ARCHIVEMATICA.get_aip_storage_usage(function(result) {
+            results.aip_storage_usage = result.data
+            callback(null, results);
+        });
+    }
+};

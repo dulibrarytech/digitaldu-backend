@@ -243,6 +243,7 @@ const qaModule = (function () {
             errors.push('-1');
         }
 
+        /*
         function format_package_size(bytes, decimals = 2) {
 
             if (bytes === 0) {
@@ -257,13 +258,15 @@ const qaModule = (function () {
             return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
         }
 
+         */
+
         domModule.html('#ready', '<h2>' + folder + '</h2>');
 
         if (file_error === true || uri_error === true) {
             domModule.html('#' + folder, '&nbsp;<strong><i class="fa fa-exclamation-circle" style="color: red"></i>&nbsp;Errors Found.</strong>&nbsp;' + file_errors + '<br>' + uri_errors + '<br>');
         }
 
-        domModule.html('#qa-package-size-' + folder, '(' + format_package_size(package_size) + ' - ' + local_file_count + ' files.)<br>');
+        domModule.html('#qa-package-size-' + folder, '(' + helperModule.format_package_size(package_size) + ' - ' + local_file_count + ' files.)<br>');
 
         if (errors.length === 0) {
 
