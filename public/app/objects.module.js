@@ -728,14 +728,15 @@ const objectsModule = (function () {
     obj.getImageData = function () {
 
         let pid = helperModule.getParameterByName('pid');
-        let url = api + endpoints.repo_object + '?pid=' + pid;
-        let token = userModule.getUserToken(),
-            request = new Request(url, {
+        let t = helperModule.getParameterByName('t');
+        let url = api + endpoints.repo_object + '?pid=' + pid + '&t=' + t;
+        // let token = userModule.getUserToken(),
+        let request = new Request(url, {
                 method: 'GET',
                 mode: 'cors',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
+                    'Content-Type': 'application/json'
+                    // 'x-access-token': token
                 }
             });
 
@@ -768,13 +769,12 @@ const objectsModule = (function () {
                                 fileName = objArr[objArr.length - 1].replace('.jp2', '.jpg');
                             }
 
-                            let image = api + apiModule.endpoints().repo_object_image + '?sip_uuid=' + pid + '&full_path=' + objectPath + '&object_name=' + fileName + '&mime_type=image/tiff&t=' + token;
+                            let image = api + apiModule.endpoints().repo_object_image + '?sip_uuid=' + pid + '&full_path=' + objectPath + '&object_name=' + fileName + '&mime_type=image/tiff&t=' + t;
 
                             imageArr.push({
                                 title: fileName,
                                 src: image,
-                                button: 'Download Image',
-                                onclick: Spotlight.download
+                                close: false
                             });
 
                             document.querySelector('#objects').innerHTML = `<a class="spotlight" href="${image}"></a>`;
@@ -806,13 +806,12 @@ const objectsModule = (function () {
                                         fileName = objArr[objArr.length - 1].replace('.jp2', '.jpg');
                                     }
 
-                                    let image = api + apiModule.endpoints().repo_object_image + '?sip_uuid=' + pid + '&full_path=' + objectPath + '&object_name=' + fileName + '&mime_type=image/tiff&t=' + token;
+                                    let image = api + apiModule.endpoints().repo_object_image + '?sip_uuid=' + pid + '&full_path=' + objectPath + '&object_name=' + fileName + '&mime_type=image/tiff&t=' + t;
 
                                     imageArr.push({
                                         title: fileName,
                                         src: image,
-                                        button: 'Download Image',
-                                        onclick: Spotlight.download
+                                        close: false
                                     });
 
                                     fragment += `<a class="spotlight" href="${image}"></a>`;
