@@ -172,11 +172,11 @@ const metadataModule = (function () {
             }
 
             menu += '<p><a id="update-' + record.pid + '" href="#' + record.pid + '" onclick="objectsModule.updateMetadata(\'' + DOMPurify.sanitize(record.pid) + '\', \'object\'); return false;"><i class="fa fa-code"></i>&nbsp;Update Metadata</a></p>';
-            console.log(record); // TODO: check transcript flag
+
             if (record.transcript_search !== undefined) {
                 menu += '<p><a id="transcript-' + record.pid + '" href="/dashboard/transcript?mode=view&sip_uuid=' + DOMPurify.sanitize(record.pid) + '"><i class="fa fa-file-o"></i>&nbsp;View Transcript</a></p>';
             } else {
-                menu += '<p><a id="transcript-' + record.pid + '" href="/dashboard/transcript?mode=add&sip_uuid=' + DOMPurify.sanitize(record.pid) + '"><i class="fa fa-file-o"></i>&nbsp;Add Transcript</a></p>';
+                // menu += '<p><a id="transcript-' + record.pid + '" href="/dashboard/transcript?mode=add&sip_uuid=' + DOMPurify.sanitize(record.pid) + '"><i class="fa fa-file-o"></i>&nbsp;Add Transcript</a></p>';
             }
         }
 
