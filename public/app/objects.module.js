@@ -591,12 +591,11 @@ const objectsModule = (function () {
                         let recordObj = record.display_record;
                         let display_record = JSON.parse(recordObj);
 
-                        // TODO: account for multiple transcripts
-                        // TODO: show along side images
                         domModule.html('#title', display_record.display_record.title);
-                        document.querySelector('#transcript-form-save-button').addEventListener('click', objectsModule.saveTranscript);
+                        // document.querySelector('#transcript-form-save-button').addEventListener('click', objectsModule.saveTranscript);
                         // TODO: document.querySelector('#transcript-form-cancel-button').addEventListener('click', cancel);
 
+                        /*
                         Array.prototype.findCallNumber = function(call_number) {
 
                             for(let i = 0; i < this.length;i++) {
@@ -609,35 +608,47 @@ const objectsModule = (function () {
 
                         let images_arr = [];
 
-                        for (let i=0;i<display_record.compound.length;i++) {
-                            images_arr.push(display_record.compound[i].object);
+                        for (let i=0;i<display_record.display_record.parts.length;i++) {
+                            images_arr.push(display_record.display_record.parts[i].object);
                         }
+                        */
 
                         if (mode === 'view') {
 
-                            let transcript_arr = JSON.parse(display_record.transcript);
                             let html = '';
 
-                            for (let i=0;i<transcript_arr.length;i++) {
+                            for (let i=0;i<display_record.display_record.parts.length;i++) {
 
-                                let objectPath = images_arr.findCallNumber(transcript_arr[i].call_number);
-                                let objArr = objectPath.split('/');
-                                let fileName = objArr[objArr.length - 1].replace('tif', 'jpg');
-                                let img = api + apiModule.endpoints().repo_object_image + '?sip_uuid=' + sip_uuid + '&full_path=' + objectPath + '&object_name=' + fileName + '&mime_type=image/tiff&t=' + token;
+                                if (display_record.display_record.parts[i].transcript !== undefined) {
 
-                                html += `<h4>${transcript_arr[i].call_number}</h4>
-                                        <p><img src="${img}" alt="${transcript_arr[i].call_number}" width="500px""></p>
-                                        <p>${transcript_arr[i].transcript_text}</p>`;
+                                    let title = display_record.display_record.parts[i].title.replace('.tif', '');
+                                    let transcript = display_record.display_record.parts[i].transcript;
+                                    let object_path = display_record.display_record.parts[i].object;
+                                    let object_arr = object_path.split('/');
+                                    let file_name = object_arr[object_arr.length - 1].replace('tif', 'jpg');
+                                    let img = api + apiModule.endpoints().repo_object_image + '?sip_uuid=' + sip_uuid + '&full_path=' + object_path + '&object_name=' + file_name + '&mime_type=image/tiff&t=' + token;
+
+                                    html += `
+                                    <div class="row">
+                                    <div class="col-sm-6" style="padding: 3px">
+                                        <img src="${img}" alt="${title}" width="550px"">
+                                    </div>
+                                    <div class="col-sm-6" style="padding: 3px;">
+                                        <h4>${title}</h4>
+                                        <p>${transcript}</p>
+                                    </div>
+                                    </div><hr>`;
+                                }
                             }
 
-                            domModule.html('#edit-transcript', '<a href="/dashboard/transcript?mode=edit&sip_uuid=' + sip_uuid + '">Edit Transcript</a>');
+                            // domModule.html('#edit-transcript', '<a href="/dashboard/transcript?mode=edit&sip_uuid=' + sip_uuid + '">Edit Transcript</a>');
                             domModule.html('#record-transcript', html);
 
                         } else if (mode === 'add') {
                             document.querySelector('#transcript-form').style.display = 'block';
                         } else if (mode === 'edit') {
                             document.querySelector('#transcript-form').style.display = 'block';
-                            domModule.val('#transcript', display_record.transcript);
+                            // domModule.val('#transcript', display_record.transcript);
                         }
                     }
                 });

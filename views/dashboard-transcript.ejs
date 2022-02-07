@@ -28,12 +28,12 @@
                         <div class="x_panel">
                             <div class="x_title">
                                 <h2 id="title"></h2>
-                                <ul class="nav navbar-right" id="edit-transcript"></ul>
+                                <!--<ul class="nav navbar-right" id="edit-transcript"></ul>-->
                                 <div class="clearfix"></div>
                             </div>
                             <div class="x_content">
                                 <div id="message"></div>
-                                <div class="row"><p id="record-transcript"></p></div>
+                                <div class="row"><p id="record-transcript" style="visibility: hidden"></p></div>
                                 <div class="row">
                                     <div class="col-xs-12">
                                         <form name="transcript-form" id="transcript-form" style="display: none">
@@ -70,6 +70,7 @@
     <script src="../../app/user.module.js"></script>
     <script src="../../app/objects.module.js"></script>
     <script>objectsModule.getTranscript();</script>
-    <script>CKEDITOR.replace( 'transcript' );</script>
+    <script>helperModule.onLoadVisibility('#record-transcript', 250);</script>
+    <!--<script>CKEDITOR.replace( 'transcript' );</script>-->
 </body>
 </html>

@@ -54,18 +54,22 @@ exports.get = function (obj, callback) {
 
             if (response.status === 200) {
 
-                // TODO: response.data.transcripts - check if array/object
-                let transcript_search = response.data.transcript_search;        // for search - save to index
+                let transcript_search = response.data.transcript_search;  // for search - save to index
                 let transcript_obj = {};
 
                 transcript_obj.transcripts = response.data.transcripts;  // display and edits - save to DB
                 transcript_obj.transcript_search = transcript_search;
-                save(obj.sip_uuid, JSON.stringify(transcript_obj));
+
+                setTimeout(function() {
+                    flag(obj.sip_uuid);
+                }, 5000);
+
                 callback(transcript_obj);
             } else {
                 LOGGER.module().info('INFO: [/libs/transcript lib (get)] No transcript found for this record.');
                 callback('no_transcript');
             }
+
         } catch (error) {
             LOGGER.module().info('INFO: [/libs/transcript lib (get)] No transcript found for this record. ' + error);
             callback('no_transcript');
@@ -75,25 +79,22 @@ exports.get = function (obj, callback) {
 };
 
 /**
- * Save transcript to repo DB record during ingest process
+ * Flag transcript record during ingest process
  * @param sip_uuid
- * @param transcript
  */
-const save = function (sip_uuid, transcript) {
+const flag = function (sip_uuid) {
 
     DB(REPO_OBJECTS)
         .where({
             sip_uuid: sip_uuid
         })
         .update({
-            transcript: transcript
+            has_transcript: 1
         })
-        .then(function (data) {
-            console.log(data);
-        })
+        .then(function (data) {})
         .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/libs/transcript lib (get)] unable to save transcript ' + error);
-            throw 'FATAL: [/libs/transcript lib (get)] unable to save transcript ' + error;
+            LOGGER.module().fatal('FATAL: [/libs/transcript lib (flag)] unable to flag transcript record ' + error);
+            throw 'FATAL: [/libs/transcript lib (flag)] unable to flag transcript record ' + error;
         });
 };
 
