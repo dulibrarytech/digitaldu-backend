@@ -307,7 +307,7 @@ exports.start_transfer = function (req, callback) {
                         endpoint: '/api/admin/v1/import/approve_transfer',
                         data: data
                     });
-                    console.log('transfer approval response: ', response);
+
                     if (response.error === true) {
                         LOGGER.module().fatal('FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_transfer)] http error. unable to approve transfer.');
                         throw 'FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_transfer)] http error. unable to approve transfer.';
@@ -1230,7 +1230,7 @@ exports.create_repo_record = function (req, callback) {
 
         TRANSFER_INGEST.create_repo_record(obj, function (result) {
             if (result === false) {
-                console.log('ERROR: Unable to create repo record.');
+                LOGGER.module().error('ERROR: [/import/queue module (TRANSFER_INGEST.create_repo_record)] Unable to create repo record.');
                 return false;
             }
         });
@@ -1238,10 +1238,18 @@ exports.create_repo_record = function (req, callback) {
         let display_record = JSON.parse(obj.display_record);
         let parts = display_record.display_record.parts; // loop and get object property value
 
+        if (typeof obj.is_compound === 'string') {
+            obj.is_compound = parseInt(obj.is_compound);
+        }
+
         if (obj.is_compound !== undefined && obj.is_compound === 1) {
 
             let dataArr = [];
-            TRANSFER_INGEST.save_compound_parts(obj.sip_uuid, parts);
+
+            setTimeout(function() {
+
+                TRANSFER_INGEST.save_compound_parts(obj.sip_uuid, parts);
+            }, 3000);
 
             for (let i=0;i<parts.length;i++) {
 

@@ -89,11 +89,9 @@ const metadataModule = (function () {
             if (record.mime_type === 'image/tiff') {
                 let thumbnail = record.thumbnail;
                 let thumbnailPath = api + endpoints.repo_object_thumbnail + '?tn=' + thumbnail + '&t=' + token;
-                // tnDisplay += '<a href="/dashboard/viewer' + '?pid=' + DOMPurify.sanitize(record.pid) + '">';
                 tnDisplay += '<a href="/dashboard/viewer' + '?pid=' + DOMPurify.sanitize(record.pid) + '&t=' + token + '" target="_blank">';
                 tnDisplay += '<img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + thumbnailPath + '" alt="' + record.pid + '" />';
                 tnDisplay += '</a>';
-
             } else {
                 tnDisplay += '<a href="' + api + endpoints.repo_object_viewer + '?uuid=' + DOMPurify.sanitize(record.pid) + '&t=' + token + '" target="_blank">';
                 tnDisplay += '<img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + api + endpoints.repo_object_tn + '?uuid=' + DOMPurify.sanitize(record.pid) + '&t=' + token + '" alt="' + record.pid + '" />';
@@ -174,8 +172,8 @@ const metadataModule = (function () {
             }
 
             menu += '<p><a id="update-' + record.pid + '" href="#' + record.pid + '" onclick="objectsModule.updateMetadata(\'' + DOMPurify.sanitize(record.pid) + '\', \'object\'); return false;"><i class="fa fa-code"></i>&nbsp;Update Metadata</a></p>';
-
-            if (record.transcript !== undefined) {
+            console.log(record); // TODO: check transcript flag
+            if (record.transcript_search !== undefined) {
                 menu += '<p><a id="transcript-' + record.pid + '" href="/dashboard/transcript?mode=view&sip_uuid=' + DOMPurify.sanitize(record.pid) + '"><i class="fa fa-file-o"></i>&nbsp;View Transcript</a></p>';
             } else {
                 menu += '<p><a id="transcript-' + record.pid + '" href="/dashboard/transcript?mode=add&sip_uuid=' + DOMPurify.sanitize(record.pid) + '"><i class="fa fa-file-o"></i>&nbsp;Add Transcript</a></p>';
