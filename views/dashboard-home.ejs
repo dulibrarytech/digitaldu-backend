@@ -112,6 +112,34 @@
                         </div>
                     </div>
                 </div>
+                <div class="row">
+                    <div class="row">
+                        <div class="col-md-6 col-sm-6">
+                            <div class="dashboard_graph x_panel">
+                                <div class="x_title"></div>
+                                <div class="x_content">
+                                    <div style="height:250px">
+                                        <p id="loading-ingests-per-year"><strong>Loading...</strong></p>
+                                        <canvas id="ingests-per-year"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--
+                        <div class="col-md-6 col-sm-6">
+                            <div class="dashboard_graph x_panel">
+                                <div class="x_title"></div>
+                                <div class="x_content">
+                                    <div style="height:250px">
+                                        <p>TEST</p>
+                                        <canvas id="ingests-per-month"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        -->
+                    </div>
+                </div>
             </div>
         </div>
         <% include partials/footer.ejs %>
@@ -130,6 +158,7 @@
 <script src="../app/user.module.js"></script>
 <script src="../app/home.module.js"></script>
 <script src="../app/stats.module.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js" integrity="sha512-TW5s0IT/IppJtu76UbysrBH9Hy/5X41OTAbQuffZFU6lQ1rdcLHzpU5BzVvr/YFykoiMYZVWlr/PX1mDcfM9Qg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>helperModule.onLoadVisibility('#dashboard', 250);</script>
 </body>
 </html>

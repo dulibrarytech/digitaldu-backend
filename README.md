@@ -44,6 +44,8 @@ http://localhost:8000/login
 
 @kimpham54, @jrynhart, @jackflaps, @josephlabrecque
 
+https://github.com/ColorlibHQ/gentelella
+
 ## Project Documentation
 
 * [v.1.0.0-beta pre release Repository Demo](https://youtu.be/1LGOQYEfz5I)

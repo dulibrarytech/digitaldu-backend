@@ -30,6 +30,38 @@ const statsModule = (function () {
      */
     const renderStats = function (data) {
 
+        // create line chart
+        let line_chart_data = data.yearly_ingest_counts;
+
+        let labels = [];
+        let totals = [];
+
+        for (let i=0;i<line_chart_data.length;i++) {
+            labels.push(line_chart_data[i].year);
+            totals.push(line_chart_data[i].total);
+        }
+
+        const DATA = {
+            labels: labels,
+            datasets: [{
+                label: 'Ingests Per Year',
+                backgroundColor: '#bab8b9',
+                borderColor: '#7f202e',
+                data: totals,
+            }]
+        };
+
+        const CONFIG = {
+            type: 'line',
+            data: DATA,
+            options: {}
+        };
+
+        const line_chart = new Chart(
+            document.querySelector('#ingests-per-year'),
+            CONFIG
+        );
+
         let total_duracloud_usage = (data.dip_storage_usage + data.aip_storage_usage);
 
         domModule.html('#published-collection-count', DOMPurify.sanitize(data.published_collection_count.toLocaleString('en')));
@@ -56,6 +88,7 @@ const statsModule = (function () {
         domModule.html('#loading-dip-usage', null);
         domModule.html('#loading-aip-usage', null);
         domModule.html('#loading-dc-usage', null);
+        domModule.html('#loading-ingests-per-year', null);
     };
 
     /**

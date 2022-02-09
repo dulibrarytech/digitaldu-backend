@@ -35,6 +35,8 @@ exports.get_stats = function (req, callback) {
         getTotalPdfCount,
         getTotalAudioCount,
         getTotalVideoCount,
+        getYearlyIngestCount,
+        // getMonthlyIngestCount,
         getDipStorageUsage,
         getAipStorageUsage
     ], function (error, results) {
@@ -234,6 +236,34 @@ exports.get_stats = function (req, callback) {
             .catch(function (error) {
                 LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/getTotalVideoCount)] unable to get total video count ' + error);
                 throw 'FATAL: [/stats/model module (get_stats/getTotalVideoCount)] unable to get total video count ' + error;
+            });
+    }
+
+    function getYearlyIngestCount(results, callback) {
+        DB.raw('SELECT COUNT(id) as \'total\', DATE_FORMAT(created, \'%Y\') as \'year\' FROM tbl_objects WHERE is_active=1 GROUP BY DATE_FORMAT(created, \'%Y\')')
+            .then(function(data) {
+                results.yearly_ingest_counts = data[0];
+                callback(null, results);
+                return null;
+            })
+            .catch(function(error) {
+                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/getYearlyIngestCount)] unable to yearly ingest count ' + error);
+                throw 'FATAL: [/stats/model module (get_stats/getYearlyIngestCount)] unable to get yearly ingest count ' + error;
+            });
+    }
+
+    // TODO: ingests by month - storage usage by month (from duracloud)
+    function getMonthlyIngestCount(results, callback) {
+        DB.raw('SELECT count(id) as \'total\', DATE_FORMAT(created, \'%m\') as \'month\' FROM tbl_objects WHERE is_active=1 GROUP BY DATE_FORMAT(created, \'%m\')')
+            .then(function(data) {
+                console.log(data[0]);
+                // results.monthly_ingest_counts = data[0];
+                callback(null, results);
+                return null;
+            })
+            .catch(function(error) {
+                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/getMonthlyIngestCount)] unable to monthly ingest count ' + error);
+                throw 'FATAL: [/stats/model module (get_stats/getMonthlyIngestCount)] unable to get monthly ingest count ' + error;
             });
     }
 
