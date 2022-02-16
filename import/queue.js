@@ -1282,7 +1282,7 @@ exports.create_repo_record = function (req, callback) {
                 let data = dataArr.pop();
                 DURACLOUD.convert_service(data);
 
-            }, 5000);
+            }, 8500);
 
         } else if (obj.is_compound === 0 || obj.is_compound === undefined) {
 
