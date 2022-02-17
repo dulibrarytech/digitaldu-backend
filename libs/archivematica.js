@@ -259,7 +259,7 @@ exports.list = function (folder, callback) {
     sftp.connect({
 
         host: CONFIG.sftpHost,
-        port: CONFIG.sftpPort, // '33322',  // 22
+        port: CONFIG.sftpPort,
         username: CONFIG.sftpId,
         password: CONFIG.sftpPwd
 
