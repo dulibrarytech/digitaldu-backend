@@ -48,6 +48,7 @@ module.exports = {
     uuidDomain: process.env.UUID_DOMAIN,
     namespace: process.env.REPO_NAMESPACE,
     sftpHost: process.env.SFTP_HOST,
+    sftpPort: process.env.SFTP_PORT,
     sftpId: process.env.SFTP_ID,
     sftpPwd: process.env.SFTP_PWD,
     sftpRemotePath: process.env.SFTP_REMOTE_PATH,

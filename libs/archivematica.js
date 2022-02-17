@@ -259,7 +259,7 @@ exports.list = function (folder, callback) {
     sftp.connect({
 
         host: CONFIG.sftpHost,
-        port: '22',
+        port: CONFIG.sftpPort, // '33322',  // 22
         username: CONFIG.sftpId,
         password: CONFIG.sftpPwd
 
@@ -297,7 +297,7 @@ exports.start_transfer = function (transferObj, callback) {
         buffer = Buffer.from(location),
         encodedLocation = buffer.toString('base64'),
         endpoint = CONFIG.archivematicaApi + 'transfer/start_transfer/?username=' + CONFIG.archivematicaUsername + '&api_key=' + CONFIG.archivematicaApiKey;
-    console.log('TIMEOUT: ', TIMEMOUT);
+
     (async () => {
 
         try {
