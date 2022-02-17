@@ -1,0 +1,13 @@
+# Systemd unit file for Digital-DU Repository
+[Unit]
+Description=Starts up Digital-DU Repository Application
+
+[Service]
+ExecStart=/home/appuser/digitaldu-backend/startup.sh
+ExecStop=/bin/kill -15 $MAINPID
+
+User=appuser
+Group=appuser
+
+[Install]
+WantedBy=multi-user.target
