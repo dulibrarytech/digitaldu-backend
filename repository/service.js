@@ -134,13 +134,44 @@ exports.ping_services = function (req, callback) {
         })();
     }
 
+    function ping_transcript_service(obj, callback) {
+
+        (async () => {
+
+            try {
+
+                let endpoint = CONFIG.transcriptService;
+                let response = await HTTP.get(endpoint, {
+                    timeout: 25000
+                });
+
+                if (response.status !== 200) {
+                    LOGGER.module().error('ERROR: [/repository/service module (ping_transcript_service)] Unable to ping transcript service.');
+                    obj.ingest_transcript_service = 'down';
+                } else if (response.status === 200) {
+                    obj.ingest_transcriptt_service = 'up';
+                }
+
+                callback(null, obj);
+                return false;
+
+            } catch (error) {
+                LOGGER.module().error('ERROR: [/repository/service module (ping_transcript_service)] Unable to ping transcript service.');
+                obj.ingest_transcript_service = 'down';
+                callback(null, obj);
+            }
+
+        })();
+    }
+
     ASYNC.waterfall([
         ping_archivematica,
         ping_archivematica_storage,
         ping_archivesspace,
         ping_duracloud,
         ping_handle_server,
-        ping_convert_service
+        ping_convert_service,
+        ping_transcript_service
     ], function (error, results) {
 
         if (error) {
