@@ -19,6 +19,7 @@
 'use strict';
 
 const API = require('../api/model');
+const SERVICE = require("../api/service");
 
 exports.default = function (req, res) {
     res.status(403).send({
@@ -26,10 +27,16 @@ exports.default = function (req, res) {
     });
 };
 
-exports.get_transcript = function (req, res) {
-    API.get_transcript(req, function (data) {
-        // TODO: adjust content type in response
+exports.get_records = function (req, res) {
+    API.get_records(req, function (data) {
         res.status(data.status).send(data.data);
+    });
+};
+
+exports.get_images = function (req, res) {
+    SERVICE.get_images(req, function (data) {
+        res.set('Content-Type', 'image/jpeg');
+        res.end(data.data, 'binary');
     });
 };
 

@@ -325,7 +325,7 @@ exports.get_image = function (req, callback) {
 
         try {
 
-            let endpoint = CONFIG.convertService + '/api/v1/image?filename=' + object_data.object_name + '&api_key=' + CONFIG.convertServiceApiKey;
+            let endpoint = CONFIG.convertService + '/repository/v1/image?filename=' + object_data.object_name + '&api_key=' + CONFIG.convertServiceApiKey;
             let response = await HTTP.get(endpoint, {
                 timeout: 45000,
                 responseType: 'arraybuffer'

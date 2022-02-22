@@ -29,6 +29,9 @@ module.exports = function (app) {
     app.route('/api/v1/uuids')
         .get(TOKEN.verify, API.get_uuids);
 
-    app.route('/api/v1/transcript')
-        .get(TOKEN.verify, API.get_transcript);
+    app.route('/api/v1/records')
+        .get(TOKEN.verify, API.get_records);
+
+    app.route('/api/v1/images')
+        .get(TOKEN.verify, API.get_images);
 };

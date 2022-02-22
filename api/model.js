@@ -26,6 +26,52 @@ const ASYNC = require('async'),
 
 // http://localhost:8000/api/v1/uuids?start=2019-08-20&end=2019-09-18
 // http://localhost:8000/api/v1/uuids?uri=/repositories/2/archival_objects/112120
+// http://localhost:8000/api/v1/records?uuid=a5efb5d1-0484-429c-95a5-15c12ff40ca0
+
+/**
+ * Gets repository records by sip_uuid
+ * @param req
+ * @param callback
+ */
+exports.get_records = function (req, callback) {
+
+    if (req.query.sip_uuid === undefined || req.query.type === undefined) {
+        callback({
+            status: 400,
+            message: 'Bad Request.'
+        });
+
+        return false;
+    }
+
+    let sip_uuid = req.query.sip_uuid;
+    let type = req.query.type;
+    let where = {};
+
+    where.is_active = 1;
+    where.object_type = 'object';
+
+    if (type === 'collection') {
+        where.is_member_of_collection = sip_uuid;
+    } else if (type === 'object') {
+        where.sip_uuid = sip_uuid
+    }
+
+    DB(REPO_OBJECTS)
+        .select('sip_uuid', 'handle', 'uri', 'object_type', 'display_record')
+        .where(where)
+        .then(function (data) {
+
+            callback({
+                status: 200,
+                data: data
+            });
+        })
+        .catch(function (error) {
+            LOGGER.module().fatal('FATAL: [/api/model module (get_records)] repository database error ' + error);
+            return false;
+        });
+};
 
 /**
  * Gets repository uuids, uris and handles
@@ -80,7 +126,7 @@ exports.get_uuids = function (req, callback) {
                     callback(null, data);
                 })
                 .catch(function (error) {
-                    LOGGER.module().fatal('FATAL: [/repository/model module (get_pids/get_collection_pids)] repository database error ' + error);
+                    LOGGER.module().fatal('FATAL: [/api/model module (get_pids/get_collection_pids)] repository database error ' + error);
                     return false;
                 });
 
@@ -107,7 +153,7 @@ exports.get_uuids = function (req, callback) {
                     callback(null, data);
                 })
                 .catch(function (error) {
-                    LOGGER.module().fatal('FATAL: [/repository/model module (get_pids/get_collection_pids)] repository database error ' + error);
+                    LOGGER.module().fatal('FATAL: [/api/model module (get_pids/get_collection_pids)] repository database error ' + error);
                     return false;
                 });
 
@@ -132,7 +178,7 @@ exports.get_uuids = function (req, callback) {
                     callback(null, data);
                 })
                 .catch(function (error) {
-                    LOGGER.module().fatal('FATAL: [/repository/model module (get_pids/get_collection_pids)] repository database error ' + error);
+                    LOGGER.module().fatal('FATAL: [/api/model module (get_pids/get_collection_pids)] repository database error ' + error);
                     return false;
                 });
         }
@@ -181,7 +227,7 @@ exports.get_uuids = function (req, callback) {
 
                 })
                 .catch(function (error) {
-                    LOGGER.module().fatal('FATAL: [/repository/model module (get_pids/get_object_pids)] repository database error ' + error);
+                    LOGGER.module().fatal('FATAL: [/api/model module (get_pids/get_object_pids)] repository database error ' + error);
                     return false;
                 });
 
@@ -205,7 +251,7 @@ exports.get_uuids = function (req, callback) {
                 });
             })
             .catch(function (error) {
-                LOGGER.module().fatal('FATAL: [/repository/model module (get_pids/get_object_pids)] repository database error ' + error);
+                LOGGER.module().fatal('FATAL: [/api/model module (get_pids/get_object_pids)] repository database error ' + error);
                 return false;
             });
 
