@@ -35,7 +35,6 @@ module.exports = function (app) {
     app.route('/api/v1/qa/move-to-ingest')
         .get(TOKEN.verify, QA.move_to_ingest);
 
-    // TODO: change move to upload
     app.route('/api/v1/qa/move-to-sftp')
         .get(TOKEN.verify, QA.move_to_sftp);
 

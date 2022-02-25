@@ -847,7 +847,7 @@ exports.create_repo_record = function (req, callback) {
             obj.dip_path = dc_data.dip_path;
             obj.file = dc_data.file;
             obj.uuid = dc_data.uuid;
-            console.log('dc data mime type: ', dc_data.mime_type);
+
             if (dc_data.mime_type === undefined || dc_data.mime_type === null) {
                 obj.mime_type = MIME_TYPE.get_mime_type(obj.file);
             } else {
@@ -897,7 +897,7 @@ exports.create_repo_record = function (req, callback) {
             } else {
 
                 let manifest = MANIFEST.process_manifest(response);
-                console.log('obj.file in manifest: ', obj.file);
+
                 obj.file_name = obj.dip_path + '/objects/' + obj.uuid + '-' + obj.file + '.dura-manifest';
                 obj.thumbnail = obj.dip_path + '/thumbnails/' + obj.uuid + '.jpg';
                 obj.manifest = true;
@@ -1418,6 +1418,8 @@ exports.create_repo_record = function (req, callback) {
 
             if (result.status === 0) {
                 // ingest complete
+                // TODO: call move-to-ingest
+                // TODO: get collection folder name
                 // TODO: clear current archivesspace session
                 return false;
             }
@@ -1511,7 +1513,6 @@ exports.poll_import_status = function (req, callback) {
         .select('sip_uuid', 'uuid', 'file', 'file_id', 'type', 'type', 'dip_path', 'mime_type', 'message', 'status', 'created')
         .whereRaw('DATE(created) = CURRENT_DATE')
         .orderBy('created', 'desc')
-        // .groupBy('sip_uuid')
         .then(function (data) {
             callback({
                 status: 200,
