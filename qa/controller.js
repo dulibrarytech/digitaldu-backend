@@ -27,8 +27,8 @@ exports.get_list_ready = function (req, res) {
     });
 };
 
-exports.get_ready_folder = function (req, res) {
-    SERVICE.get_ready_folder(req, function (data) {
+exports.run_qa = function (req, res) {
+    SERVICE.run_qa(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };

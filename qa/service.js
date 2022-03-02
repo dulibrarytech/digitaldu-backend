@@ -20,9 +20,10 @@
 
 const CONFIG = require('../config/config'),
     // ARCHIVESSPACE = require('../libs/archivespace'),
+    // KA = require('http'),
     HTTP = require('axios'),
-    KA = require('http'),
-    LOGGER = require('../libs/log4');
+    LOGGER = require('../libs/log4'),
+    TIMEOUT = 60000*15;
 
 /**
  * Gets list of ready folders
@@ -38,7 +39,7 @@ exports.get_list_ready = function (req, callback) {
         try {
 
             let response = await HTTP.get(qaUrl, {
-                timeout: 25000,
+                timeout: TIMEOUT,
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -72,7 +73,7 @@ exports.get_list_ready = function (req, callback) {
  * @param req
  * @param callback
  */
-exports.get_ready_folder = function (req, callback) {
+exports.run_qa = function (req, callback) {
 
     let folder = req.query.folder;
     let qaUrl = CONFIG.qaUrl + '/api/v1/qa/run-qa?folder=' + folder + '&api_key=' + CONFIG.qaApiKey;
@@ -81,12 +82,21 @@ exports.get_ready_folder = function (req, callback) {
 
         try {
 
+            /*
             let response = await HTTP.get(qaUrl, {
                 httpAgent: new KA.Agent({
                     keepAlive: true,
                     maxSockets: 1,
                     keepAliveMsecs: 3000
                 }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+             */
+
+            let response = await HTTP.get(qaUrl, {
+                timeout: TIMEOUT,
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -100,8 +110,10 @@ exports.get_ready_folder = function (req, callback) {
                 });
 
                 return false;
+            }
 
-            } else {
+            /*
+            else {
 
                 callback({
                     status: 404,
@@ -110,6 +122,8 @@ exports.get_ready_folder = function (req, callback) {
 
                 return false;
             }
+
+             */
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/qa/service module (get_list_ready)] request to QA server failed - ' + error);
@@ -134,13 +148,23 @@ exports.move_to_ingest = function (req, callback) {
 
         try {
 
+            /*
             let response = await HTTP.get(qaUrl, {
                 httpAgent: new KA.Agent({
                     keepAlive: true,
                     maxSockets: 1,
                     keepAliveMsecs: 3000
                 }),
-                timeout: 60000 * 30,
+                // timeout: TIMEOUT,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+             */
+
+            let response = await HTTP.get(qaUrl, {
+                timeout: TIMEOUT,
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -188,6 +212,7 @@ exports.move_to_sftp = function (req, callback) {
 
         try {
 
+            /*
             let response = await HTTP.get(qaUrl, {
                 httpAgent: new KA.Agent({
                     keepAlive: true,
@@ -198,15 +223,27 @@ exports.move_to_sftp = function (req, callback) {
                     'Content-Type': 'application/json'
                 }
             });
+             */
+
+            let response = await HTTP.get(qaUrl, {
+                timeout: TIMEOUT,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
 
             if (response.status === 200) {
                 LOGGER.module().info('INFO: [/qa/service module (move_to_sftp)] Uploading to sftp');
                 return false;
 
-            } else {
+            }
+            /*
+            else {
                 LOGGER.module().info('INFO: [/qa/service module (move_to_sftp)] Request to upload sftp failed - ');
                 return false;
             }
+
+             */
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/qa/service module (move_to_sftp)] request to QA server failed - ' + error);
@@ -237,12 +274,22 @@ exports.upload_status = function (req, callback) {
 
         try {
 
+            /*
             let response = await HTTP.get(qaUrl, {
                 httpAgent: new KA.Agent({
                     keepAlive: true,
                     maxSockets: 1,
                     keepAliveMsecs: 3000
                 }),
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+             */
+
+            let response = await HTTP.get(qaUrl, {
+                timeout: TIMEOUT,
                 headers: {
                     'Content-Type': 'application/json'
                 }

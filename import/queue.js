@@ -1418,7 +1418,7 @@ exports.create_repo_record = function (req, callback) {
 
             if (result.status === 0) {
                 // ingest complete
-                // TODO: call move-to-ingest
+                // TODO: call move-to-ingested
                 // TODO: get collection folder name
                 // TODO: clear current archivesspace session
                 return false;

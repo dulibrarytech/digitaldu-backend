@@ -1270,5 +1270,75 @@ exports.batch_fix = function () {
     })();
 };
 
+exports.save_call_number = function(req, callback) {
+
+    DB(REPO_OBJECTS)
+        .select('sip_uuid', 'display_record')
+        .then(function (data) {
+
+            let timer = setInterval(function () {
+
+                console.log(data.length);
+
+                if (data.length === 0) {
+                    clearInterval(timer);
+                    console.log('done!');
+                    return false;
+                }
+
+                let record = data.pop();
+                let display_record = JSON.parse(record.display_record);
+
+                if (display_record === null) {
+                    console.log('no display record');
+                    return false;
+                }
+
+                let identifiers = display_record.display_record.identifiers;
+                let sip_uuid = display_record.pid;
+
+                if (identifiers === undefined) {
+                    console.log(sip_uuid);
+                    console.log('no call number');
+                    return false;
+                }
+
+                for (let i=0;i<identifiers.length;i++) {
+
+                    if (identifiers[i].type === 'local') {
+
+                        console.log(identifiers[i].identifier);
+
+                        DB(REPO_OBJECTS)
+                            .where({
+                                sip_uuid: sip_uuid
+                            })
+                            .update({
+                                call_number: identifiers[i].identifier
+                            })
+                            .then(function(data) {
+                                // console.log(data);
+                            })
+                            .catch(function (error) {
+                                console.log(error);
+                            });
+                    }
+                }
+
+            }, 100);
+
+            return null;
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
+
+    callback({
+        status: 201,
+        message: 'saving call numbers...',
+        data: []
+    });
+};
+
 // TODO: delete ES record curl -X DELETE "localhost:9200/document-index/_doc/1"
 // curl -X DELETE "http://domain:9200/repo_admin/_doc/07dce309-1281-47c4-b35e-ea0b6e847829"

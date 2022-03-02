@@ -81,7 +81,7 @@ const qaModule = (function () {
             return false;
         }
 
-        for (let prop in data) {
+        for (let prop in data.result) {
 
             html += '<tr>';
             // collection folder name
@@ -90,7 +90,7 @@ const qaModule = (function () {
             html += '</td>';
             // package count
             html += '<td style="text-align: left;vertical-align: middle; width: 8%">';
-            html += '<small>' + data[prop] + '</small>';
+            html += '<small>' + data.result[prop] + '</small>';
             html += '</td>';
             // Status column
             html += '<td style="text-align: left;vertical-align: middle; width: 30%">';
@@ -567,7 +567,7 @@ const qaModule = (function () {
 
     /** TODO: Use collection module?
      * Adds collection
-     */
+
     const addCollection = function () {
 
         let obj = {};
@@ -627,6 +627,7 @@ const qaModule = (function () {
 
         httpModule.req(request, callback);
     };
+     */
 
     obj.init = function () {
         qaModule.getReadyFolders();

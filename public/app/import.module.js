@@ -93,16 +93,6 @@ const importModule = (function () {
             }
         }
 
-        /* TODO:...
-        if (uuids.length === 0) {
-            html += '<tr>';
-            html += '<td>';
-            html += '<div class="alert alert-info"><strong>There are no collections available to import.</strong></div>';
-            html += '</td>';
-            html += '</tr>';
-        }
-        */
-
         if (collection !== null && collectionObjects.length > 0) {
             let button = '<a class="btn btn-success btn-xs import-btn" onclick="importModule.queueTransferObjects(\'' + collectionObjects + '\')" href="#"><i class="fa fa-upload"></i>&nbsp;&nbsp;Import</a>';
             domModule.html('.import-button', button);
