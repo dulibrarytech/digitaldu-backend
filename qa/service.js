@@ -82,19 +82,6 @@ exports.run_qa = function (req, callback) {
 
         try {
 
-            /*
-            let response = await HTTP.get(qaUrl, {
-                httpAgent: new KA.Agent({
-                    keepAlive: true,
-                    maxSockets: 1,
-                    keepAliveMsecs: 3000
-                }),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-             */
-
             let response = await HTTP.get(qaUrl, {
                 timeout: TIMEOUT,
                 headers: {
@@ -111,19 +98,6 @@ exports.run_qa = function (req, callback) {
 
                 return false;
             }
-
-            /*
-            else {
-
-                callback({
-                    status: 404,
-                    data: []
-                });
-
-                return false;
-            }
-
-             */
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/qa/service module (get_list_ready)] request to QA server failed - ' + error);

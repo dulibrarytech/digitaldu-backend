@@ -120,7 +120,7 @@ const qaModule = (function () {
     obj.runQAonReady = function (folder) {
 
         domModule.hide('.run-qa');
-        domModule.html('#' + folder, '<strong><em>Running QA and package upload process...</em></strong>');
+        domModule.html('#' + folder, '<strong><em>Running QA process on archival packages...</em></strong>');
 
         // send folder name in request
         let url = api + endpoints.qa_run + '?folder=' + folder;
@@ -165,110 +165,88 @@ const qaModule = (function () {
     };
 
     /**
+     * Displays QA errors found in archival packages
+     * @param data
+     * @return error_object
+     */
+    function display_qa_errors(data) {
+
+        let error_messages = '';
+        let errors = [];
+
+        if (data.folder_name_results.errors.length > 0) {
+
+            errors.push(-1);
+
+            for (let i = 0; i < data.folder_name_results.errors.length; i++) {
+                error_messages += '<i class="fa fa-exclamation-circle" style="color: red"></i> ' + data.folder_name_results.errors[i];
+            }
+
+        }
+
+        if (data.file_count_results.errors.length > 0) {
+            errors.push(-1);
+            error_messages += '<i class="fa fa-exclamation-circle" style="color: red"></i> Unable to get total file count.';
+        }
+
+        if (data.package_name_results.errors.length > 0) {
+
+            errors.push(-1);
+
+            for (let i = 0; i < data.package_name_results.errors.length; i++) {
+                error_messages += '<i class="fa fa-exclamation-circle" style="color: red"></i> ' + data.package_name_results.errors[i];
+            }
+        }
+
+        if (data.total_batch_size.errors.length > 0) {
+            errors.push(-1);
+            error_messages += '<i class="fa fa-exclamation-circle" style="color: red"></i> Unable to get total batch size.';
+        }
+
+        if (data.uri_results.errors.length > 0) {
+
+            errors.push(-1);
+
+            for (let i = 0; i < data.uri_results.errors.length; i++) {
+                error_messages += '<i class="fa fa-exclamation-circle" style="color: red"></i> ' + data.uri_results.errors[i];
+            }
+        }
+
+        return {
+            errors: errors,
+            error_messages: error_messages
+        };
+    }
+
+    /**
      * Renders QA results
      * @param data
+     * @param folder
      * @returns {boolean}
      */
     const renderQAresults = function (data, folder) {
 
-        domModule.html('#' + folder, 'QA Complete.');
+        let total_batch_size = data.total_batch_size.result;
+        let total_batch_file_count = data.file_count_results.result;
+        let error_obj = display_qa_errors(data);
 
-        let file_errors = '';
-        let uri_errors = '';
-        let file_error = false;
-        let uri_error = false;
-        let package_size;
-        let errors = [];
+        domModule.html('#' + folder, '<strong>QA Complete...</strong>');
 
-        // Renders when package is empty
-        if (data.file_results.length === 0 && data.errors.length > 0) {
-            domModule.html('#' + folder, '<i class="fa fa-exclamation-circle" style="color: red"></i> ' + data.message);
-            domModule.show('.run-qa');
+        // display QA errors if found
+        if (error_obj.errors.length > 0) {
+            setTimeout(function() {
+                domModule.html('#' + folder, error_obj.error_messages);
+                domModule.show('.run-qa');
+            }, 4000);
+
             return false;
         }
 
-        if (data.total_size !== undefined) {
-            package_size = data.total_size;
-        }
+        setTimeout(function() {
 
-        if (data.file_results.length === 0 || data.file_results.local_file_count === undefined) {
-            domModule.html('#' + folder, '<i class="fa fa-exclamation-circle" style="color: red"></i> <strong>QA failed. Unable to get package file counts.</strong>');
-            domModule.show('.run-qa');
-            return false;
-        } else {
-            local_file_count = data.file_results.local_file_count;
-        }
-
-        if (data.file_results.errors.length !== 0) {
-
-            domModule.show('.run-qa');
-            file_error = true;
-            file_errors += '<p><strong>The following packages have problems with object files:</strong></p>';
-
-            for (let i = 0; i < data.file_results.errors.length; i++) {
-
-                if (data.file_results.errors[i].error !== undefined && data.file_results.errors[i].file !== undefined) {
-                    file_errors += '<article class="media event">';
-                    file_errors += '<div class="media-body">';
-                    file_errors += '<p><i class="fa fa-exclamation-circle" style="color: red"></i> ' + data.file_results.errors[i].file + ' - Error: ' + data.file_results.errors[i].error + '</p>';
-                    file_errors += '<p></p>';
-                    file_errors += '</div>';
-                    file_errors += '</article>';
-                } else {
-                    file_errors += '<article class="media event">';
-                    file_errors += '<div class="media-body">';
-                    file_errors += '<p><i class="fa fa-exclamation-circle" style="color: red"></i> ' + data.file_results.errors[i] + '</p>';
-                    file_errors += '</div>';
-                    file_errors += '</article>';
-                }
-            }
-
-            errors.push('-1');
-        }
-
-        if (data.uri_errors.length !== 0) {
-
-            domModule.show('.run-qa');
-            uri_error = true;
-            uri_errors += '<strong>The following packages are missing uri.txt files:</strong><br>';
-
-            for (let i = 0; i < data.uri_errors.length; i++) {
-                uri_errors += '<article class="media event">';
-                uri_errors += '<div class="media-body">';
-                uri_errors += '<p><i class="fa fa-exclamation-circle" style="color: red"></i> ' + data.uri_errors[i] + '</p>';
-                uri_errors += '</div>';
-                uri_errors += '</article>';
-            }
-
-            errors.push('-1');
-        }
-
-        /*
-        function format_package_size(bytes, decimals = 2) {
-
-            if (bytes === 0) {
-                return '0 Bytes';
-            }
-
-            const k = 1024;
-            const dm = decimals < 0 ? 0 : decimals;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-        }
-
-         */
-
-        domModule.html('#ready', '<h2>' + folder + '</h2>');
-
-        if (file_error === true || uri_error === true) {
-            domModule.html('#' + folder, '&nbsp;<strong><i class="fa fa-exclamation-circle" style="color: red"></i>&nbsp;Errors Found.</strong>&nbsp;' + file_errors + '<br>' + uri_errors + '<br>');
-        }
-
-        domModule.html('#qa-package-size-' + folder, '(' + helperModule.format_package_size(package_size) + ' - ' + local_file_count + ' files.)<br>');
-
-        if (errors.length === 0) {
+            // render QA results
+            domModule.html('#ready', '<h2>' + folder + '</h2>');
+            domModule.html('#qa-package-size-' + folder, '(' + helperModule.format_package_size(total_batch_size) + ' - ' + total_batch_file_count + ' files.)<br>');
 
             window.onbeforeunload = function () {
                 return '';
@@ -276,14 +254,15 @@ const qaModule = (function () {
 
             let parts = folder.split('-');
             let uri_part = parts.pop().replace('_', '/');
-
             checkCollection(uri_part, folder);
-        }
+
+        }, 4000);
     };
 
     /**
      * Checks if collection exists
      * @param uri
+     * @param folder
      */
     const checkCollection = function (uri, folder) {
 
@@ -306,6 +285,7 @@ const qaModule = (function () {
 
                 response.json().then(function (data) {
 
+                    // collection doesn't exist, create it
                     if (data.length === 0) {
 
                         domModule.html('#collection-title-' + folder, 'Creating collection...');
@@ -408,8 +388,11 @@ const qaModule = (function () {
             if (response.status === 200) {
 
                 response.json().then(function (data) {
-                    domModule.html('#' + folder, '<strong>Packages moved to ingest folder.</strong>');
-                    moveToSftp(pid, folder);
+                    setTimeout(function() {
+                        domModule.html('#' + folder, '<strong>Packages moved to ingest folder.</strong>');
+                        // move archival packages to Archivematica SFTP server
+                        moveToSftp(pid, folder);
+                    }, 4000);
                 });
 
                 return false;
@@ -480,7 +463,7 @@ const qaModule = (function () {
                             }, 60000);
 
                         });
-                    }, 30000);  // 60000*2
+                    }, 30000);
                 });
 
                 return false;
@@ -568,7 +551,7 @@ const qaModule = (function () {
     /** TODO: Use collection module?
      * Adds collection
 
-    const addCollection = function () {
+     const addCollection = function () {
 
         let obj = {};
 
