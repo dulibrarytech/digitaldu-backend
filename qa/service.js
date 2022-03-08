@@ -122,7 +122,7 @@ exports.move_to_ingest = function (req, callback) {
 
         try {
 
-            /*
+            /* TODO
             let response = await HTTP.get(qaUrl, {
                 httpAgent: new KA.Agent({
                     keepAlive: true,
@@ -186,19 +186,6 @@ exports.move_to_sftp = function (req, callback) {
 
         try {
 
-            /*
-            let response = await HTTP.get(qaUrl, {
-                httpAgent: new KA.Agent({
-                    keepAlive: true,
-                    maxSockets: 1,
-                    keepAliveMsecs: 3000
-                }),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-             */
-
             let response = await HTTP.get(qaUrl, {
                 timeout: TIMEOUT,
                 headers: {
@@ -209,15 +196,7 @@ exports.move_to_sftp = function (req, callback) {
             if (response.status === 200) {
                 LOGGER.module().info('INFO: [/qa/service module (move_to_sftp)] Uploading to sftp');
                 return false;
-
             }
-            /*
-            else {
-                LOGGER.module().info('INFO: [/qa/service module (move_to_sftp)] Request to upload sftp failed - ');
-                return false;
-            }
-
-             */
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/qa/service module (move_to_sftp)] request to QA server failed - ' + error);
@@ -248,20 +227,6 @@ exports.upload_status = function (req, callback) {
 
         try {
 
-            /*
-            let response = await HTTP.get(qaUrl, {
-                httpAgent: new KA.Agent({
-                    keepAlive: true,
-                    maxSockets: 1,
-                    keepAliveMsecs: 3000
-                }),
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-
-             */
-
             let response = await HTTP.get(qaUrl, {
                 timeout: TIMEOUT,
                 headers: {
@@ -277,10 +242,6 @@ exports.upload_status = function (req, callback) {
                     data: response.data
                 });
 
-                return false;
-
-            } else {
-                LOGGER.module().info('INFO: [/qa/service module (upload_status)] Request to upload sftp failed');
                 return false;
             }
 
