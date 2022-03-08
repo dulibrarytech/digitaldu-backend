@@ -23,7 +23,7 @@ const qaModule = (function () {
     const api = configModule.getApi();
     const endpoints = apiModule.endpoints();
     let obj = {};
-    let local_file_count;
+    let total_batch_file_count;
 
     /**
      * Gets ready folders
@@ -227,8 +227,8 @@ const qaModule = (function () {
     const renderQAresults = function (data, folder) {
 
         let total_batch_size = data.total_batch_size.result;
-        let total_batch_file_count = data.file_count_results.result;
         let error_obj = display_qa_errors(data);
+        total_batch_file_count = data.file_count_results.result;
 
         domModule.html('#' + folder, '<strong>QA Complete...</strong>');
 
@@ -455,7 +455,7 @@ const qaModule = (function () {
                                 domModule.html('#collection-title-' + folder, null);
                                 domModule.html('#package-size-' + folder, null);
                                 domModule.html('#' + folder, '<strong>Complete.</strong>');
-                                // TODO: call endpoint to move sftp data to 003 ingest folder
+
                                 setTimeout(function () {
                                     window.location.replace('/dashboard/import?collection=' + pid);
                                 }, 7000);
@@ -490,11 +490,13 @@ const qaModule = (function () {
     /**
      * Checks status of sftp upload
      * @param pid
+     * @param folder
+     * @param cb (callback function)
      */
     const checkSftpUploadStatus = function (pid, folder, cb) {
 
         let token = userModule.getUserToken();
-        let url = api + endpoints.qa_upload_status + '?pid=' + pid + '&local_file_count=' + local_file_count,
+        let url = api + endpoints.qa_upload_status + '?pid=' + pid + '&total_batch_file_count=' + total_batch_file_count,
             request = new Request(url, {
                 method: 'GET',
                 headers: {
@@ -509,7 +511,7 @@ const qaModule = (function () {
             if (response.status === 200) {
 
                 response.json().then(function (data) {
-
+                    console.log('check sftp status: ', data);
                     if (data.message === 'upload_complete') {
                         cb('complete');
                     } else if (data.message === 'in_progress') {
@@ -519,7 +521,7 @@ const qaModule = (function () {
                         let file = tmp[tmp.length - 1];
                         let html = '<p><strong><em>Uploading packages to Archivematica SFTP server...</em></strong></p>';
                         html += '<ul>';
-                        html += '<p>' + data.remote_file_count + ' out of ' + data.local_file_count + ' files (' + data.remote_package_size + ')</p>';
+                        html += '<p>' + data.remote_file_count + ' out of ' + total_batch_file_count + ' files (' + data.remote_package_size + ')</p>';
                         html += '<li>' + file + '</li>';
                         html += '</ul>';
 
@@ -547,70 +549,6 @@ const qaModule = (function () {
 
         httpModule.req(request, callback);
     };
-
-    /** TODO: Use collection module?
-     * Adds collection
-
-     const addCollection = function () {
-
-        let obj = {};
-
-        for (let i = 0; i < arr.length; i++) {
-            let propsVal = decodeURIComponent(arr[i]).split('=');
-            obj[propsVal[0]] = propsVal[1];
-        }
-
-        let token = userModule.getUserToken();
-        let url = api + endpoints.repo_object,
-            request = new Request(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                body: JSON.stringify(obj),
-                mode: 'cors'
-            });
-
-        const callback = function (response) {
-
-            if (response.status === 201) {
-
-                response.json().then(function (data) {
-                    domModule.html('#message', '<div class="alert alert-success">Collection created ( <a href="' + configModule.getApi() + '/dashboard/objects/?pid=' + DOMPurify.sanitize(data[0].pid) + '">' + DOMPurify.sanitize(data[0].pid) + '</a> )');
-                    domModule.hide('#collection-form');
-                });
-
-                return false;
-
-            } else if (response.status === 401) {
-
-                response.json().then(function (response) {
-
-                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
-
-                    setTimeout(function () {
-                        window.location.replace('/login');
-                    }, 4000);
-                });
-
-            } else if (response.status === 200) {
-
-                domModule.html('#message', '<div class="alert alert-warning">This collection object is already in the repository.</div>');
-                domModule.show('#collection-form');
-
-                setTimeout(function () {
-                    domModule.html('#message', null);
-                }, 5000);
-
-            } else {
-                helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to add collection.');
-            }
-        };
-
-        httpModule.req(request, callback);
-    };
-     */
 
     obj.init = function () {
         qaModule.getReadyFolders();

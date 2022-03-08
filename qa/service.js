@@ -241,8 +241,8 @@ exports.move_to_sftp = function (req, callback) {
 exports.upload_status = function (req, callback) {
 
     let pid = req.query.pid;
-    let local_file_count = req.query.local_file_count;
-    let qaUrl = CONFIG.qaUrl + '/api/v1/qa/upload-status?pid=' + pid + '&local_file_count=' + local_file_count + '&api_key=' + CONFIG.qaApiKey;
+    let total_batch_file_count = req.query.total_batch_file_count;
+    let qaUrl = CONFIG.qaUrl + '/api/v1/qa/upload-status?pid=' + pid + '&total_batch_file_count=' + total_batch_file_count + '&api_key=' + CONFIG.qaApiKey;
 
     (async () => {
 
