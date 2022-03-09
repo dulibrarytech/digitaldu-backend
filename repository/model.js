@@ -577,6 +577,7 @@ exports.create_collection_object = function (req, callback) {
         }
 
         let record = {};
+        record.handle = obj.handle;
         record.mods_id = obj.mods_id;
         record.uri = obj.uri;
         record.mods = obj.mods;
