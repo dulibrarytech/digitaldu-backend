@@ -491,7 +491,7 @@ exports.create_collection_object = function (req, callback) {
             return false;
         }
 
-        obj.mods_id = obj.uri;
+        obj.mods_id = VALIDATOR.unescape(obj.uri);
 
         SERVICE.get_mods(obj, function (response) {
 

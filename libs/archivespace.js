@@ -108,7 +108,7 @@ exports.get_mods = function (id, session, callback) {
     if (uri.length > 1) {
         apiUrl = CONFIG.archivespaceHost + id;
     }
-
+    console.log(apiUrl);
     (async() => {
 
         try {
