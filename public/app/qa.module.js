@@ -171,7 +171,7 @@ const qaModule = (function () {
      */
     function display_qa_errors(data) {
 
-        let error_messages = '';
+        let error_messages = '<p><strong>The following packages have problems with object files:</strong></p>';
         let errors = [];
 
         if (data.folder_name_results.errors.length > 0) {
@@ -179,14 +179,18 @@ const qaModule = (function () {
             errors.push(-1);
 
             for (let i = 0; i < data.folder_name_results.errors.length; i++) {
-                error_messages += '<i class="fa fa-exclamation-circle" style="color: red"></i> ' + data.folder_name_results.errors[i];
+                error_messages += '<p><i class="fa fa-exclamation-circle" style="color: red"></i> ' + data.folder_name_results.errors[i] + '</p>';
             }
-
         }
 
+        // TODO: rethink array name... array contains issues with objects as well.
         if (data.file_count_results.errors.length > 0) {
+
             errors.push(-1);
-            error_messages += '<i class="fa fa-exclamation-circle" style="color: red"></i> Unable to get total file count.';
+
+            for (let i = 0; i < data.file_count_results.errors.length; i++) {
+                error_messages += '<p><i class="fa fa-exclamation-circle" style="color: red"></i> ' + data.file_count_results.errors[i] + '</p>';
+            }
         }
 
         if (data.package_name_results.errors.length > 0) {
@@ -194,13 +198,13 @@ const qaModule = (function () {
             errors.push(-1);
 
             for (let i = 0; i < data.package_name_results.errors.length; i++) {
-                error_messages += '<i class="fa fa-exclamation-circle" style="color: red"></i> ' + data.package_name_results.errors[i];
+                error_messages += '<p><i class="fa fa-exclamation-circle" style="color: red"></i> ' + data.package_name_results.errors[i] + '</p>';
             }
         }
 
         if (data.total_batch_size.errors.length > 0) {
             errors.push(-1);
-            error_messages += '<i class="fa fa-exclamation-circle" style="color: red"></i> Unable to get total batch size.';
+            error_messages += '<p><i class="fa fa-exclamation-circle" style="color: red"></i> Unable to get total batch size.</p>';
         }
 
         if (data.uri_results.errors.length > 0) {
@@ -208,7 +212,7 @@ const qaModule = (function () {
             errors.push(-1);
 
             for (let i = 0; i < data.uri_results.errors.length; i++) {
-                error_messages += '<i class="fa fa-exclamation-circle" style="color: red"></i> ' + data.uri_results.errors[i];
+                error_messages += '<p><i class="fa fa-exclamation-circle" style="color: red">' + data.uri_results.errors[i] + '</p>';
             }
         }
 
@@ -338,7 +342,8 @@ const qaModule = (function () {
                     } else {
                         domModule.html('#ready', '<h2>' + data.title + '</h2>');
                         domModule.html('#collection-title-' + folder, data.title + '<br>');
-                        moveToIngest(data.pid, folder);
+                        // TODO: Temporarily removed
+                        // moveToIngest(data.pid, folder);
                     }
                 });
 

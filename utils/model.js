@@ -1341,4 +1341,4 @@ exports.save_call_number = function(req, callback) {
 };
 
 // TODO: delete ES record curl -X DELETE "localhost:9200/document-index/_doc/1"
-// curl -X DELETE "http://domain:9200/repo_admin/_doc/07dce309-1281-47c4-b35e-ea0b6e847829"
+// curl -X DELETE "http://domain:9200/repo_admin/_doc/0e642af3-79cb-456e-ba7e-ccdf5ec0cee3"
