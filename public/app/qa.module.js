@@ -342,8 +342,7 @@ const qaModule = (function () {
                     } else {
                         domModule.html('#ready', '<h2>' + data.title + '</h2>');
                         domModule.html('#collection-title-' + folder, data.title + '<br>');
-                        // TODO: Temporarily removed
-                        // moveToIngest(data.pid, folder);
+                        moveToIngest(data.pid, folder);
                     }
                 });
 
