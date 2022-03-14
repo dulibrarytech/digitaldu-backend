@@ -33,6 +33,12 @@ exports.run_qa = function (req, res) {
     });
 };
 
+exports.check_metadata = function (req, res) {
+    SERVICE.check_metadata(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
 exports.check_collection = function (req, res) {
     MODEL.check_collection(req, function (data) {
         res.status(data.status).send(data.data);

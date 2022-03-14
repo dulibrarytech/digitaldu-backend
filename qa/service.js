@@ -19,9 +19,10 @@
 'use strict';
 
 const CONFIG = require('../config/config'),
-    // ARCHIVESSPACE = require('../libs/archivespace'),
+    ARCHIVESSPACE = require('../libs/archivespace'),
     // KA = require('http'),
     HTTP = require('axios'),
+    VALIDATOR = require('validator'),
     LOGGER = require('../libs/log4'),
     TIMEOUT = 60000*15;
 
@@ -105,6 +106,108 @@ exports.run_qa = function (req, callback) {
         }
 
     })();
+};
+
+/**
+ * Checks batch metadata records
+ * @param req
+ * @param callback
+ */
+exports.check_metadata = function (req, callback) {
+
+    let uri_str = VALIDATOR.unescape(req.query.uri);
+    let uri_arr = uri_str.split('/');
+    let uri = uri_arr[uri_arr.length - 1];
+
+    ARCHIVESSPACE.get_session_token(function(result) {
+
+        let obj = JSON.parse(result.data);
+
+        ARCHIVESSPACE.get_mods(uri, obj.session, function(record) {
+
+            let errors = [];
+            let error_obj = {};
+
+            if (record.mods.data.title === undefined || record.mods.data.title.length === 0) {
+                errors.push(-1);
+                error_obj.error = 'Title is missing'
+            }
+
+            if (record.mods.data.uri === undefined || record.mods.data.uri.length === 0) {
+                errors.push(-1);
+                error_obj.error = 'URI is missing';
+            }
+
+            if (record.mods.data.identifiers === undefined || record.mods.data.identifiers.length === 0) {
+                errors.push(-1);
+                error_obj.error = 'Identifier is missing';
+            } else {
+                // TODO:...
+            }
+
+            if (record.mods.data.notes === undefined || record.mods.data.notes.length === 0) {
+                errors.push(-1);
+                error_obj.error = 'Notes is missing';
+            } else {
+
+                for (let i=0;i<record.mods.data.notes.length;i++) {
+
+                    if (record.mods.data.notes[i].type === 'abstract' && record.mods.data.notes[i].content.length === 0) {
+                        errors.push(-1);
+                        error_obj.error = 'Abstract is missing';
+                    }
+
+                    if (record.mods.data.notes[i].type === 'userestrict' && record.mods.data.notes[i].content.length === 0) {
+                        errors.push(-1);
+                        error_obj.error = 'Rights statement is missing';
+                    }
+                }
+            }
+
+            if (record.mods.data.dates !== undefined) {
+
+                for (let i=0;i<record.mods.data.dates.length;i++) {
+
+                    if (record.mods.data.dates[i].expression === undefined || record.mods.data.dates[i].expression.length === 0) {
+                        errors.push(-1);
+                        error_obj.error = 'Date expression is missing'
+                    }
+
+                    if (record.mods.data.dates[i].begin === undefined || record.mods.data.dates[i].begin.length === 0) {
+                        errors.push(-1);
+                        error_obj.error = 'Date begin is missing'
+                    }
+                }
+            }
+
+            if (record.mods.data.parts === undefined || record.mods.data.parts.length === 0) {
+                errors.push(-1);
+                error_obj.error = 'Parts is missing'
+            } else {
+
+                for (let i=0;i<record.mods.data.parts.length;i++) {
+
+                    if (record.mods.data.parts[i].type === null || record.mods.data.parts[i].type.length === 0) {
+                        errors.push(-1);
+                        error_obj.error = 'Mime-type is missing (' + record.mods.data.parts[i].title + ')';
+                    }
+                }
+            }
+
+            if (errors.length > 0) {
+                errors = [];
+                error_obj.uri = uri_str;
+                errors.push(error_obj);
+            }
+
+            ARCHIVESSPACE.destroy_session_token(obj.session, function(result) {
+                callback({
+                    status: 200,
+                    data: errors
+                });
+            });
+        });
+    });
 };
 
 /**

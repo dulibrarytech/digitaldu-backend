@@ -146,7 +146,20 @@ const qaModule = (function () {
                         domModule.html('#qa-on-ready', null);
                         domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No packages found in "' + folder + '".</div>');
                     } else {
-                        renderQAresults(data, folder);
+
+                        let uris = data.get_uri_results.result;
+
+                        check_package_metadata(uris, folder, function(errors) {
+
+                            if (errors.length > 0) {
+                                data.metadata_results = {
+                                    result: 'Metadata checked.',
+                                    errors: errors
+                                };
+                            }
+
+                            renderQAresults(data, folder);
+                        });
                     }
                 });
 
@@ -171,7 +184,7 @@ const qaModule = (function () {
      */
     function display_qa_errors(data) {
 
-        let error_messages = '<p><strong>The following packages have problems with object files:</strong></p>';
+        let error_messages = '<p><strong>The following errors were encountered:</strong></p>';
         let errors = [];
 
         if (data.folder_name_results.errors.length > 0) {
@@ -212,7 +225,16 @@ const qaModule = (function () {
             errors.push(-1);
 
             for (let i = 0; i < data.uri_results.errors.length; i++) {
-                error_messages += '<p><i class="fa fa-exclamation-circle" style="color: red">' + data.uri_results.errors[i] + '</p>';
+                error_messages += '<p><i class="fa fa-exclamation-circle" style="color: red"></i> ' + data.uri_results.errors[i] + '</p>';
+            }
+        }
+
+        if (data.metadata_results !== undefined && data.metadata_results.errors.length > 0) {
+
+            errors.push(-1);
+
+            for (let i = 0; i < data.metadata_results.errors.length; i++) {
+                error_messages += '<p><i class="fa fa-exclamation-circle" style="color: red"></i> ' + data.metadata_results.errors[i].error + ' for record ' + data.metadata_results.errors[i].uri + '</p>';
             }
         }
 
@@ -221,6 +243,78 @@ const qaModule = (function () {
             error_messages: error_messages
         };
     }
+
+    /**
+     * Checks record metadata
+     * @param uris
+     * @param folder
+     * @param cb
+     */
+    const check_package_metadata = function (uris, folder, cb) {
+
+        let errors = [];
+
+        let timer = setInterval(function() {
+
+            if (uris.length === 0) {
+                clearInterval(timer);
+                domModule.html('#' + folder, '<strong><em>Running QA process on archival packages. <br>Metadata checks complete.</em></strong>');
+
+                setTimeout(function() {
+                    cb(errors);
+                }, 4000);
+
+                return false;
+            }
+
+            let uri = uris.pop();
+            let token = userModule.getUserToken();
+
+            domModule.html('#' + folder, '<strong><em>Running QA process on archival packages. <br>Checking metadata record... ' + uri + '</em></strong>');
+
+            let url = api + endpoints.qa_check_metadata + '?uri=' + uri,
+                request = new Request(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-access-token': token
+                    },
+                    mode: 'cors'
+                });
+
+            const callback = function (response) {
+
+                if (response.status === 200) {
+
+                    response.json().then(function (data) {
+
+                        if (data.length > 0) {
+                            errors.push(data[0]);
+                        }
+                    });
+
+                    return false;
+
+                } else if (response.status === 401) {
+
+                    response.json().then(function (response) {
+
+                        helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
+
+                        setTimeout(function () {
+                            window.location.replace('/login');
+                        }, 4000);
+                    });
+
+                } else {
+                    helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to check metadata.');
+                }
+            };
+
+            httpModule.req(request, callback);
+
+        }, 3000);
+    };
 
     /**
      * Renders QA results

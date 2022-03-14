@@ -52,6 +52,7 @@ const apiModule = (function () {
             import_poll_fail_queue: '/api/admin/v1/import/poll/fail_queue',
             qa_list: '/api/v1/qa/list-ready',
             qa_run: '/api/v1/qa/run-qa',
+            qa_check_metadata: '/api/v1/qa/check-metadata',
             qa_check_collection: '/api/v1/qa/check-collection',
             qa_move_to_ingest: '/api/v1/qa/move-to-ingest',
             qa_move_to_sftp: '/api/v1/qa/move-to-sftp',
