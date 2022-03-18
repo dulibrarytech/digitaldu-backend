@@ -142,7 +142,7 @@ exports.check_metadata = function (req, callback) {
                 errors.push(-1);
                 error_obj.error = 'Identifier is missing';
             } else {
-                // TODO:...
+                // TODO:... look for specific identifier fields
             }
 
             if (record.mods.data.notes === undefined || record.mods.data.notes.length === 0) {
@@ -180,6 +180,8 @@ exports.check_metadata = function (req, callback) {
                 }
             }
 
+            // TODO: make available after archivesspace plugin is updated
+            /*
             if (record.mods.data.parts === undefined || record.mods.data.parts.length === 0) {
                 errors.push(-1);
                 error_obj.error = 'Parts is missing'
@@ -193,6 +195,7 @@ exports.check_metadata = function (req, callback) {
                     }
                 }
             }
+             */
 
             if (errors.length > 0) {
                 errors = [];

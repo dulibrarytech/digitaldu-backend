@@ -278,8 +278,8 @@ exports.list = function (folder, callback) {
         callback(data);
     }).catch(function (error) {
         LOGGER.module().error('ERROR: [/libs/archivematica lib (list)] unable to list sftp folders ' + error);
-        callback(error); // TODO:...
-        // throw 'FATAL: [/libs/archivematica lib (list)] unable to list sftp folders ' + error;
+        // callback(error); // TODO:... send back error to UI
+        throw 'FATAL: [/libs/archivematica lib (list)] unable to list sftp folders ' + error;
     });
 };
 
