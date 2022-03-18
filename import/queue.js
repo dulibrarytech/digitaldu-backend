@@ -1418,9 +1418,23 @@ exports.create_repo_record = function (req, callback) {
 
             if (result.status === 0) {
                 // ingest complete
-                // TODO: call move-to-ingested
-                // TODO: get collection folder name
-                // TODO: clear current archivesspace session
+                // Move packages to ingested folder and wasabi s3 backup
+                (async() => {
+
+                    let response = await HTTP.get({
+                        endpoint: CONFIG.qaUrl + '/api/v1/qa/move-to-ingested?pid=' + collection + '&folder=collection&api_key=' + CONFIG.qaApiKey
+                    });
+
+                    if (response.error === true) {
+                        LOGGER.module().fatal('FATAL: [/import/queue module (create_repo_record/async.waterfall/TRANSFER_INGEST.check_queue)] unable to move packages to ingested folder.');
+                        throw 'FATAL: [/import/queue module (create_repo_record/async.waterfall/TRANSFER_INGEST.check_queue)] unable to move packages to ingested folder.';
+                    } else if (response.data.status === 200) {
+                        LOGGER.module().info('INFO: [/import/queue module (create_repo_record/async.waterfall/TRANSFER_INGEST.check_queue)] sending request to start next transfer (async)');
+                        return false;
+                    }
+
+                })();
+
                 return false;
             }
 

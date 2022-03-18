@@ -556,7 +556,7 @@ const qaModule = (function () {
 
                                 setTimeout(function () {
                                     window.location.replace('/dashboard/import?collection=' + pid);
-                                }, 7000);
+                                }, 4000);
 
                             }, 60000);
 
@@ -609,7 +609,7 @@ const qaModule = (function () {
             if (response.status === 200) {
 
                 response.json().then(function (data) {
-                    console.log('check sftp status: ', data);
+
                     if (data.message === 'upload_complete') {
                         cb('complete');
                     } else if (data.message === 'in_progress') {
