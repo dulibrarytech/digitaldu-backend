@@ -1423,7 +1423,7 @@ exports.create_repo_record = function (req, callback) {
                 (async() => {
 
                     let endpoint = CONFIG.qaUrl + '/api/v1/qa/move-to-ingested?pid=' + collection + '&folder=collection&api_key=' + CONFIG.qaApiKey;
-                    let response = await HTTP.get(endpoint, {
+                    let response = await HTTP_EXT.get(endpoint, {
                         timeout: 60000*10
                     });
 
