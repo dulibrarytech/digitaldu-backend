@@ -33,6 +33,7 @@ const CONFIG = require('../config/config'),
     ASYNC = require('async'),
     MOMENT = require('moment'),
     HTTP = require('../libs/http'),
+    HTTP_EXT = require('axios'),
     DBQ = require('../config/dbqueue')(),
     SERVICE = require('../import/service'),
     TRANSFER_APPROVAL_TIMER = CONFIG.transferApprovalTimer,
@@ -1421,8 +1422,9 @@ exports.create_repo_record = function (req, callback) {
                 // Move packages to ingested folder and wasabi s3 backup
                 (async() => {
 
-                    let response = await HTTP.get({
-                        endpoint: CONFIG.qaUrl + '/api/v1/qa/move-to-ingested?pid=' + collection + '&folder=collection&api_key=' + CONFIG.qaApiKey
+                    let endpoint = CONFIG.qaUrl + '/api/v1/qa/move-to-ingested?pid=' + collection + '&folder=collection&api_key=' + CONFIG.qaApiKey;
+                    let response = await HTTP.get(endpoint, {
+                        timeout: 60000*10
                     });
 
                     if (response.error === true) {
