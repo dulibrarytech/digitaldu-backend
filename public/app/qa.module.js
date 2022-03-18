@@ -352,7 +352,7 @@ const qaModule = (function () {
 
             let parts = folder.split('-');
             let uri_part = parts.pop().replace('_', '/');
-            // checkCollection(uri_part, folder);
+            checkCollection(uri_part, folder);
 
         }, 4000);
     };
