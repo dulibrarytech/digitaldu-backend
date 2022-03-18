@@ -145,7 +145,7 @@ exports.check_metadata = function (req, callback) {
                 // TODO:... look for specific identifier fields
             }
 
-            if (record.mods.data.notes === undefined || record.mods.data.notes.length === 0) {
+            if (record.mods.data.notes === undefined) {  // TODO: || record.mods.data.notes.length === 0
                 errors.push(-1);
                 error_obj.error = 'Notes is missing';
             } else {
