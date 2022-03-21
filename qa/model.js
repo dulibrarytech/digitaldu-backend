@@ -20,6 +20,7 @@
 
 const VALIDATOR = require('validator'),
     DB = require('../config/db')(),
+    DR = require('../libs/display-record'),
     LOGGER = require('../libs/log4'),
     REPO_OBJECTS = 'tbl_objects';
 
@@ -33,25 +34,29 @@ exports.check_collection = function(req, callback) {
     let uri = VALIDATOR.unescape(req.query.uri);
 
     DB(REPO_OBJECTS)
-        .select('display_record')
+        .select('pid')  // display_record
         .where({
             uri: uri,
             object_type: 'collection',
             is_active: 1
         })
         .then(function (data) {
-            // TODO: if it doesn't exist
+            // if collection doesn't exist
             if (data.length === 0) {
-                // TODO: ask user if new collection is sub collection?
+
                 callback({
                     status: 200,
                     data: []
                 });
+
             } else {
-                // TODO: send request to qa to copy folder to 002-ingest
-                callback({
-                    status: 200,
-                    data: data[0].display_record
+
+                DR.get_db_display_record_data(data[0].pid, function(result) {
+
+                    callback({
+                        status: 200,
+                        data: result[0].display_record
+                    });
                 });
             }
 
