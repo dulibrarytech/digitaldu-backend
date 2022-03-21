@@ -173,10 +173,12 @@ exports.check_metadata = function (req, callback) {
                         error_obj.error = 'Date expression is missing'
                     }
 
+                    /* TODO: not all records will have a begin date
                     if (record.mods.data.dates[i].begin === undefined || record.mods.data.dates[i].begin.length === 0) {
                         errors.push(-1);
                         error_obj.error = 'Date begin is missing'
                     }
+                     */
                 }
             }
 

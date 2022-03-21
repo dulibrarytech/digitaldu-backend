@@ -34,7 +34,7 @@ exports.check_collection = function(req, callback) {
     let uri = VALIDATOR.unescape(req.query.uri);
 
     DB(REPO_OBJECTS)
-        .select('pid')  // display_record
+        .select('pid')
         .where({
             uri: uri,
             object_type: 'collection',
