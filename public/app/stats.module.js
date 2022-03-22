@@ -29,7 +29,7 @@ const statsModule = (function () {
      * @param data
      */
     const renderStats = function (data) {
-        console.log(data);
+
         // create line chart
         let line_chart_data = data.total_yearly_ingests;
 
