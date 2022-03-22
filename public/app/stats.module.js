@@ -29,9 +29,9 @@ const statsModule = (function () {
      * @param data
      */
     const renderStats = function (data) {
-
+        console.log(data);
         // create line chart
-        let line_chart_data = data.yearly_ingest_counts;
+        let line_chart_data = data.total_yearly_ingests;
 
         let labels = [];
         let totals = [];
@@ -64,31 +64,33 @@ const statsModule = (function () {
 
         let total_duracloud_usage = (data.dip_storage_usage + data.aip_storage_usage);
 
-        domModule.html('#published-collection-count', DOMPurify.sanitize(data.published_collection_count.toLocaleString('en')));
-        domModule.html('#total-collection-count', DOMPurify.sanitize(data.total_collection_count.toLocaleString('en')));
-        domModule.html('#published-object-count', DOMPurify.sanitize(data.published_object_count.toLocaleString('en')));
-        domModule.html('#total-object-count', DOMPurify.sanitize(data.total_object_count.toLocaleString('en')));
-        domModule.html('#total-image-count', DOMPurify.sanitize(data.total_image_count.toLocaleString('en')));
-        domModule.html('#total-pdf-count', DOMPurify.sanitize(data.total_pdf_count.toLocaleString('en')));
-        domModule.html('#total-audio-count', DOMPurify.sanitize(data.total_audio_count.toLocaleString('en')));
-        domModule.html('#total-video-count', DOMPurify.sanitize(data.total_video_count.toLocaleString('en')));
+        domModule.html('#total-published-collections', DOMPurify.sanitize(data.total_published_collections.toLocaleString('en')));
+        domModule.html('#total-collections', DOMPurify.sanitize(data.total_collections.toLocaleString('en')));
+        domModule.html('#total-published-objects', DOMPurify.sanitize(data.total_published_objects.toLocaleString('en')));
+        domModule.html('#total-objects', DOMPurify.sanitize(data.total_objects.toLocaleString('en')));
+        domModule.html('#total-images', DOMPurify.sanitize(data.total_images.toLocaleString('en')));
+        domModule.html('#total-pdfs', DOMPurify.sanitize(data.total_pdfs.toLocaleString('en')));
+        domModule.html('#total-audio', DOMPurify.sanitize(data.total_audio.toLocaleString('en')));
+        domModule.html('#total-video', DOMPurify.sanitize(data.total_video.toLocaleString('en')));
         domModule.html('#total-dip-usage', DOMPurify.sanitize(helperModule.format_package_size(data.dip_storage_usage)));
         domModule.html('#total-aip-usage', DOMPurify.sanitize(helperModule.format_package_size(data.aip_storage_usage)));
         domModule.html('#total-dc-usage', DOMPurify.sanitize(helperModule.format_package_size(total_duracloud_usage)));
+        domModule.html('#total-daily-ingests', DOMPurify.sanitize(data.total_daily_ingests.toLocaleString('en')));
 
         // clear loading... messages
-        domModule.html('#loading-published-collection-count', null);
-        domModule.html('#loading-total-collection-count', null);
-        domModule.html('#loading-published-object-count', null);
-        domModule.html('#loading-total-object-count', null);
-        domModule.html('#loading-image-count', null);
-        domModule.html('#loading-pdf-count', null);
-        domModule.html('#loading-audio-count', null);
-        domModule.html('#loading-video-count', null);
+        domModule.html('#loading-published-collection-total', null);
+        domModule.html('#loading-total-collections', null);
+        domModule.html('#loading-published-object-total', null);
+        domModule.html('#loading-total-objects', null);
+        domModule.html('#loading-total-images', null);
+        domModule.html('#loading-total-pdfs', null);
+        domModule.html('#loading-total-audio', null);
+        domModule.html('#loading-total-video', null);
         domModule.html('#loading-dip-usage', null);
         domModule.html('#loading-aip-usage', null);
         domModule.html('#loading-dc-usage', null);
         domModule.html('#loading-ingests-per-year', null);
+        domModule.html('#loading-ingests-per-day', null);
     };
 
     /**

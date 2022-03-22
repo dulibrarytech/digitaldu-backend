@@ -27,18 +27,19 @@ const ASYNC = require('async'),
 exports.get_stats = function (req, callback) {
 
     ASYNC.waterfall([
-        getPublishedCollectionCount,
-        getPublishedObjectCount,
-        getTotalCollectionCount,
-        getTotalObjectCount,
-        getTotalImageCount,
-        getTotalPdfCount,
-        getTotalAudioCount,
-        getTotalVideoCount,
-        getYearlyIngestCount,
+        get_total_published_collections,
+        get_total_published_objects,
+        get_total_collections,
+        get_total_objects,
+        get_total_images,
+        get_total_pdfs,
+        get_total_audio,
+        get_total_video,
+        get_total_yearly_ingests,
+        get_total_daily_ingests,
         // getMonthlyIngestCount,
-        getDipStorageUsage,
-        getAipStorageUsage
+        get_dip_storage_usage,
+        get_aip_storage_usage
     ], function (error, results) {
 
         if (error) {
@@ -53,96 +54,92 @@ exports.get_stats = function (req, callback) {
         });
     });
 
-    function getPublishedCollectionCount(callback) {
+    function get_total_published_collections(callback) {
 
-        // published collection count
         DB(REPO_OBJECTS)
-            .count('object_type as published_collection_count')
+            .count('object_type as total_published_collections')
             .where({
                 object_type: 'collection',
                 is_active: 1,
                 is_published: 1
             })
             .then(function (data) {
-
-                callback(null, data[0]);
+                let results = {};
+                results.total_published_collections = parseInt(data[0].total_published_collections);
+                callback(null, results);
                 return null;
 
             })
             .catch(function (error) {
-                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/getPublishedCollectionCount)] unable to get published collection count ' + error);
-                throw 'FATAL: [/stats/model module (get_stats/getPublishedCollectionCount)] unable to get published collection count ' + error;
+                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/get_total_published_collections)] unable to get published collection total ' + error);
+                throw 'FATAL: [/stats/model module (get_stats/get_total_published_collections)] unable to get published collection total ' + error;
             });
     }
 
-    function getPublishedObjectCount(results, callback) {
+    function get_total_published_objects(results, callback) {
 
-        // published object count
         DB(REPO_OBJECTS)
-            .count('object_type as published_object_count')
+            .count('object_type as total_published_objects')
             .where({
                 object_type: 'object',
                 is_active: 1,
                 is_published: 1
             })
             .then(function (data) {
-
-                results.published_object_count = parseInt(data[0].published_object_count);
+                results.total_published_objects = parseInt(data[0].total_published_objects);
                 callback(null, results);
                 return null;
             })
             .catch(function (error) {
-                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/getPublishedObjectCount)] unable to get published object count ' + error);
-                throw 'FATAL: [/stats/model module (get_stats/getPublishedObjectCount)] unable to get published object count ' + error;
+                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/get_total_published_objects)] unable to get published object total ' + error);
+                throw 'FATAL: [/stats/model module (get_stats/get_total_published_objects)] unable to get published object total ' + error;
             });
     }
 
-    function getTotalCollectionCount(results, callback) {
+    function get_total_collections(results, callback) {
 
-        // total collection count
         DB(REPO_OBJECTS)
-            .count('object_type as total_collection_count')
+            .count('object_type as total_collections')
             .where({
                 object_type: 'collection',
                 is_active: 1
             })
             .then(function (data) {
 
-                results.total_collection_count = parseInt(data[0].total_collection_count);
+                results.total_collections = parseInt(data[0].total_collections);
                 callback(null, results);
                 return null;
             })
             .catch(function (error) {
-                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/getTotalCollectionCount)] unable to get total collection count ' + error);
-                throw 'FATAL: [/stats/model module (get_stats/getTotalCollectionCount)] unable to get total collection count ' + error;
+                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/get_total_collections)] unable to get total collections ' + error);
+                throw 'FATAL: [/stats/model module (get_stats/get_total_collections)] unable to get total collections ' + error;
             });
     }
 
-    function getTotalObjectCount(results, callback) {
+    function get_total_objects(results, callback) {
 
-        // total object count
         DB(REPO_OBJECTS)
-            .count('object_type as total_object_count')
+            .count('object_type as total_objects')
             .where({
                 object_type: 'object',
                 is_active: 1
             })
             .then(function (data) {
 
-                results.total_object_count = data[0].total_object_count;
+                results.total_objects = data[0].total_objects;
                 callback(null, results);
                 return null;
             })
             .catch(function (error) {
-                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/getTotalObjectCount)] unable to get total object count ' + error);
-                throw 'FATAL: [/stats/model module (get_stats/getTotalObjectCount)] unable to get total object count ' + error;
+                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/get_total_objects)] unable to get total objects ' + error);
+                throw 'FATAL: [/stats/model module (get_stats/get_total_objects)] unable to get total objects ' + error;
             });
     }
 
-    function getTotalImageCount(results, callback) {
+    function get_total_images(results, callback) {
 
         DB(REPO_OBJECTS)
-            .count('mime_type as total_image_count')
+            .count('mime_type as total_images')
             .where({
                 mime_type: 'image/tiff',
                 is_active: 1
@@ -157,40 +154,40 @@ exports.get_stats = function (req, callback) {
             })
             .then(function (data) {
 
-                results.total_image_count = data[0].total_image_count;
+                results.total_images = data[0].total_images;
                 callback(null, results);
                 return null;
             })
             .catch(function (error) {
-                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/getTotalImageCount)] unable to get total image count ' + error);
-                throw 'FATAL: [/stats/model module (get_stats/getTotalImageCount)] unable to get total image count ' + error;
+                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/get_total_images)] unable to get total images ' + error);
+                throw 'FATAL: [/stats/model module (get_stats/get_total_images)] unable to get total images ' + error;
             });
     }
 
-    function getTotalPdfCount(results, callback) {
+    function get_total_pdfs(results, callback) {
 
         DB(REPO_OBJECTS)
-            .count('mime_type as total_pdf_count')
+            .count('mime_type as total_pdfs')
             .where({
                 mime_type: 'application/pdf',
                 is_active: 1
             })
             .then(function (data) {
 
-                results.total_pdf_count = data[0].total_pdf_count;
+                results.total_pdfs = data[0].total_pdfs;
                 callback(null, results);
                 return null;
             })
             .catch(function (error) {
-                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/getTotalPdfCount)] unable to get total pdf count ' + error);
-                throw 'FATAL: [/stats/model module (get_stats/getTotalPdfCount)] unable to get total pdf count ' + error;
+                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/get_total_pdfs)] unable to get total pdfs ' + error);
+                throw 'FATAL: [/stats/model module (get_stats/get_total_pdfs)] unable to get total pdfs ' + error;
             });
     }
 
-    function getTotalAudioCount(results, callback) {
+    function get_total_audio(results, callback) {
 
         DB(REPO_OBJECTS)
-            .count('mime_type as total_audio_count')
+            .count('mime_type as total_audio')
             .where({
                 mime_type: 'audio/x-wav',
                 is_active: 1
@@ -201,20 +198,20 @@ exports.get_stats = function (req, callback) {
             })
             .then(function (data) {
 
-                results.total_audio_count = data[0].total_audio_count;
+                results.total_audio = data[0].total_audio;
                 callback(null, results);
                 return null;
             })
             .catch(function (error) {
-                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/getTotalAudioCount)] unable to get total audio count ' + error);
-                throw 'FATAL: [/stats/model module (get_stats/getTotalAudioCount)] unable to get total audio count ' + error;
+                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/get_total_audio)] unable to get total audio ' + error);
+                throw 'FATAL: [/stats/model module (get_stats/get_total_audio)] unable to get total audio ' + error;
             });
     }
 
-    function getTotalVideoCount(results, callback) {
+    function get_total_video(results, callback) {
 
         DB(REPO_OBJECTS)
-            .count('mime_type as total_video_count')
+            .count('mime_type as total_video')
             .where({
                 mime_type: 'video/mp4',
                 is_active: 1
@@ -229,26 +226,26 @@ exports.get_stats = function (req, callback) {
             })
             .then(function (data) {
 
-                results.total_video_count = data[0].total_video_count;
+                results.total_video = data[0].total_video;
                 callback(null, results);
                 return null;
             })
             .catch(function (error) {
-                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/getTotalVideoCount)] unable to get total video count ' + error);
-                throw 'FATAL: [/stats/model module (get_stats/getTotalVideoCount)] unable to get total video count ' + error;
+                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/get_total_video)] unable to get total video ' + error);
+                throw 'FATAL: [/stats/model module (get_stats/get_total_video)] unable to get total video ' + error;
             });
     }
 
-    function getYearlyIngestCount(results, callback) {
+    function get_total_yearly_ingests(results, callback) {
         DB.raw('SELECT COUNT(id) as \'total\', DATE_FORMAT(created, \'%Y\') as \'year\' FROM tbl_objects WHERE is_active=1 GROUP BY DATE_FORMAT(created, \'%Y\')')
             .then(function(data) {
-                results.yearly_ingest_counts = data[0];
+                results.total_yearly_ingests = data[0];
                 callback(null, results);
                 return null;
             })
             .catch(function(error) {
-                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/getYearlyIngestCount)] unable to yearly ingest count ' + error);
-                throw 'FATAL: [/stats/model module (get_stats/getYearlyIngestCount)] unable to get yearly ingest count ' + error;
+                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/get_total_yearly_ingests)] unable to get yearly ingest total ' + error);
+                throw 'FATAL: [/stats/model module (get_stats/get_total_yearly_ingests)] unable to get yearly ingest total ' + error;
             });
     }
 
@@ -262,12 +259,26 @@ exports.get_stats = function (req, callback) {
                 return null;
             })
             .catch(function(error) {
-                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/getMonthlyIngestCount)] unable to monthly ingest count ' + error);
+                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/getMonthlyIngestCount)] unable to get monthly ingest count ' + error);
                 throw 'FATAL: [/stats/model module (get_stats/getMonthlyIngestCount)] unable to get monthly ingest count ' + error;
             });
     }
 
-    function getDipStorageUsage(results, callback) {
+    function get_total_daily_ingests(results, callback) {
+        DB.raw('SELECT count(id) as \'total_daily_ingests\' FROM tbl_objects WHERE is_active=1 AND DATE(created) = CURDATE()')
+            .then(function(data) {
+                let result = data[0].pop();
+                results.total_daily_ingests = result.total_daily_ingests;
+                callback(null, results);
+                return null;
+            })
+            .catch(function(error) {
+                LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/get_total_daily_ingests)] unable to get daily ingests ' + error);
+                throw 'FATAL: [/stats/model module (get_stats/get_total_daily_ingests)] unable to get daily ingests ' + error;
+            });
+    }
+
+    function get_dip_storage_usage(results, callback) {
 
         ARCHIVEMATICA.get_dip_storage_usage(function(result) {
             results.dip_storage_usage = result.data
@@ -276,7 +287,7 @@ exports.get_stats = function (req, callback) {
 
     }
 
-    function getAipStorageUsage(results, callback) {
+    function get_aip_storage_usage(results, callback) {
 
         ARCHIVEMATICA.get_aip_storage_usage(function(result) {
             results.aip_storage_usage = result.data
