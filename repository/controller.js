@@ -18,7 +18,7 @@
 
 'use strict';
 
-const REPO = require('../repository/model'),
+const MODEL = require('../repository/model'),
     SERVICE = require('../repository/service'),
     CACHE = require('../libs/cache'),
     PATH = require('path');
@@ -38,45 +38,46 @@ exports.get_admin_objects = function (req, res) {
 };
 
 exports.get_display_record = function (req, res) {
-    REPO.get_display_record(req, function (data) {
+    let sip_uuid = req.query.pid;
+    MODEL.get_display_record(sip_uuid, function (data) {
         res.status(data.status).send(data.data);
     });
 };
 
 exports.create_collection_object = function (req, res) {
-    REPO.create_collection_object(req, function (data) {
+    MODEL.create_collection_object(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
 
 exports.update_thumbnail = function (req, res) {
-    REPO.update_thumbnail(req, function (data) {
+    MODEL.update_thumbnail(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
 
 exports.publish_objects = function (req, res) {
     CACHE.clear_cache();
-    REPO.publish_objects(req, function (data) {
+    MODEL.publish_objects(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
 
 exports.unpublish_objects = function (req, res) {
     CACHE.clear_cache();
-    REPO.unpublish_objects(req, function (data) {
+    MODEL.unpublish_objects(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
 
 exports.reset_display_record = function (req, res) {
-    REPO.reset_display_record(req, function (data) {
+    MODEL.reset_display_record(req, function (data) {
         res.status(data.status).send(data);
     });
 };
 
 exports.delete_object = function (req, res) {
-    REPO.delete_object(req, function (data) {
+    MODEL.delete_object(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };

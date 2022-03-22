@@ -24,7 +24,7 @@ const CONFIG = require('../config/config'),
     UUID = require('node-uuid'),
     VALIDATOR = require('validator'),
     HANDLES = require('../libs/handles'),
-    MODS = require('../libs/display-record'),
+    DR = require('../libs/display-record'),
     ARCHIVEMATICA = require('../libs/archivematica'),
     SERVICE = require('../repository/service'),
     LOGGER = require('../libs/log4'),
@@ -256,15 +256,13 @@ const unindex = function (sip_uuid, callback) {
 };
 
 /**
- * Gets object display record
- * @param req
+ * Gets metadata display record
+ * @param sip_uuid
  * @param callback
  */
-exports.get_display_record = function (req, callback) {
+exports.get_display_record = function (sip_uuid, callback) {
 
-    let pid = req.query.pid;
-
-    if (pid === undefined || pid.length === 0 || !VALIDATOR.isUUID(pid)) {
+    if (sip_uuid === undefined || sip_uuid.length === 0 || !VALIDATOR.isUUID(sip_uuid)) {
         callback({
             status: 400,
             message: 'Bad request.',
@@ -273,17 +271,17 @@ exports.get_display_record = function (req, callback) {
 
         return false;
 
-    } else if (Array.isArray(pid)) {
+    } else if (Array.isArray(sip_uuid)) {
         // TODO: bug appears to be caused by http wrapper <-- from publishing process
         // workaround for http bug that creates array instead of string
-        pid = pid[0];
+        sip_uuid = sip_uuid[0];
     }
 
-    MODS.get_db_display_record_data(pid, function(data) {
+    DR.get_db_display_record_data(sip_uuid, function(data) {
 
         callback({
             status: 200,
-            message: 'Object retrieved.',
+            message: 'Display record retrieved.',
             data: data
         });
     });
@@ -323,9 +321,9 @@ exports.update_thumbnail = function (req, callback) {
         .then(function (data) {
 
             // Get existing record from repository
-            MODS.get_display_record_data(obj.pid, function (recordObj) {
+            DR.get_display_record_data(obj.pid, function (recordObj) {
 
-                MODS.create_display_record(recordObj, function (result) {
+                DR.create_display_record(recordObj, function (result) {
 
                     let tmp = JSON.parse(result);
 
@@ -354,7 +352,7 @@ exports.update_thumbnail = function (req, callback) {
                         is_active: 1
                     };
 
-                    MODS.update_display_record(where_obj, obj.display_record, function (result) {
+                    DR.update_display_record(where_obj, obj.display_record, function (result) {
 
                         index(recordObj.sip_uuid, function (result) {
 
@@ -563,7 +561,7 @@ exports.create_collection_object = function (req, callback) {
         let uriArr = obj.mods_id.split('/');
         obj.mods_id = uriArr[uriArr.length - 1];
 
-        MODS.create_display_record(obj, function (result) {
+        DR.create_display_record(obj, function (result) {
             obj.display_record = result;
             callback(null, obj);
         });
@@ -579,7 +577,7 @@ exports.create_collection_object = function (req, callback) {
         let record = {};
         record.handle = obj.handle;
         record.mods_id = obj.mods_id;
-        record.uri = VALIDATOR.unescape(obj.uri); // TODO: test
+        record.uri = VALIDATOR.unescape(obj.uri);
         record.mods = obj.mods;
         record.object_type = obj.object_type;
         record.is_member_of_collection = obj.is_member_of_collection;
@@ -1374,9 +1372,9 @@ exports.reset_display_record = function (req, callback) {
         let obj = {};
         let sip_uuid = req.body.pid;
 
-        MODS.get_display_record_data(sip_uuid, function(record) {
+        DR.get_display_record_data(sip_uuid, function(record) {
 
-            MODS.create_display_record(record, function (display_record) {
+            DR.create_display_record(record, function (display_record) {
 
                 let recordObj = JSON.parse(display_record);
                 let where_obj = {
@@ -1385,7 +1383,7 @@ exports.reset_display_record = function (req, callback) {
                     is_active: 1
                 };
 
-                MODS.update_display_record(where_obj, display_record, function(result) {
+                DR.update_display_record(where_obj, display_record, function(result) {
                     obj.sip_uuid = recordObj.pid;
                     obj.is_published = recordObj.is_published;
                     callback(null, obj);
@@ -1639,7 +1637,7 @@ exports.save_transcript = function (req, callback) {
 
                 LOGGER.module().info('INFO: [/repository/model module (add_transcript)] Transcript saved to DB');
 
-                MODS.get_db_display_record_data(sip_uuid, function(data) {
+                DR.get_db_display_record_data(sip_uuid, function(data) {
 
                     let record = JSON.parse(data[0].display_record);
                     record.transcript = transcript;
@@ -1649,7 +1647,7 @@ exports.save_transcript = function (req, callback) {
                         is_active: 1
                     };
 
-                    MODS.update_display_record(where_obj, JSON.stringify(record),function(result) {
+                    DR.update_display_record(where_obj, JSON.stringify(record),function(result) {
 
                         (async () => {
 
