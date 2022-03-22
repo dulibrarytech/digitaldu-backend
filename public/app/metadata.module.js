@@ -230,7 +230,13 @@ const metadataModule = (function () {
 
         let pid = '';
         pid += '<ul>';
-        pid += '<li><strong>Pid:</strong>&nbsp;<a target="_blank" href="' + DOMPurify.sanitize(record.handle) + '">' + DOMPurify.sanitize(record.pid) + '</a>&nbsp;&nbsp;<i class="fa fa-external-link"></i></li>';
+
+        if (record.is_published === 0) {
+            pid += '<li><strong>Pid:</strong>&nbsp;' + DOMPurify.sanitize(record.pid) + '&nbsp;&nbsp;<i class="fa fa-external-link"></i></li>';
+        } else {
+            pid += '<li><strong>Pid:</strong>&nbsp;<a target="_blank" href="' + DOMPurify.sanitize(record.handle) + '">' + DOMPurify.sanitize(record.pid) + '</a>&nbsp;&nbsp;<i class="fa fa-external-link"></i></li>';
+        }
+
         pid += '</ul>';
 
         return pid;
