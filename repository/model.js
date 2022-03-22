@@ -262,21 +262,6 @@ const unindex = function (sip_uuid, callback) {
  */
 exports.get_display_record = function (sip_uuid, callback) {
 
-    if (sip_uuid === undefined || sip_uuid.length === 0 || !VALIDATOR.isUUID(sip_uuid)) {
-        callback({
-            status: 400,
-            message: 'Bad request.',
-            data: []
-        });
-
-        return false;
-
-    } else if (Array.isArray(sip_uuid)) {
-        // TODO: bug appears to be caused by http wrapper <-- from publishing process
-        // workaround for http bug that creates array instead of string
-        sip_uuid = sip_uuid[0];
-    }
-
     DR.get_db_display_record_data(sip_uuid, function(data) {
 
         callback({
