@@ -33,231 +33,6 @@ const CONFIG = require('../config/config'),
     DB = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects';
 
-/*
-/**
- * Moves records from admin to public index
- * @param match_phrase
- * @param callback
- *
-const reindex = function (match_phrase, callback) {
-
-    (async () => {
-
-        let query = {};
-        let bool = {};
-
-        bool.must = {};
-        bool.must.match_phrase = match_phrase;
-        query.bool = bool;
-
-        let data = {
-            'query': query
-        };
-
-        let response = await HTTP.post({
-            endpoint: '/api/admin/v1/indexer/reindex',
-            data: data
-        });
-
-        let result = {};
-
-        if (response.error === true) {
-            LOGGER.module().error('ERROR: [/repository/model module (reindex)] reindex failed.');
-            result.error = true;
-        } else if (response.data.status === 201) {
-            result.error = false;
-        }
-
-        callback(result);
-
-    })();
-};
-
-/**
- * Updates published status
- * @param sip_uuid
- * @param is_published
- * @param callback
- *
-const update_fragment = function (sip_uuid, is_published, callback) {
-
-    (async () => {
-
-        let data = {
-            'sip_uuid': sip_uuid,
-            'fragment': {
-                doc: {
-                    is_published: is_published
-                }
-            }
-        };
-
-        let response = await HTTP.put({
-            endpoint: '/api/admin/v1/indexer/update_fragment',
-            data: data
-        });
-
-        let result = {};
-
-        if (response.error === true) {
-            LOGGER.module().error('ERROR: [/repository/model module (update_fragment)] unable to update published status.');
-            result.error = true;
-        } else if (response.data.status === 201) {
-            result.error = false;
-        }
-
-        callback(result);
-
-    })();
-};
-
-/**
- * Indexes record
- * @param sip_uuid
- * @param callback
- *
-const index = function (sip_uuid, callback) {
-
-    (async () => {
-
-        let data = {
-            'sip_uuid': sip_uuid
-        };
-
-        let response = await HTTP.post({
-            endpoint: '/api/admin/v1/indexer',
-            data: data
-        });
-
-        let result = {};
-
-        if (response.error === true) {
-            LOGGER.module().error('ERROR: [/repository/model module (index)] index failed.');
-            result.error = true;
-        } else if (response.data.status === 201) {
-            result.error = false;
-        }
-
-        callback(result);
-
-    })();
-};
-
-/**
- * Removes record from index
- * @param sip_uuid
- * @param callback
- *
-const del = function (sip_uuid, callback) {
-
-    (async () => {
-
-        let response = await HTTP.delete({
-            endpoint: '/api/admin/v1/indexer',
-            params: {
-                pid: sip_uuid
-            }
-        });
-
-        let result = {};
-
-        if (response.error === true) {
-            LOGGER.module().error('ERROR: [/repository/model module (del)] unable to remove published record from index.');
-            result.error = true;
-        } else if (response.data.status === 204) {
-            result.error = false;
-        }
-
-        callback(result);
-
-    })();
-};
-
-/**
- * Updates display record after publish status changed
- * @param obj
- * @param callback
- *
-function update_display_record(obj, callback) {
-
-    let pid;
-    let is_published;
-
-    if (obj.sip_uuid !== undefined) {
-        pid = obj.sip_uuid // publish
-        is_published = 1;
-    } else if (obj.pid !== undefined) {
-        pid = obj.pid;  // unpublish
-        is_published = 0;
-    }
-
-    (async () => {
-
-        let response = await HTTP.get({
-            endpoint: '/api/admin/v1/repo/object',
-            params: {
-                pid: pid
-            }
-        });
-
-        if (response.error === true) {
-            LOGGER.module().error('ERROR: [/repository/model module (update_display_record)] unable to get display record.');
-        } else if (response.error === false) {
-
-            let display_record = JSON.parse(response.data[0].display_record);
-            display_record.is_published = is_published;
-
-            DB(REPO_OBJECTS)
-                .where({
-                    pid: pid,
-                    is_active: 1
-                })
-                .update({
-                    display_record: JSON.stringify(display_record)
-                })
-                .then(function () {
-                })
-                .catch(function (error) {
-                    LOGGER.module().error('ERROR: [/repository/model module (update_display_record)] unable to update display record. ' + error);
-                });
-        }
-
-        callback(null, obj);
-
-    })();
-}
-
-/**
- * Removes record from admin and public indexes - part of record delete process
- * @param sip_uuid
- * @param callback
- *
-const unindex = function (sip_uuid, callback) {
-
-    (async () => {
-
-        let response = await HTTP.delete({
-            endpoint: '/api/admin/v1/indexer/delete',
-            params: {
-                pid: sip_uuid
-            }
-        });
-
-        let result = {};
-
-        if (response.error === true) {
-            LOGGER.module().error('ERROR: [/repository/model module (unindex)] unable to remove record from index.');
-            result.error = true;
-        } else if (response.data.status === 204) {
-            result.error = false;
-        }
-
-        callback(result);
-
-    })();
-};
-*/
-
 /**
  * Gets metadata display record
  * @param sip_uuid
@@ -274,94 +49,86 @@ exports.get_display_record = function (sip_uuid, callback) {
 };
 
 /**
- * Updates thumbnail
+ * Updates thumbnail url
  * @param sip_uuid
  * @param thumbnail_url
  * @param callback
  */
-exports.update_thumbnail = function (sip_uuid, thumbnail_url, callback) {
+exports.update_thumbnail_url = function (sip_uuid, thumbnail_url, callback) {
 
     ASYNC.waterfall([
-        update_db_record,
+        update_repo_record,
         get_display_record_data,
         create_display_record,
         update_display_record,
         reindex_display_record,
         republish_display_record
-    ], function (error, result) {
-        console.log('the end. ', result);
-        callback({
+    ], function (error) {
+
+        let response = {
             status: 201,
-            message: 'Thumbnail updated.'
-        });
+            message: 'Thumbnail URL updated.'
+        };
+
+        if (error !== null) {
+            response = {
+                status: 500,
+                message: error.message
+            }
+        }
+
+        callback(response);
     });
 
     /**
-     *
+     * Updates the repository record with new thumbnail url
      * @param callback
      */
-    function update_db_record(callback) {
-
-        let obj = {};
-        obj.sip_uuid = sip_uuid;
-        obj.thumbnail = VALIDATOR.unescape(thumbnail_url);
+    function update_repo_record(callback) {
 
         DB(REPO_OBJECTS)
             .where({
-                sip_uuid: obj.sip_uuid,
+                sip_uuid: sip_uuid,
                 is_active: 1
             })
             .update({
-                thumbnail: obj.thumbnail
+                thumbnail: VALIDATOR.unescape(thumbnail_url) // obj.thumbnail
             })
-            .then(function (data) {
-
-                if (data === 1) {
-                    obj.is_updated = true;
-                } else {
-                    obj.is_updated = false;
-                }
-
-                callback(null, obj);
+            .then(function () {
+                callback(null, sip_uuid);
             })
             .catch(function (error) {
-                LOGGER.module().fatal('FATAL: [/repository/model module (update_thumbnail/update_db_record)] unable to update thumbnail record ' + error);
-                throw 'FATAL: [/repository/model module (update_thumbnail/update_db_record)] unable to update thumbnail record ' + error;
+                LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail/update_db_record)] unable to update thumbnail record ' + error);
+                callback(new Error('Unable to update repository record: ' + error.message));
             });
     }
 
+
     /**
-     *
-     * @param obj
+     * Gets display record data
+     * @param sip_uuid
      * @param callback
      * @returns {boolean}
      */
-    function get_display_record_data(obj, callback) {
-
-        if (obj.is_updated === false) {
-            callback(null, obj); // TODO: how to quit early if update failed?
-            return false;
-        }
-
-        DR.get_display_record_data(obj.sip_uuid, function (record_obj) {
+    function get_display_record_data(sip_uuid, callback) {
+        DR.get_display_record_data(sip_uuid, function (record_obj) {
             callback(null, record_obj);
         });
     }
 
     /**
-     *
+     * Creates updated display record
      * @param record_obj
      * @param callback
      */
     function create_display_record(record_obj, callback) {
-
         DR.create_display_record(record_obj, function (display_record) {
             callback(null, display_record);
         });
     }
 
     /**
-     *
+     * Updates display record
      * @param display_record
      * @param callback
      */
@@ -386,7 +153,7 @@ exports.update_thumbnail = function (sip_uuid, thumbnail_url, callback) {
     }
 
     /**
-     *
+     * Reindexes display record
      * @param display_record_obj
      * @param callback
      */
@@ -411,7 +178,7 @@ exports.update_thumbnail = function (sip_uuid, thumbnail_url, callback) {
     }
 
     /**
-     *
+     * Republishes display record
      * @param display_record_obj
      * @param callback
      */

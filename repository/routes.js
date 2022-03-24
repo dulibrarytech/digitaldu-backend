@@ -34,7 +34,7 @@ module.exports = function (app) {
     // gets thumbnails from duracloud
     app.route('/api/admin/v1/repo/object/thumbnail')
         .get(TOKEN.verify, REPO.get_thumbnail)
-        .post(TOKEN.verify, REPO.update_thumbnail);
+        .post(TOKEN.verify, REPO.update_thumbnail_url);
 
     // gets thumbnails from TN service
     app.route('/api/admin/v1/repo/object/tn')

@@ -143,6 +143,7 @@ exports.get_index_display_record_data = function (sip_uuid, callback) {
             })
             .catch(function (error) {
                 LOGGER.module().error('ERROR: [/libs/display-record lib (get_display_record_data)] unable to get display record data for indexing ' + error);
+                callback(new Error('Unable to get display record data for indexing: ' + error.message));
             });
 
     }, 0);
@@ -163,24 +164,24 @@ exports.get_display_record_data = function (sip_uuid, callback) {
         })
         .then(function (data) {
 
-            let recordObj = {};
-            recordObj.pid = data[0].pid;
-            recordObj.is_member_of_collection = data[0].is_member_of_collection;
-            recordObj.object_type = data[0].object_type;
-            recordObj.sip_uuid = data[0].sip_uuid;
-            recordObj.handle = data[0].handle;
-            recordObj.thumbnail = data[0].thumbnail;
-            recordObj.object = data[0].file_name;
-            recordObj.mime_type = data[0].mime_type;
-            recordObj.transcript = data[0].transcript;
-            recordObj.transcript_search = data[0].transcript_search;
-            recordObj.is_published = data[0].is_published;
-            recordObj.mods = data[0].mods;
-            callback(recordObj);
+            let record_obj = {};
+            record_obj.pid = data[0].pid;
+            record_obj.is_member_of_collection = data[0].is_member_of_collection;
+            record_obj.object_type = data[0].object_type;
+            record_obj.sip_uuid = data[0].sip_uuid;
+            record_obj.handle = data[0].handle;
+            record_obj.thumbnail = data[0].thumbnail;
+            record_obj.object = data[0].file_name;
+            record_obj.mime_type = data[0].mime_type;
+            record_obj.transcript = data[0].transcript;
+            record_obj.transcript_search = data[0].transcript_search;
+            record_obj.is_published = data[0].is_published;
+            record_obj.mods = data[0].mods;
+            callback(record_obj);
         })
         .catch(function(error) {
-            LOGGER.module().error('ERROR: [/libs/display-record lib (get_display_record_data)] unable to get display record data ' + error);
-            callback(error);
+            LOGGER.module().error('ERROR: [/libs/display-record lib (get_display_record_data)] unable to get display record data ' + error.message);
+            callback(new Error('Unable to get display record data: ' + error.message));
         });
 };
 

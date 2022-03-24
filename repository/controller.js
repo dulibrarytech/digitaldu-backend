@@ -44,12 +44,12 @@ exports.get_display_record = function (req, res) {
     });
 };
 
-exports.update_thumbnail = function (req, res) {
+exports.update_thumbnail_url = function (req, res) {
 
     let sip_uuid = req.body.pid;
     let thumbnail_url = req.body.thumbnail_url;
 
-    MODEL.update_thumbnail(sip_uuid, thumbnail_url, function (data) {
+    MODEL.update_thumbnail_url(sip_uuid, thumbnail_url, function (data) {
         res.status(data.status).send(data.data);
     });
 };
