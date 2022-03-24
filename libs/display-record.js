@@ -23,15 +23,15 @@ const DB = require('../config/db')(),
 
 /**
  * Gets display record to render in UI
- * @param pid
+ * @param sip_uuid
  * @param callback
  */
-exports.get_db_display_record_data = function (pid, callback) {
+exports.get_db_display_record_data = function (sip_uuid, callback) {
 
-    if (pid === undefined || typeof pid !== 'string') {
+    if (sip_uuid === undefined || typeof sip_uuid !== 'string') {
         callback({
             error: true,
-            message: 'Missing pid | Unable to get display record'
+            message: 'Missing sip_uuid | Unable to get display record'
         });
         return false;
     }
@@ -39,7 +39,7 @@ exports.get_db_display_record_data = function (pid, callback) {
     DB(REPO_OBJECTS)
         .select('display_record')
         .where({
-            pid: pid,
+            pid: sip_uuid,
             is_active: 1
         })
         .then(function (data) {

@@ -44,14 +44,18 @@ exports.get_display_record = function (req, res) {
     });
 };
 
-exports.create_collection_object = function (req, res) {
-    MODEL.create_collection_object(req, function (data) {
+exports.update_thumbnail = function (req, res) {
+
+    let sip_uuid = req.body.pid;
+    let thumbnail_url = req.body.thumbnail_url;
+
+    MODEL.update_thumbnail(sip_uuid, thumbnail_url, function (data) {
         res.status(data.status).send(data.data);
     });
 };
 
-exports.update_thumbnail = function (req, res) {
-    MODEL.update_thumbnail(req, function (data) {
+exports.create_collection_object = function (req, res) {
+    MODEL.create_collection_object(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };

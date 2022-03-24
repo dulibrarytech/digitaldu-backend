@@ -27,16 +27,18 @@ const CONFIG = require('../config/config'),
     DR = require('../libs/display-record'),
     ARCHIVEMATICA = require('../libs/archivematica'),
     SERVICE = require('../repository/service'),
+    HELPER = require('../repository/helper'),
     LOGGER = require('../libs/log4'),
     CACHE = require('../libs/cache'),
     DB = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects';
 
+/*
 /**
  * Moves records from admin to public index
  * @param match_phrase
  * @param callback
- */
+ *
 const reindex = function (match_phrase, callback) {
 
     (async () => {
@@ -76,7 +78,7 @@ const reindex = function (match_phrase, callback) {
  * @param sip_uuid
  * @param is_published
  * @param callback
- */
+ *
 const update_fragment = function (sip_uuid, is_published, callback) {
 
     (async () => {
@@ -113,7 +115,7 @@ const update_fragment = function (sip_uuid, is_published, callback) {
  * Indexes record
  * @param sip_uuid
  * @param callback
- */
+ *
 const index = function (sip_uuid, callback) {
 
     (async () => {
@@ -145,7 +147,7 @@ const index = function (sip_uuid, callback) {
  * Removes record from index
  * @param sip_uuid
  * @param callback
- */
+ *
 const del = function (sip_uuid, callback) {
 
     (async () => {
@@ -175,7 +177,7 @@ const del = function (sip_uuid, callback) {
  * Updates display record after publish status changed
  * @param obj
  * @param callback
- */
+ *
 function update_display_record(obj, callback) {
 
     let pid;
@@ -229,7 +231,7 @@ function update_display_record(obj, callback) {
  * Removes record from admin and public indexes - part of record delete process
  * @param sip_uuid
  * @param callback
- */
+ *
 const unindex = function (sip_uuid, callback) {
 
     (async () => {
@@ -254,6 +256,7 @@ const unindex = function (sip_uuid, callback) {
 
     })();
 };
+*/
 
 /**
  * Gets metadata display record
@@ -261,9 +264,7 @@ const unindex = function (sip_uuid, callback) {
  * @param callback
  */
 exports.get_display_record = function (sip_uuid, callback) {
-
     DR.get_db_display_record_data(sip_uuid, function(data) {
-
         callback({
             status: 200,
             message: 'Display record retrieved.',
@@ -274,11 +275,184 @@ exports.get_display_record = function (sip_uuid, callback) {
 
 /**
  * Updates thumbnail
- * @param req
+ * @param sip_uuid
+ * @param thumbnail_url
  * @param callback
  */
-exports.update_thumbnail = function (req, callback) {
+exports.update_thumbnail = function (sip_uuid, thumbnail_url, callback) {
 
+    ASYNC.waterfall([
+        update_db_record,
+        get_display_record_data,
+        create_display_record,
+        update_display_record,
+        reindex_display_record,
+        republish_display_record
+    ], function (error, result) {
+        console.log('the end. ', result);
+        callback({
+            status: 201,
+            message: 'Thumbnail updated.'
+        });
+    });
+
+    /**
+     *
+     * @param callback
+     */
+    function update_db_record(callback) {
+
+        let obj = {};
+        obj.sip_uuid = sip_uuid;
+        obj.thumbnail = VALIDATOR.unescape(thumbnail_url);
+
+        DB(REPO_OBJECTS)
+            .where({
+                sip_uuid: obj.sip_uuid,
+                is_active: 1
+            })
+            .update({
+                thumbnail: obj.thumbnail
+            })
+            .then(function (data) {
+
+                if (data === 1) {
+                    obj.is_updated = true;
+                } else {
+                    obj.is_updated = false;
+                }
+
+                callback(null, obj);
+            })
+            .catch(function (error) {
+                LOGGER.module().fatal('FATAL: [/repository/model module (update_thumbnail/update_db_record)] unable to update thumbnail record ' + error);
+                throw 'FATAL: [/repository/model module (update_thumbnail/update_db_record)] unable to update thumbnail record ' + error;
+            });
+    }
+
+    /**
+     *
+     * @param obj
+     * @param callback
+     * @returns {boolean}
+     */
+    function get_display_record_data(obj, callback) {
+
+        if (obj.is_updated === false) {
+            callback(null, obj); // TODO: how to quit early if update failed?
+            return false;
+        }
+
+        DR.get_display_record_data(obj.sip_uuid, function (record_obj) {
+            callback(null, record_obj);
+        });
+    }
+
+    /**
+     *
+     * @param record_obj
+     * @param callback
+     */
+    function create_display_record(record_obj, callback) {
+
+        DR.create_display_record(record_obj, function (display_record) {
+            callback(null, display_record);
+        });
+    }
+
+    /**
+     *
+     * @param display_record
+     * @param callback
+     */
+    function update_display_record(display_record, callback) {
+
+        let display_record_obj = JSON.parse(display_record);
+        let where_obj = {
+            is_member_of_collection: display_record_obj.is_member_of_collection,
+            pid: display_record_obj.pid,
+            is_active: 1
+        };
+
+        DR.update_display_record(where_obj, display_record, function (result) {
+
+            if (result.error === true) {
+                callback(null, result);
+                return false;
+            }
+
+            callback(null, display_record_obj);
+        });
+    }
+
+    /**
+     *
+     * @param display_record_obj
+     * @param callback
+     */
+    function reindex_display_record(display_record_obj, callback) {
+
+        HELPER.index(display_record_obj.pid, function (result) {
+
+            if (result.error === true) {
+                LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail/reindex_display_record)] unable to reindex display record.');
+
+                callback({
+                    error: true,
+                    error_message: 'ERROR: [/repository/model module (update_thumbnail/reindex_display_record)] unable to reindex display record.'
+                });
+
+                return false;
+            }
+
+            callback(null, display_record_obj);
+        });
+
+    }
+
+    /**
+     *
+     * @param display_record_obj
+     * @param callback
+     */
+    function republish_display_record(display_record_obj, callback) {
+
+        if (display_record_obj.is_published === 1) {
+
+            // wait to make sure updated admin record is ready
+            setTimeout(function () {
+
+                let match_phrase = {
+                    'pid': display_record_obj.pid
+                };
+
+                HELPER.reindex(match_phrase, function (result) {
+
+                    if (result.error === true) {
+                        LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail/republish_display_record)] unable to republish display record ' + response.error);
+                    }
+
+                    callback(null, 'done.');
+                });
+
+                CACHE.clear_cache();
+
+            }, 7000);
+        } else {
+            callback(null, 'done');
+        }
+    }
+};
+
+/** TODO: remove
+ * Updates thumbnail
+ * @param sip_uuid
+ * @param thumbnail
+ * @param callback
+ */
+exports.update_thumbnail_ = function (sip_uuid, thumbnail, callback) {
+
+    /*
     if (req.body.pid === undefined || req.body.pid.length === 0) {
 
         callback({
@@ -289,12 +463,13 @@ exports.update_thumbnail = function (req, callback) {
         return false;
     }
 
-    let pid = req.body.pid;
-    let thumbnail = req.body.thumbnail_url;
+     */
+
     let obj = {};
-    obj.pid = pid;
+    obj.pid = sip_uuid;
     obj.thumbnail = thumbnail;
 
+    // update DB record
     DB(REPO_OBJECTS)
         .where({
             pid: obj.pid,
@@ -308,6 +483,7 @@ exports.update_thumbnail = function (req, callback) {
             // Get existing record from repository
             DR.get_display_record_data(obj.pid, function (recordObj) {
 
+                // generate new display record
                 DR.create_display_record(recordObj, function (result) {
 
                     let tmp = JSON.parse(result);
@@ -337,6 +513,7 @@ exports.update_thumbnail = function (req, callback) {
                         is_active: 1
                     };
 
+                    // update display record
                     DR.update_display_record(where_obj, obj.display_record, function (result) {
 
                         index(recordObj.sip_uuid, function (result) {
