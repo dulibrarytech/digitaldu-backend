@@ -310,7 +310,7 @@ exports.update_display_record = function (obj, display_record, callback) {
     DB(REPO_OBJECTS)
         .where(obj)
         .update({
-            display_record_: display_record
+            display_record: display_record
         })
         .then(function (data) {
 

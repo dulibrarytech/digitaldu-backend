@@ -22,7 +22,7 @@ const HTTP = require('../libs/http'),
     LOGGER = require('../libs/log4');
 
 /**
- * Moves records from admin to public index
+ * Moves records from admin to public index (publishes record)
  * @param match_phrase
  * @param callback
  */
@@ -49,7 +49,7 @@ exports.reindex = function (match_phrase, callback) {
         let result = {};
 
         if (response.error === true) {
-            LOGGER.module().error('ERROR: [/repository/model module (reindex)] reindex failed.');
+            LOGGER.module().error('ERROR: [/repository/helper module (reindex)] reindex failed.');
             result.error = true;
         } else if (response.data.status === 201) {
             result.error = false;
@@ -119,7 +119,7 @@ exports.index = function (sip_uuid, callback) {
         let result = {};
 
         if (response.error === true) {
-            LOGGER.module().error('ERROR: [/repository/model module (index)] index failed.');
+            LOGGER.module().error('ERROR: [/repository/helper (index)] index failed.');
             result.error = true;
         } else if (response.data.status === 201) {
             result.error = false;

@@ -175,14 +175,7 @@ exports.update_thumbnail_url = function (sip_uuid, thumbnail_url, callback) {
 
             if (result.error === true) {
                 LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail/reindex_display_record)] unable to reindex display record.');
-
-                callback({
-                    error: true,
-                    error_message: 'ERROR: [/repository/model module (update_thumbnail/reindex_display_record)] unable to reindex display record.'
-                });
-
-                // callback(new Error('Unable to reindex display record'));
-
+                callback(new Error('Unable to reindex display record'));
                 return false;
             }
 
@@ -211,9 +204,10 @@ exports.update_thumbnail_url = function (sip_uuid, thumbnail_url, callback) {
 
                     if (result.error === true) {
                         LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail/republish_display_record)] unable to republish display record ' + response.error);
+                        callback(new Error('Unable to republish display record'));
                     }
 
-                    callback(null, 'done.');
+                    callback(null, 'done');
                 });
 
                 CACHE.clear_cache();
