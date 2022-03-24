@@ -92,7 +92,7 @@ exports.update_thumbnail_url = function (sip_uuid, thumbnail_url, callback) {
                 is_active: 1
             })
             .update({
-                thumbnail: VALIDATOR.unescape(thumbnail_url) // obj.thumbnail
+                thumbnail: VALIDATOR.unescape(thumbnail_url)
             })
             .then(function () {
                 callback(null, sip_uuid);
@@ -112,6 +112,12 @@ exports.update_thumbnail_url = function (sip_uuid, thumbnail_url, callback) {
      */
     function get_display_record_data(sip_uuid, callback) {
         DR.get_display_record_data(sip_uuid, function (record_obj) {
+
+            if (!record_obj.hasOwnProperty('pid')) {
+                callback(new Error('Unable to get display record: data'));
+                return false;
+            }
+
             callback(null, record_obj);
         });
     }
@@ -123,6 +129,12 @@ exports.update_thumbnail_url = function (sip_uuid, thumbnail_url, callback) {
      */
     function create_display_record(record_obj, callback) {
         DR.create_display_record(record_obj, function (display_record) {
+
+            if (typeof display_record === 'object') {
+                callback(new Error('Unable to get display record'));
+                return false;
+            }
+
             callback(null, display_record);
         });
     }
@@ -143,8 +155,8 @@ exports.update_thumbnail_url = function (sip_uuid, thumbnail_url, callback) {
 
         DR.update_display_record(where_obj, display_record, function (result) {
 
-            if (result.error === true) {
-                callback(null, result);
+            if (typeof result === 'object') {
+                callback(new Error('Unable to update display record'));
                 return false;
             }
 
@@ -168,6 +180,8 @@ exports.update_thumbnail_url = function (sip_uuid, thumbnail_url, callback) {
                     error: true,
                     error_message: 'ERROR: [/repository/model module (update_thumbnail/reindex_display_record)] unable to reindex display record.'
                 });
+
+                // callback(new Error('Unable to reindex display record'));
 
                 return false;
             }

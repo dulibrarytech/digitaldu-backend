@@ -206,7 +206,11 @@ exports.create_display_record = function (obj, callback) {
     record.object_type = obj.object_type;
     record.is_published = obj.is_published;
 
-    metadata = JSON.parse(mods);
+    try {
+        metadata = JSON.parse(mods);
+    } catch (error) {
+        callback(new Error('Unable to create display record: ' + error.message));
+    }
 
     if (obj.file_name !== undefined) {
         record.object = obj.file_name;  // import process
@@ -306,19 +310,19 @@ exports.update_display_record = function (obj, display_record, callback) {
     DB(REPO_OBJECTS)
         .where(obj)
         .update({
-            display_record: display_record
+            display_record_: display_record
         })
         .then(function (data) {
 
             if (data === 1) {
                 LOGGER.module().info('INFO: [/libs/display-record lib (update_display_record)] display record updated');
-                callback({error: false});
+                callback('display_record_updated');
             }
 
             return false;
         })
         .catch(function (error) {
             LOGGER.module().error('ERROR: [/libs/display-record lib (update_display_record)] unable to update display record ' + error);
-            callback({error: true});
+            callback(new Error('Unable to update display record: ' + error.message));
         });
 };
