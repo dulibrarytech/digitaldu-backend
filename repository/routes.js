@@ -28,7 +28,7 @@ module.exports = function (app) {
 
     app.route('/api/admin/v1/repo/object')
         .get(TOKEN.verify, REPO.get_display_record)
-        .post(TOKEN.verify, REPO.create_collection_object)
+        .post(TOKEN.verify, REPO.create_collection_record)
         .delete(TOKEN.verify, REPO.delete_object);
 
     // gets thumbnails from duracloud

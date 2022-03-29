@@ -194,11 +194,11 @@ exports.create_display_record = function (obj, callback) {
 
     'use strict';
 
-    let mods = obj.mods,
+    let mods = obj.metadata,
         record = {},
         metadata;
 
-    record.pid = obj.pid;
+    record.pid = obj.uuid; // TODO: normalize uuid prop across app
     record.is_member_of_collection = obj.is_member_of_collection;
     record.handle = obj.handle;
     record.thumbnail = obj.thumbnail;
@@ -294,7 +294,7 @@ exports.create_display_record = function (obj, callback) {
         record.type = metadata.resource_type;
     }
 
-    record.display_record = JSON.parse(obj.mods);
+    record.display_record = JSON.parse(obj.metadata);
     record.display_record.title = escape(record.display_record.title);
     callback(JSON.stringify(record));
 };

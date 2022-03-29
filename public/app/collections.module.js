@@ -246,7 +246,7 @@ const collectionsModule = (function () {
             if (response.status === 201) {
 
                 response.json().then(function (data) {
-                    domModule.html('#message', '<div class="alert alert-success">Collection created ( <a href="' + configModule.getApi() + '/dashboard/objects/?pid=' + DOMPurify.sanitize(data[0].pid) + '">' + DOMPurify.sanitize(data[0].pid) + '</a> )');
+                    domModule.html('#message', '<div class="alert alert-success">Collection created ( <a href="' + configModule.getApi() + '/dashboard/objects/?pid=' + DOMPurify.sanitize(data.sip_uuid) + '">' + DOMPurify.sanitize(data.sip_uuid) + '</a> )');
                     domModule.hide('#collection-form');
                 });
 

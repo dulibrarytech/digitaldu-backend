@@ -1,6 +1,6 @@
 {
   "name": "repo",
-  "version": "1.6.0",
+  "version": "2.0.0",
   "description": "Digital Repository back-end",
   "main": "repo.js",
   "scripts": {

@@ -166,7 +166,7 @@ exports.delete_repo_index = function (req, callback) {
  * @param callback
  */
 exports.index_record = function (obj, callback) {
-
+    // TODO: check payload
     CLIENT.index(obj, function (error, response) {
 
         if (error) {

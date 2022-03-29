@@ -54,8 +54,9 @@ exports.update_thumbnail_url = function (req, res) {
     });
 };
 
-exports.create_collection_object = function (req, res) {
-    MODEL.create_collection_object(req, function (data) {
+exports.create_collection_record = function (req, res) {
+    let data = req.body;
+    MODEL.create_collection_record(data, function (data) {
         res.status(data.status).send(data.data);
     });
 };

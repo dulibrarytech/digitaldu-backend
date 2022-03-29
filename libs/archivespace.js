@@ -81,6 +81,120 @@ exports.ping = function (callback) {
 };
 
 /**
+ * Gets JSON representation of metadata resource record from archivesspace
+ * @param uri
+ * @param token
+ * @param callback
+ */
+exports.get_resource_record = (uri, token, callback) => {
+
+    'use strict';
+
+    if (uri === undefined || token === undefined) {
+
+        callback({
+            error: true,
+            error_message: 'ERROR: [/libs/archivesspace lib (get_metadata)] id and token params missing'
+        });
+
+        return false;
+    }
+
+    let api_url = CONFIG.archivespaceHost + uri;  // TODO:  + '/repository'
+
+    (async() => {
+
+        try {
+
+            let response = await HTTP.get(api_url, {
+                timeout: TIMEOUT,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-ArchivesSpace-Session': token
+                }
+            });
+
+            if (response.status === 200) {
+
+                callback({
+                    error: false,
+                    metadata: response
+                });
+
+                return false;
+            }
+
+        } catch (error) {
+
+            LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_metadata)] Unable to get archivesspace resource: (http status code ' + error.response.status + ') ' + error.message);
+
+            callback({
+                error: true,
+                error_message: 'ERROR: [/libs/archivesspace lib (get_metadata)] Unable to get archivesspace resource: (http status code ' + error.response.status + ') ' + error.message
+            });
+        }
+
+    })();
+};
+
+/**
+ * Gets JSON representation of metadata archival object record from archivesspace
+ * @param uri
+ * @param token
+ * @param callback
+ */
+exports.get_archival_object_record = (uri, token, callback) => {
+
+    'use strict';
+
+    if (uri === undefined || token === undefined) {
+
+        callback({
+            error: true,
+            error_message: 'ERROR: [/libs/archivesspace lib (get_metadata)] id and token params missing'
+        });
+
+        return false;
+    }
+
+    let api_url = CONFIG.archivespaceHost + uri + '/repository';
+
+    (async() => {
+
+        try {
+
+            let response = await HTTP.get(api_url, {
+                timeout: TIMEOUT,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-ArchivesSpace-Session': token
+                }
+            });
+
+            if (response.status === 200) {
+
+                callback({
+                    error: false,
+                    metadata: response
+                });
+
+                return false;
+            }
+
+        } catch (error) {
+
+            LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_metadata)] Unable to get archivesspace resource: (http status code ' + error.response.status + ') ' + error.message);
+
+            callback({
+                error: true,
+                error_message: 'ERROR: [/libs/archivesspace lib (get_metadata)] Unable to get archivesspace resource: (http status code ' + error.response.status + ') ' + error.message
+            });
+        }
+
+    })();
+};
+
+/** TODO: Deprecate
  * Gets JSON representation of mods record from archivesspace
  * @param id
  * @param session
@@ -107,7 +221,7 @@ exports.get_mods = function (id, session, callback) {
     let uri = id.split('/');
 
     if (uri.length > 1) {
-        apiUrl = CONFIG.archivespaceHost + id;
+        apiUrl = CONFIG.archivespaceHost + id; // TODO:  + '/repository'
     }
 
     (async() => {

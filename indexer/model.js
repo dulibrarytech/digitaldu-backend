@@ -54,6 +54,16 @@ exports.get_index_record = function (req, callback) {
 
     MODS.get_index_display_record_data(sip_uuid, function(record) {
 
+        if (record === 'no_data') {
+
+            callback({
+                status: 400,
+                message: 'record not indexed'
+            });
+
+            return false;
+        }
+
         SERVICE.index_record({
             index: elasticSearchIndex,
             id: record.pid,
@@ -72,7 +82,7 @@ exports.get_index_record = function (req, callback) {
                 LOGGER.module().error('ERROR: [/indexer/model module (get_index_record)] unable to index record');
 
                 callback({
-                    status: 201,
+                    status: 201,  // TODO: change response code
                     message: 'record not indexed'
                 });
             }

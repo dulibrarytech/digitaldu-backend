@@ -21,13 +21,13 @@
 const CONFIG = require('../config/config'),
     HTTP = require('../libs/http'),
     ASYNC = require('async'),
-    UUID = require('node-uuid'),
     VALIDATOR = require('validator'),
-    HANDLES = require('../libs/handles'),
     DR = require('../libs/display-record'),
     ARCHIVEMATICA = require('../libs/archivematica'),
+    ARCHIVESSPACE = require('../libs/archivespace'),
     SERVICE = require('../repository/service'),
     HELPER = require('../repository/helper'),
+    COLLECTION_TASKS = require('../repository/tasks/create_collection_tasks'),
     LOGGER = require('../libs/log4'),
     CACHE = require('../libs/cache'),
     DB = require('../config/db')(),
@@ -48,7 +48,7 @@ exports.get_display_record = function (sip_uuid, callback) {
     });
 };
 
-/**
+/** TODO: refactor to use tasks object
  * Updates thumbnail url
  * @param sip_uuid
  * @param thumbnail_url
@@ -220,14 +220,12 @@ exports.update_thumbnail_url = function (sip_uuid, thumbnail_url, callback) {
 };
 
 /**
- * Creates repository collection (admin dashboard)
- * @param req
+ * Creates repository collection record
+ * @param data (contains data.uri/data.is_member_of_collection)
  * @param callback
- * @returns {boolean}
+ * @returns callback
  */
-exports.create_collection_object = function (req, callback) {
-
-    let data = req.body;
+exports.create_collection_record = (data, callback) => {
 
     if (data.uri === undefined || data.is_member_of_collection === undefined) {
 
@@ -235,229 +233,54 @@ exports.create_collection_object = function (req, callback) {
             status: 400,
             message: 'Bad request.'
         });
-
-        return false;
     }
 
-    function check_uri(callback) {
+    const URI = VALIDATOR.unescape(data.uri);
+    const TASKS = new COLLECTION_TASKS.Create_collection_tasks(DB, REPO_OBJECTS);
 
-        let obj = {};
-
-        DB(REPO_OBJECTS)
-            .count('uri as uri')
-            .where('uri', data.uri)
-            .then(function (result) {
-
-                if (result[0].uri === 1) {
-                    obj.dupe = true;
-                    callback(null, obj);
-                    return false;
-                }
-
-                obj.dupe = false;
-                callback(null, obj);
-            })
-            .catch(function (error) {
-                LOGGER.module().fatal('FATAL: [/repository/model module (create_collection_object)] unable to check uri ' + error);
-            });
-    }
-
-    function get_session_token(obj, callback) {
-
-        if (obj.dupe === true) {
-            obj.session = null;
-            callback(null, obj);
-            return false;
-        }
-
-        (async () => {
-
-            let uriArr = data.uri.split('/');
-            let response = await HTTP.get({
-                endpoint: '/api/admin/v1/import/metadata/session'
-            });
-
-            if (response.error === true) {
-                obj.session = null;
-                callback(null, obj);
-            } else {
-                obj.mods_id = uriArr[uriArr.length - 1];
-                obj.uri = data.uri;
-                obj.session = response.data.session;
-                callback(null, obj);
-            }
-
-            return false;
-
-        })();
-    }
-
-    function get_mods(obj, callback) {
-
-        if (obj.session === null || obj.dupe === true) {
-            callback(null, obj);
-            return false;
-        }
-
-        obj.mods_id = VALIDATOR.unescape(obj.uri);
-
-        SERVICE.get_mods(obj, function (response) {
-
-            if (response.error !== undefined && response.error === true) {
-
-                LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/get_mods)] unable to get mods ' + response.error_message);
-
-                obj.mods = null;
-                callback(null, obj);
-                return false;
-            }
-
-            obj.object_type = 'collection';
-            obj.is_member_of_collection = data.is_member_of_collection;
-            delete obj.session;
-            callback(null, obj);
-        });
-    }
-
-    function get_pid(obj, callback) {
-
-        if (obj.dupe === true) {
-            callback(null, obj);
-            return false;
-        }
+    (async() => {
 
         try {
-            obj.pid = UUID(CONFIG.uuidDomain, UUID.DNS);
-            obj.sip_uuid = obj.pid;
-            callback(null, obj);
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/get_pid)] unable to generate uuid');
-            obj.pid = null;
-            callback(null, obj);
-        }
-    }
 
-    function get_handle(obj, callback) {
+            let obj = {};
+            let token;
+            let is_duplicate = await TASKS.check_uri(URI);
 
-        if (obj.pid === null || obj.dupe === true) {
-            obj.handle = null;
-            callback(null, obj);
-            return false;
-        }
+            if (is_duplicate === true) {
 
-        LOGGER.module().info('INFO: [/repository/model module (create_collection_object/get_handle)] getting handle');
+                callback({
+                    status: 200,
+                    message: 'Collection already exists.'
+                });
 
-        HANDLES.create_handle(obj.pid, function (handle) {
-
-            if (handle.error !== undefined && handle.error === true) {
-                LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/get_handle/handles.create_handle)] handle error');
-                obj.handle = handle.message;
-                callback(null, obj);
                 return false;
             }
 
-            obj.handle = handle;
-            callback(null, obj);
-        });
-    }
-
-    function create_display_record(obj, callback) {
-
-        if (obj.dupe === true) {
-            callback(null, obj);
-            return false;
-        }
-
-        let uriArr = obj.mods_id.split('/');
-        obj.mods_id = uriArr[uriArr.length - 1];
-
-        DR.create_display_record(obj, function (result) {
-            obj.display_record = result;
-            callback(null, obj);
-        });
-    }
-
-    function save_record(obj, callback) {
-
-        if (obj.dupe === true) {
-            callback(null, obj);
-            return false;
-        }
-
-        let record = {};
-        record.handle = obj.handle;
-        record.mods_id = obj.mods_id;
-        record.uri = VALIDATOR.unescape(obj.uri);
-        record.mods = obj.mods;
-        record.object_type = obj.object_type;
-        record.is_member_of_collection = obj.is_member_of_collection;
-        record.pid = obj.pid;
-        record.sip_uuid = obj.sip_uuid;
-        record.display_record = obj.display_record;
-
-        DB(REPO_OBJECTS)
-            .insert(record)
-            .then(function (data) {
-                callback(null, obj);
-            })
-            .catch(function (error) {
-                LOGGER.module().fatal('FATAL: [/repository/model module (create_collection_object/save_record)] unable to save collection record ' + error);
-                obj.error = 'FATAL: unable to save collection record ' + error;
-                callback(null, obj);
-            });
-    }
-
-    function index_collection(obj, callback) {
-
-        if (obj.dupe === true) {
-            callback(null, obj);
-            return false;
-        }
-
-        index(obj.sip_uuid, function (result) {
-
-            if (result.error === true) {
-                LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/index_collection)] unable to index collection record.');
-                return false;
-            }
-
-            callback(null, obj);
-        });
-    }
-
-    ASYNC.waterfall([
-        check_uri,
-        get_session_token,
-        get_mods,
-        get_pid,
-        get_handle,
-        create_display_record,
-        save_record,
-        index_collection
-    ], function (error, results) {
-
-        if (error) {
-            LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/async.waterfall)] ' + error);
-        }
-
-        if (results.dupe !== undefined && results.dupe === true) {
-
-            callback({
-                status: 200,
-                message: 'Cannot create duplicate collection object.'
-            });
-
-        } else {
-
-            LOGGER.module().info('INFO: [/repository/model module (create_collection_object/async.waterfall)] collection record saved');
+            obj.is_member_of_collection = data.is_member_of_collection;
+            obj.uri = URI;
+            token = await TASKS.get_session_token();
+            obj.metadata = await TASKS.get_resource_record(URI, token);
+            obj.uuid = await TASKS.get_uuid(CONFIG.uuidDomain);
+            obj.handle = await TASKS.create_handle(obj.uuid);
+            obj.display_record = await TASKS.create_display_record(obj);
+            TASKS.save_record(obj);
+            await TASKS.index_record(obj.uuid);
 
             callback({
                 status: 201,
-                message: 'Object created.',
-                data: [{'pid': results.pid}]
+                message: 'Collection record created',
+                data: {sip_uuid: obj.uuid}
+            });
+
+        } catch (error) {
+
+            callback({
+                status: 500,
+                message: 'Unable to create collection record ' + error.message
             });
         }
-    });
+
+    })();
 };
 
 /**
