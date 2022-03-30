@@ -143,14 +143,14 @@ exports.Create_collection_tasks = function (DB, TABLE) {
 
     /**
      * Creates handle
-     * @param sip_uuid
+     * @param uuid
      * @returns Promise string
      */
-    this.create_handle = (sip_uuid) => {
+    this.create_handle = (uuid) => {
 
         let promise = new Promise((resolve, reject) => {
 
-            HANDLES.create_handle(sip_uuid, (handle) => {
+            HANDLES.create_handle(uuid, (handle) => {
 
                 if (handle.error !== undefined && handle.error === true) {
                     LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks/create_handle)] handle error');
@@ -203,8 +203,8 @@ exports.Create_collection_tasks = function (DB, TABLE) {
     this.save_record = (obj) => {
 
         let record = {};
-        record.pid = obj.uuid;
-        record.sip_uuid = obj.uuid;
+        // record.pid = obj.uuid;
+        record.uuid = obj.uuid;
         record.handle = obj.handle;
         record.uri = obj.uri;
         record.mods = obj.metadata;
@@ -212,7 +212,7 @@ exports.Create_collection_tasks = function (DB, TABLE) {
         record.is_member_of_collection = obj.is_member_of_collection;
         record.display_record = obj.display_record;
 
-        return DB(TABLE)
+        return this.DB(this.TABLE)
             .insert(record)
             .then(() => {})
             .catch((error) => {
@@ -243,6 +243,5 @@ exports.Create_collection_tasks = function (DB, TABLE) {
         return promise.then((response) => {
             return response;
         });
-
     }
 };

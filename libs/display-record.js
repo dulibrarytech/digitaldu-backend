@@ -23,15 +23,15 @@ const DB = require('../config/db')(),
 
 /**
  * Gets display record to render in UI
- * @param sip_uuid
+ * @param uuid
  * @param callback
  */
-exports.get_db_display_record_data = function (sip_uuid, callback) {
+exports.get_db_display_record_data = function (uuid, callback) {
 
-    if (sip_uuid === undefined || typeof sip_uuid !== 'string') {
+    if (uuid === undefined || typeof uuid !== 'string') {
         callback({
             error: true,
-            message: 'Missing sip_uuid | Unable to get display record'
+            message: 'Missing uuid | Unable to get display record'
         });
         return false;
     }
@@ -39,7 +39,7 @@ exports.get_db_display_record_data = function (sip_uuid, callback) {
     DB(REPO_OBJECTS)
         .select('display_record')
         .where({
-            pid: sip_uuid,
+            uuid: uuid,
             is_active: 1
         })
         .then(function (data) {
@@ -64,17 +64,17 @@ exports.get_db_display_record_data = function (sip_uuid, callback) {
 
 /**
  * Gets display record for indexing
- * @param sip_uuid
+ * @param uuid
  * @param callback
  */
-exports.get_index_display_record_data = function (sip_uuid, callback) {
+exports.get_index_display_record_data = function (uuid, callback) {
 
     setTimeout(function() {
 
         DB(REPO_OBJECTS)
             .select('*')
             .where({
-                sip_uuid: sip_uuid,
+                uuid: uuid,
                 is_active: 1
             })
             .then(function (data) {
@@ -89,7 +89,7 @@ exports.get_index_display_record_data = function (sip_uuid, callback) {
                 if (record.display_record.jsonmodel_type !== undefined && record.display_record.jsonmodel_type === 'resource') {
 
                     let collection_record = {};
-                    collection_record.pid = data[0].pid;
+                    collection_record.uuid = data[0].uuid;
                     collection_record.uri = data[0].uri;
                     collection_record.is_member_of_collection = data[0].is_member_of_collection;
                     collection_record.handle = data[0].handle;
@@ -151,24 +151,23 @@ exports.get_index_display_record_data = function (sip_uuid, callback) {
 
 /**
  * Gets display record data (preps data before creating display record)
- * @param sip_uuid
+ * @param uuid
  * @param callback
  */
-exports.get_display_record_data = function (sip_uuid, callback) {
+exports.get_display_record_data = function (uuid, callback) {
 
     DB(REPO_OBJECTS)
         .select('*')
         .where({
-            sip_uuid: sip_uuid,
+            uuid: uuid,
             is_active: 1
         })
         .then(function (data) {
 
             let record_obj = {};
-            record_obj.pid = data[0].pid;
+            record_obj.uuid = data[0].uuid;
             record_obj.is_member_of_collection = data[0].is_member_of_collection;
             record_obj.object_type = data[0].object_type;
-            record_obj.sip_uuid = data[0].sip_uuid;
             record_obj.handle = data[0].handle;
             record_obj.thumbnail = data[0].thumbnail;
             record_obj.object = data[0].file_name;
@@ -176,7 +175,7 @@ exports.get_display_record_data = function (sip_uuid, callback) {
             record_obj.transcript = data[0].transcript;
             record_obj.transcript_search = data[0].transcript_search;
             record_obj.is_published = data[0].is_published;
-            record_obj.mods = data[0].mods;
+            record_obj.metadata = data[0].metadata;
             callback(record_obj);
         })
         .catch(function(error) {
@@ -194,11 +193,11 @@ exports.create_display_record = function (obj, callback) {
 
     'use strict';
 
-    let mods = obj.metadata,
+    let data = obj.metadata,
         record = {},
         metadata;
 
-    record.pid = obj.uuid; // TODO: normalize uuid prop across app
+    record.uuid = obj.uuid;
     record.is_member_of_collection = obj.is_member_of_collection;
     record.handle = obj.handle;
     record.thumbnail = obj.thumbnail;
@@ -207,7 +206,7 @@ exports.create_display_record = function (obj, callback) {
     record.is_published = obj.is_published;
 
     try {
-        metadata = JSON.parse(mods);
+        metadata = JSON.parse(data);
     } catch (error) {
         callback(new Error('Unable to create display record: ' + error.message));
     }

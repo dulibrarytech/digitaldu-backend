@@ -26,6 +26,12 @@ const CONFIG = require('../config/config'),
     INDEX_TIMER = CONFIG.indexTimer,
     REPO_OBJECTS = 'tbl_objects';
 
+// TODO: move to helper
+function uuid_pid (record) {
+    record.pid = record.uuid;
+    return record;
+}
+
 /**
  * Gets index record
  * @param req
@@ -34,7 +40,7 @@ const CONFIG = require('../config/config'),
  */
 exports.get_index_record = function (req, callback) {
 
-    if (req.body.sip_uuid === undefined || req.body.sip_uuid.length === 0) {
+    if (req.body.uuid === undefined || req.body.uuid.length === 0) {
         callback({
             status: 400,
             message: 'Bad request.'
@@ -43,7 +49,7 @@ exports.get_index_record = function (req, callback) {
         return false;
     }
 
-    let sip_uuid = req.body.sip_uuid,
+    let uuid = req.body.uuid,
         elasticSearchIndex;
 
     if (req.body.publish !== undefined && req.body.publish === 'true') {
@@ -52,7 +58,7 @@ exports.get_index_record = function (req, callback) {
         elasticSearchIndex = CONFIG.elasticSearchBackIndex;
     }
 
-    MODS.get_index_display_record_data(sip_uuid, function(record) {
+    MODS.get_index_display_record_data(uuid, function(record) {
 
         if (record === 'no_data') {
 
@@ -63,6 +69,8 @@ exports.get_index_record = function (req, callback) {
 
             return false;
         }
+
+        record = uuid_pid(record);
 
         SERVICE.index_record({
             index: elasticSearchIndex,
@@ -109,7 +117,7 @@ exports.index_records = function (req, callback) {
     function index (index_name) {
 
         DB(REPO_OBJECTS)
-            .select('pid')
+            .select('uuid')
             .where({
                 is_indexed: 0,
                 is_active: 1
@@ -124,16 +132,18 @@ exports.index_records = function (req, callback) {
                     return false;
                 }
 
-                let pid = data[0].pid;
+                let uuid = data[0].uuid;
 
-                MODS.get_index_display_record_data(pid, function(record) {
+                MODS.get_index_display_record_data(uuid, function(record) {
 
                     if (record === 'no_data') {
                         LOGGER.module().error('ERROR: [/indexer/model module (MODS.get_index_display_record_data)] record not found.');
                         return false;
                     }
 
-                    console.log('indexing: ', record.pid);
+                    console.log('indexing: ', record.uuid);
+
+                    record = uuid_pid(record);
 
                     SERVICE.index_record({
                         index: index_name,
@@ -145,7 +155,7 @@ exports.index_records = function (req, callback) {
 
                             DB(REPO_OBJECTS)
                                 .where({
-                                    pid: record.pid
+                                    uuid: record.pid
                                 })
                                 .update({
                                     is_indexed: 1
@@ -212,10 +222,10 @@ exports.index_records = function (req, callback) {
  */
 exports.update_fragment = function (req, callback) {
 
-    let sip_uuid = req.body.sip_uuid,
+    let uuid = req.body.uuid,
         doc_fragment = req.body.fragment;
 
-    if (sip_uuid === undefined || doc_fragment === undefined) {
+    if (uuid === undefined || doc_fragment === undefined) {
 
         callback({
             status: 400,
@@ -227,7 +237,7 @@ exports.update_fragment = function (req, callback) {
 
     SERVICE.update_fragment({
         index: CONFIG.elasticSearchBackIndex,
-        id: sip_uuid,
+        id: uuid,
         body: doc_fragment
     }, function (response) {
 
@@ -293,9 +303,9 @@ exports.reindex = function (req, callback) {
  */
 exports.unindex_record = function (req, callback) {
 
-    let pid = req.query.pid;
+    let uuid = req.query.uuid;
 
-    if (pid === undefined || pid.length === 0) {
+    if (uuid === undefined || uuid.length === 0) {
 
         callback({
             status: 400,
@@ -307,7 +317,7 @@ exports.unindex_record = function (req, callback) {
 
     SERVICE.unindex_record({
         index: CONFIG.elasticSearchFrontIndex,
-        id: pid
+        id: uuid
     }, function (response) {
 
         if (response.result === 'deleted') {
@@ -334,9 +344,9 @@ exports.unindex_record = function (req, callback) {
  */
 exports.unindex_admin_record = function (req, callback) {
 
-    let pid = req.query.pid;
+    let uuid = req.query.uuid;
 
-    if (pid === undefined || pid.length === 0) {
+    if (uuid === undefined || uuid.length === 0) {
 
         callback({
             status: 400,
@@ -348,7 +358,7 @@ exports.unindex_admin_record = function (req, callback) {
 
     SERVICE.unindex_record({
         index: CONFIG.elasticSearchBackIndex,
-        id: pid
+        id: uuid
     }, function (response) {
 
         if (response.result === 'deleted') {
@@ -376,9 +386,9 @@ exports.unindex_admin_record = function (req, callback) {
  */
 exports.republish_record = function (req, callback) {
 
-    let pid = req.body.sip_uuid;
+    let uuid = req.body.uuid;
 
-    if (pid === undefined || pid.length === 0) {
+    if (uuid === undefined || uuid.length === 0) {
 
         callback({
             status: 400,
@@ -390,12 +400,12 @@ exports.republish_record = function (req, callback) {
 
     let index_name = CONFIG.elasticSearchFrontIndex;
 
-    function index (pid, index_name) {
+    function index (uuid, index_name) {
 
         DB(REPO_OBJECTS)
             .select('*')
             .where({
-                pid: pid,
+                uuid: uuid,
                 is_published: 1,
                 is_indexed: 0,
                 is_active: 1
@@ -414,7 +424,7 @@ exports.republish_record = function (req, callback) {
                     if (record.display_record.jsonmodel_type !== undefined && record.display_record.jsonmodel_type === 'resource') {
 
                         let collection_record = {};
-                        collection_record.pid = data[0].pid;
+                        collection_record.uuid = data[0].uuid;
                         collection_record.uri = data[0].uri;
                         collection_record.is_member_of_collection = data[0].is_member_of_collection;
                         collection_record.handle = data[0].handle;
@@ -470,6 +480,8 @@ exports.republish_record = function (req, callback) {
                         record.is_published = 1;
                     }
 
+                    record = uuid_pid(record);
+
                     SERVICE.index_record({
                         index: index_name,
                         id: record.pid,
@@ -480,7 +492,7 @@ exports.republish_record = function (req, callback) {
 
                             DB(REPO_OBJECTS)
                                 .where({
-                                    pid: record.pid
+                                    uuid: record.pid
                                 })
                                 .update({
                                     is_indexed: 1
@@ -522,7 +534,7 @@ exports.republish_record = function (req, callback) {
     // reset is_indexed fields
     DB(REPO_OBJECTS)
         .where({
-            pid: pid,
+            uuid: uuid,
             is_indexed: 1,
             is_active: 1,
             is_published: 1
@@ -532,7 +544,7 @@ exports.republish_record = function (req, callback) {
             is_active: 1
         })
         .then(function (data) {
-            index(pid, index_name);
+            index(uuid, index_name);
         })
         .catch(function (error) {
             LOGGER.module().error('ERROR: [/indexer/model module (publish_records)] unable to reset is_indexed fields ' + error);

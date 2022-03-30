@@ -24,22 +24,23 @@ const CONFIG = require('../config/config'),
     VALIDATOR = require('validator'),
     DR = require('../libs/display-record'),
     ARCHIVEMATICA = require('../libs/archivematica'),
-    ARCHIVESSPACE = require('../libs/archivespace'),
-    SERVICE = require('../repository/service'),
-    HELPER = require('../repository/helper'),
-    COLLECTION_TASKS = require('../repository/tasks/create_collection_tasks'),
+    // ARCHIVESSPACE = require('../libs/archivespace'),
+    // SERVICE = require('../repository/service'),
+    // HELPER = require('../repository/helper'),
+    CREATE_COLLECTION_TASKS = require('../repository/tasks/create_collection_tasks'),
+    UPDATE_THUMBNAIL_URL_TASKS = require('../repository/tasks/update_thumbnail_url_tasks'),
     LOGGER = require('../libs/log4'),
-    CACHE = require('../libs/cache'),
+    // CACHE = require('../libs/cache'),
     DB = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects';
 
 /**
  * Gets metadata display record
- * @param sip_uuid
+ * @param uuid
  * @param callback
  */
-exports.get_display_record = function (sip_uuid, callback) {
-    DR.get_db_display_record_data(sip_uuid, function(data) {
+exports.get_display_record = function (uuid, callback) {
+    DR.get_db_display_record_data(uuid, function(data) {
         callback({
             status: 200,
             message: 'Display record retrieved.',
@@ -48,175 +49,45 @@ exports.get_display_record = function (sip_uuid, callback) {
     });
 };
 
-/** TODO: refactor to use tasks object
+/**
  * Updates thumbnail url
- * @param sip_uuid
+ * @param uuid
  * @param thumbnail_url
  * @param callback
  */
-exports.update_thumbnail_url = function (sip_uuid, thumbnail_url, callback) {
+exports.update_thumbnail_url = (uuid, thumbnail_url, callback) => {
 
-    ASYNC.waterfall([
-        update_repo_record,
-        get_display_record_data,
-        create_display_record,
-        update_display_record,
-        reindex_display_record,
-        republish_display_record
-    ], function (error) {
+    const THUMBNAIL_URL = VALIDATOR.unescape(thumbnail_url);
+    const TASKS = new UPDATE_THUMBNAIL_URL_TASKS.Update_thumbnail_url_tasks(uuid, THUMBNAIL_URL, DB, REPO_OBJECTS);
 
-        let response = {
-            status: 201,
-            message: 'Thumbnail URL updated.'
-        };
+    (async() => {
 
-        if (error !== null) {
-            response = {
-                status: 500,
-                message: error.message
-            }
-        }
+        try {
 
-        callback(response);
-    });
+            let data;
+            let display_record;
 
-    /**
-     * Updates the repository record with new thumbnail url
-     * @param callback
-     */
-    function update_repo_record(callback) {
+            await TASKS.update_repo_record();
+            data = await TASKS.get_display_record_data();
+            display_record = await TASKS.create_display_record(data);
+            await TASKS.update_display_record(display_record);
+            await TASKS.reindex_display_record(JSON.parse(display_record));
+            await TASKS.republish_display_record(JSON.parse(display_record));
 
-        DB(REPO_OBJECTS)
-            .where({
-                sip_uuid: sip_uuid,
-                is_active: 1
-            })
-            .update({
-                thumbnail: VALIDATOR.unescape(thumbnail_url)
-            })
-            .then(function () {
-                callback(null, sip_uuid);
-            })
-            .catch(function (error) {
-                LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail/update_db_record)] unable to update thumbnail record ' + error);
-                callback(new Error('Unable to update repository record: ' + error.message));
+            callback({
+                status: 201,
+                message: 'Thumbnail URL updated.'
             });
-    }
 
+        } catch (error) {
 
-    /**
-     * Gets display record data
-     * @param sip_uuid
-     * @param callback
-     * @returns {boolean}
-     */
-    function get_display_record_data(sip_uuid, callback) {
-        DR.get_display_record_data(sip_uuid, function (record_obj) {
-
-            if (!record_obj.hasOwnProperty('pid')) {
-                callback(new Error('Unable to get display record: data'));
-                return false;
-            }
-
-            callback(null, record_obj);
-        });
-    }
-
-    /**
-     * Creates updated display record
-     * @param record_obj
-     * @param callback
-     */
-    function create_display_record(record_obj, callback) {
-        DR.create_display_record(record_obj, function (display_record) {
-
-            if (typeof display_record === 'object') {
-                callback(new Error('Unable to get display record'));
-                return false;
-            }
-
-            callback(null, display_record);
-        });
-    }
-
-    /**
-     * Updates display record
-     * @param display_record
-     * @param callback
-     */
-    function update_display_record(display_record, callback) {
-
-        let display_record_obj = JSON.parse(display_record);
-        let where_obj = {
-            is_member_of_collection: display_record_obj.is_member_of_collection,
-            pid: display_record_obj.pid,
-            is_active: 1
-        };
-
-        DR.update_display_record(where_obj, display_record, function (result) {
-
-            if (typeof result === 'object') {
-                callback(new Error('Unable to update display record'));
-                return false;
-            }
-
-            callback(null, display_record_obj);
-        });
-    }
-
-    /**
-     * Reindexes display record
-     * @param display_record_obj
-     * @param callback
-     */
-    function reindex_display_record(display_record_obj, callback) {
-
-        HELPER.index(display_record_obj.pid, function (result) {
-
-            if (result.error === true) {
-                LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail/reindex_display_record)] unable to reindex display record.');
-                callback(new Error('Unable to reindex display record'));
-                return false;
-            }
-
-            callback(null, display_record_obj);
-        });
-
-    }
-
-    /**
-     * Republishes display record
-     * @param display_record_obj
-     * @param callback
-     */
-    function republish_display_record(display_record_obj, callback) {
-
-        if (display_record_obj.is_published === 1) {
-
-            // wait to make sure updated admin record is ready
-            setTimeout(function () {
-
-                let match_phrase = {
-                    'pid': display_record_obj.pid
-                };
-
-                HELPER.reindex(match_phrase, function (result) {
-
-                    if (result.error === true) {
-                        LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail/republish_display_record)] unable to republish display record ' + response.error);
-                        callback(new Error('Unable to republish display record'));
-                    }
-
-                    callback(null, 'done');
-                });
-
-                CACHE.clear_cache();
-
-            }, 7000);
-        } else {
-            callback(null, 'done');
+            callback({
+                status: 500,
+                message: 'Unable to update thumbnail url ' + error.message
+            });
         }
-    }
+
+    })();
 };
 
 /**
@@ -236,7 +107,7 @@ exports.create_collection_record = (data, callback) => {
     }
 
     const URI = VALIDATOR.unescape(data.uri);
-    const TASKS = new COLLECTION_TASKS.Create_collection_tasks(DB, REPO_OBJECTS);
+    const TASKS = new CREATE_COLLECTION_TASKS.Create_collection_tasks(DB, REPO_OBJECTS);
 
     (async() => {
 

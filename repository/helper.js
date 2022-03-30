@@ -62,16 +62,16 @@ exports.reindex = function (match_phrase, callback) {
 
 /**
  * Updates published status
- * @param sip_uuid
+ * @param uuid
  * @param is_published
  * @param callback
  */
-exports.update_fragment = function (sip_uuid, is_published, callback) {
+exports.update_fragment = function (uuid, is_published, callback) {
 
     (async () => {
 
         let data = {
-            'sip_uuid': sip_uuid,
+            'uuid': uuid,
             'fragment': {
                 doc: {
                     is_published: is_published
@@ -100,15 +100,15 @@ exports.update_fragment = function (sip_uuid, is_published, callback) {
 
 /**
  * Indexes record
- * @param sip_uuid
+ * @param uuid
  * @param callback
  */
-exports.index = function (sip_uuid, callback) {
+exports.index = function (uuid, callback) {
 
     (async () => {
 
         let data = {
-            'sip_uuid': sip_uuid
+            'uuid': uuid
         };
 
         let response = await HTTP.post({
