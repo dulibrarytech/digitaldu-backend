@@ -49,12 +49,11 @@ exports.Publish_record_tasks = function (uuid, DB, TABLE) {
             .then((data) => {
 
                 if (data === 1) {
-                    return false;
+                    return true;
                 }
-
             })
             .catch((error) => {
-                LOGGER.module().error('ERROR: [/repository/tasks (publish_record_tasks/update_collection_record)] unable to publish collection pid ' + error);
+                LOGGER.module().fatal('FATAL: [/repository/tasks (update_collection_status)] unable to update collection publish status ' + error.message);
             });
     }
 
@@ -91,8 +90,8 @@ exports.Publish_record_tasks = function (uuid, DB, TABLE) {
             DR.create_display_record(data, (display_record) => {
 
                 if (typeof display_record === 'object') {
-                    LOGGER.module().error('ERROR: [/repository/tasks (update_thumbnail_url_tasks/create_display_record)] Unable to get display record');
-                    reject(new Error('Unable to get display record'));
+                    LOGGER.module().error('ERROR: [/repository/tasks (create_display_record)] Unable to create display record');
+                    reject(new Error('ERROR: [/repository/tasks (create_display_record)] Unable to create display record'));
                 }
 
                 resolve(display_record);
@@ -122,8 +121,8 @@ exports.Publish_record_tasks = function (uuid, DB, TABLE) {
             DR.update_display_record(where_obj, display_record, (result) => {
 
                 if (typeof result === 'object') {
-                    LOGGER.module().error('ERROR: [/repository/tasks (update_thumbnail_url_tasks/update_display_record)] Unable to update display record');
-                    reject(new Error('Unable to update display record'));
+                    LOGGER.module().error('ERROR: [/repository/tasks (update_display_record/DR.update_display_record)] Unable to update display record');
+                    reject(new Error('ERROR: [/repository/tasks (update_display_record/DR.update_display_record)] Unable to update display record'));
                 }
 
                 resolve(result);
@@ -151,12 +150,10 @@ exports.Publish_record_tasks = function (uuid, DB, TABLE) {
                 is_published: 1
             })
             .then(() => {
-                LOGGER.module().info('INFO: [/libs/display-record lib (update_display_record)] Records updated');
                 return 'records_updated';
             })
             .catch((error) => {
-                LOGGER.module().error('ERROR: [/libs/display-record lib (update_display_record)] unable to update display record ' + error);
-                return new Error('Unable to update display record: ' + error.message);
+                LOGGER.module().fatal('FATAL: [/repository/tasks (update_child_records_status)] Unable to update display record ' + error.message);
             });
     }
 
@@ -171,7 +168,7 @@ exports.Publish_record_tasks = function (uuid, DB, TABLE) {
             HELPER.index(display_record.uuid, (result) => {
 
                 if (result.error === true) {
-                    LOGGER.module().error('ERROR: [/repository/tasks (update_thumbnail_url/reindex_display_record)] unable to reindex display record');
+                    LOGGER.module().error('ERROR: [/repository/tasks (reindex_display_record/HELPER.index)] Unable to reindex display record');
                     reject(new Error('Unable to reindex display record'));
                 }
 
@@ -198,8 +195,8 @@ exports.Publish_record_tasks = function (uuid, DB, TABLE) {
             HELPER.publish_record(match_phrase, (result) => {
 
                 if (result.error === true) {
-                    LOGGER.module().error('ERROR: [/repository/tasks (publish_collection)] unable to publish collection record.');
-                    reject(new Error('Unable to publish record'));
+                    LOGGER.module().error('ERROR: [/repository/tasks (publish_collection/HELPER.publish_record)] Unable to publish record');
+                    reject(new Error('ERROR: [/repository/tasks (publish_collection/HELPER.publish_record)] Unable to publish record'));
                 }
 
                 resolve(result);
@@ -213,6 +210,7 @@ exports.Publish_record_tasks = function (uuid, DB, TABLE) {
 
     /**
      * indexes collection child records
+     * @return boolean
      */
     this.reindex_child_records = () => {
 
@@ -240,7 +238,7 @@ exports.Publish_record_tasks = function (uuid, DB, TABLE) {
                         HELPER.index(record.uuid, (result) => {
 
                             if (result.error === true) {
-                                LOGGER.module().error('ERROR: [/repository/tasks (reindex_child_records/reindex_display_record)] unable to reindex display record');
+                                LOGGER.module().error('ERROR: [/repository/tasks (reindex_child_records/HELPER.index)] Unable to index child record(s)');
                             }
                         });
                     }
@@ -250,12 +248,13 @@ exports.Publish_record_tasks = function (uuid, DB, TABLE) {
                 return null;
             })
             .catch((error) => {
-                LOGGER.module().fatal('FATAL: [/repository/model module (publish_objects/index_objects)] unable to index published object ' + error);
+                LOGGER.module().fatal('FATAL: [/repository/tasks (reindex_child_records)] Unable to get record uuid ' + error.message);
             });
     }
 
     /**
      * Moves copy of record or records from admin to public index
+     * @return void
      */
     this.publish_child_records = () => {
 
@@ -266,7 +265,7 @@ exports.Publish_record_tasks = function (uuid, DB, TABLE) {
         HELPER.publish_record(match_phrase, (result) => {
 
             if (result.error === true) {
-                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + response.error);
+                LOGGER.module().error('ERROR: [/repository/tasks (publish_child_records/HELPER.publish_record)] Unable to publish child record(s)');
             }
 
         });
@@ -288,8 +287,7 @@ exports.Publish_record_tasks = function (uuid, DB, TABLE) {
                 return data[0].is_member_of_collection;
             })
             .catch((error) => {
-                LOGGER.module().fatal('FATAL: [/repository/model module (get_admin_object)] Unable to get object ' + error);
-                throw 'FATAL: [/repository/model module (get_admin_object)] Unable to get object ' + error;
+                LOGGER.module().fatal('FATAL: [/repository/tasks (get_collection_uuid)] Unable to get collection uuid ' + error.message);
             });
     }
 
@@ -345,7 +343,7 @@ exports.Publish_record_tasks = function (uuid, DB, TABLE) {
                 return true;
             })
             .catch(function (error) {
-                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection pid ' + error);
+                LOGGER.module().fatal('FATAL: [/repository/tasks (update_child_record)] Unable to update child record publish status ' + error.message);
             });
     }
 };
