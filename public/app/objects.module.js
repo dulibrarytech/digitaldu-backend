@@ -145,7 +145,7 @@ const objectsModule = (function () {
 
                 }, 5000);
 
-            } else if (response.status === 418) {
+            } else if (response.status === 200) {
 
                 domModule.html('#message', '<div class="alert alert-warning">Unable to publish object. (The object\'s parent collection must be published before attempting to publish one of its objects.)</div>');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
