@@ -26,12 +26,19 @@ const HTTP = require('../libs/http'),
  * @param match_phrase
  * @param callback
  */
-exports.reindex = function (match_phrase, callback) {
+exports.publish_record = function (match_phrase, callback) {
 
     (async () => {
 
         let query = {};
         let bool = {};
+
+        /*
+        let match_phrase = {
+            'pid': uuid
+        };
+
+         */
 
         bool.must = {};
         bool.must.match_phrase = match_phrase;
@@ -60,7 +67,7 @@ exports.reindex = function (match_phrase, callback) {
     })();
 };
 
-/**
+/** TODO: simply reindex updated record instead?
  * Updates published status
  * @param uuid
  * @param is_published
@@ -160,12 +167,12 @@ exports.del = function (sip_uuid, callback) {
     })();
 };
 
-/** TODO: rename function - does it belong here?
+/** TODO: REMOVE
  * Updates display record after publish status changed
- * @param obj
+ * @param uuid
  * @param callback
- */
-function update_display_record(obj, callback) {
+
+function update_record_publish_status(uuid, callback) {
 
     let pid;
     let is_published;
@@ -183,7 +190,7 @@ function update_display_record(obj, callback) {
         let response = await HTTP.get({
             endpoint: '/api/admin/v1/repo/object',
             params: {
-                pid: pid
+                uuid: uuid
             }
         });
 
@@ -214,6 +221,7 @@ function update_display_record(obj, callback) {
 
     })();
 }
+ */
 
 /**
  * Removes record from admin and public indexes - part of record delete process

@@ -141,9 +141,11 @@ exports.index_records = function (req, callback) {
                         return false;
                     }
 
-                    console.log('indexing: ', record.uuid);
+                    if (record.pid === undefined) {
+                        record = uuid_pid(record);
+                    }
 
-                    record = uuid_pid(record);
+                    console.log('indexing: ', record.pid);
 
                     SERVICE.index_record({
                         index: index_name,
@@ -245,6 +247,11 @@ exports.update_fragment = function (req, callback) {
             callback({
                 status: 201,
                 message: 'fragment updated'
+            });
+        } else if (response.result === 'noop') {
+            callback({
+                status: 201,
+                message: 'published status is already set'
             });
         } else {
 
@@ -425,6 +432,7 @@ exports.republish_record = function (req, callback) {
 
                         let collection_record = {};
                         collection_record.uuid = data[0].uuid;
+                        collection_record.pid = data[0].uuid;
                         collection_record.uri = data[0].uri;
                         collection_record.is_member_of_collection = data[0].is_member_of_collection;
                         collection_record.handle = data[0].handle;
@@ -480,7 +488,9 @@ exports.republish_record = function (req, callback) {
                         record.is_published = 1;
                     }
 
-                    record = uuid_pid(record);
+                    if (record.pid === undefined) {
+                        record = uuid_pid(record);
+                    }
 
                     SERVICE.index_record({
                         index: index_name,

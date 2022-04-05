@@ -718,14 +718,14 @@ exports.reindex_frontend = function (req, callback) {
 
 /**
  * publishes (indexes) records into public index
- * @param sip_uuid
+ * @param uuid
  */
-function publish(sip_uuid) {
+function publish(uuid) {
 
     (async() => {
 
         let data = {
-            'sip_uuid': sip_uuid
+            'uuid': uuid
         };
 
         let response = await HTTP.post({
@@ -756,7 +756,7 @@ const republish = function (object_type) {
     };
 
     DB(REPO_OBJECTS)
-        .select('sip_uuid')
+        .select('uuid')
         .where(whereObj)
         .then(function (data) {
 
@@ -768,7 +768,7 @@ const republish = function (object_type) {
                 }
 
                 let record = data.pop();
-                publish(record.sip_uuid);
+                publish(record.uuid);
 
             }, 20);
 
@@ -818,7 +818,7 @@ exports.batch_convert = function (req, callback) {
         };
 
         DB(REPO_OBJECTS)
-            .select('sip_uuid', 'display_record', 'file_name')
+            .select('uuid', 'display_record', 'file_name')
             .where(whereObj)
             .orderBy('id', 'desc')
             .then(function (data) {
@@ -917,7 +917,7 @@ exports.batch_convert = function (req, callback) {
         };
 
         DB(REPO_OBJECTS)
-            .select('sip_uuid','file_name')
+            .select('uuid','file_name')
             .where(whereObj)
             .orderBy('id', 'desc')
             .then(function (data) {
@@ -938,7 +938,7 @@ exports.batch_convert = function (req, callback) {
                     let object_name;
                     let obj = {};
 
-                    obj.sip_uuid = record.sip_uuid;
+                    obj.uuid = record.uuid;
 
                     if (record.file_name === null) {
                         return false;
@@ -1000,7 +1000,7 @@ exports.batch_convert = function (req, callback) {
     function convert() {
 
         DBQ(CONVERT_QUEUE)
-            .select('sip_uuid','full_path', 'object_name', 'mime_type')
+            .select('uuid','full_path', 'object_name', 'mime_type')
             .then(function (data) {
 
                 let timer = setInterval(function () {
@@ -1273,7 +1273,7 @@ exports.batch_fix = function () {
 exports.save_call_number = function(req, callback) {
 
     DB(REPO_OBJECTS)
-        .select('sip_uuid', 'display_record')
+        .select('uuid', 'display_record')
         .then(function (data) {
 
             let timer = setInterval(function () {
@@ -1295,10 +1295,10 @@ exports.save_call_number = function(req, callback) {
                 }
 
                 let identifiers = display_record.display_record.identifiers;
-                let sip_uuid = display_record.pid;
+                let uuid = display_record.pid;
 
                 if (identifiers === undefined) {
-                    console.log(sip_uuid);
+                    console.log(uuid);
                     console.log('no call number');
                     return false;
                 }
@@ -1311,7 +1311,7 @@ exports.save_call_number = function(req, callback) {
 
                         DB(REPO_OBJECTS)
                             .where({
-                                sip_uuid: sip_uuid
+                                uuid: uuid
                             })
                             .update({
                                 call_number: identifiers[i].identifier

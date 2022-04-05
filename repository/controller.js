@@ -61,9 +61,13 @@ exports.create_collection_record = function (req, res) {
     });
 };
 
-exports.publish_objects = function (req, res) {
-    CACHE.clear_cache();
-    MODEL.publish_objects(req, function (data) {
+exports.publish_record = function (req, res) {
+
+    let uuid = req.body.uuid;
+    let type = req.body.type;
+
+    MODEL.publish_record(uuid, type, function (data) {
+        CACHE.clear_cache();
         res.status(data.status).send(data.data);
     });
 };

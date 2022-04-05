@@ -53,7 +53,7 @@ module.exports = function (app) {
         .put(TOKEN.verify, REPO.save_transcript);
 
     app.route('/api/admin/v1/repo/publish')
-        .post(TOKEN.verify, REPO.publish_objects);
+        .post(TOKEN.verify, REPO.publish_record);
 
     app.route('/api/admin/v1/repo/unpublish')
         .post(TOKEN.verify, REPO.unpublish_objects);

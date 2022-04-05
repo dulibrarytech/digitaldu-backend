@@ -49,14 +49,14 @@ exports.Update_thumbnail_url_tasks = function (uuid, thumbnail_url, DB, TABLE) {
             .update({
                 thumbnail: this.thumbnail_url
             })
-            .then(function (data) {
+            .then((data) => {
 
                 if (data === 1) {
                     return data;
                 } // TODO: else
             })
-            .catch(function (error) {
-                LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail/update_db_record)] unable to update thumbnail record ' + error);
+            .catch((error) => {
+                LOGGER.module().error('ERROR: [/repository/tasks (update_thumbnail_url/update_repo_record)] unable to update thumbnail record ' + error);
             });
     }
 
@@ -181,7 +181,7 @@ exports.Update_thumbnail_url_tasks = function (uuid, thumbnail_url, DB, TABLE) {
                     HELPER.reindex(match_phrase, (result) => {
 
                         if (result.error === true) {
-                            LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail/republish_display_record)] unable to republish display record ' + response.error);
+                            LOGGER.module().error('ERROR: [/repository/tasks (update_thumbnail_url/republish_display_record)] unable to republish display record');
                             reject(new Error('Unable to republish display record'));
                         }
 

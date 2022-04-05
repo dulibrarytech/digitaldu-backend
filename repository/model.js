@@ -29,6 +29,7 @@ const CONFIG = require('../config/config'),
     // HELPER = require('../repository/helper'),
     CREATE_COLLECTION_TASKS = require('../repository/tasks/create_collection_tasks'),
     UPDATE_THUMBNAIL_URL_TASKS = require('../repository/tasks/update_thumbnail_url_tasks'),
+    PUBLISH_RECORD_TASKS = require('../repository/tasks/publish_record_tasks'),
     LOGGER = require('../libs/log4'),
     // CACHE = require('../libs/cache'),
     DB = require('../config/db')(),
@@ -40,54 +41,13 @@ const CONFIG = require('../config/config'),
  * @param callback
  */
 exports.get_display_record = function (uuid, callback) {
-    DR.get_db_display_record_data(uuid, function(data) {
+    DR.get_db_display_record_data(uuid, function (data) {
         callback({
             status: 200,
             message: 'Display record retrieved.',
             data: data
         });
     });
-};
-
-/**
- * Updates thumbnail url
- * @param uuid
- * @param thumbnail_url
- * @param callback
- */
-exports.update_thumbnail_url = (uuid, thumbnail_url, callback) => {
-
-    const THUMBNAIL_URL = VALIDATOR.unescape(thumbnail_url);
-    const TASKS = new UPDATE_THUMBNAIL_URL_TASKS.Update_thumbnail_url_tasks(uuid, THUMBNAIL_URL, DB, REPO_OBJECTS);
-
-    (async() => {
-
-        try {
-
-            let data;
-            let display_record;
-
-            await TASKS.update_repo_record();
-            data = await TASKS.get_display_record_data();
-            display_record = await TASKS.create_display_record(data);
-            await TASKS.update_display_record(display_record);
-            await TASKS.reindex_display_record(JSON.parse(display_record));
-            await TASKS.republish_display_record(JSON.parse(display_record));
-
-            callback({
-                status: 201,
-                message: 'Thumbnail URL updated.'
-            });
-
-        } catch (error) {
-
-            callback({
-                status: 500,
-                message: 'Unable to update thumbnail url ' + error.message
-            });
-        }
-
-    })();
 };
 
 /**
@@ -109,7 +69,7 @@ exports.create_collection_record = (data, callback) => {
     const URI = VALIDATOR.unescape(data.uri);
     const TASKS = new CREATE_COLLECTION_TASKS.Create_collection_tasks(DB, REPO_OBJECTS);
 
-    (async() => {
+    (async () => {
 
         try {
 
@@ -140,7 +100,7 @@ exports.create_collection_record = (data, callback) => {
             callback({
                 status: 201,
                 message: 'Collection record created',
-                data: {sip_uuid: obj.uuid}
+                data: {uuid: obj.uuid}
             });
 
         } catch (error) {
@@ -155,391 +115,120 @@ exports.create_collection_record = (data, callback) => {
 };
 
 /**
- * Publishes object(s)
- * @param req
+ * Updates thumbnail url
+ * @param uuid
+ * @param thumbnail_url
  * @param callback
  */
-exports.publish_objects = function (req, callback) {
+exports.update_thumbnail_url = (uuid, thumbnail_url, callback) => {
 
-    if (req.body.pid === undefined || req.body.pid.length === 0) {
+    const THUMBNAIL_URL = VALIDATOR.unescape(thumbnail_url);
+    const TASKS = new UPDATE_THUMBNAIL_URL_TASKS.Update_thumbnail_url_tasks(uuid, THUMBNAIL_URL, DB, REPO_OBJECTS);
 
-        callback({
-            status: 400,
-            message: 'Bad request.'
-        });
+    (async () => {
 
-        return false;
-    }
+        try {
 
-    /*
-     Publish collections and associated objects
-     */
-    const pid = req.body.pid,
-        type = req.body.type;
+            let data;
+            let display_record;
 
-    function update_collection_record(callback) {
+            await TASKS.update_repo_record();
+            data = await TASKS.get_display_record_data();
+            display_record = await TASKS.create_display_record(data);
+            await TASKS.update_display_record(display_record);
+            await TASKS.reindex_display_record(JSON.parse(display_record));
+            await TASKS.republish_display_record(JSON.parse(display_record));
 
-        let obj = {};
-        obj.is_member_of_collection = pid;
-
-        DB(REPO_OBJECTS)
-            .where({
-                pid: obj.is_member_of_collection,
-                is_active: 1
-            })
-            .update({
-                is_published: 1
-            })
-            .then(function (data) {
-                callback(null, obj);
-                return null;
-            })
-            .catch(function (error) {
-                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection pid ' + error);
-                callback(null, 'failed');
+            callback({
+                status: 201,
+                message: 'Thumbnail URL updated.'
             });
-    }
 
-    function update_collection_doc(obj, callback) {
+        } catch (error) {
 
-        if (obj.status === 'failed') {
-            callback(null, obj);
-            return false;
-        }
-
-        update_fragment(obj.is_member_of_collection, 1, function (result) {
-
-            if (result.error === true) {
-                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/update_collection_doc)] unable to update published status.');
-                return false;
-            }
-
-            callback(null, obj);
-        });
-    }
-
-    function publish_collection(obj, callback) {
-
-        if (obj.status !== undefined && obj.status === 'failed') {
-            callback(null, obj);
-            return false;
-        }
-
-        let match_phrase = {
-            'pid': obj.is_member_of_collection
-        };
-
-        reindex(match_phrase, function (result) {
-
-            if (result.error === true) {
-                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection admin record.');
-                obj.status = 'failed';
-                callback(null, obj);
-                return false;
-            }
-
-            callback(null, obj);
-        });
-
-        let pidObj = {};
-        pidObj.sip_uuid = match_phrase.pid;
-
-        update_display_record(pidObj, function () {});
-    }
-
-    function update_collection_object_records(obj, callback) {
-
-        if (obj.status !== undefined && obj.status === 'failed') {
-            callback(null, obj);
-            return false;
-        }
-
-        DB(REPO_OBJECTS)
-            .where({
-                is_member_of_collection: obj.is_member_of_collection,
-                is_published: 0,
-                is_active: 1
-            })
-            .update({
-                is_published: 1
-            })
-            .then(function (data) {
-                callback(null, obj);
-                return null;
-            })
-            .catch(function (error) {
-                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_child_objects)] unable to publish collection pid ' + error);
-                callback(null, 'failed');
+            callback({
+                status: 500,
+                message: 'Unable to update thumbnail url ' + error.message
             });
-    }
-
-    function update_collection_object_docs(obj, callback) {
-
-        DB(REPO_OBJECTS)
-            .select('sip_uuid')
-            .where({
-                is_member_of_collection: obj.is_member_of_collection,
-                is_published: 1,
-                is_active: 1
-            })
-            .then(function (data) {
-
-                let timer = setInterval(function () {
-
-                    if (data.length === 0) {
-
-                        clearInterval(timer);
-                        callback(null, obj);
-                        return false;
-
-                    } else {
-
-                        let record = data.pop();
-
-                        if (record.sip_uuid === null) {
-                            return false;
-                        }
-
-                        update_fragment(record.sip_uuid, 1, function (result) {
-
-                            if (result.error === true) {
-                                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/update_collection_object_docs)] unable to update published status.');
-                                obj.status = 'failed';
-                                return false;
-                            }
-                        });
-
-                        update_display_record(record, function () {});
-                    }
-
-                }, 150);
-
-                return null;
-            })
-            .catch(function (error) {
-                LOGGER.module().fatal('FATAL: [/repository/model module (publish_objects/index_objects)] unable to index published object ' + error);
-                callback(null, obj);
-            });
-    }
-
-    function publish_collection_objects(obj, callback) {
-
-        if (obj.status !== undefined && obj.status === 'failed') {
-            callback(null, obj);
-            return false;
         }
 
-        let match_phrase = {
-            'is_member_of_collection': obj.is_member_of_collection
-        };
+    })();
+};
 
-        reindex(match_phrase, function (result) {
+/**
+ * Publishes record(s)
+ * @param uuid
+ * @param type
+ * @param callback
+ */
+exports.publish_record = function (uuid, type, callback) {
 
-            if (result.error === true) {
-                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update collection admin record ' + response.error);
-                obj.status = 'failed';
-                callback(null, obj);
-                return false;
-            }
+    const TASKS = new PUBLISH_RECORD_TASKS.Publish_record_tasks(uuid, DB, REPO_OBJECTS);
 
-            callback(null, obj);
-        });
-    }
+    (async () => {
 
-    /*
-     Publish single objects
-     */
+        let response;
 
-    /*
-     gets object's collection uuid
-     */
-    function get_collection_uuid(callback) {
+        if (type === 'collection') {
 
-        let obj = {};
-        obj.sip_uuid = pid;
+            let data;
+            let display_record;
 
-        if (obj.sip_uuid === undefined || obj.sip_uuid.length === 0) {
-            return false;
-        }
+            await TASKS.update_collection_status();
+            data = await TASKS.get_display_record_data();
+            display_record = await TASKS.create_display_record(data);
+            await TASKS.update_display_record(display_record);
+            await TASKS.update_child_records_status();
+            await TASKS.reindex_display_record(JSON.parse(display_record));
+            await TASKS.reindex_child_records();
+            await TASKS.publish_record();
+            await TASKS.publish_child_records();
 
-        DB(REPO_OBJECTS)
-            .select('is_member_of_collection')
-            .where({
-                sip_uuid: obj.sip_uuid,
-                is_active: 1
-            })
-            .then(function (data) {
-                obj.is_member_of_collection = VALIDATOR.escape(data[0].is_member_of_collection);
-                callback(null, obj);
-                return null;
-            })
-            .catch(function (error) {
-                LOGGER.module().fatal('FATAL: [/repository/model module (get_admin_object)] Unable to get object ' + error);
-                throw 'FATAL: [/repository/model module (get_admin_object)] Unable to get object ' + error;
-            });
-    }
+            response = {
+                status: 201,
+                message: 'Collection Published',
+                data: []
+            };
 
-    /*
-     checks if collection is published
-     */
-    function check_collection(obj, callback) {
+        } else if (type === 'object') {
 
-        DB(REPO_OBJECTS)
-            .select('is_published')
-            .where({
-                pid: obj.is_member_of_collection,
-                is_active: 1,
-                is_published: 1
-            })
-            .then(function (data) {
+            let collection_uuid;
+            let is_collection_published;
+            let result;
+            let data;
+            let display_record;
 
-                if (data.length === 0) {
-                    obj.is_published = false;
-                } else if (data.length > 0) {
-                    obj.is_published = true;
-                }
+            collection_uuid = await TASKS.get_collection_uuid();
+            is_collection_published = await TASKS.check_collection_publish_status(collection_uuid);
+            result = await TASKS.update_child_record(is_collection_published);
 
-                callback(null, obj);
-                return null;
-            })
-            .catch(function (error) {
-                LOGGER.module().fatal('FATAL: [/repository/model module (check_collection)] Unable to check collection ' + error);
-                throw 'FATAL: [/repository/model module (check_collection)] Unable to check collection ' + error;
-            });
-    }
+            if (result === true) {
 
-    function update_object_record(obj, callback) {
+                data = await TASKS.get_display_record_data();
+                display_record = await TASKS.create_display_record(data);
+                await TASKS.update_display_record(display_record);
+                await TASKS.reindex_display_record(JSON.parse(display_record));
+                await TASKS.publish_record();
 
-        if (obj.is_published === false) {
-            callback(null, obj);
-            return false;
-        }
-
-        DB(REPO_OBJECTS)
-            .where({
-                sip_uuid: obj.sip_uuid,
-                is_active: 1
-            })
-            .update({
-                is_published: 1
-            })
-            .then(function (data) {
-                callback(null, obj);
-                return null;
-            })
-            .catch(function (error) {
-                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection pid ' + error);
-                callback(null, 'failed');
-            });
-    }
-
-    function update_object_doc(obj, callback) {
-
-        if (obj.is_published === false) {
-            callback(null, obj);
-            return false;
-        }
-
-        update_fragment(obj.sip_uuid, 1, function (result) {
-
-            if (result.error === true) {
-                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/update_object_doc)] unable to update published status.');
-                obj.status = 'failed';
-            }
-
-            callback(null, obj);
-        });
-    }
-
-    function publish_object(obj, callback) {
-
-        if (obj.is_published === false || obj.status !== undefined && obj.status === 'failed') {
-            callback(null, obj);
-            return false;
-        }
-
-        let match_phrase = {
-            'pid': obj.sip_uuid
-        };
-
-        reindex(match_phrase, function (result) {
-
-            if (result.error === true) {
-                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection admin record.');
-                obj.status = 'failed';
-            }
-
-            callback(null, obj);
-        });
-    }
-
-    // publish collection and all of its objects
-    if (type === 'collection') {
-
-        ASYNC.waterfall([
-            update_collection_record,
-            update_collection_doc,
-            publish_collection,
-            update_collection_object_records,
-            update_collection_object_docs,
-            publish_collection_objects
-        ], function (error, results) {
-
-            if (error) {
-                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/async.waterfall)] ' + error);
-                throw 'ERROR: [/repository/model module (publish_objects/async.waterfall)] ' + error;
-            }
-
-            LOGGER.module().info('INFO: [/repository/model module (publish_objects/async.waterfall)] collection published');
-        });
-
-        callback({
-            status: 201,
-            message: 'Collection Published',
-            data: []
-        });
-
-        return false;
-    }
-
-    if (type === 'object') {
-
-        ASYNC.waterfall([
-            get_collection_uuid,
-            check_collection,
-            update_object_record,
-            update_display_record,
-            update_object_doc,
-            publish_object
-        ], function (error, results) {
-
-            if (error) {
-                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/async.waterfall)] ' + error);
-                throw 'ERROR: [/repository/model module (publish_objects/async.waterfall)] ' + error;
-            }
-
-            if (results.is_published === false) {
-
-                callback({
-                    status: 418,
-                    message: 'Object not published',
-                    data: []
-                });
-
-            } else {
-
-                LOGGER.module().info('INFO: [/repository/model module (publish_objects/async.waterfall)] object published');
-
-                callback({
+                response = {
                     status: 201,
                     message: 'Object Published',
                     data: []
-                });
-            }
-        });
+                }
 
-        return false;
-    }
+            } else {
+
+                response = {
+                    status: 200,
+                    message: 'Collection for record ' + uuid + ' is not published.  Child record cannot be published as a result',
+                    data: []
+                }
+            }
+        }
+
+        callback(response);
+
+    })();
 };
 
 /**
@@ -577,7 +266,8 @@ exports.unpublish_objects = function (req, callback) {
         let pidObj = {};
         pidObj.pid = pid;
 
-        update_display_record(pidObj, function () {});
+        update_display_record(pidObj, function () {
+        });
     }
 
     // unpublish entire collection - unpublish objects
@@ -631,7 +321,8 @@ exports.unpublish_objects = function (req, callback) {
                         let pidObj = {};
                         pidObj.pid = record.sip_uuid;
 
-                        update_display_record(pidObj, function () {});
+                        update_display_record(pidObj, function () {
+                        });
 
                     } else {
 
@@ -876,7 +567,7 @@ exports.reset_display_record = function (req, callback) {
         let obj = {};
         let sip_uuid = req.body.pid;
 
-        DR.get_display_record_data(sip_uuid, function(record) {
+        DR.get_display_record_data(sip_uuid, function (record) {
 
             DR.create_display_record(record, function (display_record) {
 
@@ -887,7 +578,7 @@ exports.reset_display_record = function (req, callback) {
                     is_active: 1
                 };
 
-                DR.update_display_record(where_obj, display_record, function(result) {
+                DR.update_display_record(where_obj, display_record, function (result) {
                     obj.sip_uuid = recordObj.pid;
                     obj.is_published = recordObj.is_published;
                     callback(null, obj);
@@ -1141,7 +832,7 @@ exports.save_transcript = function (req, callback) {
 
                 LOGGER.module().info('INFO: [/repository/model module (add_transcript)] Transcript saved to DB');
 
-                DR.get_db_display_record_data(sip_uuid, function(data) {
+                DR.get_db_display_record_data(sip_uuid, function (data) {
 
                     let record = JSON.parse(data[0].display_record);
                     record.transcript = transcript;
@@ -1151,7 +842,7 @@ exports.save_transcript = function (req, callback) {
                         is_active: 1
                     };
 
-                    DR.update_display_record(where_obj, JSON.stringify(record),function(result) {
+                    DR.update_display_record(where_obj, JSON.stringify(record), function (result) {
 
                         (async () => {
 
@@ -1186,7 +877,7 @@ exports.save_transcript = function (req, callback) {
                                         'pid': sip_uuid
                                     };
 
-                                    setTimeout(function() {
+                                    setTimeout(function () {
 
                                         // moves updated record to public index if already published
                                         reindex(match_phrase, function (result) {
