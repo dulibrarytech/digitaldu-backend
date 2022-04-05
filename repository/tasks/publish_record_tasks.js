@@ -16,173 +16,20 @@
 
  */
 
-const LOGGER = require("../../libs/log4");
-const DR = require("../../libs/display-record");
-const HELPER = require("../../repository/helper");
+const HELPER = require('../../repository/helper');
+const LOGGER = require('../../libs/log4');
 
 /**
- * Object contains tasks used to publish a repository record
+ * Object contains task used to publish a repository record
  * @param uuid
- * @param DB
- * @param TABLE
  * @constructor
  */
-exports.Publish_record_tasks = function (uuid, DB, TABLE) {
+exports.Publish_record_tasks = function (uuid) {
 
     this.uuid = uuid;
-    this.DB = DB;
-    this.TABLE = TABLE;
 
     /**
-     * Updates collection publish status
-     */
-    this.update_collection_status = () => {
-
-        return this.DB(this.TABLE)
-            .where({
-                uuid: this.uuid,
-                is_active: 1
-            })
-            .update({
-                is_published: 1
-            })
-            .then((data) => {
-
-                if (data === 1) {
-                    return true;
-                }
-            })
-            .catch((error) => {
-                LOGGER.module().fatal('FATAL: [/repository/tasks (update_collection_status)] unable to update collection publish status ' + error.message);
-            });
-    }
-
-    /**
-     * Gets display record data
-     * @returns Promise string
-     */
-    this.get_display_record_data = () => {
-
-        let promise = new Promise((resolve, reject) => {
-
-            DR.get_display_record_data(this.uuid, (record_obj) => {
-                // TODO: figure out how to catch error here
-                // reject(new Error('Unable to get display record: data'));
-                resolve(record_obj);
-            });
-
-        });
-
-        return promise.then((data) => {
-            return data;
-        });
-    }
-
-    /**
-     * Creates updated display record
-     * @param data
-     * returns Promise
-     */
-    this.create_display_record = (data) => {
-
-        let promise = new Promise((resolve, reject) => {
-
-            DR.create_display_record(data, (display_record) => {
-
-                if (typeof display_record === 'object') {
-                    LOGGER.module().error('ERROR: [/repository/tasks (create_display_record)] Unable to create display record');
-                    reject(new Error('ERROR: [/repository/tasks (create_display_record)] Unable to create display record'));
-                }
-
-                resolve(display_record);
-            });
-        });
-
-        return promise.then((display_record) => {
-            return display_record;
-        });
-    }
-
-    /**
-     * Updates display record
-     * @param display_record
-     */
-    this.update_display_record = (display_record) => {
-
-        let promise = new Promise((resolve, reject) => {
-
-            let display_record_obj = JSON.parse(display_record);
-            let where_obj = {
-                is_member_of_collection: display_record_obj.is_member_of_collection,
-                uuid: display_record_obj.uuid,
-                is_active: 1
-            };
-
-            DR.update_display_record(where_obj, display_record, (result) => {
-
-                if (typeof result === 'object') {
-                    LOGGER.module().error('ERROR: [/repository/tasks (update_display_record/DR.update_display_record)] Unable to update display record');
-                    reject(new Error('ERROR: [/repository/tasks (update_display_record/DR.update_display_record)] Unable to update display record'));
-                }
-
-                resolve(result);
-            });
-        });
-
-        return promise.then((display_record) => {
-            return display_record;
-        });
-    }
-
-    /**
-     * Updates db collection child record's publish status
-     */
-    this.update_child_records_status = () => {
-
-        let where_obj = {
-            is_member_of_collection: this.uuid,
-            is_active: 1
-        };
-
-        this.DB(this.TABLE)
-            .where(where_obj)
-            .update({
-                is_published: 1
-            })
-            .then(() => {
-                return 'records_updated';
-            })
-            .catch((error) => {
-                LOGGER.module().fatal('FATAL: [/repository/tasks (update_child_records_status)] Unable to update display record ' + error.message);
-            });
-    }
-
-    /**
-     * Reindexes display record
-     * @param display_record
-     */
-    this.reindex_display_record = (display_record) => {
-
-        let promise = new Promise((resolve, reject) => {
-
-            HELPER.index(display_record.uuid, (result) => {
-
-                if (result.error === true) {
-                    LOGGER.module().error('ERROR: [/repository/tasks (reindex_display_record/HELPER.index)] Unable to reindex display record');
-                    reject(new Error('Unable to reindex display record'));
-                }
-
-                resolve(display_record);
-            });
-        });
-
-        return promise.then((result) => {
-            return result;
-        });
-    }
-
-    /**
-     * Publishes record
+     * Publishes both collection and child records
      */
     this.publish_record = () => {
 
@@ -195,8 +42,8 @@ exports.Publish_record_tasks = function (uuid, DB, TABLE) {
             HELPER.publish_record(match_phrase, (result) => {
 
                 if (result.error === true) {
-                    LOGGER.module().error('ERROR: [/repository/tasks (publish_collection/HELPER.publish_record)] Unable to publish record');
-                    reject(new Error('ERROR: [/repository/tasks (publish_collection/HELPER.publish_record)] Unable to publish record'));
+                    LOGGER.module().error('ERROR: [/repository/tasks (publish_record/HELPER.publish_record)] Unable to publish record');
+                    reject(new Error('ERROR: [/repository/tasks (publish_record/HELPER.publish_record)] Unable to publish record'));
                 }
 
                 resolve(result);
@@ -206,144 +53,5 @@ exports.Publish_record_tasks = function (uuid, DB, TABLE) {
         return promise.then((result) => {
             return result;
         });
-    }
-
-    /**
-     * indexes collection child records
-     * @return boolean
-     */
-    this.reindex_child_records = () => {
-
-        this.DB(this.TABLE)
-            .select('uuid')
-            .where({
-                is_member_of_collection: this.uuid,
-                is_active: 1
-            })
-            .then((data) => {
-
-                let timer = setInterval(() => {
-
-                    if (data.length === 0) {
-                        clearInterval(timer);
-                        return false;
-                    } else {
-
-                        let record = data.pop();
-
-                        if (record.uuid === null) {
-                            return false;
-                        }
-
-                        HELPER.index(record.uuid, (result) => {
-
-                            if (result.error === true) {
-                                LOGGER.module().error('ERROR: [/repository/tasks (reindex_child_records/HELPER.index)] Unable to index child record(s)');
-                            }
-                        });
-                    }
-
-                }, 150);
-
-                return null;
-            })
-            .catch((error) => {
-                LOGGER.module().fatal('FATAL: [/repository/tasks (reindex_child_records)] Unable to get record uuid ' + error.message);
-            });
-    }
-
-    /**
-     * Moves copy of record or records from admin to public index
-     * @return void
-     */
-    this.publish_child_records = () => {
-
-        let match_phrase = {
-            'is_member_of_collection': this.uuid
-        };
-
-        HELPER.publish_record(match_phrase, (result) => {
-
-            if (result.error === true) {
-                LOGGER.module().error('ERROR: [/repository/tasks (publish_child_records/HELPER.publish_record)] Unable to publish child record(s)');
-            }
-
-        });
-    };
-
-    /**
-     * Gets collection uuid
-     * @returns string
-     */
-    this.get_collection_uuid = () => {
-
-        return this.DB(this.TABLE)
-            .select('is_member_of_collection')
-            .where({
-                uuid: this.uuid,
-                is_active: 1
-            })
-            .then((data) => {
-                return data[0].is_member_of_collection;
-            })
-            .catch((error) => {
-                LOGGER.module().fatal('FATAL: [/repository/tasks (get_collection_uuid)] Unable to get collection uuid ' + error.message);
-            });
-    }
-
-    /**
-     *  Checks collection publish status
-     *  @param collection_uuid
-     *  @return boolean
-     */
-    this.check_collection_publish_status = (collection_uuid) => {
-
-        return this.DB(this.TABLE)
-            .select('is_published')
-            .where({
-                uuid: collection_uuid,
-                is_active: 1
-            })
-            .then((data) => {
-
-                let is_published = false;
-
-                if (data[0].is_published === 1) {
-                    is_published = true;
-                }
-
-                return is_published;
-            })
-            .catch((error) => {
-                LOGGER.module().fatal('FATAL: [/repository/tasks (check_collection_publish_status)] Unable to check collection status ' + error.message);
-                throw 'FATAL: [/repository/tasks (check_collection_publish_status)] Unable to check collection status ' + error.message;
-            });
-    }
-
-    /**
-     * Checks if the child record's collection is published
-     * @param is_collection_published
-     * @returns boolean
-     */
-    this.update_child_record = (is_collection_published) => {
-
-        if (is_collection_published === false) {
-            return false;
-        }
-
-        return this.DB(this.TABLE)
-            .where({
-                uuid: this.uuid,
-                is_active: 1
-            })
-            .update({
-                is_published: 1
-            })
-            .then(function (data) {
-                return true;
-            })
-            .catch(function (error) {
-                LOGGER.module().fatal('FATAL: [/repository/tasks (update_child_record)] Unable to update child record publish status ' + error.message);
-            });
     }
 };

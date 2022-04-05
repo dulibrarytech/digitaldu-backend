@@ -24,14 +24,13 @@ const CONFIG = require('../config/config'),
     VALIDATOR = require('validator'),
     DR = require('../libs/display-record'),
     ARCHIVEMATICA = require('../libs/archivematica'),
-    // ARCHIVESSPACE = require('../libs/archivespace'),
-    // SERVICE = require('../repository/service'),
-    // HELPER = require('../repository/helper'),
     CREATE_COLLECTION_TASKS = require('../repository/tasks/create_collection_tasks'),
     UPDATE_THUMBNAIL_URL_TASKS = require('../repository/tasks/update_thumbnail_url_tasks'),
-    PUBLISH_RECORD_TASKS = require('../repository/tasks/publish_record_tasks'),
+    PUBLISH_COLLECTION_RECORD_TASKS = require('../repository/tasks/publish_collection_record_tasks'),
+    PUBLISH_CHILD_RECORD_TASKS = require('../repository/tasks/publish_child_record_tasks'),
+    DISPLAY_RECORD_TASKS = require('../repository/tasks/display_record_tasks'),
+    SUPPRESS_RECORD_TASKS = require('../repository/tasks/suppress_record_tasks'),
     LOGGER = require('../libs/log4'),
-    // CACHE = require('../libs/cache'),
     DB = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects';
 
@@ -163,7 +162,9 @@ exports.update_thumbnail_url = (uuid, thumbnail_url, callback) => {
  */
 exports.publish_record = function (uuid, type, callback) {
 
-    const TASKS = new PUBLISH_RECORD_TASKS.Publish_record_tasks(uuid, DB, REPO_OBJECTS);
+    const COLLECTION_TASKS = new PUBLISH_COLLECTION_RECORD_TASKS.Publish_collection_record_tasks(uuid, DB, REPO_OBJECTS);
+    const CHILD_RECORD_TASKS = new PUBLISH_CHILD_RECORD_TASKS.Publish_child_record_tasks(uuid, DB, REPO_OBJECTS);
+    const DISPLAY_RECORD_TASK = new DISPLAY_RECORD_TASKS.Display_record_tasks(uuid);
 
     (async () => {
 
@@ -171,18 +172,12 @@ exports.publish_record = function (uuid, type, callback) {
 
         if (type === 'collection') {
 
-            let data;
-            let display_record;
-
-            await TASKS.update_collection_status();
-            data = await TASKS.get_display_record_data();
-            display_record = await TASKS.create_display_record(data);
-            await TASKS.update_display_record(display_record);
-            await TASKS.update_child_records_status();
-            await TASKS.reindex_display_record(JSON.parse(display_record));
-            await TASKS.reindex_child_records();
-            await TASKS.publish_record();
-            await TASKS.publish_child_records();
+            await COLLECTION_TASKS.update_collection_status(1);
+            DISPLAY_RECORD_TASK.update();
+            await CHILD_RECORD_TASKS.update_child_records_status(1);
+            CHILD_RECORD_TASKS.reindex_child_records();
+            await COLLECTION_TASKS.publish();
+            await CHILD_RECORD_TASKS.publish_child_records();
 
             response = {
                 status: 201,
@@ -195,20 +190,15 @@ exports.publish_record = function (uuid, type, callback) {
             let collection_uuid;
             let is_collection_published;
             let result;
-            let data;
-            let display_record;
 
-            collection_uuid = await TASKS.get_collection_uuid();
-            is_collection_published = await TASKS.check_collection_publish_status(collection_uuid);
-            result = await TASKS.update_child_record(is_collection_published);
+            collection_uuid = await COLLECTION_TASKS.get_collection_uuid();
+            is_collection_published = await COLLECTION_TASKS.check_collection_publish_status(collection_uuid);
+            result = await CHILD_RECORD_TASKS.update_child_record(is_collection_published);
 
             if (result === true) {
 
-                data = await TASKS.get_display_record_data();
-                display_record = await TASKS.create_display_record(data);
-                await TASKS.update_display_record(display_record);
-                await TASKS.reindex_display_record(JSON.parse(display_record));
-                await TASKS.publish_record();
+                DISPLAY_RECORD_TASK.update();
+                CHILD_RECORD_TASKS.publish();
 
                 response = {
                     status: 201,
@@ -231,7 +221,46 @@ exports.publish_record = function (uuid, type, callback) {
     })();
 };
 
-/**
+/** TODO
+ * Suppress record(s)
+ * @param uuid
+ * @param type
+ * @param callback
+ */
+exports.suppress_record = function (uuid, type, callback) {
+
+    const TASKS = new SUPPRESS_RECORD_TASKS.Suppress_record_tasks(uuid, DB, REPO_OBJECTS);
+
+    (async () => {
+
+        let response;
+
+        if (type === 'collection') {
+
+            await TASKS.suppress_collection_record();
+            await TASKS.update_collection_status(0); // publish_record_tasks.js
+            // TODO: update child records publish status to 0
+            await TASKS.update_child_records_status(0); // publish_record_tasks.js
+
+            // TODO: update child display records with publish status to 0
+            // let data = await TASKS.get_display_record_data();
+            // let display_record = await TASKS.create_display_record(data);
+            // await TASKS.update_display_record(display_record);
+            // await TASKS.reindex_display_record(JSON.parse(display_record));
+            //
+
+        } else if (type === 'object') {
+
+        } else {
+
+        }
+
+        callback(response);
+
+    })();
+};
+
+/** DEPRECATE
  * Unpublishes records
  * @param req
  * @param callback
