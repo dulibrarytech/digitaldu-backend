@@ -184,8 +184,10 @@ exports.publish_record = function (uuid, type, callback) {
 
             setTimeout(async () => {
                 await COLLECTION_TASKS.publish();
+                LOGGER.module().info('INFO: [/repository/model module (publish_record)] Collection published');
                 await CHILD_RECORD_TASKS.publish_child_records();
-            }, 4000);
+                LOGGER.module().info('INFO: [/repository/model module (publish_record)] Child records published');
+            }, 60000*5);
 
             response = {
                 status: 201,
@@ -237,7 +239,6 @@ exports.publish_record = function (uuid, type, callback) {
  */
 exports.suppress_record = function (uuid, type, callback) {
 
-    // const TASKS = new SUPPRESS_RECORD_TASKS.Suppress_record_tasks(uuid, DB, REPO_OBJECTS); // TODO: add common function here?
     const COLLECTION_TASK = new SUPPRESS_COLLECTION_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
     const CHILD_TASK = new SUPPRESS_CHILD_RECORD_TASKS.Suppress_child_record_tasks(uuid, DB, REPO_OBJECTS);
     const DISPLAY_RECORD_TASK = new DISPLAY_RECORD_TASKS.Display_record_tasks(uuid);
@@ -248,12 +249,24 @@ exports.suppress_record = function (uuid, type, callback) {
 
         if (type === 'collection') {
 
-            await COLLECTION_TASK.suppress_collection_record();
+            let result = await COLLECTION_TASK.suppress_collection_record();
+
+            if (result.error === true) {
+
+                response = {
+                    status: 200,
+                    message: 'Collection is already suppressed',
+                    data: []
+                }
+
+                callback(response);
+                return false;
+            }
+
             await COLLECTION_TASK.update_collection_status(0);
             DISPLAY_RECORD_TASK.update(); // updates collection display record
             await CHILD_TASK.update_child_records_status(0);
             await CHILD_TASK.suppress_child_records(); // removes child records from public index and updates display records
-            // TODO: bug - reindexing is ommiting pid and uuid properties
             CHILD_TASK.reindex_child_records();
             COLLECTION_TASK.reindex_collection_record();
 

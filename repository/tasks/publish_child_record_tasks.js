@@ -147,7 +147,7 @@ exports.Publish_child_record_tasks = function (uuid, DB, TABLE) {
                         });
                     }
 
-                }, 150);
+                }, 30);
 
                 return null;
             })

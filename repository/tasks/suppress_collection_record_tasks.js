@@ -46,10 +46,9 @@ const Suppress_collection_record_tasks = class {
 
                 if (result.error === true) {
                     LOGGER.module().error('ERROR: [/repository/tasks (suppress_collection_record)] Unable to suppress collection record');
-                    reject(new Error('ERROR: [/repository/tasks (suppress_collection_record)] Unable to suppress collection record'));
                 }
 
-                resolve(result);
+                return resolve(result);
             });
         });
 

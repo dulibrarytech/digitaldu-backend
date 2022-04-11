@@ -308,6 +308,10 @@ exports.create_display_record = function (obj, callback) {
  */
 exports.update_display_record = function (obj, display_record, callback) {
 
+    if (display_record === null) {
+        return false;
+    }
+
     DB(REPO_OBJECTS)
         .where(obj)
         .update({
