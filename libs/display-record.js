@@ -19,7 +19,7 @@
 const DB = require('../config/db')(),
     VALIDATOR = require('validator'),
     REPO_OBJECTS = 'tbl_objects',
-    LOGGER = require("../libs/log4");
+    LOGGER = require('../libs/log4');
 
 /**
  * Gets display record to render in UI
@@ -90,6 +90,7 @@ exports.get_index_display_record_data = function (uuid, callback) {
 
                     let collection_record = {};
                     collection_record.uuid = data[0].uuid;
+                    // collection_record.pid = data[0].uuid;
                     collection_record.uri = data[0].uri;
                     collection_record.is_member_of_collection = data[0].is_member_of_collection;
                     collection_record.handle = data[0].handle;
@@ -198,6 +199,7 @@ exports.create_display_record = function (obj, callback) {
         metadata;
 
     record.uuid = obj.uuid;
+    record.pid = obj.uuid;
     record.is_member_of_collection = obj.is_member_of_collection;
     record.handle = obj.handle;
     record.thumbnail = obj.thumbnail;

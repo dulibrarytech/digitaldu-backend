@@ -95,17 +95,17 @@ exports.index = function (uuid, callback) {
 
 /**
  * Removes record from index
- * @param sip_uuid
+ * @param uuid
  * @param callback
  */
-exports.del = function (sip_uuid, callback) {
+exports.del = function (uuid, callback) {
 
     (async () => {
 
         let response = await HTTP.delete({
             endpoint: '/api/admin/v1/indexer',
             params: {
-                pid: sip_uuid
+                uuid: uuid
             }
         });
 

@@ -29,7 +29,11 @@ const CONFIG = require('../config/config'),
     PUBLISH_COLLECTION_RECORD_TASKS = require('../repository/tasks/publish_collection_record_tasks'),
     PUBLISH_CHILD_RECORD_TASKS = require('../repository/tasks/publish_child_record_tasks'),
     DISPLAY_RECORD_TASKS = require('../repository/tasks/display_record_tasks'),
+
     SUPPRESS_RECORD_TASKS = require('../repository/tasks/suppress_record_tasks'),
+    SUPPRESS_COLLECTION_RECORD_TASKS = require('../repository/tasks/suppress_collection_record_tasks'),
+    SUPPRESS_CHILD_RECORD_TASKS = require('../repository/tasks/suppress_child_record_tasks'),
+
     LOGGER = require('../libs/log4'),
     DB = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects';
@@ -175,9 +179,13 @@ exports.publish_record = function (uuid, type, callback) {
             await COLLECTION_TASKS.update_collection_status(1);
             DISPLAY_RECORD_TASK.update();
             await CHILD_RECORD_TASKS.update_child_records_status(1);
+            CHILD_RECORD_TASKS.update_child_display_records();
             CHILD_RECORD_TASKS.reindex_child_records();
-            await COLLECTION_TASKS.publish();
-            await CHILD_RECORD_TASKS.publish_child_records();
+
+            setTimeout(async () => {
+                await COLLECTION_TASKS.publish();
+                await CHILD_RECORD_TASKS.publish_child_records();
+            }, 4000);
 
             response = {
                 status: 201,
@@ -221,7 +229,7 @@ exports.publish_record = function (uuid, type, callback) {
     })();
 };
 
-/** TODO
+/**
  * Suppress record(s)
  * @param uuid
  * @param type
@@ -229,7 +237,10 @@ exports.publish_record = function (uuid, type, callback) {
  */
 exports.suppress_record = function (uuid, type, callback) {
 
-    const TASKS = new SUPPRESS_RECORD_TASKS.Suppress_record_tasks(uuid, DB, REPO_OBJECTS);
+    // const TASKS = new SUPPRESS_RECORD_TASKS.Suppress_record_tasks(uuid, DB, REPO_OBJECTS); // TODO: add common function here?
+    const COLLECTION_TASK = new SUPPRESS_COLLECTION_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
+    const CHILD_TASK = new SUPPRESS_CHILD_RECORD_TASKS.Suppress_child_record_tasks(uuid, DB, REPO_OBJECTS);
+    const DISPLAY_RECORD_TASK = new DISPLAY_RECORD_TASKS.Display_record_tasks(uuid);
 
     (async () => {
 
@@ -237,22 +248,25 @@ exports.suppress_record = function (uuid, type, callback) {
 
         if (type === 'collection') {
 
-            await TASKS.suppress_collection_record();
-            await TASKS.update_collection_status(0); // publish_record_tasks.js
-            // TODO: update child records publish status to 0
-            await TASKS.update_child_records_status(0); // publish_record_tasks.js
+            await COLLECTION_TASK.suppress_collection_record();
+            await COLLECTION_TASK.update_collection_status(0);
+            DISPLAY_RECORD_TASK.update(); // updates collection display record
+            await CHILD_TASK.update_child_records_status(0);
+            await CHILD_TASK.suppress_child_records(); // removes child records from public index and updates display records
+            // TODO: bug - reindexing is ommiting pid and uuid properties
+            CHILD_TASK.reindex_child_records();
+            COLLECTION_TASK.reindex_collection_record();
 
-            // TODO: update child display records with publish status to 0
-            // let data = await TASKS.get_display_record_data();
-            // let display_record = await TASKS.create_display_record(data);
-            // await TASKS.update_display_record(display_record);
-            // await TASKS.reindex_display_record(JSON.parse(display_record));
-            //
+            response = {
+                status: 201,
+                message: 'Collection suppressed',
+                data: []
+            }
 
         } else if (type === 'object') {
-
+            // TODO:
         } else {
-
+            // TODO:
         }
 
         callback(response);

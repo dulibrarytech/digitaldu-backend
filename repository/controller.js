@@ -72,12 +72,26 @@ exports.publish_record = function (req, res) {
     });
 };
 
+exports.suppress_record = function (req, res) {
+
+    let uuid = req.body.uuid;
+    let type = req.body.type;
+
+    MODEL.suppress_record(uuid, type, function (data) {
+        CACHE.clear_cache();
+        res.status(data.status).send(data.data);
+    });
+};
+
+/*
 exports.unpublish_objects = function (req, res) {
     CACHE.clear_cache();
     MODEL.unpublish_objects(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
+
+ */
 
 exports.reset_display_record = function (req, res) {
     MODEL.reset_display_record(req, function (data) {

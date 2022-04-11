@@ -217,7 +217,7 @@ exports.index_records = function (req, callback) {
     });
 };
 
-/**
+/** DEPRECATE
  * updates document fragment
  * @param req
  * @param callback

@@ -52,11 +52,11 @@ module.exports = function (app) {
     app.route('/api/admin/v1/repo/object/transcript')
         .put(TOKEN.verify, REPO.save_transcript);
 
-    app.route('/api/admin/v1/repo/publish') // TODO: v2 /api/v2/repo/publish
+    app.route('/api/v2/repo/publish') // TODO: /api/admin/v1/repo/publish
         .post(TOKEN.verify, REPO.publish_record);
 
-    app.route('/api/admin/v1/repo/unpublish') // TODO: v2 /api/v2/repo/suppress
-        .post(TOKEN.verify, REPO.unpublish_objects);
+    app.route('/api/v2/repo/suppress') // TODO: /api/admin/v1/repo/unpublish
+        .post(TOKEN.verify, REPO.suppress_record); // REPO.unpublish_objects
 
     app.route('/api/admin/v1/repo/metadata/reset')
         .post(TOKEN.verify, REPO.reset_display_record);
