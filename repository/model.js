@@ -265,9 +265,9 @@ exports.suppress_record = function (uuid, type, callback) {
 
             await COLLECTION_TASK.update_collection_status(0);
             DISPLAY_RECORD_TASK.update(); // updates collection display record
-            await CHILD_TASK.update_child_records_status(0);
-            await CHILD_TASK.suppress_child_records(); // removes child records from public index and updates display records
-            CHILD_TASK.reindex_child_records();
+            await CHILD_TASK.update_child_record_status(type,0);
+            await CHILD_TASK.suppress_child_records(type); // removes child records from public index and updates display records
+            CHILD_TASK.reindex_child_records(type);
             COLLECTION_TASK.reindex_collection_record();
 
             response = {
@@ -277,328 +277,29 @@ exports.suppress_record = function (uuid, type, callback) {
             }
 
         } else if (type === 'object') {
-            // TODO:
+
+            const REINDEX_TASK = new PUBLISH_CHILD_RECORD_TASKS.Publish_child_record_tasks(uuid, DB, REPO_OBJECTS);
+            await CHILD_TASK.update_child_record_status(type, 0);
+            await CHILD_TASK.suppress_child_records(type);
+            REINDEX_TASK.reindex_child_records(type);
+
+            response = {
+                status: 201,
+                message: 'Record suppressed',
+                data: []
+            }
+
         } else {
-            // TODO:
+            response = {
+                status: 200,
+                message: 'Unable to determine record type',
+                data: []
+            }
         }
 
         callback(response);
 
     })();
-};
-
-/** DEPRECATE
- * Unpublishes records
- * @param req
- * @param callback
- */
-exports.unpublish_objects = function (req, callback) {
-
-    const type = req.body.type,
-        pid = req.body.pid;
-
-    if (pid === undefined || pid.length === 0 || type === undefined) {
-        return false;
-    }
-
-    // unpublish entire collection - remove record from public index
-    function unpublish_collection(callback) {
-
-        let obj = {};
-        obj.is_member_of_collection = pid;
-
-        del(obj.is_member_of_collection, function (result) {
-
-            if (result.error === true) {
-                LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/unpublish_collection)] unable to remove published record from index.');
-                obj.status = 'failed';
-                callback(null, obj);
-                return false;
-            }
-
-            callback(null, obj);
-        });
-
-        let pidObj = {};
-        pidObj.pid = pid;
-
-        update_display_record(pidObj, function () {
-        });
-    }
-
-    // unpublish entire collection - unpublish objects
-    function unpublish_collection_docs(obj, callback) {
-
-        if (obj.status === 'failed') {
-            callback(null, obj);
-            return false;
-        }
-
-        DB(REPO_OBJECTS)
-            .select('sip_uuid')
-            .where({
-                is_member_of_collection: obj.is_member_of_collection,
-                is_published: 1,
-                is_active: 1
-            })
-            .then(function (data) {
-
-                let timer = setInterval(function () {
-
-                    if (data.length > 0) {
-
-                        let record = data.pop();
-
-                        if (record.sip_uuid === null) {
-                            return false;
-                        }
-
-                        // remove objects from public index
-                        del(record.sip_uuid, function (result) {
-
-                            if (result.error === true) {
-                                LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/unpublish_collection_docs)] unable to remove published record from index.');
-                            }
-
-                            return false;
-                        });
-
-                        // update admin objects to unpublished status
-                        update_fragment(record.sip_uuid, 0, function (result) {
-
-                            if (result.error === true) {
-                                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/unpublish_collection_docs)] unable to update published status.');
-                                obj.status = 'failed';
-                            }
-
-                            return false;
-                        });
-
-                        let pidObj = {};
-                        pidObj.pid = record.sip_uuid;
-
-                        update_display_record(pidObj, function () {
-                        });
-
-                    } else {
-
-                        clearInterval(timer);
-                        callback(null, obj);
-                        return false;
-                    }
-
-                }, 250);
-
-                return null;
-            })
-            .catch(function (error) {
-                LOGGER.module().fatal('FATAL: [/repository/model module (unpublish_objects/unindex_objects)] unable to remove published record from index ' + error);
-                callback(null, obj);
-            });
-    }
-
-    // unpublish entire collection - update indexed admin collection record
-    function update_collection_doc(obj, callback) {
-
-        if (obj.status === 'failed') {
-            callback(null, obj);
-            return false;
-        }
-
-        update_fragment(obj.is_member_of_collection, 0, function (result) {
-
-            if (result.error === true) {
-                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/reindex_admin_collection)] unable to update published status.');
-                obj.status = 'failed';
-            }
-
-            callback(null, obj);
-            return false;
-        });
-    }
-
-    // update db record
-    function update_collection_record(obj, callback) {
-
-        DB(REPO_OBJECTS)
-            .where({
-                sip_uuid: obj.is_member_of_collection,
-                is_active: 1
-            })
-            .update({
-                is_published: 0
-            })
-            .then(function (data) {
-                callback(null, obj);
-                return null;
-            })
-            .catch(function (error) {
-                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_collection)] unable to publish collection pid ' + error);
-                callback(null, 'failed');
-            });
-    }
-
-    // update db records
-    function update_collection_object_records(obj, callback) {
-
-        if (obj.status !== undefined && obj.status === 'failed') {
-            callback(null, obj);
-            return false;
-        }
-
-        DB(REPO_OBJECTS)
-            .where({
-                is_member_of_collection: obj.is_member_of_collection,
-                is_active: 1
-            })
-            .update({
-                is_published: 0
-            })
-            .then(function (data) {
-                callback(null, obj);
-                return null;
-            })
-            .catch(function (error) {
-                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/publish_child_objects)] unable to publish collection pid ' + error);
-                callback(null, 'failed');
-            });
-    }
-
-    /*
-     unpublish single objects
-     */
-
-    // unpublish single object - remove record from public index
-    function unpublish_object(callback) {
-
-        let obj = {};
-        obj.pid = pid;
-
-        if (obj.pid === undefined || obj.pid.length === 0) {
-            return false;
-        }
-
-        del(obj.pid, function (result) {
-
-            if (result.error === true) {
-                LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/unindex_objects)] unable to remove published record from index.');
-                obj.status = 'failed';
-                callback(null, obj);
-                return false;
-            }
-
-            callback(null, obj);
-            return false;
-        });
-    }
-
-    // unpublish single object - update indexed admin object record
-    function update_object_doc(obj, callback) {
-
-        if (obj.status === 'failed') {
-            callback(null, obj);
-            return false;
-        }
-
-        update_fragment(obj.pid, 0, function (result) {
-
-            if (result.error === true) {
-                LOGGER.module().error('ERROR: [/repository/model module (publish_objects/update_object_doc)] unable to update published status.');
-                obj.status = 'failed';
-            }
-
-            callback(null, obj);
-        });
-    }
-
-    // unpublish single object - update db record
-    function update_object_record(obj, callback) {
-
-        if (obj.status !== undefined && obj.status === 'failed') {
-            callback(null, obj);
-            return false;
-        }
-
-        DB(REPO_OBJECTS)
-            .where({
-                pid: obj.pid,
-                is_active: 1
-            })
-            .update({
-                is_published: 0
-            })
-            .then(function (data) {
-                callback(null, obj);
-                return null;
-            })
-            .catch(function (error) {
-                LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/update_object_record)] unable to unpublish object ' + error);
-                obj.status = 'failed';
-                callback(null, obj);
-            });
-    }
-
-    // unpublish collection and all of its objects
-    if (type === 'collection') {
-
-        ASYNC.waterfall([
-            unpublish_collection,
-            unpublish_collection_docs,
-            update_collection_doc,
-            update_collection_record,
-            update_collection_object_records
-        ], function (error, results) {
-
-            if (error) {
-                LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/async.waterfall)] ' + error);
-                throw 'ERROR: async (unpublish_object)';
-            }
-
-            LOGGER.module().info('INFO: [/repository/model module (unpublish_objects/async.waterfall)] collection unpublished');
-        });
-
-        callback({
-            status: 201,
-            message: 'Collection unpublished',
-            data: []
-        });
-
-        return false;
-
-    } else if (type === 'object') {
-
-        ASYNC.waterfall([
-            unpublish_object,
-            update_object_doc,
-            update_object_record,
-            update_display_record
-        ], function (error, results) {
-
-            if (error) {
-                LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/async.waterfall)] ' + error);
-                throw 'ERROR: async (unpublish_object)';
-            }
-
-            LOGGER.module().info('INFO: [/repository/model module (unpublish_objects/async.waterfall)] object unpublished');
-        });
-
-        callback({
-            status: 201,
-            message: 'Object unpublished',
-            data: []
-        });
-
-        return false;
-
-    } else {
-
-        callback({
-            status: 400,
-            message: 'Bad request.'
-        });
-
-        return false;
-    }
 };
 
 /**
@@ -618,6 +319,7 @@ exports.reset_display_record = function (req, callback) {
         return false;
     }
 
+    // TODO: this functionality has already been refactored see task objects
     function create_display_record(callback) {
 
         let obj = {};

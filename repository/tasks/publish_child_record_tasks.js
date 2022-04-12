@@ -113,17 +113,23 @@ exports.Publish_child_record_tasks = function (uuid, DB, TABLE) {
     }
 
     /**
-     * indexes collection child records
+     * indexes collection child records (admin)
      * @return boolean
      */
-    this.reindex_child_records = () => {
+    this.reindex_child_records = (type) => {
+
+        let where_obj = {};
+            where_obj.is_active = 1;
+
+            if (type === 'collection') {
+                where_obj.is_member_of_collection = this.uuid;
+            } else if (type === 'object') {
+                where_obj.uuid = this.uuid;
+            }
 
         this.DB(this.TABLE)
             .select('uuid')
-            .where({
-                is_member_of_collection: this.uuid,
-                is_active: 1
-            })
+            .where(where_obj)
             .then((data) => {
 
                 let timer = setInterval(() => {

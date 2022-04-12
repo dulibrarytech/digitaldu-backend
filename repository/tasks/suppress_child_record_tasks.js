@@ -35,15 +35,20 @@ exports.Suppress_child_record_tasks = function (uuid, DB, TABLE) {
 
     /**
      * Updates db collection child record's publish status
+     * @param type
      * @param status
      * @return boolean
      */
-    this.update_child_records_status = (status) => {
+    this.update_child_record_status = (type, status) => {
 
-        let where_obj = {
-            is_member_of_collection: this.uuid,
-            is_active: 1
-        };
+        let where_obj = {};
+            where_obj.is_active = 1;
+
+            if (type === 'collection') {
+                where_obj.is_member_of_collection = this.uuid;
+            } else if (type === 'object') {
+                where_obj.uuid = this.uuid;
+            }
 
         this.DB(this.TABLE)
             .where(where_obj)
@@ -61,17 +66,21 @@ exports.Suppress_child_record_tasks = function (uuid, DB, TABLE) {
     /**
      * Suppress collection child records
      */
-    this.suppress_child_records = () => {
+    this.suppress_child_records = (type) => {
 
         let TASK;
+        let where_obj = {};
+            where_obj.is_active = 1;
+
+            if (type === 'collection') {
+                where_obj.is_member_of_collection = this.uuid;
+            } else if (type === 'object') {
+                where_obj.uuid = this.uuid;
+            }
 
         return this.DB(this.TABLE)
             .select('uuid')
-            .where({
-                is_member_of_collection: this.uuid,
-                // is_published: 1,
-                is_active: 1
-            })
+            .where(where_obj)
             .then((data) => {
 
                 let timer = setInterval(() => {
@@ -113,10 +122,10 @@ exports.Suppress_child_record_tasks = function (uuid, DB, TABLE) {
     }
 
     /** TODO: Duplicate function (publish child record tasks)
-     * indexes collection child records
+     * indexes child records
      * @return boolean
      */
-    this.reindex_child_records = () => {
+    this.reindex_child_record = () => {
 
         this.DB(this.TABLE)
             .select('uuid')
@@ -155,4 +164,5 @@ exports.Suppress_child_record_tasks = function (uuid, DB, TABLE) {
                 LOGGER.module().fatal('FATAL: [/repository/tasks (reindex_child_records)] Unable to get record uuid ' + error.message);
             });
     }
+
 };
