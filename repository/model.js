@@ -187,7 +187,7 @@ exports.publish_record = function (uuid, type, callback) {
                 LOGGER.module().info('INFO: [/repository/model module (publish_record)] Collection published');
                 await CHILD_RECORD_TASKS.publish_child_records();
                 LOGGER.module().info('INFO: [/repository/model module (publish_record)] Child records published');
-            }, 60000*5);
+            }, 60000 * 5);
 
             response = {
                 status: 201,
@@ -208,7 +208,10 @@ exports.publish_record = function (uuid, type, callback) {
             if (result === true) {
 
                 DISPLAY_RECORD_TASK.update();
-                CHILD_RECORD_TASKS.publish();
+
+                setTimeout(() => {
+                    CHILD_RECORD_TASKS.publish();
+                }, 4000);
 
                 response = {
                     status: 201,
@@ -265,7 +268,7 @@ exports.suppress_record = function (uuid, type, callback) {
 
             await COLLECTION_TASK.update_collection_status(0);
             DISPLAY_RECORD_TASK.update(); // updates collection display record
-            await CHILD_TASK.update_child_record_status(type,0);
+            await CHILD_TASK.update_child_record_status(type, 0);
             await CHILD_TASK.suppress_child_records(type); // removes child records from public index and updates display records
             CHILD_TASK.reindex_child_records(type);
             COLLECTION_TASK.reindex_collection_record();
