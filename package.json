@@ -10,7 +10,7 @@
   "license": "Apache",
   "dependencies": {
     "ajv": "^6.12.0",
-    "async": "^2.6.3",
+    "async": "^3.2.2",
     "axios": "^0.21.2",
     "body-parser": "^1.19.0",
     "compression": "^1.7.4",
