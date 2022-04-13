@@ -21,7 +21,7 @@ const ARCHIVESSPACE = require("../../libs/archivespace");
 const HANDLES = require('../../libs/handles');
 const DR = require('../../libs/display-record');
 const HELPER = require('../../repository/helper');
-const LOGGER = require("../../libs/log4");
+const LOGGER = require('../../libs/log4');
 
 /**
  * Object contains tasks used to create a repository collection record
@@ -29,17 +29,19 @@ const LOGGER = require("../../libs/log4");
  * @param TABLE
  * @constructor
  */
-exports.Create_collection_tasks = function (DB, TABLE) {
+const Create_collection_tasks = class {
 
-    this.DB = DB;
-    this.TABLE = TABLE;
+    constructor(uuid, DB, TABLE) {
+        this.DB = DB;
+        this.TABLE = TABLE;
+    }
 
     /**
      * Checks uri to determine if collection already exists
      * @param uri
      * @returns boolean
      */
-    this.check_uri = (uri) => {
+    check_uri = (uri) => {
 
         let is_duplicate = false;
 
@@ -64,7 +66,7 @@ exports.Create_collection_tasks = function (DB, TABLE) {
      * Gets archivesspace session token
      * @returns Promise string
      */
-    this.get_session_token = () => {
+    get_session_token = () => {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -97,7 +99,7 @@ exports.Create_collection_tasks = function (DB, TABLE) {
      * @param token
      * @returns Promise string
      */
-    this.get_resource_record = (uri, token) => {
+    get_resource_record = (uri, token) => {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -123,7 +125,7 @@ exports.Create_collection_tasks = function (DB, TABLE) {
      * @param uuidDomain
      * @returns Promise string
      */
-    this.get_uuid = (uuidDomain) => {
+    get_uuid = (uuidDomain) => {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -146,7 +148,7 @@ exports.Create_collection_tasks = function (DB, TABLE) {
      * @param uuid
      * @returns Promise string
      */
-    this.create_handle = (uuid) => {
+    create_handle = (uuid) => {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -173,7 +175,7 @@ exports.Create_collection_tasks = function (DB, TABLE) {
      * @param obj
      * returns Promise string
      */
-    this.create_display_record = (obj) => {
+    create_display_record = (obj) => {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -200,10 +202,9 @@ exports.Create_collection_tasks = function (DB, TABLE) {
      * @param obj
      * @returns boolean
      */
-    this.save_record = (obj) => {
+    save_record = (obj) => {
 
         let record = {};
-        // record.pid = obj.uuid;
         record.uuid = obj.uuid;
         record.handle = obj.handle;
         record.uri = obj.uri;
@@ -225,7 +226,7 @@ exports.Create_collection_tasks = function (DB, TABLE) {
      * @param sip_uuid
      * @returns Promise
      */
-    this.index_record = (sip_uuid) => {
+    index_record = (sip_uuid) => {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -245,3 +246,5 @@ exports.Create_collection_tasks = function (DB, TABLE) {
         });
     }
 };
+
+module.exports = Create_collection_tasks;

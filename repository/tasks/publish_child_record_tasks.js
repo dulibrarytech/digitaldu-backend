@@ -19,7 +19,7 @@
 const HELPER = require('../../repository/helper');
 const LOGGER = require('../../libs/log4');
 const DISPLAY_RECORD_TASKS = require('../../repository/tasks/display_record_tasks');
-const TASK = require("../../repository/tasks/publish_record_tasks");
+const TASK = require('../../repository/tasks/publish_record_tasks');
 
 /**
  * Object contains tasks used to publish collection child repository record(s)
@@ -28,18 +28,20 @@ const TASK = require("../../repository/tasks/publish_record_tasks");
  * @param TABLE
  * @constructor
  */
-exports.Publish_child_record_tasks = function (uuid, DB, TABLE) {
+const Publish_child_record_tasks = class {
 
-    this.uuid = uuid;
-    this.DB = DB;
-    this.TABLE = TABLE;
+    constructor(uuid, DB, TABLE) {
+        this.uuid = uuid;
+        this.DB = DB;
+        this.TABLE = TABLE;
+    }
 
     /**
      * Publishes record
      */
-    this.publish = () => {
+    publish = () => {
         (async () => {
-            const task = new TASK.Publish_record_tasks(this.uuid);
+            const task = new TASK(this.uuid);
             await task.publish_record();
         })();
     };
@@ -49,7 +51,7 @@ exports.Publish_child_record_tasks = function (uuid, DB, TABLE) {
      * @param status
      * @return boolean
      */
-    this.update_child_records_status = (status) => {
+    update_child_records_status = (status) => {
 
         let where_obj = {
             is_member_of_collection: this.uuid,
@@ -72,7 +74,7 @@ exports.Publish_child_record_tasks = function (uuid, DB, TABLE) {
     /**
      * Updates child display records
      */
-    this.update_child_display_records = () => {
+    update_child_display_records = () => {
 
         let TASK;
 
@@ -80,7 +82,6 @@ exports.Publish_child_record_tasks = function (uuid, DB, TABLE) {
             .select('uuid')
             .where({
                 is_member_of_collection: this.uuid,
-                // is_published: 0,
                 is_active: 1
             })
             .then((data) => {
@@ -95,7 +96,7 @@ exports.Publish_child_record_tasks = function (uuid, DB, TABLE) {
                             return false;
                         }
 
-                        TASK = new DISPLAY_RECORD_TASKS.Display_record_tasks(record.uuid);
+                        TASK = new DISPLAY_RECORD_TASKS(record.uuid);
                         TASK.update();
 
                     } else {
@@ -116,7 +117,7 @@ exports.Publish_child_record_tasks = function (uuid, DB, TABLE) {
      * indexes collection child records (admin)
      * @return boolean
      */
-    this.reindex_child_records = (type) => {
+    reindex_child_records = (type) => {
 
         let where_obj = {};
             where_obj.is_active = 1;
@@ -166,7 +167,7 @@ exports.Publish_child_record_tasks = function (uuid, DB, TABLE) {
      * Moves copy of record or records from admin to public index
      * @return Promise
      */
-    this.publish_child_records = () => {
+    publish_child_records = () => {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -195,7 +196,7 @@ exports.Publish_child_record_tasks = function (uuid, DB, TABLE) {
      * @param is_collection_published
      * @returns boolean
      */
-    this.update_child_record = (is_collection_published) => {
+    update_child_record = (is_collection_published) => {
 
         if (is_collection_published === false) {
             return false;
@@ -217,3 +218,5 @@ exports.Publish_child_record_tasks = function (uuid, DB, TABLE) {
             });
     }
 };
+
+module.exports = Publish_child_record_tasks;

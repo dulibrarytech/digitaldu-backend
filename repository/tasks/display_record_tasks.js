@@ -25,14 +25,16 @@ const LOGGER = require('../../libs/log4');
  * @param uuid
  * @constructor
  */
-exports.Display_record_tasks = function (uuid) {
+const Display_record_tasks = class {
 
-    this.uuid = uuid;
+    constructor(uuid) {
+        this.uuid = uuid;
+    }
 
     /**
      * Executes tasks to update display record
      */
-    this.update = () => {
+    update = () => {
 
         (async () => {
 
@@ -51,7 +53,7 @@ exports.Display_record_tasks = function (uuid) {
      * Gets display record data
      * @returns Promise string
      */
-    this.get_display_record_data = () => {
+    get_display_record_data = () => {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -73,7 +75,7 @@ exports.Display_record_tasks = function (uuid) {
      * @param data
      * returns Promise
      */
-    this.create_display_record = (data) => {
+    create_display_record = (data) => {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -97,7 +99,7 @@ exports.Display_record_tasks = function (uuid) {
      * Updates display record
      * @param display_record
      */
-    this.update_display_record = (display_record) => {
+    update_display_record = (display_record) => {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -128,7 +130,7 @@ exports.Display_record_tasks = function (uuid) {
      * Reindexes display record
      * @param display_record
      */
-    this.reindex_display_record = (display_record) => {
+    reindex_display_record = (display_record) => {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -148,3 +150,5 @@ exports.Display_record_tasks = function (uuid) {
         });
     }
 };
+
+module.exports = Display_record_tasks;

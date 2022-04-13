@@ -24,14 +24,16 @@ const LOGGER = require('../../libs/log4');
  * @param uuid
  * @constructor
  */
-exports.Publish_record_tasks = function (uuid) {
+const Publish_record_tasks = class {
 
-    this.uuid = uuid;
+    constructor(uuid) {
+        this.uuid = uuid;
+    }
 
     /**
      * Publishes both collection and child records
      */
-    this.publish_record = () => {
+    publish_record = () => {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -55,3 +57,5 @@ exports.Publish_record_tasks = function (uuid) {
         });
     }
 };
+
+module.exports = Publish_record_tasks;

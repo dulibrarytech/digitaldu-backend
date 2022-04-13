@@ -16,10 +16,10 @@
 
  */
 
-const LOGGER = require("../../libs/log4");
-const DR = require("../../libs/display-record");
-const HELPER = require("../../repository/helper");
-const CACHE = require("../../libs/cache");
+const LOGGER = require('../../libs/log4');
+const DR = require('../../libs/display-record');
+const HELPER = require('../../repository/helper');
+const CACHE = require('../../libs/cache');
 
 /**
  * Object contains tasks used to update collection thumbnail url
@@ -29,17 +29,19 @@ const CACHE = require("../../libs/cache");
  * @param TABLE
  * @constructor
  */
-exports.Update_thumbnail_url_tasks = function (uuid, thumbnail_url, DB, TABLE) {
+const Update_thumbnail_url_tasks = class {
 
-    this.DB = DB;
-    this.TABLE = TABLE;
-    this.uuid = uuid;
-    this.thumbnail_url = thumbnail_url;
+    constructor(uuid, thumbnail_url, DB, TABLE) {
+        this.uuid = uuid;
+        this.thumbnail_url = thumbnail_url;
+        this.DB = DB;
+        this.TABLE = TABLE;
+    }
 
     /**
      * Updates the repository record with new thumbnail url
      */
-    this.update_repo_record = () => {
+    update_repo_record = () => {
 
         return this.DB(this.TABLE)
             .where({
@@ -64,7 +66,7 @@ exports.Update_thumbnail_url_tasks = function (uuid, thumbnail_url, DB, TABLE) {
      * Gets display record data
      * @returns Promise string
      */
-    this.get_display_record_data = () => {
+    get_display_record_data = () => {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -86,7 +88,7 @@ exports.Update_thumbnail_url_tasks = function (uuid, thumbnail_url, DB, TABLE) {
      * @param data
      * returns Promise
      */
-    this.create_display_record = (data) => {
+    create_display_record = (data) => {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -110,7 +112,7 @@ exports.Update_thumbnail_url_tasks = function (uuid, thumbnail_url, DB, TABLE) {
      * Updates display record
      * @param display_record
      */
-    this.update_display_record = (display_record) => {
+    update_display_record = (display_record) => {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -141,7 +143,7 @@ exports.Update_thumbnail_url_tasks = function (uuid, thumbnail_url, DB, TABLE) {
      * Reindexes display record
      * @param display_record
      */
-    this.reindex_display_record = (display_record) => {
+    reindex_display_record = (display_record) => {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -165,7 +167,7 @@ exports.Update_thumbnail_url_tasks = function (uuid, thumbnail_url, DB, TABLE) {
      * Republishes display record
      * @param display_record
      */
-    this.republish_display_record = (display_record) => {
+    republish_display_record = (display_record) => {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -201,3 +203,5 @@ exports.Update_thumbnail_url_tasks = function (uuid, thumbnail_url, DB, TABLE) {
         });
     }
 };
+
+module.exports = Update_thumbnail_url_tasks;

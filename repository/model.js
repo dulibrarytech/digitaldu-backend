@@ -27,13 +27,10 @@ const CONFIG = require('../config/config'),
     CREATE_COLLECTION_TASKS = require('../repository/tasks/create_collection_tasks'),
     UPDATE_THUMBNAIL_URL_TASKS = require('../repository/tasks/update_thumbnail_url_tasks'),
     PUBLISH_COLLECTION_RECORD_TASKS = require('../repository/tasks/publish_collection_record_tasks'),
-    PUBLISH_CHILD_RECORD_TASKS = require('../repository/tasks/publish_child_record_tasks'),
-    DISPLAY_RECORD_TASKS = require('../repository/tasks/display_record_tasks'),
-
-    SUPPRESS_RECORD_TASKS = require('../repository/tasks/suppress_record_tasks'),
+    PUBLISH_CHILD_RECORD_TASKS = require('../repository/tasks/publish_child_record_tasks'), //
     SUPPRESS_COLLECTION_RECORD_TASKS = require('../repository/tasks/suppress_collection_record_tasks'),
     SUPPRESS_CHILD_RECORD_TASKS = require('../repository/tasks/suppress_child_record_tasks'),
-
+    DISPLAY_RECORD_TASKS = require('../repository/tasks/display_record_tasks'),
     LOGGER = require('../libs/log4'),
     DB = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects';
@@ -70,7 +67,7 @@ exports.create_collection_record = (data, callback) => {
     }
 
     const URI = VALIDATOR.unescape(data.uri);
-    const TASKS = new CREATE_COLLECTION_TASKS.Create_collection_tasks(DB, REPO_OBJECTS);
+    const TASKS = new CREATE_COLLECTION_TASKS(DB, REPO_OBJECTS);
 
     (async () => {
 
@@ -126,7 +123,7 @@ exports.create_collection_record = (data, callback) => {
 exports.update_thumbnail_url = (uuid, thumbnail_url, callback) => {
 
     const THUMBNAIL_URL = VALIDATOR.unescape(thumbnail_url);
-    const TASKS = new UPDATE_THUMBNAIL_URL_TASKS.Update_thumbnail_url_tasks(uuid, THUMBNAIL_URL, DB, REPO_OBJECTS);
+    const TASKS = new UPDATE_THUMBNAIL_URL_TASKS(uuid, THUMBNAIL_URL, DB, REPO_OBJECTS);
 
     (async () => {
 
@@ -166,9 +163,9 @@ exports.update_thumbnail_url = (uuid, thumbnail_url, callback) => {
  */
 exports.publish_record = function (uuid, type, callback) {
 
-    const COLLECTION_TASKS = new PUBLISH_COLLECTION_RECORD_TASKS.Publish_collection_record_tasks(uuid, DB, REPO_OBJECTS);
-    const CHILD_RECORD_TASKS = new PUBLISH_CHILD_RECORD_TASKS.Publish_child_record_tasks(uuid, DB, REPO_OBJECTS);
-    const DISPLAY_RECORD_TASK = new DISPLAY_RECORD_TASKS.Display_record_tasks(uuid);
+    const COLLECTION_TASKS = new PUBLISH_COLLECTION_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
+    const CHILD_RECORD_TASKS = new PUBLISH_CHILD_RECORD_TASKS(uuid, DB, REPO_OBJECTS); // .Publish_child_record_tasks
+    const DISPLAY_RECORD_TASK = new DISPLAY_RECORD_TASKS(uuid);
 
     (async () => {
 
@@ -243,8 +240,8 @@ exports.publish_record = function (uuid, type, callback) {
 exports.suppress_record = function (uuid, type, callback) {
 
     const COLLECTION_TASK = new SUPPRESS_COLLECTION_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
-    const CHILD_TASK = new SUPPRESS_CHILD_RECORD_TASKS.Suppress_child_record_tasks(uuid, DB, REPO_OBJECTS);
-    const DISPLAY_RECORD_TASK = new DISPLAY_RECORD_TASKS.Display_record_tasks(uuid);
+    const CHILD_TASK = new SUPPRESS_CHILD_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
+    const DISPLAY_RECORD_TASK = new DISPLAY_RECORD_TASKS(uuid);
 
     (async () => {
 
@@ -281,7 +278,7 @@ exports.suppress_record = function (uuid, type, callback) {
 
         } else if (type === 'object') {
 
-            const REINDEX_TASK = new PUBLISH_CHILD_RECORD_TASKS.Publish_child_record_tasks(uuid, DB, REPO_OBJECTS);
+            const REINDEX_TASK = new PUBLISH_CHILD_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
             await CHILD_TASK.update_child_record_status(type, 0);
             await CHILD_TASK.suppress_child_records(type);
             REINDEX_TASK.reindex_child_records(type);

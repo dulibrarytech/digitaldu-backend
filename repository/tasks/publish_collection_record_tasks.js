@@ -20,24 +20,26 @@ const TASK = require('../../repository/tasks/publish_record_tasks');
 const LOGGER = require('../../libs/log4');
 
 /**
- *
+ * Publishes collection record
  * @param uuid
  * @param DB
  * @param TABLE
  * @constructor
  */
-exports.Publish_collection_record_tasks = function (uuid, DB, TABLE) {
+const Publish_collection_record_tasks = class {
 
-    this.uuid = uuid;
-    this.DB = DB;
-    this.TABLE = TABLE;
+    constructor(uuid, DB, TABLE) {
+        this.uuid = uuid;
+        this.DB = DB;
+        this.TABLE = TABLE;
+    }
 
     /**
      * Publishes record
      */
-    this.publish = () => {
+    publish = () => {
         (async () => {
-            const task = new TASK.Publish_record_tasks(this.uuid);
+            const task = new TASK(this.uuid);
             await task.publish_record();
         })();
     };
@@ -47,7 +49,7 @@ exports.Publish_collection_record_tasks = function (uuid, DB, TABLE) {
      * @param status
      * @return boolean
      */
-    this.update_collection_status = (status) => {
+    update_collection_status = (status) => {
 
         return this.DB(this.TABLE)
             .where({
@@ -72,7 +74,7 @@ exports.Publish_collection_record_tasks = function (uuid, DB, TABLE) {
      * Gets collection uuid
      * @returns string
      */
-    this.get_collection_uuid = () => {
+    get_collection_uuid = () => {
 
         return this.DB(this.TABLE)
             .select('is_member_of_collection')
@@ -93,7 +95,7 @@ exports.Publish_collection_record_tasks = function (uuid, DB, TABLE) {
      *  @param collection_uuid
      *  @return boolean
      */
-    this.check_collection_publish_status = (collection_uuid) => {
+    check_collection_publish_status = (collection_uuid) => {
 
         return this.DB(this.TABLE)
             .select('is_published')
@@ -116,3 +118,6 @@ exports.Publish_collection_record_tasks = function (uuid, DB, TABLE) {
             });
     }
 };
+
+module.exports = Publish_collection_record_tasks;
+

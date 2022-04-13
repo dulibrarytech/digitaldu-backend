@@ -27,11 +27,13 @@ const DISPLAY_RECORD_TASKS = require('../../repository/tasks/display_record_task
  * @param TABLE
  * @constructor
  */
-exports.Suppress_child_record_tasks = function (uuid, DB, TABLE) {
+const Suppress_child_record_tasks = class {
 
-    this.uuid = uuid;
-    this.DB = DB;
-    this.TABLE = TABLE;
+    constructor(uuid, DB, TABLE) {
+        this.uuid = uuid;
+        this.DB = DB;
+        this.TABLE = TABLE;
+    }
 
     /**
      * Updates db collection child record's publish status
@@ -39,7 +41,7 @@ exports.Suppress_child_record_tasks = function (uuid, DB, TABLE) {
      * @param status
      * @return boolean
      */
-    this.update_child_record_status = (type, status) => {
+    update_child_record_status = (type, status) => {
 
         let where_obj = {};
             where_obj.is_active = 1;
@@ -66,7 +68,7 @@ exports.Suppress_child_record_tasks = function (uuid, DB, TABLE) {
     /**
      * Suppress collection child records
      */
-    this.suppress_child_records = (type) => {
+    suppress_child_records = (type) => {
 
         let TASK;
         let where_obj = {};
@@ -93,7 +95,7 @@ exports.Suppress_child_record_tasks = function (uuid, DB, TABLE) {
                             return false;
                         }
 
-                        TASK = new DISPLAY_RECORD_TASKS.Display_record_tasks(record.uuid);
+                        TASK = new DISPLAY_RECORD_TASKS(record.uuid);
                         TASK.update();
 
                         // remove child records from public index
@@ -107,7 +109,6 @@ exports.Suppress_child_record_tasks = function (uuid, DB, TABLE) {
                         });
 
                     } else {
-
                         clearInterval(timer);
                         return false;
                     }
@@ -120,49 +121,6 @@ exports.Suppress_child_record_tasks = function (uuid, DB, TABLE) {
                 LOGGER.module().fatal('FATAL: [/repository/model module (unpublish_objects/unindex_objects)] unable to remove published record from index ' + error);
             });
     }
-
-    /** TODO: Duplicate function (publish child record tasks)
-     * indexes child records
-     * @return boolean
-     */
-    this.reindex_child_record = () => {
-
-        this.DB(this.TABLE)
-            .select('uuid')
-            .where({
-                is_member_of_collection: this.uuid,
-                is_active: 1
-            })
-            .then((data) => {
-
-                let timer = setInterval(() => {
-
-                    if (data.length === 0) {
-                        clearInterval(timer);
-                        return false;
-                    } else {
-
-                        let record = data.pop();
-
-                        if (record.uuid === null) {
-                            return false;
-                        }
-
-                        HELPER.index(record.uuid, (result) => {
-
-                            if (result.error === true) {
-                                LOGGER.module().error('ERROR: [/repository/tasks (reindex_child_records/HELPER.index)] Unable to index child record(s)');
-                            }
-                        });
-                    }
-
-                }, 150);
-
-                return null;
-            })
-            .catch((error) => {
-                LOGGER.module().fatal('FATAL: [/repository/tasks (reindex_child_records)] Unable to get record uuid ' + error.message);
-            });
-    }
-
 };
+
+module.exports = Suppress_child_record_tasks;

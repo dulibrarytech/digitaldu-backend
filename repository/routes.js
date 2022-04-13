@@ -56,7 +56,7 @@ module.exports = function (app) {
         .post(TOKEN.verify, REPO.publish_record);
 
     app.route('/api/v2/repo/suppress') // TODO: /api/admin/v1/repo/unpublish
-        .post(TOKEN.verify, REPO.suppress_record); // REPO.unpublish_objects
+        .post(TOKEN.verify, REPO.suppress_record);
 
     app.route('/api/admin/v1/repo/metadata/reset')
         .post(TOKEN.verify, REPO.reset_display_record);
