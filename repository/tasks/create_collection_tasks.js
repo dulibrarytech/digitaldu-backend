@@ -31,7 +31,7 @@ const LOGGER = require('../../libs/log4');
  */
 const Create_collection_tasks = class {
 
-    constructor(uuid, DB, TABLE) {
+    constructor(DB, TABLE) {
         this.DB = DB;
         this.TABLE = TABLE;
     }
@@ -223,14 +223,14 @@ const Create_collection_tasks = class {
 
     /**
      * Indexes display record
-     * @param sip_uuid
+     * @param uuid
      * @returns Promise
      */
-    index_record = (sip_uuid) => {
+    index_record = (uuid) => {
 
         let promise = new Promise((resolve, reject) => {
 
-            HELPER.index(sip_uuid, (response) => {
+            HELPER.index(uuid, (response) => {
 
                 if (response.error === true) {
                     LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/index_collection)] unable to index collection record');

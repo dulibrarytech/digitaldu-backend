@@ -19,11 +19,8 @@
 'use strict';
 
 const CONFIG = require('../config/config'),
-    HTTP = require('../libs/http'),
-    ASYNC = require('async'),
     VALIDATOR = require('validator'),
     DR = require('../libs/display-record'),
-    ARCHIVEMATICA = require('../libs/archivematica'),
     CREATE_COLLECTION_TASKS = require('../repository/tasks/create_collection_tasks'),
     UPDATE_THUMBNAIL_URL_TASKS = require('../repository/tasks/update_thumbnail_url_tasks'),
     PUBLISH_COLLECTION_RECORD_TASKS = require('../repository/tasks/publish_collection_record_tasks'),
@@ -31,6 +28,7 @@ const CONFIG = require('../config/config'),
     SUPPRESS_COLLECTION_RECORD_TASKS = require('../repository/tasks/suppress_collection_record_tasks'),
     SUPPRESS_CHILD_RECORD_TASKS = require('../repository/tasks/suppress_child_record_tasks'),
     DISPLAY_RECORD_TASKS = require('../repository/tasks/display_record_tasks'),
+    DELETE_RECORD_TASKS = require('../repository/tasks/delete_record_tasks'),
     LOGGER = require('../libs/log4'),
     DB = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects';
@@ -40,8 +38,8 @@ const CONFIG = require('../config/config'),
  * @param uuid
  * @param callback
  */
-exports.get_display_record = function (uuid, callback) {
-    DR.get_db_display_record_data(uuid, function (data) {
+exports.get_record = function (uuid, callback) {
+    DR.get_db_display_record_data(uuid, (data) => {
         callback({
             status: 200,
             message: 'Display record retrieved.',
@@ -52,21 +50,14 @@ exports.get_display_record = function (uuid, callback) {
 
 /**
  * Creates repository collection record
- * @param data (contains data.uri/data.is_member_of_collection)
+ * @param uri
+ * @param is_member_of_collection
  * @param callback
  * @returns callback
  */
-exports.create_collection_record = (data, callback) => {
+exports.create_collection_record = (uri, is_member_of_collection, callback) => {
 
-    if (data.uri === undefined || data.is_member_of_collection === undefined) {
-
-        callback({
-            status: 400,
-            message: 'Bad request.'
-        });
-    }
-
-    const URI = VALIDATOR.unescape(data.uri);
+    const URI = VALIDATOR.unescape(uri);
     const TASKS = new CREATE_COLLECTION_TASKS(DB, REPO_OBJECTS);
 
     (async () => {
@@ -87,7 +78,7 @@ exports.create_collection_record = (data, callback) => {
                 return false;
             }
 
-            obj.is_member_of_collection = data.is_member_of_collection;
+            obj.is_member_of_collection = is_member_of_collection;
             obj.uri = URI;
             token = await TASKS.get_session_token();
             obj.metadata = await TASKS.get_resource_record(URI, token);
@@ -161,7 +152,7 @@ exports.update_thumbnail_url = (uuid, thumbnail_url, callback) => {
  * @param type
  * @param callback
  */
-exports.publish_record = function (uuid, type, callback) {
+exports.publish_record = (uuid, type, callback) => {
 
     const COLLECTION_TASKS = new PUBLISH_COLLECTION_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
     const CHILD_RECORD_TASKS = new PUBLISH_CHILD_RECORD_TASKS(uuid, DB, REPO_OBJECTS); // .Publish_child_record_tasks
@@ -237,7 +228,7 @@ exports.publish_record = function (uuid, type, callback) {
  * @param type
  * @param callback
  */
-exports.suppress_record = function (uuid, type, callback) {
+exports.suppress_record = (uuid, type, callback) => {
 
     const COLLECTION_TASK = new SUPPRESS_COLLECTION_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
     const CHILD_TASK = new SUPPRESS_CHILD_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
@@ -303,370 +294,51 @@ exports.suppress_record = function (uuid, type, callback) {
 };
 
 /**
- * Recreates display record
- * @param req
+ * Rebuilds display record
+ * @param uuid
  * @param callback
  */
-exports.reset_display_record = function (req, callback) {
+exports.rebuild_display_record = (uuid, callback) => {
 
-    if (req.body.pid === undefined) {
-
-        callback({
-            status: 400,
-            message: 'Bad request.'
-        });
-
-        return false;
-    }
-
-    // TODO: this functionality has already been refactored see task objects
-    function create_display_record(callback) {
-
-        let obj = {};
-        let sip_uuid = req.body.pid;
-
-        DR.get_display_record_data(sip_uuid, function (record) {
-
-            DR.create_display_record(record, function (display_record) {
-
-                let recordObj = JSON.parse(display_record);
-                let where_obj = {
-                    is_member_of_collection: recordObj.is_member_of_collection,
-                    pid: recordObj.pid,
-                    is_active: 1
-                };
-
-                DR.update_display_record(where_obj, display_record, function (result) {
-                    obj.sip_uuid = recordObj.pid;
-                    obj.is_published = recordObj.is_published;
-                    callback(null, obj);
-                });
-            });
-        });
-    }
-
-    function admin_index(obj, callback) {
-
-        // update admin index
-        index(obj.sip_uuid, function (result) {
-
-            if (result.error === true) {
-                LOGGER.module().error('ERROR: [/repository/model module (reset_display_record/admin_index)] indexer error.');
-                obj.admin_index = false;
-                callback(null, obj);
-                return false;
-            }
-
-            obj.admin_index = true;
-            callback(null, obj);
-            return false;
-        });
-    }
-
-    function public_index(obj, callback) {
-
-        if (obj.is_published === 1) {
-
-            // update public index
-            index(obj.sip_uuid, function (result) {
-
-                if (result.error === true) {
-                    LOGGER.module().error('ERROR: [/repository/model module (reset_display_record/admin_index)] indexer error.');
-                    obj.public_index = false;
-                    callback(null, obj);
-                    return false;
-                }
-
-                obj.public_index = true;
-                callback(null, obj);
-                return false;
-            });
-
-        } else {
-            obj.public_index = false;
-            callback(null, obj);
-        }
-    }
-
-    ASYNC.waterfall([
-        create_display_record,
-        admin_index,
-        public_index
-    ], function (error, results) {
-
-        if (error) {
-            LOGGER.module().error('ERROR: [/repository/model module (reset_display_record/async.waterfall)] ' + error);
-        }
-
-        LOGGER.module().info('INFO: [/repository/model module (reset_display_record/async.waterfall)] display record reset');
-
-        callback({
-            status: 201,
-            message: 'Display record(s) updated.'
-        });
-    });
-};
-
-/**
- * Deletes repository object (DB, Index, and creates archivematica delete request)
- * @param req
- * @param callback
- */
-exports.delete_object = function (req, callback) {
-
-    let pid = req.body.pid;
-    let delete_reason = req.body.delete_reason;
-
-    function check_if_published(callback) {
-
-        let obj = {};
-        obj.pid = pid;
-        obj.delete_reason = delete_reason;
-
-        DB(REPO_OBJECTS)
-            .count('is_published as is_published')
-            .where({
-                pid: obj.pid,
-                is_active: 1,
-                is_published: 1
-            })
-            .then(function (data) {
-                // delete only if object is not published
-                if (data[0].is_published === 0) {
-                    obj.is_published = false;
-                } else {
-                    obj.is_published = true;
-                }
-
-                callback(null, obj);
-            })
-            .catch(function (error) {
-                LOGGER.module().fatal('FATAL: [/repository/model module (delete_object/check_if_published)] Unable to delete record ' + error);
-                throw 'FATAL: [/repository/model module (delete_object/check_if_published)] Unable to delete record ' + error;
-            });
-    }
-
-    function delete_record(obj, callback) {
-
-        if (obj.is_published === true) {
-            callback(null, obj);
-            return false;
-        }
-
-        DB(REPO_OBJECTS)
-            .where({
-                pid: obj.pid
-            })
-            .update({
-                is_active: 0
-            })
-            .then(function (data) {
-
-                if (data === 1) {
-                    callback(null, obj);
-                }
-            })
-            .catch(function (error) {
-                LOGGER.module().fatal('FATAL: [/repository/model module (delete_object)] unable to delete record ' + error);
-                throw 'FATAL: [/repository/model module (delete_object)] unable to delete record ' + error;
-            });
-    }
-
-    function unindex_record(obj, callback) {
-
-        if (obj.is_published === true) {
-            callback(null, obj);
-            return false;
-        }
-
-        unindex(obj.pid, function (result) {
-
-            if (result.error === true) {
-                LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/unindex_objects)] unable to remove published record from index.');
-                obj.status = 'failed';
-                callback(null, obj);
-                return false;
-            }
-
-            callback(null, obj);
-        });
-    }
-
-    function delete_aip_request(obj, callback) {
-
-        if (obj.is_published === true) {
-            callback(null, obj);
-            return false;
-        }
-
-        ARCHIVEMATICA.delete_aip_request(obj, function (result) {
-
-            if (result.error === false) {
-
-                let json = JSON.parse(result.data);
-                obj.delete_id = json.id;
-
-                DB(REPO_OBJECTS)
-                    .where({
-                        pid: obj.pid
-                    })
-                    .update({
-                        delete_id: obj.delete_id
-                    })
-                    .then(function (data) {
-
-                        if (data === 1) {
-                            LOGGER.module().info('INFO: [/repository/model module (delete_object/delete_aip_request)] delete id ' + obj.delete_id + ' saved');
-                            callback(null, obj);
-                        }
-                    })
-                    .catch(function (error) {
-                        LOGGER.module().fatal('FATAL: [/repository/model module (delete_object)] unable to save delete id ' + error);
-                        throw 'FATAL: [/repository/model module (delete_object)] unable to save delete id ' + error;
-                    });
-
-            } else {
-                LOGGER.module().error('ERROR: [/repository/model module (delete_object/delete_aip_request)] unable to create delete aip request');
-                obj.delete_id = false;
-            }
-        });
-    }
-
-    ASYNC.waterfall([
-        check_if_published,
-        delete_record,
-        unindex_record,
-        delete_aip_request
-    ], function (error, results) {
-
-        if (error) {
-            LOGGER.module().error('ERROR: [/repository/model module (delete_object/async.waterfall)] ' + error);
-        }
-
-        // delete link only appears when record is unpublished
-        if (results.is_published === true) {
-
-            LOGGER.module().error('ERROR: [/repository/model module (delete_object/async.waterfall)] Cannot delete published object. ');
-            return false;
-        }
-
-        LOGGER.module().info('INFO: [/repository/model module (delete_object/async.waterfall)] object deleted.');
-    });
+    const task = new DISPLAY_RECORD_TASKS(uuid);
+    task.update();
 
     callback({
-        status: 204,
-        message: 'Delete object.'
+        status: 201,
+        message: 'Display record(s) updated'
     });
 };
 
 /**
- * Adds transcript to existing record and re-indexes
- * @param req
+ * Deletes repository record (DB, Index, and creates archivematica delete request)
+ * @param uuid
+ * @param delete_reason
  * @param callback
  */
-exports.save_transcript = function (req, callback) {
+exports.delete_record = (uuid, delete_reason, callback) => {
 
-    let sip_uuid = req.body.sip_uuid;
-    let transcript = req.body.transcript;
+    (async () => {
 
-    if (sip_uuid === undefined || transcript === undefined) {
+        const TASK = new DELETE_RECORD_TASKS(uuid, delete_reason, DB, REPO_OBJECTS);
+        let is_published = await TASK.check_if_published(); // delete only if object is not published
+
+        if (is_published === 1) {
+            callback({
+                status: 200,
+                message: 'Published records cannot be deleted.'
+            });
+
+            return false;
+        }
+
+        await TASK.set_to_inactive();
+        await TASK.delete_from_index();
+        // TASK.delete_aip_request(); // TODO: ingest test record
 
         callback({
-            status: 400,
-            message: 'Bad Request.'
+            status: 204,
+            message: 'Delete object.'
         });
-    }
 
-    DB(REPO_OBJECTS)
-        .where({
-            pid: sip_uuid
-        })
-        .update({
-            transcript: transcript
-        })
-        .then(function (data) {
-
-            if (data === 1) {
-
-                LOGGER.module().info('INFO: [/repository/model module (add_transcript)] Transcript saved to DB');
-
-                DR.get_db_display_record_data(sip_uuid, function (data) {
-
-                    let record = JSON.parse(data[0].display_record);
-                    record.transcript = transcript;
-
-                    let where_obj = {
-                        sip_uuid: sip_uuid,
-                        is_active: 1
-                    };
-
-                    DR.update_display_record(where_obj, JSON.stringify(record), function (result) {
-
-                        (async () => {
-
-                            let data = {
-                                'sip_uuid': sip_uuid,
-                                'fragment': {
-                                    doc: {
-                                        transcript: transcript
-                                    }
-                                }
-                            };
-
-                            let response = await HTTP.put({
-                                endpoint: '/api/admin/v1/indexer/update_fragment',
-                                data: data
-                            });
-
-                            let result = {};
-
-                            if (response.error === true) {
-                                LOGGER.module().error('ERROR: [/repository/model module (update_fragment)] unable to update transcript.');
-                                result.error = true;
-                            } else if (response.data.status === 201) {
-                                result.error = false;
-                            }
-
-                            if (result.error === false) {
-
-                                if (record.is_published === 1) {
-
-                                    let match_phrase = {
-                                        'pid': sip_uuid
-                                    };
-
-                                    setTimeout(function () {
-
-                                        // moves updated record to public index if already published
-                                        reindex(match_phrase, function (result) {
-
-                                            if (result.error === true) {
-                                                LOGGER.module().error('ERROR: [/repository/model module (save_transcript)] unable to copy record to public index.');
-                                            }
-                                        });
-
-                                    }, 3000);
-                                }
-
-                                callback({
-                                    status: 201,
-                                    message: 'Transcript Saved.'
-                                });
-
-                            } else if (result.error === true) {
-                                callback({
-                                    status: 200,
-                                    message: 'Transcript not Saved.'
-                                });
-                            }
-
-                        })();
-                    });
-                });
-            }
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/repository/model module (add_transcript)] Unable to save transcript ' + error);
-            throw 'FATAL: [/repository/model module (add_transcript)] Unable to save transcript ' + error;
-        });
+    })();
 };

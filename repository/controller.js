@@ -23,96 +23,157 @@ const MODEL = require('../repository/model'),
     CACHE = require('../libs/cache'),
     PATH = require('path');
 
-exports.get_admin_objects = function (req, res) {
+const get_records = (req, res) => {
+
+    if (req.query.uuid === undefined || req.query.uuid.length === 0) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
 
     let cache = CACHE.get_cache(req);
 
     if (cache) {
         res.send(cache);
     } else {
-        SERVICE.get_admin_objects(req, function (data) {
+
+        let is_member_of_collection = req.query.uuid;
+        let page = req.query.page;
+        let total_on_page = req.query.total_on_page;
+        let sort = req.query.sort;
+
+        SERVICE.get_records(is_member_of_collection, page, total_on_page, sort, (data) => {
             CACHE.cache_request(req, data.data);
             res.status(data.status).send(data.data);
         });
     }
 };
 
-exports.get_display_record = function (req, res) {
-    let sip_uuid = req.query.pid;
-    MODEL.get_display_record(sip_uuid, function (data) {
+exports.get_record = (req, res) => {
+
+    let uuid = req.query.uuid;
+
+    if (uuid === undefined) {
+        get_records(req);
+        return false;
+    }
+
+    MODEL.get_record(uuid, (data) => {
         res.status(data.status).send(data.data);
     });
 };
 
-exports.update_thumbnail_url = function (req, res) {
+exports.update_thumbnail_url = (req, res) => {
 
-    let sip_uuid = req.body.pid;
+    let uuid = req.body.uuid;
     let thumbnail_url = req.body.thumbnail_url;
 
-    MODEL.update_thumbnail_url(sip_uuid, thumbnail_url, function (data) {
+    if (uuid === undefined || thumbnail_url === undefined) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    MODEL.update_thumbnail_url(uuid, thumbnail_url, (data) => {
         res.status(data.status).send(data.data);
     });
 };
 
-exports.create_collection_record = function (req, res) {
-    let data = req.body;
-    MODEL.create_collection_record(data, function (data) {
+exports.create_collection_record = (req, res) => {
+
+    let uri = req.body.uri;
+    let is_member_of_collection = req.body.is_member_of_collection;
+
+    if (uri === undefined || is_member_of_collection === undefined) {
+        res.status(400).send('Bad request.');
+    }
+
+    MODEL.create_collection_record(uri, is_member_of_collection, (data) => {
         res.status(data.status).send(data.data);
     });
 };
 
-exports.publish_record = function (req, res) {
+exports.publish_record = (req, res) => {
 
     let uuid = req.body.uuid;
     let type = req.body.type;
 
-    MODEL.publish_record(uuid, type, function (data) {
+    if (uuid === undefined || type === undefined) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    MODEL.publish_record(uuid, type, (data) => {
         CACHE.clear_cache();
         res.status(data.status).send(data.data);
     });
 };
 
-exports.suppress_record = function (req, res) {
+exports.suppress_record = (req, res) => {
 
     let uuid = req.body.uuid;
     let type = req.body.type;
 
-    MODEL.suppress_record(uuid, type, function (data) {
+    if (uuid === undefined || type === undefined) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    MODEL.suppress_record(uuid, type, (data) => {
         CACHE.clear_cache();
         res.status(data.status).send(data.data);
     });
 };
 
-/*
-exports.unpublish_objects = function (req, res) {
-    CACHE.clear_cache();
-    MODEL.unpublish_objects(req, function (data) {
+exports.get_suppressed_records = (req, res) => {
+
+    let uuid = req.query.uuid;
+
+    if (uuid === undefined || uuid.length === 0) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    SERVICE.get_suppressed_records(uuid, (data) => {
         res.status(data.status).send(data.data);
     });
 };
 
- */
+exports.delete_record = (req, res) => {
 
-exports.reset_display_record = function (req, res) {
-    MODEL.reset_display_record(req, function (data) {
+    let uuid = req.body.uuid;
+    let delete_reason = req.body.delete_reason;
+
+    if (uuid === undefined || delete_reason === undefined) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    MODEL.delete_record(uuid, delete_reason, (data) => {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.rebuild_display_record = (req, res) => {
+
+    let uuid = req.body.uuid;
+
+    if (uuid === undefined || uuid.length === 0) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    MODEL.rebuild_display_record(uuid, (data) => {
         res.status(data.status).send(data);
     });
 };
 
-exports.delete_object = function (req, res) {
-    MODEL.delete_object(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.get_tn = function (req, res) {
+exports.get_tn = (req, res) => {
 
     let cache = CACHE.get_tn_cache(req);
 
     if (cache) {
         res.sendFile(cache);
     } else {
-        SERVICE.get_tn(req, function (data) {
+        SERVICE.get_tn(req, (data) => {
             if (data.error === true) {
                 res.sendFile(PATH.join(__dirname, '../public', data.data));
             } else {
@@ -122,33 +183,27 @@ exports.get_tn = function (req, res) {
     }
 };
 
-exports.get_image = function (req, res) {
-    SERVICE.get_image(req, function (data) {
+exports.get_image = (req, res) => {
+    SERVICE.get_image(req, (data) => {
         res.set('Content-Type', 'image/jpeg');
         res.end(data.data, 'binary');
     });
 };
 
-exports.get_viewer = function (req, res) {
-    SERVICE.get_viewer(req, function (data) {
+exports.get_viewer = (req, res) => {
+    SERVICE.get_viewer(req, (data) => {
         res.redirect(data.data);
     });
 };
 
-exports.save_transcript = function (req, res) {
-    REPO.save_transcript(req, function (data) {
+exports.ping = (req, res) => {
+    SERVICE.ping_services(req, (data) => {
         res.status(data.status).send(data.data);
     });
 };
 
-exports.ping = function (req, res) {
-    SERVICE.ping_services(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.get_thumbnail = function (req, res) {
-    SERVICE.get_thumbnail(req, function (data) {
+exports.get_thumbnail = (req, res) => {
+    SERVICE.get_thumbnail(req, (data) => {
 
         res.set('Content-Type', 'image/jpeg');
 
@@ -160,8 +215,10 @@ exports.get_thumbnail = function (req, res) {
     });
 };
 
-exports.get_unpublished_admin_objects = function (req, res) {
-    SERVICE.get_unpublished_admin_objects(req, function (data) {
+/*
+exports.save_transcript = (req, res) => {
+    REPO.save_transcript(req, (data) => {
         res.status(data.status).send(data.data);
     });
 };
+ */

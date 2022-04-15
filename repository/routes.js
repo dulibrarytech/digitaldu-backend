@@ -18,49 +18,48 @@
 
 'use strict';
 
-const REPO = require('../repository/controller'),
+const CONTROLLER = require('../repository/controller'),
     TOKEN = require('../libs/tokens');
 
 module.exports = function (app) {
 
-    app.route('/api/admin/v1/repo/objects')
-        .get(TOKEN.verify, REPO.get_admin_objects);
+    app.route('/api/v2/repo/ping')  // OLD - /api/admin/v1/repo/ping/services
+        .get(TOKEN.verify, CONTROLLER.ping);
 
-    app.route('/api/admin/v1/repo/object')
-        .get(TOKEN.verify, REPO.get_display_record)
-        .post(TOKEN.verify, REPO.create_collection_record)
-        .delete(TOKEN.verify, REPO.delete_object);
+    app.route('/api/v2/repo/records') // OLD - /api/admin/v1/repo/object
+        .get(TOKEN.verify, CONTROLLER.get_record)
+        .post(TOKEN.verify, CONTROLLER.create_collection_record)
+        .delete(TOKEN.verify, CONTROLLER.delete_record);
 
+    app.route('/api/v2/repo/publish') // OLD - /api/admin/v1/repo/publish
+        .post(TOKEN.verify, CONTROLLER.publish_record);
+
+    app.route('/api/v2/repo/suppress') // OLD - /api/admin/v1/repo/unpublish
+        .post(TOKEN.verify, CONTROLLER.suppress_record)
+        .get(TOKEN.verify, CONTROLLER.get_suppressed_records); // OLD - /api/admin/v1/repo/object/unpublished
+
+    app.route('/api/v2/repo/rebuild/display_record') // OLD - /api/admin/v1/repo/metadata/reset
+        .post(TOKEN.verify, CONTROLLER.rebuild_display_record);
+
+    //////////////////////
     // gets thumbnails from duracloud
-    app.route('/api/admin/v1/repo/object/thumbnail')
-        .get(TOKEN.verify, REPO.get_thumbnail)
-        .post(TOKEN.verify, REPO.update_thumbnail_url);
+    app.route('/api/v2/repo/thumbnail')  // OLD - /api/admin/v1/repo/object/thumbnail
+        .get(TOKEN.verify, CONTROLLER.get_thumbnail)
+        .put(TOKEN.verify, CONTROLLER.update_thumbnail_url);
 
     // gets thumbnails from TN service
     app.route('/api/admin/v1/repo/object/tn')
-        .get(TOKEN.verify, REPO.get_tn);
+        .get(TOKEN.verify, CONTROLLER.get_tn);
 
     app.route('/api/admin/v1/repo/object/image')
-        .get(TOKEN.verify, REPO.get_image);
+        .get(TOKEN.verify, CONTROLLER.get_image);
 
     app.route('/api/admin/v1/repo/object/viewer')
-        .get(TOKEN.verify, REPO.get_viewer);
+        .get(TOKEN.verify, CONTROLLER.get_viewer);
+    //////////////////
 
-    app.route('/api/admin/v1/repo/object/unpublished')
-        .get(TOKEN.verify, REPO.get_unpublished_admin_objects);
-
+    /*
     app.route('/api/admin/v1/repo/object/transcript')
-        .put(TOKEN.verify, REPO.save_transcript);
-
-    app.route('/api/v2/repo/publish') // TODO: /api/admin/v1/repo/publish
-        .post(TOKEN.verify, REPO.publish_record);
-
-    app.route('/api/v2/repo/suppress') // TODO: /api/admin/v1/repo/unpublish
-        .post(TOKEN.verify, REPO.suppress_record);
-
-    app.route('/api/admin/v1/repo/metadata/reset')
-        .post(TOKEN.verify, REPO.reset_display_record);
-
-    app.route('/api/admin/v1/repo/ping/services')
-        .get(TOKEN.verify, REPO.ping);
+        .put(TOKEN.verify, CONTROLLER.save_transcript);
+     */
 };

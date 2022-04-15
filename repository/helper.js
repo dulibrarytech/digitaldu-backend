@@ -123,7 +123,7 @@ exports.del = function (uuid, callback) {
     })();
 };
 
-/**
+/** TODO: is this needed? deleted records cannot be deleted anyway
  * Removes record from admin and public indexes - part of record delete process
  * @param sip_uuid
  * @param callback

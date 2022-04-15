@@ -30,8 +30,8 @@ const CONFIG = require('../config/config'),
     ES = require('elasticsearch'),
     CLIENT = new ES.Client({
         host: CONFIG.elasticSearch
-    });
-const {file} = require("elasticsearch/src/lib/loggers");
+    }),
+    {file} = require("elasticsearch/src/lib/loggers");
 
 /**
  * Pings third-party services to determine availability
@@ -382,33 +382,24 @@ exports.get_viewer = function (req, callback) {
 };
 
 /**
- * Gets objects by collection
- * @param req
+ * Gets records by collection
+ * @param is_member_of_collection
+ * @param page
+ * @param total_on_page
+ * @param sort
  * @param callback
  */
-exports.get_admin_objects = function (req, callback) {
+exports.get_records = function (is_member_of_collection, page, total_on_page, sort, callback) {
 
-    if (req.query.pid === undefined || req.query.pid.length === 0) {
+    let total_on_page_default = 10;
+    let sort_default = 'title.keyword:asc';
 
-        callback({
-            status: 400,
-            message: 'Bad request.'
-        });
-
-        return false;
+    if (total_on_page === undefined) {
+        total_on_page = total_on_page_default;
     }
 
-    let is_member_of_collection = req.query.pid,
-        page = req.query.page,
-        total_on_page = 10,
-        sort = 'title.keyword:asc';
-
-    if (req.query.total_on_page !== undefined) {
-        total_on_page = req.query.total_on_page;
-    }
-
-    if (req.query.sort !== undefined) {
-        sort = req.query.sort;
+    if (sort === undefined) {
+        sort = sort_default;
     }
 
     if (page === undefined) {
@@ -453,23 +444,13 @@ exports.get_admin_objects = function (req, callback) {
 };
 
 /**
- * Gets unpublished objects by collection
- * @param req
+ * Gets suppressed records by collection
+ * @param uuid
  * @param callback
  */
-exports.get_unpublished_admin_objects = function (req, callback) {
+exports.get_suppressed_records = function (uuid, callback) {
 
-    if (req.query.pid === undefined || req.query.pid.length === 0) {
-
-        callback({
-            status: 400,
-            message: 'Bad request.'
-        });
-
-        return false;
-    }
-
-    let is_member_of_collection = req.query.pid,
+    let is_member_of_collection = req.query.uuid,
         page = 0,
         total_on_page = 10000,
         sort = 'title.keyword:asc';
@@ -514,7 +495,7 @@ exports.get_unpublished_admin_objects = function (req, callback) {
     });
 };
 
-/**
+/** TODO: move to task obj?
  * Gets mods record
  * @param obj
  * @param callback
