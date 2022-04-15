@@ -20,6 +20,14 @@ const HELPER = require('../../repository/helper');
 const ARCHIVEMATICA = require('../../libs/archivematica');
 const LOGGER = require('../../libs/log4');
 
+/**
+ * Contains tasks used to remove a record from the repository
+ * @param uuid
+ * @param delete_reason
+ * @param DB
+ * @param TABLE
+ * @type {Delete_record_tasks}
+ */
 const Delete_record_tasks = class {
 
     constructor(uuid, delete_reason, DB, TABLE) {

@@ -24,7 +24,7 @@ const LOGGER = require('../../libs/log4');
  * @param uuid
  * @param DB
  * @param TABLE
- * @constructor
+ * @type {Suppress_collection_record_tasks}
  */
 const Suppress_collection_record_tasks = class {
 
@@ -83,6 +83,9 @@ const Suppress_collection_record_tasks = class {
             });
     };
 
+    /**
+     * Reindexes collection record
+     */
     reindex_collection_record = () => {
 
         this.DB(this.TABLE)

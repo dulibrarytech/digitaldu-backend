@@ -26,7 +26,7 @@ const HTTP = require('../libs/http'),
  * @param match_phrase
  * @param callback
  */
-exports.publish_record = function (match_phrase, callback) {
+exports.publish_record = (match_phrase, callback) => {
 
     (async () => {
 
@@ -66,7 +66,7 @@ exports.publish_record = function (match_phrase, callback) {
  * @param uuid
  * @param callback
  */
-exports.index = function (uuid, callback) {
+exports.index = (uuid, callback) => {
 
     (async () => {
 
@@ -98,7 +98,7 @@ exports.index = function (uuid, callback) {
  * @param uuid
  * @param callback
  */
-exports.del = function (uuid, callback) {
+exports.del = (uuid, callback) => {
 
     (async () => {
 
@@ -115,75 +115,6 @@ exports.del = function (uuid, callback) {
             LOGGER.module().error('ERROR: [/repository/model module (del)] unable to remove published record from index.');
             result.error = true;
         } else if (response.data.status === 204) {
-            result.error = false;
-        }
-
-        callback(result);
-
-    })();
-};
-
-/** TODO: is this needed? deleted records cannot be deleted anyway
- * Removes record from admin and public indexes - part of record delete process
- * @param sip_uuid
- * @param callback
- */
-exports.unindex = function (sip_uuid, callback) {
-
-    (async () => {
-
-        let response = await HTTP.delete({
-            endpoint: '/api/admin/v1/indexer/delete',
-            params: {
-                pid: sip_uuid
-            }
-        });
-
-        let result = {};
-
-        if (response.error === true) {
-            LOGGER.module().error('ERROR: [/repository/model module (unindex)] unable to remove record from index.');
-            result.error = true;
-        } else if (response.data.status === 204) {
-            result.error = false;
-        }
-
-        callback(result);
-
-    })();
-};
-
-/** TODO: simply reindex updated record instead?
- * DEPRECATE - REMOVE
- * Updates published status
- * @param uuid
- * @param is_published
- * @param callback
- */
-exports.update_fragment = function (uuid, is_published, callback) {
-
-    (async () => {
-
-        let data = {
-            'uuid': uuid,
-            'fragment': {
-                doc: {
-                    is_published: is_published
-                }
-            }
-        };
-
-        let response = await HTTP.put({
-            endpoint: '/api/admin/v1/indexer/update_fragment',
-            data: data
-        });
-
-        let result = {};
-
-        if (response.error === true) {
-            LOGGER.module().error('ERROR: [/repository/model module (update_fragment)] unable to update published status.');
-            result.error = true;
-        } else if (response.data.status === 201) {
             result.error = false;
         }
 

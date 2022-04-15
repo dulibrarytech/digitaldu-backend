@@ -16,17 +16,17 @@
 
  */
 
-const HELPER = require('../../repository/helper');
-const LOGGER = require('../../libs/log4');
 const DISPLAY_RECORD_TASKS = require('../../repository/tasks/display_record_tasks');
 const TASK = require('../../repository/tasks/publish_record_tasks');
+const HELPER = require('../../repository/helper');
+const LOGGER = require('../../libs/log4');
 
 /**
  * Object contains tasks used to publish collection child repository record(s)
  * @param uuid
  * @param DB
  * @param TABLE
- * @constructor
+ * @type {Publish_child_record_tasks}
  */
 const Publish_child_record_tasks = class {
 
@@ -109,7 +109,7 @@ const Publish_child_record_tasks = class {
                 return null;
             })
             .catch(function (error) {
-                LOGGER.module().fatal('FATAL: [/repository/model module (unpublish_objects/unindex_objects)] unable to remove published record from index ' + error);
+                LOGGER.module().fatal('FATAL: [/repository/task (update_child_display_records)] unable to remove published record from index ' + error.message);
             });
     }
 

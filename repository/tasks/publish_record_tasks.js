@@ -23,6 +23,7 @@ const LOGGER = require('../../libs/log4');
  * Object contains task used to publish a repository record
  * @param uuid
  * @constructor
+ * @type {Publish_record_tasks}
  */
 const Publish_record_tasks = class {
 

@@ -16,10 +16,10 @@
 
  */
 
-const LOGGER = require('../../libs/log4');
 const DR = require('../../libs/display-record');
-const HELPER = require('../../repository/helper');
 const CACHE = require('../../libs/cache');
+const HELPER = require('../../repository/helper');
+const LOGGER = require('../../libs/log4');
 
 /**
  * Object contains tasks used to update collection thumbnail url
@@ -27,7 +27,7 @@ const CACHE = require('../../libs/cache');
  * @param thumbnail_url
  * @param DB
  * @param TABLE
- * @constructor
+ * @type {Update_thumbnail_url_tasks}
  */
 const Update_thumbnail_url_tasks = class {
 
@@ -52,13 +52,10 @@ const Update_thumbnail_url_tasks = class {
                 thumbnail: this.thumbnail_url
             })
             .then((data) => {
-
-                if (data === 1) {
-                    return data;
-                } // TODO: else
+                return data;
             })
             .catch((error) => {
-                LOGGER.module().error('ERROR: [/repository/tasks (update_thumbnail_url/update_repo_record)] unable to update thumbnail record ' + error);
+                LOGGER.module().fatal('FATAL: [/repository/tasks (update_thumbnail_url/update_repo_record)] unable to update thumbnail record ' + error.message);
             });
     }
 
@@ -71,8 +68,6 @@ const Update_thumbnail_url_tasks = class {
         let promise = new Promise((resolve, reject) => {
 
             DR.get_display_record_data(this.uuid, (record_obj) => {
-                // TODO: figure out how to catch error here
-                // reject(new Error('Unable to get display record: data'));
                 resolve(record_obj);
             });
 

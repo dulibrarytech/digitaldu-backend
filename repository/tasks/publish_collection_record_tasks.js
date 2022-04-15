@@ -24,7 +24,7 @@ const LOGGER = require('../../libs/log4');
  * @param uuid
  * @param DB
  * @param TABLE
- * @constructor
+ * @type {Publish_collection_record_tasks}
  */
 const Publish_collection_record_tasks = class {
 

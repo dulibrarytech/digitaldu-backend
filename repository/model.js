@@ -20,7 +20,6 @@
 
 const CONFIG = require('../config/config'),
     VALIDATOR = require('validator'),
-    DR = require('../libs/display-record'),
     CREATE_COLLECTION_TASKS = require('../repository/tasks/create_collection_tasks'),
     UPDATE_THUMBNAIL_URL_TASKS = require('../repository/tasks/update_thumbnail_url_tasks'),
     PUBLISH_COLLECTION_RECORD_TASKS = require('../repository/tasks/publish_collection_record_tasks'),
@@ -29,6 +28,7 @@ const CONFIG = require('../config/config'),
     SUPPRESS_CHILD_RECORD_TASKS = require('../repository/tasks/suppress_child_record_tasks'),
     DISPLAY_RECORD_TASKS = require('../repository/tasks/display_record_tasks'),
     DELETE_RECORD_TASKS = require('../repository/tasks/delete_record_tasks'),
+    DR = require('../libs/display-record'),
     LOGGER = require('../libs/log4'),
     DB = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects';
@@ -38,7 +38,7 @@ const CONFIG = require('../config/config'),
  * @param uuid
  * @param callback
  */
-exports.get_record = function (uuid, callback) {
+exports.get_record = (uuid, callback) => {
     DR.get_db_display_record_data(uuid, (data) => {
         callback({
             status: 200,

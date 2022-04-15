@@ -23,7 +23,7 @@ const LOGGER = require('../../libs/log4');
 /**
  * Updates display record
  * @param uuid
- * @constructor
+ * @type {Display_record_tasks}
  */
 const Display_record_tasks = class {
 
@@ -58,8 +58,6 @@ const Display_record_tasks = class {
         let promise = new Promise((resolve, reject) => {
 
             DR.get_display_record_data(this.uuid, (record_obj) => {
-                // TODO: figure out how to catch error here
-                // reject(new Error('Unable to get display record: data'));
                 resolve(record_obj);
             });
 

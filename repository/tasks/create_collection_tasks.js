@@ -27,7 +27,7 @@ const LOGGER = require('../../libs/log4');
  * Object contains tasks used to create a repository collection record
  * @param DB
  * @param TABLE
- * @constructor
+ * @type {Create_collection_tasks}
  */
 const Create_collection_tasks = class {
 
