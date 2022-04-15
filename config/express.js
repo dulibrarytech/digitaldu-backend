@@ -28,7 +28,7 @@ const HTTP = require('http'),
     CACHE = require('../libs/cache'),
     DIRS = require('../libs/directories');
 
-module.exports = function() {
+module.exports = () => {
 
     const APP = EXPRESS(),
         SERVER = HTTP.createServer(APP);
@@ -48,7 +48,6 @@ module.exports = function() {
     APP.use(BODYPARSER.json());
     APP.use(METHODOVERRIDE());
     APP.use(HELMET());
-
     APP.use(EXPRESS.static('./public'));
     APP.use(XSS.sanitize_req_query);
     APP.use(XSS.sanitize_req_body);

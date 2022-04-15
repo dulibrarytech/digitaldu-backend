@@ -16,8 +16,8 @@
 
  */
 
-const HELPER = require('../../repository/helper');
 const ARCHIVEMATICA = require('../../libs/archivematica');
+const HELPER = require('../../repository/helper');
 const LOGGER = require('../../libs/log4');
 
 /**
