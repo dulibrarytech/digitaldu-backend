@@ -32,8 +32,8 @@ const Ping_tasks = class {
     constructor() {}
 
     /**
-     *
-     * @return {Promise<unknown>}
+     * Pings Archivematica
+     * @return Promise
      */
     ping_archivematica = () => {
 
@@ -55,8 +55,8 @@ const Ping_tasks = class {
     }
 
     /**
-     *
-     * @return {Promise<unknown>}
+     * Pings Archivematica Storage Service
+     * @return Promise
      */
     ping_archivematica_storage = () => {
 
@@ -78,8 +78,8 @@ const Ping_tasks = class {
     }
 
     /**
-     *
-     * @return {Promise<unknown>}
+     * Pings ArchivesSpace
+     * @return Promise
      */
     ping_archivesspace = () => {
 
@@ -101,8 +101,8 @@ const Ping_tasks = class {
     }
 
     /**
-     *
-     * @return {Promise<unknown>}
+     * Pings DuraCloud storage service
+     * @return Promise
      */
     ping_duracloud = () => {
 
@@ -123,8 +123,8 @@ const Ping_tasks = class {
     }
 
     /**
-     *
-     * @return {Promise<string|undefined>}
+     * Pings handle server
+     * @return Promise
      */
     ping_handle_server = () => {
 
@@ -146,15 +146,15 @@ const Ping_tasks = class {
                 return handle_server_status;
 
             } catch (error) {
-                LOGGER.module().error('ERROR: [/repository/service module (ping_handle_server)] Unable to ping handle server. ' + error.message);
+                LOGGER.module().error('ERROR: [/repository/tasks (ping_handle_server)] Unable to ping handle server. ' + error.message);
             }
 
         })();
     }
 
     /**
-     *
-     * @return {Promise<string|undefined>}
+     * Pings image convert service
+     * @return Promise
      */
     ping_convert_service = () => {
 
@@ -176,15 +176,15 @@ const Ping_tasks = class {
                 return ingest_convert_service_status;
 
             } catch (error) {
-                LOGGER.module().error('ERROR: [/repository/tasks (ping_convert_service)] Unable to ping convert service.');
+                LOGGER.module().error('ERROR: [/repository/tasks (ping_convert_service)] Unable to ping convert service. ' + error.message);
             }
 
         })();
     }
 
     /**
-     *
-     * @return {Promise<string|undefined>}
+     * Pings transcript service
+     * @return Promise
      */
     ping_transcript_service = () => {
 
@@ -206,7 +206,7 @@ const Ping_tasks = class {
                 return ingest_transcript_service_status;
 
             } catch (error) {
-                LOGGER.module().error('ERROR: [/repository/service module (ping_transcript_service)] Unable to ping transcript service. ' + error.message);
+                LOGGER.module().error('ERROR: [/repository/tasks (ping_transcript_service)] Unable to ping transcript service. ' + error.message);
             }
 
         })();
