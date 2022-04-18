@@ -235,6 +235,14 @@ exports.get_convert_service_image = (req, res) => {
 };
 
 exports.get_object_viewer = (req, res) => {
+
+    let uuid = req.query.uuid;
+
+    if (uuid === undefined || uuid.length === 0) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
     SERVICE.get_object_viewer(req, (data) => {
         res.redirect(data.data);
     });

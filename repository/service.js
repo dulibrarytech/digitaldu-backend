@@ -110,7 +110,7 @@ exports.get_tn_service_image = function (uuid, callback) {
 
             if (response.status !== 200) {
 
-                LOGGER.module().error('ERROR: [/repository/service module (get_tn)] Unable to get thumbnail from TN service.');
+                LOGGER.module().error('ERROR: [/repository/service module (get_tn_service_image)] Unable to get thumbnail from TN service.');
 
                 callback({
                     error: true,
@@ -131,7 +131,7 @@ exports.get_tn_service_image = function (uuid, callback) {
 
         } catch (error) {
 
-            LOGGER.module().error('ERROR: [/repository/service module (get_tn)] Unable to get thumbnail from TN service. Request failed: ' + error.message);
+            LOGGER.module().error('ERROR: [/repository/service module (get_tn_service_image)] Unable to get thumbnail from TN service. Request failed: ' + error.message);
 
             callback({
                 error: true,
@@ -171,8 +171,8 @@ exports.get_convert_service_image = function (obj, callback) {
             return false;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/repository/service module (get_image)] Unable to get image: ' + error.message);
-            LOGGER.module().info('INFO: [/repository/service module (get_image)] Sending data to image convert service');
+            LOGGER.module().error('ERROR: [/repository/service module (get_convert_service_image)] Unable to get image: ' + error.message);
+            LOGGER.module().info('INFO: [/repository/service module (get_convert_service_image)] Sending data to image convert service');
             // create missing file
             setTimeout(function() {
                 DURACLOUD.convert_service(obj);
@@ -184,22 +184,10 @@ exports.get_convert_service_image = function (obj, callback) {
 
 /**
  * Gets object viewer for non-images
- * @param req
+ * @param uuid
  * @param callback
  */
-exports.get_object_viewer = function (req, callback) {
-
-    let uuid = req.query.uuid;
-
-    if (uuid === undefined || uuid.length === 0) {
-
-        callback({
-            status: 400,
-            message: 'Bad request.'
-        });
-
-        return false;
-    }
+exports.get_object_viewer = function (uuid, callback) {
 
     let apiUrl = CONFIG.tnService + 'viewer/' + uuid + '?key=' + CONFIG.tnServiceApiKey;
 
@@ -262,7 +250,7 @@ exports.get_records = function (is_member_of_collection, page, total_on_page, so
         });
     }, function (error) {
 
-        LOGGER.module().error('ERROR: [/repository/service/ module (get_admin_objects)] Request to Elasticsearch failed: ' + error);
+        LOGGER.module().error('ERROR: [/repository/service module (get_records)] Request to Elasticsearch failed: ' + error);
 
         callback({
             status: 500,
@@ -314,7 +302,7 @@ exports.get_suppressed_records = function (uuid, callback) {
         });
     }, function (error) {
 
-        LOGGER.module().error('ERROR: [/repository/service/ module (get_unpublished_admin_objects)] Request to Elasticsearch failed: ' + error);
+        LOGGER.module().error('ERROR: [/repository/service module (get_suppressed_records)] Request to Elasticsearch failed: ' + error);
 
         callback({
             status: 500,
