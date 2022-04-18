@@ -21,7 +21,14 @@
 const MODEL = require('../repository/model'),
     SERVICE = require('../repository/service'),
     CACHE = require('../libs/cache'),
-    PATH = require('path');
+    PATH = require('path'),
+    VALIDATOR = require('validator');
+
+exports.ping = (req, res) => {
+    SERVICE.ping_services(req, (data) => {
+        res.status(data.status).send(data.data);
+    });
+};
 
 const get_records = (req, res) => {
 
@@ -166,14 +173,22 @@ exports.rebuild_display_record = (req, res) => {
     });
 };
 
-exports.get_tn = (req, res) => {
+exports.get_tn_service_image = (req, res) => {
 
     let cache = CACHE.get_tn_cache(req);
 
     if (cache) {
         res.sendFile(cache);
     } else {
-        SERVICE.get_tn(req, (data) => {
+
+        let uuid = req.query.uuid;
+
+        if (uuid === undefined || uuid.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        SERVICE.get_tn_service_image(uuid, (data) => {
             if (data.error === true) {
                 res.sendFile(PATH.join(__dirname, '../public', data.data));
             } else {
@@ -183,27 +198,58 @@ exports.get_tn = (req, res) => {
     }
 };
 
-exports.get_image = (req, res) => {
-    SERVICE.get_image(req, (data) => {
+exports.get_convert_service_image = (req, res) => {
+
+    let is_bad_request = false;
+    let uuid = req.query.uuid;
+    let full_path = req.query.full_path;
+    let object_name = req.query.object_name;
+    let mime_type = req.query.mime_type;
+
+    if (uuid === undefined || uuid.length === 0) {
+        is_bad_request = true;
+    } else if (full_path === undefined || full_path.length === 0) {
+        is_bad_request = true;
+    } else if (object_name === undefined || object_name.length === 0) {
+        is_bad_request = true;
+    } else if (mime_type === undefined || mime_type.length === 0) {
+        is_bad_request = true;
+    }
+
+    if (is_bad_request === true) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    let obj = {
+        sip_uuid: req.query.sip_uuid,
+        full_path: VALIDATOR.unescape(req.query.full_path),
+        object_name: req.query.object_name,
+        mime_type: VALIDATOR.unescape(req.query.mime_type)
+    };
+
+    SERVICE.get_convert_service_image(obj, (data) => {
         res.set('Content-Type', 'image/jpeg');
         res.end(data.data, 'binary');
     });
 };
 
-exports.get_viewer = (req, res) => {
-    SERVICE.get_viewer(req, (data) => {
+exports.get_object_viewer = (req, res) => {
+    SERVICE.get_object_viewer(req, (data) => {
         res.redirect(data.data);
     });
 };
 
-exports.ping = (req, res) => {
-    SERVICE.ping_services(req, (data) => {
-        res.status(data.status).send(data.data);
-    });
-};
+exports.get_duracloud_thumbnail = (req, res) => {
 
-exports.get_thumbnail = (req, res) => {
-    SERVICE.get_thumbnail(req, (data) => {
+    let tn = VALIDATOR.unescape(req.query.tn);
+
+    if (tn === undefined || tn.length === 0) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    SERVICE.get_duracloud_thumbnail(req, (data) => {
 
         res.set('Content-Type', 'image/jpeg');
 
@@ -214,11 +260,3 @@ exports.get_thumbnail = (req, res) => {
         }
     });
 };
-
-/*
-exports.save_transcript = (req, res) => {
-    REPO.save_transcript(req, (data) => {
-        res.status(data.status).send(data.data);
-    });
-};
- */

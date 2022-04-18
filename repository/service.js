@@ -19,14 +19,12 @@
 'use strict';
 
 const CONFIG = require('../config/config'),
-    ARCHIVEMATICA = require('../libs/archivematica'),
     ARCHIVESSPACE = require('../libs/archivespace'),
     DURACLOUD = require('../libs/duracloud'),
     HTTP = require('axios'),
     LOGGER = require('../libs/log4'),
     CACHE = require('../libs/cache'),
-    ASYNC = require('async'),
-    VALIDATOR = require('validator'),
+    PING_TASKS = require('../repository/tasks/ping_tasks'),
     ES = require('elasticsearch'),
     CLIENT = new ES.Client({
         host: CONFIG.elasticSearch
@@ -40,200 +38,60 @@ const CONFIG = require('../config/config'),
  */
 exports.ping_services = function (req, callback) {
 
-    function ping_archivematica(callback) {
+    (async () => {
 
-        ARCHIVEMATICA.ping_api(function (response) {
-            let obj = {};
-            obj.archivematica = response.status;
-            callback(null, obj);
-        });
-    }
+        try {
 
-    function ping_archivematica_storage(obj, callback) {
+            let results = {};
+            const TASKS = new PING_TASKS();
+            results.archivematica_status = await TASKS.ping_archivematica();
+            results.archivematica_storage_status = await TASKS.ping_archivematica_storage();
+            results.archivesspace_status = await TASKS.ping_archivesspace();
+            results.duracloud_status = await TASKS.ping_duracloud();
+            results.handle_server_status = await TASKS.ping_handle_server();
+            results.convert_service_status = await TASKS.ping_convert_service();
+            results.transcript_service_status = await TASKS.ping_transcript_service();
 
-        ARCHIVEMATICA.ping_storage_api(function (response) {
-            obj.archivematica_storage = response.status;
-            callback(null, obj);
-        });
-    }
+            callback({
+                status: 200,
+                message: 'Services pinged.',
+                data: results
+            });
 
-    function ping_archivesspace(obj, callback) {
-
-        ARCHIVESSPACE.ping(function (response) {
-            obj.archivespace = response.status;
-            callback(null, obj);
-        });
-
-    }
-
-    function ping_duracloud(obj, callback) {
-
-        DURACLOUD.ping(function (response) {
-            obj.duracloud = response.status;
-            callback(null, obj);
-        });
-    }
-
-    function ping_handle_server(obj, callback) {
-
-        (async () => {
-
-            try {
-
-                let endpoint = CONFIG.handleHost.replace('handle-service-0.6', '');
-                let response = await HTTP.get(endpoint, {
-                    timeout: 25000
-                });
-
-                if (response.status !== 200) {
-                    LOGGER.module().error('ERROR: [/repository/service module (ping_handle_server)] Unable to ping handle server.');
-                    obj.handle_server = 'down';
-                } else if (response.status === 200) {
-                    obj.handle_server = 'up';
-                }
-
-                callback(null, obj);
-                return false;
-
-            } catch (error) {
-                LOGGER.module().error('ERROR: [/repository/service module (ping_handle_server)] Unable to ping handle server.');
-                obj.handle_server = 'down';
-                callback(null, obj);
-            }
-
-        })();
-    }
-
-    function ping_convert_service(obj, callback) {
-
-        (async () => {
-
-            try {
-
-                let endpoint = CONFIG.convertService;
-                let response = await HTTP.get(endpoint, {
-                    timeout: 25000
-                });
-
-                if (response.status !== 200) {
-                    LOGGER.module().error('ERROR: [/repository/service module (ping_convert_service)] Unable to ping convert service.');
-                    obj.ingest_convert_service = 'down';
-                } else if (response.status === 200) {
-                    obj.ingest_convert_service = 'up';
-                }
-
-                callback(null, obj);
-                return false;
-
-            } catch (error) {
-                LOGGER.module().error('ERROR: [/repository/service module (ping_convert_service)] Unable to ping convert service.');
-                obj.ingest_convert_service = 'down';
-                callback(null, obj);
-            }
-
-        })();
-    }
-
-    function ping_transcript_service(obj, callback) {
-
-        (async () => {
-
-            try {
-
-                let endpoint = CONFIG.transcriptService;
-                let response = await HTTP.get(endpoint, {
-                    timeout: 25000
-                });
-
-                if (response.status !== 200) {
-                    LOGGER.module().error('ERROR: [/repository/service module (ping_transcript_service)] Unable to ping transcript service.');
-                    obj.ingest_transcript_service = 'down';
-                } else if (response.status === 200) {
-                    obj.ingest_transcriptt_service = 'up';
-                }
-
-                callback(null, obj);
-                return false;
-
-            } catch (error) {
-                LOGGER.module().error('ERROR: [/repository/service module (ping_transcript_service)] Unable to ping transcript service.');
-                obj.ingest_transcript_service = 'down';
-                callback(null, obj);
-            }
-
-        })();
-    }
-
-    ASYNC.waterfall([
-        ping_archivematica,
-        ping_archivematica_storage,
-        ping_archivesspace,
-        ping_duracloud,
-        ping_handle_server,
-        ping_convert_service,
-        ping_transcript_service
-    ], function (error, results) {
-
-        if (error) {
-            LOGGER.module().error('ERROR: [/repository/service module (ping_services/async.waterfall)] unable to ping third-party services ' + error);
-            return false;
+        } catch (error) {
+            callback({
+                status: 500,
+                message: 'Unable to ping services ' + error.message
+            });
         }
 
-        callback({
-            status: 200,
-            message: 'Services pinged.',
-            data: results
-        });
-    });
+    })();
 };
 
 /**
- * Gets thumbnail
- * @param req
+ * Gets thumbnail from duracloud service
+ * @param tn
  * @param callback
- * @returns {boolean}
+ * @returns response
  */
-exports.get_thumbnail = function (req, callback) {
-
-    let tn = VALIDATOR.unescape(req.query.tn);
-
-    if (tn === undefined || tn.length === 0) {
-
-        callback({
-            status: 400,
-            message: 'Bad request.'
-        });
-
-        return false;
-    }
-
+exports.get_duracloud_thumbnail = function (tn, callback) {
     DURACLOUD.get_thumbnail(tn, function (response) {
         callback(response);
     });
 };
 
 /**
- * Gets thumbnail from TN service
- * @param req
+ * Gets thumbnail from Front-end TN service
+ * @param uuid
  * @param callback
  */
-exports.get_tn = function (req, callback) {
+exports.get_tn_service_image = function (uuid, callback) {
 
-    let uuid = req.query.uuid;
-
+    /* TODO: test and confirm type is not needed
     if (req.query.type !== undefined) {
         let type = VALIDATOR.unescape(req.query.type);
     }
-
-    if (uuid === undefined || uuid.length === 0) {
-
-        callback({
-            status: 400,
-            message: 'Bad request.'
-        });
-
-        return false;
-    }
+     */
 
     (async () => {
 
@@ -273,7 +131,7 @@ exports.get_tn = function (req, callback) {
 
         } catch (error) {
 
-            LOGGER.module().error('ERROR: [/repository/service module (get_tn)] Unable to get thumbnail from TN service. Request failed: ' + error);
+            LOGGER.module().error('ERROR: [/repository/service module (get_tn)] Unable to get thumbnail from TN service. Request failed: ' + error.message);
 
             callback({
                 error: true,
@@ -287,45 +145,16 @@ exports.get_tn = function (req, callback) {
 
 /**
  * Gets image from image server
- * @param req
+ * @param obj
  * @param callback
  */
-exports.get_image = function (req, callback) {
-
-    let is_bad_request = false;
-
-    if (req.query.sip_uuid === undefined || req.query.sip_uuid.length === 0) {
-        is_bad_request = true;
-    } else if (req.query.full_path === undefined || req.query.full_path.length === 0) {
-        is_bad_request = true;
-    } else if (req.query.object_name === undefined || req.query.object_name.length === 0) {
-        is_bad_request = true;
-    } else if (req.query.mime_type === undefined || req.query.mime_type.length === 0) {
-        is_bad_request = true;
-    }
-
-    if (is_bad_request === true) {
-
-        callback({
-            status: 400,
-            message: 'Bad request.'
-        });
-
-        return false;
-    }
-
-    let object_data = {
-        sip_uuid: req.query.sip_uuid,
-        full_path: VALIDATOR.unescape(req.query.full_path),
-        object_name: req.query.object_name,
-        mime_type: VALIDATOR.unescape(req.query.mime_type)
-    };
+exports.get_convert_service_image = function (obj, callback) {
 
     (async () => {
 
         try {
-
-            let endpoint = CONFIG.convertService + '/repository/v1/image?filename=' + object_data.object_name + '&api_key=' + CONFIG.convertServiceApiKey;
+            // TODO: place convert service endpoint in config file
+            let endpoint = CONFIG.convertService + '/repository/v1/image?filename=' + obj.object_name + '&api_key=' + CONFIG.convertServiceApiKey;
             let response = await HTTP.get(endpoint, {
                 timeout: 45000,
                 responseType: 'arraybuffer'
@@ -342,12 +171,11 @@ exports.get_image = function (req, callback) {
             return false;
 
         } catch (error) {
-
-            LOGGER.module().error('ERROR: [/repository/service module (get_image)] Unable to get image: ' + error);
+            LOGGER.module().error('ERROR: [/repository/service module (get_image)] Unable to get image: ' + error.message);
             LOGGER.module().info('INFO: [/repository/service module (get_image)] Sending data to image convert service');
             // create missing file
             setTimeout(function() {
-                DURACLOUD.convert_service(object_data);
+                DURACLOUD.convert_service(obj);
             }, 5000);
         }
 
@@ -359,7 +187,7 @@ exports.get_image = function (req, callback) {
  * @param req
  * @param callback
  */
-exports.get_viewer = function (req, callback) {
+exports.get_object_viewer = function (req, callback) {
 
     let uuid = req.query.uuid;
 

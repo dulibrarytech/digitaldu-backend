@@ -46,14 +46,14 @@ module.exports = (app) => {
         .put(TOKEN.verify, CONTROLLER.update_thumbnail_url);
 
     app.route(ENDPOINTS().repository.repo_thumbnail_duracloud)  // OLD - /api/admin/v1/repo/object/thumbnail
-        .get(TOKEN.verify, CONTROLLER.get_thumbnail);
+        .get(TOKEN.verify, CONTROLLER.get_duracloud_thumbnail);
 
     app.route(ENDPOINTS().repository.repo_thumbnail_service)    // OLD -  /api/admin/v1/repo/object/tn
-        .get(TOKEN.verify, CONTROLLER.get_tn)
+        .get(TOKEN.verify, CONTROLLER.get_tn_service_image)
 
     app.route(ENDPOINTS().repository.repo_image_service)  // OLD - /api/admin/v1/repo/object/image
-        .get(TOKEN.verify, CONTROLLER.get_image);
+        .get(TOKEN.verify, CONTROLLER.get_convert_service_image);
 
     app.route(ENDPOINTS().repository.repo_viewer)  // OLD - /api/admin/v1/repo/object/viewer
-        .get(TOKEN.verify, CONTROLLER.get_viewer);
+        .get(TOKEN.verify, CONTROLLER.get_object_viewer);
 };
