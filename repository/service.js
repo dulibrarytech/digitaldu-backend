@@ -19,7 +19,6 @@
 'use strict';
 
 const CONFIG = require('../config/config'),
-    ARCHIVESSPACE = require('../libs/archivespace'),
     DURACLOUD = require('../libs/duracloud'),
     HTTP = require('axios'),
     LOGGER = require('../libs/log4'),
