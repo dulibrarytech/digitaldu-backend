@@ -91,6 +91,7 @@ module.exports = {
     tnServiceApiKey: process.env.TN_SERVICE_API_KEY,
     tnUploadPath: process.env.TN_UPLOAD_PATH,
     convertService: process.env.CONVERT_SERVICE,
+    convertServiceEndpoint: process.env.CONVERT_SERVICE_ENDPOINT,
     convertServiceApiKey: process.env.CONVERT_SERVICE_API_KEY,
     transcriptService: process.env.TRANSCRIPT_SERVICE,
     transcriptServiceApiKey: process.env.TRANSCRIPT_SERVICE_API_KEY

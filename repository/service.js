@@ -28,8 +28,8 @@ const CONFIG = require('../config/config'),
     ES = require('elasticsearch'),
     CLIENT = new ES.Client({
         host: CONFIG.elasticSearch
-    }),
-    {file} = require("elasticsearch/src/lib/loggers");
+    });
+    // {file} = require("elasticsearch/src/lib/loggers");
 
 /**
  * Pings third-party services to determine availability
@@ -153,8 +153,8 @@ exports.get_convert_service_image = function (obj, callback) {
     (async () => {
 
         try {
-            // TODO: place convert service endpoint in config file
-            let endpoint = CONFIG.convertService + '/repository/v1/image?filename=' + obj.object_name + '&api_key=' + CONFIG.convertServiceApiKey;
+
+            let endpoint = CONFIG.convertService + CONFIG.convertServiceEndpoint + obj.object_name + '&api_key=' + CONFIG.convertServiceApiKey;
             let response = await HTTP.get(endpoint, {
                 timeout: 45000,
                 responseType: 'arraybuffer'
