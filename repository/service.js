@@ -86,12 +86,6 @@ exports.get_duracloud_thumbnail = function (tn, callback) {
  */
 exports.get_tn_service_image = function (uuid, callback) {
 
-    /* TODO: test and confirm type is not needed
-    if (req.query.type !== undefined) {
-        let type = VALIDATOR.unescape(req.query.type);
-    }
-     */
-
     (async () => {
 
         let missing_tn = '/images/image-tn.png';
