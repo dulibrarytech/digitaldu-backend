@@ -303,24 +303,3 @@ exports.get_suppressed_records = function (uuid, callback) {
         });
     });
 };
-
-/** TODO: move to task obj?
- * Gets mods record
- * @param obj
- * @param callback
- */
-exports.get_mods = function (obj, callback) {
-
-    ARCHIVESSPACE.get_mods(obj.mods_id, obj.session, function (result) {
-
-        if (result.error === false) {
-            obj.error = result.error;
-            obj.mods = JSON.stringify(result.mods.data);
-        } else {
-            obj.error = result.error;
-            obj.mods = null;
-        }
-
-        callback(obj);
-    });
-};
