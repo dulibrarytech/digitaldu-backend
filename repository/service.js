@@ -29,7 +29,6 @@ const CONFIG = require('../config/config'),
     CLIENT = new ES.Client({
         host: CONFIG.elasticSearch
     });
-    // {file} = require("elasticsearch/src/lib/loggers");
 
 /**
  * Pings third-party services to determine availability
