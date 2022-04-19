@@ -5,9 +5,9 @@
 # http://www.sequelpro.com/
 # https://github.com/sequelpro/sequelpro
 #
-# Host: 127.0.0.1 (MySQL 5.5.65-MariaDB)
+# Host: 127.0.0.1 (MySQL 5.7.26)
 # Database: repo
-# Generation Time: 2022-02-07 22:38:47 +0000
+# Generation Time: 2022-04-19 15:50:28 +0000
 # ************************************************************
 
 
@@ -28,10 +28,10 @@ DROP TABLE IF EXISTS `tbl_objects`;
 CREATE TABLE `tbl_objects` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `is_member_of_collection` varchar(255) NOT NULL DEFAULT '',
-  `pid` varchar(255) NOT NULL DEFAULT '',
+  `uuid` varchar(255) NOT NULL DEFAULT '',
   `handle` varchar(255) DEFAULT NULL,
   `object_type` varchar(50) DEFAULT 'object',
-  `mods` text,
+  `metadata` text,
   `thumbnail` varchar(255) DEFAULT NULL,
   `file_name` varchar(255) DEFAULT NULL,
   `display_record` longtext,
@@ -40,11 +40,11 @@ CREATE TABLE `tbl_objects` (
   `compound_parts` longtext,
   `mods_id` varchar(20) DEFAULT NULL,
   `uri` varchar(255) DEFAULT NULL,
+  `call_number` varchar(255) DEFAULT NULL,
   `mime_type` varchar(255) DEFAULT NULL,
   `delete_id` varchar(255) DEFAULT '',
   `checksum` varchar(255) DEFAULT NULL,
   `file_size` bigint(11) DEFAULT NULL,
-  `sip_uuid` varchar(255) DEFAULT NULL,
   `has_transcript` tinyint(4) DEFAULT '0',
   `is_compound` tinyint(1) NOT NULL DEFAULT '0',
   `is_published` tinyint(1) NOT NULL DEFAULT '0',
@@ -56,13 +56,30 @@ CREATE TABLE `tbl_objects` (
   `created` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `is_member_of_collection_index` (`is_member_of_collection`),
-  KEY `pid_index` (`pid`),
+  KEY `pid_index` (`uuid`),
   KEY `object_type_index` (`object_type`),
-  KEY `sip_uuid_index` (`sip_uuid`),
   KEY `is_published_index` (`is_published`),
   KEY `is_active_index` (`is_active`),
   KEY `mime_type_index` (`mime_type`),
   KEY `uri_index` (`uri`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+
+# Dump of table tbl_users
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `tbl_users`;
+
+CREATE TABLE `tbl_users` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `du_id` varchar(255) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `first_name` varchar(255) DEFAULT NULL,
+  `last_name` varchar(255) DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT '1',
+  `created` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
