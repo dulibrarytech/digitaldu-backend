@@ -199,26 +199,24 @@ const Create_collection_tasks = class {
 
     /**
      * Saves display record to database
-     * @param obj
+     * @param record
      * @returns boolean
      */
-    save_record = (obj) => {
+    save_record = (record) => {
 
-        let record = {};
-        record.uuid = obj.uuid;
-        record.handle = obj.handle;
-        record.uri = obj.uri;
-        record.mods = obj.metadata;
-        record.object_type = 'collection';
-        record.is_member_of_collection = obj.is_member_of_collection;
-        record.display_record = obj.display_record;
+        let promise = new Promise((resolve, reject) => {
 
-        return this.DB(this.TABLE)
-            .insert(record)
-            .then(() => {})
-            .catch((error) => {
-                LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks/save_record)] unable to save collection record ' + error.message);
-            });
+            this.DB(this.TABLE)
+                .insert(record)
+                .then((result) => {resolve(result);})
+                .catch((error) => {
+                    LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks/save_record)] unable to save collection record ' + error.message);
+                });
+        });
+
+        return promise.then((result) => {
+            return result;
+        });
     }
 
     /**

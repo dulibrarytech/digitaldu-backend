@@ -107,8 +107,10 @@ exports.get_index_record = function (req, callback) {
 exports.index_records = function (req, callback) {
 
     let index_name;
+    let frontend = false;
 
     if (req.body.index_name !== undefined) {
+        frontend = true;
         index_name = req.body.index_name;
     } else {
         index_name = CONFIG.elasticSearchBackIndex;
@@ -116,12 +118,17 @@ exports.index_records = function (req, callback) {
 
     function index (index_name) {
 
+        let where_obj = {};
+            where_obj.is_indexed = 0;
+            where_obj.is_active = 1;
+
+        if (frontend === true) {
+            where_obj.is_published = 1;
+        }
+
         DB(REPO_OBJECTS)
             .select('uuid')
-            .where({
-                is_indexed: 0,
-                is_active: 1
-            })
+            .where(where_obj)
             .whereNot({
                 display_record: null
             })
@@ -145,7 +152,7 @@ exports.index_records = function (req, callback) {
                         record = uuid_pid(record);
                     }
 
-                    console.log('indexing: ', record.pid);
+                    console.log('indexing ', record.pid + ' into ' + index_name);
 
                     SERVICE.index_record({
                         index: index_name,
@@ -305,25 +312,27 @@ exports.reindex = function (req, callback) {
 
 /**
  * Removes record from public index
- * @param req
+ * @param uuid
+ * @param index
  * @param callback
  */
-exports.unindex_record = function (req, callback) {
+exports.unindex_record = function (uuid, index, callback) {
 
-    let uuid = req.query.uuid;
+    let index_type;
 
-    if (uuid === undefined || uuid.length === 0) {
-
+    if (index === 'backend') {
+        index_type = CONFIG.elasticSearchBackIndex;
+    } else if (index === 'frontend') {
+        index_type = CONFIG.elasticSearchFrontIndex;
+    } else {
         callback({
-            status: 400,
-            message: 'Bad request.'
+            status: 500,
+            data: 'unable to remove record from index'
         });
-
-        return false;
     }
 
     SERVICE.unindex_record({
-        index: CONFIG.elasticSearchFrontIndex,
+        index: index_type,
         id: uuid
     }, function (response) {
 
@@ -349,6 +358,7 @@ exports.unindex_record = function (req, callback) {
  * @param req
  * @param callback
  */
+/*
 exports.unindex_admin_record = function (req, callback) {
 
     let uuid = req.query.uuid;
@@ -384,6 +394,8 @@ exports.unindex_admin_record = function (req, callback) {
         }
     });
 };
+
+ */
 
 /**
  * indexes all published records to public index after full reindex

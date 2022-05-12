@@ -64,7 +64,7 @@ exports.get_record = (req, res) => {
         return false;
     }
 
-    MODEL.get_record(uuid, (data) => {
+    MODEL.get_display_record(uuid, (data) => {
         res.status(data.status).send(data.data);
     });
 };
@@ -146,8 +146,8 @@ exports.get_suppressed_records = (req, res) => {
 
 exports.delete_record = (req, res) => {
 
-    let uuid = req.body.uuid;
-    let delete_reason = req.body.delete_reason;
+    let uuid = req.query.uuid;
+    let delete_reason = req.query.delete_reason;
 
     if (uuid === undefined || delete_reason === undefined) {
         res.status(400).send('Bad request.');
@@ -243,7 +243,7 @@ exports.get_object_viewer = (req, res) => {
         return false;
     }
 
-    SERVICE.get_object_viewer(req, (data) => {
+    SERVICE.get_object_viewer(uuid, (data) => {
         res.redirect(data.data);
     });
 };
@@ -257,7 +257,7 @@ exports.get_duracloud_thumbnail = (req, res) => {
         return false;
     }
 
-    SERVICE.get_duracloud_thumbnail(req, (data) => {
+    SERVICE.get_duracloud_thumbnail(tn, (data) => {
 
         res.set('Content-Type', 'image/jpeg');
 

@@ -31,14 +31,14 @@ const CONFIG = require('../config/config'),
     DR = require('../libs/display-record'),
     LOGGER = require('../libs/log4'),
     DB = require('../config/db')(),
-    REPO_OBJECTS = 'tbl_objects';
+    REPO_OBJECTS = 'tbl_objects_test';
 
 /**
  * Gets metadata display record
  * @param uuid
  * @param callback
  */
-exports.get_record = (uuid, callback) => {
+exports.get_display_record = (uuid, callback) => {
     DR.get_db_display_record_data(uuid, (data) => {
         callback({
             status: 200,
@@ -85,7 +85,7 @@ exports.create_collection_record = (uri, is_member_of_collection, callback) => {
             obj.uuid = await TASKS.get_uuid(CONFIG.uuidDomain);
             obj.handle = await TASKS.create_handle(obj.uuid);
             obj.display_record = await TASKS.create_display_record(obj);
-            TASKS.save_record(obj);
+            await TASKS.save_record(obj);
             await TASKS.index_record(obj.uuid);
 
             callback({

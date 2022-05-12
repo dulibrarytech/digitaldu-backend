@@ -20,704 +20,87 @@
 
 const CONFIG = require('../config/config'),
     HTTP = require('../libs/http'),
-    ASYNC = require('async'),
     LOGGER = require('../libs/log4'),
     CACHE = require('../libs/cache'),
-    TRANSCRIPTS = require('../libs/transcripts'),
     DURACLOUD = require('../libs/duracloud'),
     DB = require('../config/db')(),
     DBQ = require('../config/dbqueue')(),
+    REINDEX_TASKS = require('../utils/tasks/reindex_tasks'),
     REPO_OBJECTS = 'tbl_objects',
     CONVERT_QUEUE = 'tbl_convert_queue';
 
 /**
- * reindexes all repository records
- * @param req
+ * Re-indexes repository records
+ * @param index
  * @param callback
  */
-exports.reindex = function (req, callback) {
+exports.reindex = (index, callback) => {
 
-    CACHE.clear_cache();
+    (async () => {
 
-    function check_indexes(callback) {
+        let where_obj = {};
 
-        let obj = {};
-        let indexes = [CONFIG.elasticSearchBackIndex, CONFIG.elasticSearchFrontIndex];
-        obj.indexes = [];
-
-        function check_index(index, cb) {
-
-            (async () => {
-
-                let response = await HTTP.head({
-                    url: CONFIG.elasticSearch + '/' + index
-                });
-
-                let result = {};
-
-                if (response.error === true) {
-                    LOGGER.module().error('ERROR: [/utils/model module (check_index)] request failed. Index does not exist.');
-                    result.error = true;
-                } else {
-                    result.error = false;
-                }
-
-                result.index = index;
-                cb(result);
-            })();
+        if (index === 'frontend') {
+            where_obj.is_indexed = 0;
+            where_obj.is_active = 1;
+            where_obj.is_published = 1;
+            index = CONFIG.elasticSearchFrontIndex;
+        } else if (index === 'backend') {
+            where_obj.is_indexed = 0;
+            where_obj.is_active = 1;
+            index = CONFIG.elasticSearchBackIndex;
         }
 
-        let timer = setInterval(function () {
+        const TASKS = new REINDEX_TASKS(CONFIG.elasticSearch, index, DB, REPO_OBJECTS);
+        let is_deleted;
+        let is_created = true;
+        let is_indexing;
+        let index_exists = await TASKS.check_index();
 
-            if (indexes.length === 0) {
-                clearInterval(timer);
-                callback(null, obj);
+        if (index_exists === true) {
+            is_deleted = await TASKS.delete_index();
+        } else if (index_exists === false) {
+            is_created = await TASKS.create_index();
+        }
+
+        if (is_created !== false) {
+
+            is_indexing = await TASKS.index();
+
+            if (is_indexing === true) {
+
+                let timer = setInterval(() => {
+                    (async () => {
+
+                        let is_indexed = await TASKS.monitor_index_progress(where_obj);
+
+                        if (is_indexed === true) {
+                            console.log('indexing complete');
+                            clearInterval(timer);
+                        }
+                    })();
+
+                    CACHE.clear_cache();
+
+                }, 10000);
+
+            } else {
+                console.log('re-index failed');
                 return false;
             }
-
-            let index = indexes.pop();
-
-            check_index(index, function(result) {
-
-                if (result.error === false) {
-                    // indexes to delete
-                    obj.indexes.push(result.index);
-                }
-
-            });
-
-        }, 500);
-    }
-
-    function delete_index(obj, callback) {
-
-        // no need to run delete if indices do not exist
-        if (obj.error === false) {
-            obj.delete_indexes = [];
-            callback(null, obj);
-            return false;
         }
 
-        obj.delete_indexes = obj.indexes;
-
-        function del(index_name) {
-
-            (async() => {
-
-                let data = {
-                    'index_name': index_name
-                };
-
-                let response = await HTTP.post({
-                    endpoint: '/api/admin/v1/indexer/index/delete',
-                    data: data
-                });
-
-                if (response.error === true) {
-                    LOGGER.module().error('ERROR: [/import/utils module (reindex/delete_index)] indexer error ' + response.error);
-                } else if (response.data.status === 201) {
-                    return false;
-                }
-
-            })();
-        }
-
-        let timer = setInterval(function () {
-
-            if (obj.delete_indexes.length === 0) {
-                clearInterval(timer);
-                callback(null, obj);
-                return false;
-            }
-
-            let index = obj.delete_indexes.pop();
-            del(index);
-
-        }, 500);
-    }
-
-    function create_index(obj, callback) {
-
-        if (obj.delete_indexes.length !== 0) {
-            obj.delete = false;
-            callback(null, obj);
-            return false;
-        }
-
-        obj.create_indexes = [CONFIG.elasticSearchBackIndex, CONFIG.elasticSearchFrontIndex];
-
-        function create(index_name) {
-
-            (async() => {
-
-                let data = {
-                    'index_name': index_name
-                };
-
-                let response = await HTTP.post({
-                    endpoint: '/api/admin/v1/indexer/index/create',
-                    data: data
-                });
-
-                if (response.error === true) {
-                    LOGGER.module().error('ERROR: [/import/utils module (reindex/create_index/create)] indexer error ' + response.error);
-                } else if (response.data.status === 201) {
-                    return false;
-                }
-
-            })();
-        }
-
-        let timer = setInterval(function () {
-
-            if (obj.create_indexes.length === 0) {
-                clearInterval(timer);
-                callback(null, obj);
-                return false;
-            }
-
-            let index = obj.create_indexes.pop();
-            create(index);
-
-        }, 4000);
-    }
-
-    function index(obj, callback) {
-
-        if (obj.create_indexes.length !== 0) {
-            obj.create = false;
-            callback(null, obj);
-            return false;
-        }
-
-        function reindex(index_name) {
-
-            (async() => {
-
-                let data = {
-                    'index_name': index_name,
-                    'reindex': true
-                };
-
-                let response = await HTTP.post({
-                    endpoint: '/api/admin/v1/indexer/all',
-                    data: data
-                });
-
-                if (response.error === true) {
-                    LOGGER.module().error('ERROR: [/import/utils module (reindex/index/reindex)] indexer error ' + response.error);
-                } else if (response.data.status === 201) {
-                    obj.reindexed = true;
-                    callback(null, obj);
-                    return false;
-                }
-
-            })();
-        }
-
-        reindex(CONFIG.elasticSearchBackIndex);
-    }
-
-    function monitor_index_progress(obj, callback) {
-
-        console.log('Starting monitor...');
-
-        function monitor() {
-
-            DB(REPO_OBJECTS)
-                .count('is_indexed as is_indexed_count')
-                .where({
-                    is_indexed: 0,
-                    is_active: 1
-                })
-                .then(function (data) {
-
-                    console.log('Record index count: ', data[0].is_indexed_count);
-
-                    if (data[0].is_indexed_count < 50) {
-                        clearInterval(timer);
-                        obj.reindex_complete = true;
-                        callback(null, obj);
-                        return false;
-                    }
-
-                    return null;
-                })
-                .catch(function (error) {
-                    LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/monitor_index_progress)] unable to monitor index progress ' + error);
-                    throw 'FATAL: [/stats/model module (get_stats/monitor_index_progress)] unable to monitor index progress ' + error;
-                });
-        }
-
-        var timer = setInterval(function () {
-            monitor();
-            CACHE.clear_cache();
-        }, 10000);
-    }
-
-    ASYNC.waterfall([
-        check_indexes,
-        delete_index,
-        create_index,
-        index,
-        monitor_index_progress
-    ], function (error, results) {
-
-        if (error) {
-            LOGGER.module().error('ERROR: [/utils/model module (reindex/async.waterfall)] ' + error);
-        }
-
-        if (results.reindexed !== undefined) {
-            LOGGER.module().info('INFO: [/utils/model module (reindex/async.waterfall)] indexing in progress');
-        } else {
-            LOGGER.module().error('ERROR: [/utils/model module (reindex/async.waterfall)] reindex failed. ' + results);
-        }
-
-        if (results.reindex_complete !== undefined && results.reindex_complete === true) {
-            republish('collection');
-            republish('object');
-        }
-
-        CACHE.clear_cache();
-    });
+    })();
 
     callback({
         status: 201,
-        message: 'reindexing repository',
+        message: 'reindexing repository records',
         data: []
     });
 };
 
 /**
- * Re-indexes backend
- * @param req
- * @param callback
- */
-exports.reindex_backend = function (req, callback) {
-
-    CACHE.clear_cache();
-
-    function check_backend_index(callback) {
-
-        let obj = {};
-        let indexes = [CONFIG.elasticSearchBackIndex];
-        obj.indexes = [];
-
-        function check_index(index, cb) {
-
-            (async () => {
-
-                let response = await HTTP.head({
-                    url: CONFIG.elasticSearch + '/' + index
-                });
-
-                let result = {};
-
-                if (response.error === true) {
-                    LOGGER.module().error('ERROR: [/utils/model module (check_index)] request failed. Backend index does not exist.');
-                    result.error = true;
-                } else {
-                    result.error = false;
-                }
-
-                result.index = index;
-                cb(result);
-            })();
-        }
-
-        let timer = setInterval(function () {
-
-            if (indexes.length === 0) {
-                clearInterval(timer);
-                callback(null, obj);
-                return false;
-            }
-
-            let index = indexes.pop();
-
-            check_index(index, function(result) {
-
-                if (result.error === false) {
-                    // indexes to delete
-                    obj.indexes.push(result.index);
-                }
-
-            });
-
-        }, 500);
-    }
-
-    function delete_backend_index(obj, callback) {
-
-        // no need to run delete if indices do not exist
-        if (obj.error === false) {
-            obj.delete_indexes = [];
-            callback(null, obj);
-            return false;
-        }
-
-        obj.delete_indexes = obj.indexes;
-
-        function del(index_name) {
-
-            (async() => {
-
-                let data = {
-                    'index_name': index_name
-                };
-
-                let response = await HTTP.post({
-                    endpoint: '/api/admin/v1/indexer/index/delete',
-                    data: data
-                });
-
-                if (response.error === true) {
-                    LOGGER.module().error('ERROR: [/import/utils module (reindex_backend/delete_index)] backend indexer error ' + response.error);
-                } else if (response.data.status === 201) {
-                    return false;
-                }
-
-            })();
-        }
-
-        let timer = setInterval(function () {
-
-            if (obj.delete_indexes.length === 0) {
-                clearInterval(timer);
-                callback(null, obj);
-                return false;
-            }
-
-            let index = obj.delete_indexes.pop();
-            del(index);
-
-        }, 500);
-    }
-
-    function create_backend_index(obj, callback) {
-
-        if (obj.delete_indexes.length !== 0) {
-            obj.delete = false;
-            callback(null, obj);
-            return false;
-        }
-
-        obj.create_indexes = [CONFIG.elasticSearchBackIndex];
-
-        function create(index_name) {
-
-            (async() => {
-
-                let data = {
-                    'index_name': index_name
-                };
-
-                let response = await HTTP.post({
-                    endpoint: '/api/admin/v1/indexer/index/create',
-                    data: data
-                });
-
-                if (response.error === true) {
-                    LOGGER.module().error('ERROR: [/import/utils module (backend_reindex/create_index/create)] backend indexer error ' + response.error);
-                } else if (response.data.status === 201) {
-                    return false;
-                }
-
-            })();
-        }
-
-        let timer = setInterval(function () {
-
-            if (obj.create_indexes.length === 0) {
-                clearInterval(timer);
-                callback(null, obj);
-                return false;
-            }
-
-            let index = obj.create_indexes.pop();
-            create(index);
-
-        }, 4000);
-    }
-
-    function index_backend(obj, callback) {
-
-        if (obj.create_indexes.length !== 0) {
-            obj.create = false;
-            callback(null, obj);
-            return false;
-        }
-
-        function reindex(index_name) {
-
-            (async() => {
-
-                let data = {
-                    'index_name': index_name,
-                    'reindex': true
-                };
-
-                let response = await HTTP.post({
-                    endpoint: '/api/admin/v1/indexer/all',
-                    data: data
-                });
-
-                if (response.error === true) {
-                    LOGGER.module().error('ERROR: [/import/utils module (reindex_backend/index/reindex)] backend indexer error ' + response.error);
-                } else if (response.data.status === 201) {
-                    obj.reindexed = true;
-                    callback(null, obj);
-                    return false;
-                }
-
-            })();
-        }
-
-        reindex(CONFIG.elasticSearchBackIndex);
-    }
-
-    function monitor_backend_index_progress(obj, callback) {
-
-        console.log('Starting monitor...');
-
-        function monitor() {
-
-            DB(REPO_OBJECTS)
-                .count('is_indexed as is_indexed_count')
-                .where({
-                    is_indexed: 0,
-                    is_active: 1
-                })
-                .then(function (data) {
-
-                    console.log('Record backend index count: ', data[0].is_indexed_count);
-
-                    if (data[0].is_indexed_count < 50) {
-                        clearInterval(timer);
-                        obj.reindex_complete = true;
-                        callback(null, obj);
-                        return false;
-                    }
-
-                    return null;
-                })
-                .catch(function (error) {
-                    LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/monitor_index_progress)] unable to monitor backend index progress ' + error);
-                    throw 'FATAL: [/stats/model module (get_stats/monitor_index_progress)] unable to monitor backend index progress ' + error;
-                });
-        }
-
-        var timer = setInterval(function () {
-            monitor();
-            CACHE.clear_cache();
-        }, 10000);
-    }
-
-    ASYNC.waterfall([
-        check_backend_index,
-        delete_backend_index,
-        create_backend_index,
-        index_backend,
-        monitor_backend_index_progress
-    ], function (error, results) {
-
-        if (error) {
-            LOGGER.module().error('ERROR: [/utils/model module (reindex/async.waterfall)] ' + error);
-        }
-
-        if (results.reindexed !== undefined) {
-            LOGGER.module().info('INFO: [/utils/model module (reindex/async.waterfall)] indexing backend in progress');
-        } else {
-            LOGGER.module().error('ERROR: [/utils/model module (reindex/async.waterfall)] backend reindex failed. ' + results);
-        }
-
-        CACHE.clear_cache();
-    });
-
-    callback({
-        status: 201,
-        message: 'reindexing backend repository records',
-        data: []
-    });
-};
-
-/**
- * Re-indexes frontend
- * @param req
- * @param callback
- */
-exports.reindex_frontend = function (req, callback) {
-
-    CACHE.clear_cache();
-
-    function check_frontend_index(callback) {
-
-        let obj = {};
-        let indexes = [CONFIG.elasticSearchFrontIndex];
-        obj.indexes = [];
-
-        function check_index(index, cb) {
-
-            (async () => {
-
-                let response = await HTTP.head({
-                    url: CONFIG.elasticSearch + '/' + index
-                });
-
-                let result = {};
-
-                if (response.error === true) {
-                    LOGGER.module().error('ERROR: [/utils/model module (check_index)] request failed. Frontend index does not exist.');
-                    result.error = true;
-                } else {
-                    result.error = false;
-                }
-
-                result.index = index;
-                cb(result);
-            })();
-        }
-
-        let timer = setInterval(function () {
-
-            if (indexes.length === 0) {
-                clearInterval(timer);
-                callback(null, obj);
-                return false;
-            }
-
-            let index = indexes.pop();
-
-            check_index(index, function(result) {
-
-                if (result.error === false) {
-                    // indexes to delete
-                    obj.indexes.push(result.index);
-                }
-
-            });
-
-        }, 500);
-    }
-
-    function delete_frontend_index(obj, callback) {
-
-        // no need to run delete if indices do not exist
-        if (obj.error === false) {
-            obj.delete_indexes = [];
-            callback(null, obj);
-            return false;
-        }
-
-        obj.delete_indexes = obj.indexes;
-
-        function del(index_name) {
-
-            (async() => {
-
-                let data = {
-                    'index_name': index_name
-                };
-
-                let response = await HTTP.post({
-                    endpoint: '/api/admin/v1/indexer/index/delete',
-                    data: data
-                });
-
-                if (response.error === true) {
-                    LOGGER.module().error('ERROR: [/import/utils module (reindex_frontend/delete_index)] frontend indexer error ' + response.error);
-                } else if (response.data.status === 201) {
-                    return false;
-                }
-
-            })();
-        }
-
-        let timer = setInterval(function () {
-
-            if (obj.delete_indexes.length === 0) {
-                clearInterval(timer);
-                callback(null, obj);
-                return false;
-            }
-
-            let index = obj.delete_indexes.pop();
-            del(index);
-
-        }, 500);
-    }
-
-    function create_frontend_index(obj, callback) {
-
-        if (obj.delete_indexes.length !== 0) {
-            obj.delete = false;
-            callback(null, obj);
-            return false;
-        }
-
-        obj.create_indexes = [CONFIG.elasticSearchFrontIndex];
-
-        function create(index_name) {
-
-            (async() => {
-
-                let data = {
-                    'index_name': index_name
-                };
-
-                let response = await HTTP.post({
-                    endpoint: '/api/admin/v1/indexer/index/create',
-                    data: data
-                });
-
-                if (response.error === true) {
-                    LOGGER.module().error('ERROR: [/import/utils module (reindex_frontend/create_index/create)] frontend indexer error ' + response.error);
-                } else if (response.data.status === 201) {
-                    return false;
-                }
-
-            })();
-        }
-
-        let timer = setInterval(function () {
-
-            if (obj.create_indexes.length === 0) {
-                clearInterval(timer);
-                callback(null, obj);
-                return false;
-            }
-
-            let index = obj.create_indexes.pop();
-            create(index);
-
-        }, 4000);
-    }
-
-    ASYNC.waterfall([
-        check_frontend_index,
-        delete_frontend_index,
-        create_frontend_index
-    ], function (error, results) {
-
-        if (error) {
-            LOGGER.module().error('ERROR: [/utils/model module (reindex/async.waterfall)] ' + error);
-        }
-
-        republish('collection');
-        republish('object');
-
-        CACHE.clear_cache();
-    });
-
-    callback({
-        status: 201,
-        message: 'reindexing frontend repository records',
-        data: []
-    });
-};
-
-/**
- * publishes (indexes) records into public index
+ * publishes (indexes) record into public index
  * @param uuid
  */
 function publish(uuid) {
@@ -742,7 +125,7 @@ function publish(uuid) {
     })();
 }
 
-/**
+/** TODO: DEPRECATE
  * Republishes records after full reindex
  */
 const republish = function (object_type) {
@@ -782,10 +165,11 @@ const republish = function (object_type) {
 
 /**
  * Loads transcripts from transcript service
- */
+
 exports.load_transcripts = function () {
     TRANSCRIPTS.load();
 };
+ */
 
 /**
  * Retrieves files

@@ -19,6 +19,7 @@
 'use strict';
 
 const UTILS = require('../utils/controller'),
+    ENDPOINTS = require('../utils/endpoints'),
     TOKEN = require('../libs/tokens');
 
 module.exports = function (app) {
@@ -26,34 +27,23 @@ module.exports = function (app) {
     app.route('/')
         .get(UTILS.default);
 
-    app.get('/robots.txt', function (req, res) {
+    app.get('/robots.txt', (req, res) => {
         res.type('text/plain');
         res.send('User-agent: *\nDisallow: /');
     });
 
-    app.route('/api/admin/v1/utils/reindex')
+    app.route(ENDPOINTS().utils.utils_reindex)
         .post(TOKEN.verify, UTILS.reindex);
 
-    app.route('/api/admin/v1/utils/reindex/backend')
-        .post(TOKEN.verify, UTILS.reindex_backend);
-
-    app.route('/api/admin/v1/utils/reindex/frontend')
-        .post(TOKEN.verify, UTILS.reindex_frontend);
-
-    app.route('/api/admin/v1/utils/clear_cache')
+    app.route(ENDPOINTS().utils.utils_clear_cache)
         .post(TOKEN.verify, UTILS.clear_cache);
 
-    app.route('/api/admin/v1/utils/batch_convert')
+    app.route(ENDPOINTS().utils.utils_batch_convert)
         .post(TOKEN.verify, UTILS.batch_convert);
 
-    app.route('/api/admin/v1/utils/save_call_number')
+    app.route(ENDPOINTS().utils.utils_save_call_number)
         .post(TOKEN.verify, UTILS.save_call_number);
 
-    app.route('/api/admin/v1/utils/batch_fix')
+    app.route(ENDPOINTS().utils.utils_batch_fix)
         .post(TOKEN.verify, UTILS.batch_fix);
-    /*
-    app.route('/api/admin/v1/utils/load_transcripts')
-        .post(TOKEN.verify, UTILS.batch_convert);
-    */
-
 };

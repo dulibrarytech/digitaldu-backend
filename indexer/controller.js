@@ -28,16 +28,23 @@ exports.index_record = function (req, res) {
 };
 
 exports.unindex_record = function (req, res) {
-    MODEL.unindex_record(req, function (data) {
+
+    let uuid = req.query.uuid;
+    let index = req.query.index;
+    // TODO: 400
+    MODEL.unindex_record(uuid, index, function (data) {
         res.status(data.status).send(data);
     });
 };
 
+/*
 exports.unindex_admin_record = function (req, res) {
     MODEL.unindex_admin_record(req, function (data) {
         res.status(data.status).send(data);
     });
 };
+
+ */
 
 exports.index_records = function (req, res) {
     MODEL.index_records(req, function (data) {

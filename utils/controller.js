@@ -28,19 +28,10 @@ exports.default = function (req, res) {
 };
 
 exports.reindex = function (req, res) {
-    UTILS.reindex(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
 
-exports.reindex_backend = function (req, res) {
-    UTILS.reindex_backend(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
+    let index = req.body.index;
 
-exports.reindex_frontend = function (req, res) {
-    UTILS.reindex_frontend(req, function (data) {
+    UTILS.reindex(index, function (data) {
         res.status(data.status).send(data.data);
     });
 };
@@ -60,12 +51,6 @@ exports.batch_convert = function (req, res) {
 
 exports.save_call_number = function (req, res) {
     UTILS.save_call_number(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.load_transcripts = function (req, res) {
-    UTILS.load_transcripts(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
