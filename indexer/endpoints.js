@@ -18,12 +18,6 @@
 
 'use strict';
 
-/*
-        .put(TOKEN.verify, INDEXER.index_records)
-        .post(TOKEN.verify, INDEXER.index_record)
-        .delete(TOKEN.verify, INDEXER.unindex_record);
- */
-
 const PREFIX = '/api/';
 const VERSION = 'v2';
 const ENDPOINT = '/indexer/';
@@ -39,16 +33,25 @@ const ENDPOINTS = {
             },
             put: {
                 description: 'Full reindex',
-                params: 'token, api_key'
+                params: 'token or api_key'
             },
             delete: {
                 description: 'Deletes record',
-                params: 'uuid, token or api_key'
+                params: 'token or api_key, uuid'
             }
         },
         indexer_manage_index: {
             endpoint: `${PREFIX}${VERSION}${ENDPOINT}manage_index`,
-            description: 'Allows us to create and delete indices'
+            description: 'Allows us to create and delete indices',
+            post: {
+                description: 'Creates new repository search index',
+                params: 'token or api_key',
+                body: 'index_name'
+            },
+            delete: {
+                description: 'Deletes existing repository search index',
+                params: 'token or api_key, uuid, index (frontend/backend)'
+            }
         },
         indexer_reindex_record: `${PREFIX}${VERSION}${ENDPOINT}reindex_record`, //-- TODO
         indexer_republish_record: `${PREFIX}${VERSION}${ENDPOINT}republish_record`, //-- TODO

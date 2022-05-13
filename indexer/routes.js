@@ -21,15 +21,15 @@
 const INDEXER = require('../indexer/controller'),
     ENDPOINTS = require('../indexer/endpoints'),
     TOKEN = require('../libs/tokens');
-// TODO: figure out most efficient routes
+
 module.exports = function (app) {
 
-    app.route(ENDPOINTS().indexer.indexer_index_records.endpoint)  // '/api/admin/v1/indexer'
+    app.route(ENDPOINTS().indexer.indexer_index_records.endpoint)
         .put(TOKEN.verify, INDEXER.index_records)
         .post(TOKEN.verify, INDEXER.index_record)
-        .delete(TOKEN.verify, INDEXER.unindex_record);  // Removes record from public index
+        .delete(TOKEN.verify, INDEXER.unindex_record);
 
-    app.route(ENDPOINTS().indexer.indexer_manage_index)  // '/api/admin/v1/indexer/index/create'
+    app.route(ENDPOINTS().indexer.indexer_manage_index)
         .post(TOKEN.verify, INDEXER.create_repo_index)
         .delete(TOKEN.verify, INDEXER.delete_repo_index);
 

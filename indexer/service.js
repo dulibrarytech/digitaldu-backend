@@ -31,23 +31,15 @@ const CONFIG = require('../config/config'),
 
 /**
  * Create new index and mapping
- * @param req
+ * @param index_name
  * @param callback
  */
-exports.create_repo_index = function (req, callback) {
-
-    if (req.body.index_name === undefined) {
-
-        callback({
-            status: 400,
-            data: 'Bad request.'
-        });
-    }
+exports.create_repo_index = function (index_name, callback) {
 
     function create_index (callback) {
 
         let obj = {};
-        obj.index_name = req.body.index_name;
+        obj.index_name = index_name;
 
         CLIENT.indices.create({
             index: obj.index_name,
@@ -105,6 +97,7 @@ exports.create_repo_index = function (req, callback) {
         });
     }
 
+    // TODO: create tasks object
     ASYNC.waterfall([
         create_index,
         create_mapping
@@ -125,21 +118,13 @@ exports.create_repo_index = function (req, callback) {
 
 /**
  * Deletes index
- * @param req
+ * @param index_name
  * @param callback
  */
-exports.delete_repo_index = function (req, callback) {
-
-    if (req.body.index_name === undefined) {
-
-        callback({
-            status: 400,
-            data: 'Bad request.'
-        });
-    }
+exports.delete_repo_index = function (index_name, callback) {
 
     CLIENT.indices.delete({
-        index: req.body.index_name
+        index: index_name
     }).then(function (result) {
 
         let message = '';
@@ -184,7 +169,7 @@ exports.index_record = function (obj, callback) {
     });
 };
 
-/**
+/** DEPRECATE
  * Updates document fragments
  * @param obj
  * @param callback

@@ -31,7 +31,7 @@ exports.unindex_record = function (req, res) {
 
     let uuid = req.query.uuid;
     let index = req.query.index;
-    // TODO: 400
+
     MODEL.unindex_record(uuid, index, function (data) {
         res.status(data.status).send(data);
     });
@@ -77,13 +77,21 @@ exports.republish_record = function (req, res) {
 };
 
 exports.create_repo_index = function (req, res) {
-    SERVICE.create_repo_index(req, function (data) {
+
+    // TODO: create tasks object
+    let index_name = req.body.index_name;
+
+    SERVICE.create_repo_index(index_name, function (data) {
         res.status(data.status).send(data);
     });
 };
 
 exports.delete_repo_index = function (req, res) {
-    SERVICE.delete_repo_index(req, function (data) {
+
+    // TODO: create task object
+    let index_name = req.body.index_name;
+
+    SERVICE.delete_repo_index(index_name, function (data) {
         res.status(data.status).send(data);
     });
 };
