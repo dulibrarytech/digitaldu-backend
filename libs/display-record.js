@@ -317,7 +317,7 @@ exports.update_display_record = function (obj, display_record, callback) {
         .update({
             display_record: display_record
         })
-        .then(function (data) {
+        .then((data) => {
 
             if (data === 1) {
                 LOGGER.module().info('INFO: [/libs/display-record lib (update_display_record)] display record updated');

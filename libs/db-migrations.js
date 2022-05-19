@@ -18,7 +18,7 @@
 
 'use strict';
 
-const DB = require('../config/db')(),
+const DB = require('../test/db')(),
     REPO_USERS = 'tbl_users_test',
     REPO_OBJECTS = 'tbl_objects_test',
     LOGGER = require('../libs/log4');
@@ -95,7 +95,7 @@ const create_repo_users_table = () => {
  */
 exports.up = () => {
     create_repo_objects_table();
-    create_repo_users_table();
+    // create_repo_users_table();
 };
 
 /**

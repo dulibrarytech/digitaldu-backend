@@ -29,6 +29,6 @@ const CONFIG = require('../config/config'),
         }
 });
 
-module.exports = function () {
+module.exports = () => {
   return DB;
 };

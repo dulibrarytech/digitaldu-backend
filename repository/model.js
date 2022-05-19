@@ -28,10 +28,11 @@ const CONFIG = require('../config/config'),
     SUPPRESS_CHILD_RECORD_TASKS = require('../repository/tasks/suppress_child_record_tasks'),
     DISPLAY_RECORD_TASKS = require('../repository/tasks/display_record_tasks'),
     DELETE_RECORD_TASKS = require('../repository/tasks/delete_record_tasks'),
-    DR = require('../libs/display-record'),
+    // DISPLAY_RECORD_LIB = require('../libs/display_record'), // TODO: use tasks instead
+    // DR = require('../libs/display-record'),
     LOGGER = require('../libs/log4'),
     DB = require('../config/db')(),
-    REPO_OBJECTS = 'tbl_objects_test';
+    REPO_OBJECTS = 'tbl_objects';
 
 /**
  * Gets metadata display record
@@ -39,13 +40,28 @@ const CONFIG = require('../config/config'),
  * @param callback
  */
 exports.get_display_record = (uuid, callback) => {
-    DR.get_db_display_record_data(uuid, (data) => {
+
+    if (uuid === undefined || typeof uuid !== 'string') {
+
+        callback({
+            status: 400,
+            message: 'Bad Request'
+        });
+
+        return false;
+    }
+
+    (async () => {
+
+        const DRL = new DISPLAY_RECORD_TASKS(uuid, DB, REPO_OBJECTS)
+        const data = await DRL.get_db_display_record_data();
+
         callback({
             status: 200,
             message: 'Display record retrieved.',
             data: data
         });
-    });
+    })();
 };
 
 /**
@@ -156,7 +172,7 @@ exports.publish_record = (uuid, type, callback) => {
 
     const COLLECTION_TASKS = new PUBLISH_COLLECTION_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
     const CHILD_RECORD_TASKS = new PUBLISH_CHILD_RECORD_TASKS(uuid, DB, REPO_OBJECTS); // .Publish_child_record_tasks
-    const DISPLAY_RECORD_TASK = new DISPLAY_RECORD_TASKS(uuid);
+    const DISPLAY_RECORD_TASK = new DISPLAY_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
 
     (async () => {
 
@@ -232,7 +248,7 @@ exports.suppress_record = (uuid, type, callback) => {
 
     const COLLECTION_TASK = new SUPPRESS_COLLECTION_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
     const CHILD_TASK = new SUPPRESS_CHILD_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
-    const DISPLAY_RECORD_TASK = new DISPLAY_RECORD_TASKS(uuid);
+    const DISPLAY_RECORD_TASK = new DISPLAY_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
 
     (async () => {
 
@@ -300,7 +316,7 @@ exports.suppress_record = (uuid, type, callback) => {
  */
 exports.rebuild_display_record = (uuid, callback) => {
 
-    const task = new DISPLAY_RECORD_TASKS(uuid);
+    const task = new DISPLAY_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
     task.update();
 
     callback({

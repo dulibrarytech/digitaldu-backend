@@ -16,7 +16,8 @@
 
  */
 
-const DR = require('../../libs/display-record');
+// const DR = require('../../libs/display-record');
+const DISPLAY_RECORD_LIB = require('../../libs/display_record');
 const HELPER = require('../../repository/helper');
 const LOGGER = require('../../libs/log4');
 
@@ -27,8 +28,11 @@ const LOGGER = require('../../libs/log4');
  */
 const Display_record_tasks = class {
 
-    constructor(uuid) {
+    constructor(uuid, DB, TABLE) {
         this.uuid = uuid;
+        this.DB = DB;
+        this.TABLE = TABLE;
+        this.DRL = new DISPLAY_RECORD_LIB(this.DB, this.TABLE);
     }
 
     /**
@@ -57,9 +61,21 @@ const Display_record_tasks = class {
 
         let promise = new Promise((resolve, reject) => {
 
+            try {
+
+                (async () => {
+                    resolve(await this.DRL.get_display_record_data(this.uuid));
+                })();
+
+            } catch (error) {
+                reject(error);
+            }
+
+            /*
             DR.get_display_record_data(this.uuid, (record_obj) => {
                 resolve(record_obj);
             });
+             */
 
         });
 
@@ -77,6 +93,17 @@ const Display_record_tasks = class {
 
         let promise = new Promise((resolve, reject) => {
 
+            try {
+
+                (async () => {
+                    resolve(this.DRL.create_display_record(data));
+                })();
+
+            } catch (error) {
+                reject(error);
+            }
+
+            /*
             DR.create_display_record(data, (display_record) => {
 
                 if (typeof display_record === 'object') {
@@ -86,6 +113,7 @@ const Display_record_tasks = class {
 
                 resolve(display_record);
             });
+             */
         });
 
         return promise.then((display_record) => {
@@ -108,6 +136,17 @@ const Display_record_tasks = class {
                 is_active: 1
             };
 
+            try {
+
+                (async () => {
+                    resolve(this.DRL.update_display_record(where_obj, display_record));
+                })();
+
+            } catch (error) {
+                reject(error);
+            }
+
+            /*
             DR.update_display_record(where_obj, display_record, (result) => {
 
                 if (typeof result === 'object') {
@@ -117,6 +156,8 @@ const Display_record_tasks = class {
 
                 resolve(result);
             });
+
+             */
         });
 
         return promise.then((display_record) => {
@@ -145,6 +186,30 @@ const Display_record_tasks = class {
 
         return promise.then((result) => {
             return result;
+        });
+    }
+
+    /**
+     * Retrieves display record data by uuid
+     */
+    get_db_display_record_data = () => {
+
+        let promise = new Promise((resolve, reject) => {
+
+            try {
+
+                (async () => {
+                    resolve(await this.DRL.get_db_display_record_data(this.uuid));
+                })();
+
+            } catch (error) {
+                reject(error);
+            }
+
+        });
+
+        return promise.then((data) => {
+            return data;
         });
     }
 };
