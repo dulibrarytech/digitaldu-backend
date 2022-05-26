@@ -19,7 +19,7 @@
 'use strict';
 
 const CONFIG = require('../config/config'),
-    HTTP = require('../libs/http'),
+    // HTTP = require('../libs/http'),
     LOGGER = require('../libs/log4'),
     CACHE = require('../libs/cache'),
     DURACLOUD = require('../libs/duracloud'),
@@ -98,78 +98,6 @@ exports.reindex = (index, callback) => {
         data: []
     });
 };
-
-/**
- * publishes (indexes) record into public index
- * @param uuid
- */
-function publish(uuid) {
-
-    (async() => {
-
-        let data = {
-            'uuid': uuid
-        };
-
-        let response = await HTTP.post({
-            endpoint: '/api/admin/v1/indexer/republish',
-            data: data
-        });
-
-        if (response.error === true) {
-            LOGGER.module().error('ERROR: [/import/utils module (republish/publish)] indexer error ' + response.error);
-        } else if (response.data.status === 201) {
-            return false;
-        }
-
-    })();
-}
-
-/** TODO: DEPRECATE
- * Republishes records after full reindex
- */
-const republish = function (object_type) {
-
-    console.log('Republishing ' + object_type + ' records...');
-
-    let whereObj = {
-        object_type: object_type,
-        is_published: 1,
-        is_active: 1
-    };
-
-    DB(REPO_OBJECTS)
-        .select('uuid')
-        .where(whereObj)
-        .then(function (data) {
-
-            let timer = setInterval(function () {
-
-                if (data.length === 0) {
-                    clearInterval(timer);
-                    return false;
-                }
-
-                let record = data.pop();
-                publish(record.uuid);
-
-            }, 20);
-
-            return null;
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/import/utils module (reindex/republish_collection/publish_collection)] Unable to get object ' + error);
-            throw 'FATAL: [/import/utils module (reindex/republish_collection/publish_collection)] Unable to get object ' + error;
-        });
-};
-
-/**
- * Loads transcripts from transcript service
-
-exports.load_transcripts = function () {
-    TRANSCRIPTS.load();
-};
- */
 
 /**
  * Retrieves files
@@ -723,6 +651,72 @@ exports.save_call_number = function(req, callback) {
         data: []
     });
 };
+
+/** TODO: DEPRECATED
+ * publishes (indexes) record into public index
+ * @param uuid
+
+ function publish(uuid) {
+
+    (async() => {
+
+        let data = {
+            'uuid': uuid
+        };
+
+        let response = await HTTP.post({
+            endpoint: '/api/admin/v1/indexer/republish',
+            data: data
+        });
+
+        if (response.error === true) {
+            LOGGER.module().error('ERROR: [/import/utils module (republish/publish)] indexer error ' + response.error);
+        } else if (response.data.status === 201) {
+            return false;
+        }
+
+    })();
+}
+ */
+
+/** TODO: DEPRECATED
+ * Republishes records after full reindex
+
+ const republish = function (object_type) {
+
+    console.log('Republishing ' + object_type + ' records...');
+
+    let whereObj = {
+        object_type: object_type,
+        is_published: 1,
+        is_active: 1
+    };
+
+    DB(REPO_OBJECTS)
+        .select('uuid')
+        .where(whereObj)
+        .then(function (data) {
+
+            let timer = setInterval(function () {
+
+                if (data.length === 0) {
+                    clearInterval(timer);
+                    return false;
+                }
+
+                let record = data.pop();
+                publish(record.uuid);
+
+            }, 20);
+
+            return null;
+        })
+        .catch(function (error) {
+            LOGGER.module().fatal('FATAL: [/import/utils module (reindex/republish_collection/publish_collection)] Unable to get object ' + error);
+            throw 'FATAL: [/import/utils module (reindex/republish_collection/publish_collection)] Unable to get object ' + error;
+        });
+};
+ */
 
 // TODO: delete ES record curl -X DELETE "localhost:9200/document-index/_doc/1"
 // curl -X DELETE "http://domain:9200/repo_admin/_doc/0e642af3-79cb-456e-ba7e-ccdf5ec0cee3"

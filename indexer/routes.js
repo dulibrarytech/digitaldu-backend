@@ -18,50 +18,35 @@
 
 'use strict';
 
-const INDEXER = require('../indexer/controller'),
+const CONTROLLER = require('../indexer/controller'),
     ENDPOINTS = require('../indexer/endpoints'),
     TOKEN = require('../libs/tokens');
 
 module.exports = function (app) {
 
     app.route(ENDPOINTS().indexer.indexer_index_records.endpoint)
-        .put(TOKEN.verify, INDEXER.index_records)
-        .post(TOKEN.verify, INDEXER.index_record)
-        .delete(TOKEN.verify, INDEXER.unindex_record);
+        .put(TOKEN.verify, CONTROLLER.index_records)
+        .post(TOKEN.verify, CONTROLLER.index_record)
+        .delete(TOKEN.verify, CONTROLLER.unindex_record);
 
     app.route(ENDPOINTS().indexer.indexer_manage_index)
-        .post(TOKEN.verify, INDEXER.create_repo_index)
-        .delete(TOKEN.verify, INDEXER.delete_repo_index);
+        .post(TOKEN.verify, CONTROLLER.create_repo_index)
+        .delete(TOKEN.verify, CONTROLLER.delete_repo_index);
 
+    app.route(ENDPOINTS().indexer.indexer_publish_records)
+        .post(TOKEN.verify, CONTROLLER.publish_records);
 
-    // TODO: combine the deletes - designate uising params
     /*
+    app.route('/api/admin/v1/indexer/republish')
+        .post(TOKEN.verify, CONTROLLER.republish_record);
+
     app.route('/api/admin/v1/indexer/delete')
         .delete(TOKEN.verify, INDEXER.unindex_admin_record); // removes record from admin index
     */
-
-    app.route('/api/admin/v1/indexer/reindex') // TODO: rename!! publishes records from admin to public
-        .post(TOKEN.verify, INDEXER.reindex); // TODO: check if this can be deprecated
-
-    app.route('/api/admin/v1/indexer/republish')
-        .post(TOKEN.verify, INDEXER.republish_record);
-
-
 
     /*
     app.route('/api/admin/v1/indexer/update_fragment')
         .put(TOKEN.verify, INDEXER.update_fragment);
 
      */
-
-    /* TODO
-    app.route(ENDPOINTS().indexer.indexer_full_reindex)  // '/api/admin/v1/indexer/all'
-        .post(TOKEN.verify, INDEXER.index_records);
-    */
-
-    /*
-    app.route()  // '/api/admin/v1/indexer/index/delete'
-        .post(TOKEN.verify, INDEXER.delete_repo_index);
-    */
-
 };

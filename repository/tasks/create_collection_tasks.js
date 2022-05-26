@@ -17,7 +17,7 @@
  */
 
 const UUID = require('node-uuid');
-const ARCHIVESSPACE = require("../../libs/archivespace");
+const ARCHIVESSPACE = require("../../libs/archivesspace");
 const HANDLES = require('../../libs/handles');
 const DR = require('../../libs/display-record');
 const HELPER = require('../../repository/helper');
@@ -43,23 +43,33 @@ const Create_collection_tasks = class {
      */
     check_uri = (uri) => {
 
-        let is_duplicate = false;
+        let promise = new Promise((resolve, reject) => {
 
-        return this.DB(this.TABLE)
-            .count('uri as uri')
-            .where('uri', uri)
-            .then((result) => {
+            let is_duplicate = false;
 
-                if (result[0].uri > 0) {
-                    is_duplicate = true;
-                }
+            this.DB(this.TABLE)
+                .count('uri as uri')
+                .where('uri', uri)
+                .then((result) => {
 
-                return is_duplicate;
-            })
-            .catch((error) => {
-                LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks)] unable to check uri ' + error.message);
-                return new Error('Unable to check uri ' + error.message);
+                    if (result[0].uri > 0) {
+                        is_duplicate = true;
+                    }
+
+                    resolve(is_duplicate);
+                })
+                .catch((error) => {
+                    LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks)] unable to check uri ' + error.message);
+                    reject(new Error('Unable to check uri ' + error.message));
+                });
+        });
+
+        return promise.then((result) => {
+            return result;
+        }).catch((error) => {
+                return error;
             });
+
     }
 
     /**
@@ -70,6 +80,7 @@ const Create_collection_tasks = class {
 
         let promise = new Promise((resolve, reject) => {
 
+            // TODO: convert to an object
             ARCHIVESSPACE.get_session_token((response) => {
 
                 try {
@@ -79,10 +90,11 @@ const Create_collection_tasks = class {
                     if (response.error === true) {
                         reject(new Error('Unable to get session token'));
                     } else {
+                        console.log(token.session);
                         resolve(token.session);
                     }
 
-                } catch(error) {
+                } catch (error) {
                     reject(new Error('Unable to get session token'));
                 }
             });
@@ -90,6 +102,8 @@ const Create_collection_tasks = class {
 
         return promise.then((token) => {
             return token;
+        }).catch((error) => {
+            return error;
         });
     }
 
@@ -117,6 +131,8 @@ const Create_collection_tasks = class {
 
         return promise.then((metadata) => {
             return metadata;
+        }).catch((error) => {
+            return error;
         });
     }
 
@@ -140,6 +156,8 @@ const Create_collection_tasks = class {
 
         return promise.then((uuid) => {
             return uuid;
+        }).catch((error) => {
+            return error;
         });
     }
 
@@ -167,6 +185,8 @@ const Create_collection_tasks = class {
 
         return promise.then((handle) => {
             return handle;
+        }).catch((error) => {
+            return error;
         });
     }
 
@@ -194,6 +214,8 @@ const Create_collection_tasks = class {
 
         return promise.then((display_record) => {
             return display_record;
+        }).catch((error) => {
+            return error;
         });
     }
 
@@ -208,15 +230,22 @@ const Create_collection_tasks = class {
 
             this.DB(this.TABLE)
                 .insert(record)
-                .then((result) => {resolve(result);})
+                .then((result) => {
+                    resolve(result);
+                })
                 .catch((error) => {
                     LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks/save_record)] unable to save collection record ' + error.message);
+                    reject(error);
                 });
         });
 
         return promise.then((result) => {
-            return result;
-        });
+            if (result.length === 1) {
+                return true
+            }
+        }).catch((error) => {
+                return error;
+            });
     }
 
     /**
@@ -241,6 +270,8 @@ const Create_collection_tasks = class {
 
         return promise.then((response) => {
             return response;
+        }).catch((error) => {
+            return error;
         });
     }
 };

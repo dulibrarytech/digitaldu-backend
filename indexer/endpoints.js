@@ -53,7 +53,15 @@ const ENDPOINTS = {
                 params: 'token or api_key, uuid, index (frontend/backend)'
             }
         },
-        indexer_reindex_record: `${PREFIX}${VERSION}${ENDPOINT}reindex_record`, //-- TODO
+        indexer_publish_records: {
+            endpoint: `${PREFIX}${VERSION}${ENDPOINT}publish_records`,
+            description: 'Moves record(s) from admin to public index using ES reindex process',
+            post: {
+                description: 'Publishes record by moving it from admin to public index',
+                params: 'token or api_key',
+                body: 'match_phrase query object'
+            }
+        },
         indexer_republish_record: `${PREFIX}${VERSION}${ENDPOINT}republish_record`, //-- TODO
         indexer_delete_record: `${PREFIX}${VERSION}${ENDPOINT}delete_record` //-- TODO
     }

@@ -20,9 +20,35 @@
 
 const MODEL = require('../indexer/model'),
     SERVICE = require('../indexer/service');
+const CONFIG = require("../config/config");
 
-exports.index_record = function (req, res) {
-    MODEL.get_index_record(req, function (data) {
+exports.index_record = (req, res) => {
+
+    let uuid = req.body.uuid;
+    let publish = req.body.publish;
+    let index_name;
+
+    if (req.body.uuid === undefined || req.body.uuid.length === 0) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    if (publish === 'true') {
+        index_name = CONFIG.elasticSearchFrontIndex;
+    } else {
+        index_name = CONFIG.elasticSearchBackIndex;
+    }
+
+    MODEL.index_record(uuid, index_name, (data) => {
+        res.status(data.status).send(data);
+    });
+};
+
+exports.index_records = (req, res) => {
+
+    let index_name = req.body.index_name;
+
+    MODEL.index_records(index_name, (data) => {
         res.status(data.status).send(data);
     });
 };
@@ -37,41 +63,8 @@ exports.unindex_record = function (req, res) {
     });
 };
 
-/*
-exports.unindex_admin_record = function (req, res) {
-    MODEL.unindex_admin_record(req, function (data) {
-        res.status(data.status).send(data);
-    });
-};
-
- */
-
-exports.index_records = function (req, res) {
-    MODEL.index_records(req, function (data) {
-        res.status(data.status).send(data);
-    });
-};
-
-exports.update_fragment = function (req, res) {
-    MODEL.update_fragment(req, function (data) {
-        res.status(data.status).send(data);
-    });
-};
-
-exports.reindex = function (req, res) {
-    MODEL.reindex(req, function (data) {
-        res.status(data.status).send(data);
-    });
-};
-
-exports.index_data = function (req, res) {
-    MODEL.index_data(req, function (data) {
-        res.status(data.status).send(data);
-    });
-};
-
-exports.republish_record = function (req, res) {
-    MODEL.republish_record(req, function (data) {
+exports.publish_records = function (req, res) {
+    MODEL.publish_records(req, function (data) {
         res.status(data.status).send(data);
     });
 };
@@ -89,9 +82,36 @@ exports.create_repo_index = function (req, res) {
 exports.delete_repo_index = function (req, res) {
 
     // TODO: create task object
-    let index_name = req.body.index_name;
+    let index_name = req.query.index_name;
 
     SERVICE.delete_repo_index(index_name, function (data) {
         res.status(data.status).send(data);
     });
 };
+
+/*
+exports.update_fragment = function (req, res) {
+    MODEL.update_fragment(req, function (data) {
+        res.status(data.status).send(data);
+    });
+};
+
+ */
+
+/*
+exports.republish_record = function (req, res) {
+    MODEL.republish_record(req, function (data) {
+        res.status(data.status).send(data);
+    });
+};
+
+ */
+
+/*
+exports.index_data = function (req, res) {
+    MODEL.index_data(req, function (data) {
+        res.status(data.status).send(data);
+    });
+};
+
+ */

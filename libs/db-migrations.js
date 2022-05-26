@@ -30,7 +30,7 @@ const DB = require('../test/db')(),
  */
 const create_repo_objects_table = () => {
 
-    DB.schema.createTable(REPO_OBJECTS, (table) => {
+    return DB.schema.createTable(REPO_OBJECTS, (table) => {
         table.increments();
         table.string('is_member_of_collection', 255).collate('utf8_general_ci').comment('collection universal unique identifier');
         table.string('uuid', 255).collate('utf8_general_ci').comment('record universal unique identifier');
@@ -94,8 +94,11 @@ const create_repo_users_table = () => {
  *  Creates db test tables
  */
 exports.up = () => {
-    create_repo_objects_table();
-    // create_repo_users_table();
+    (async () => {
+        console.log('Going up...');
+        await create_repo_objects_table();
+        // create_repo_users_table();
+    })();
 };
 
 /**
@@ -105,10 +108,10 @@ exports.down = () => {
     DB.schema
         .dropTable(REPO_USERS)
         .dropTable(REPO_OBJECTS)
-        .then(function() {
+        .then(function () {
             console.log('Removing test tables');
         })
-        .catch(function(error) {
+        .catch(function (error) {
             console.log(error);
         });
 };

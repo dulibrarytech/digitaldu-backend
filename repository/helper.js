@@ -19,6 +19,7 @@
 'use strict';
 
 const HTTP = require('../libs/http'),
+    ENDPOINTS = require('../indexer/endpoints'),
     LOGGER = require('../libs/log4');
 
 /**
@@ -45,12 +46,12 @@ exports.publish_record = (match_phrase, callback) => {
         };
 
         response = await HTTP.post({
-            endpoint: '/api/admin/v1/indexer/reindex',
+            endpoint: ENDPOINTS().indexer.indexer_publish_records,
             data: data
         });
 
         if (response.error === true) {
-            LOGGER.module().error('ERROR: [/repository/helper module (reindex)] reindex failed.');
+            LOGGER.module().error('ERROR: [/repository/helper module (publish (reindex))] publish failed.');
             result.error = true;
         } else if (response.data.status === 201) {
             result.error = false;
@@ -77,7 +78,7 @@ exports.index = (uuid, callback) => {
         };
 
         response = await HTTP.post({
-            endpoint: '/api/admin/v1/indexer',
+            endpoint: ENDPOINTS().indexer.indexer_index_records,
             data: data
         });
 
@@ -103,7 +104,7 @@ exports.del = (uuid, callback) => {
     (async () => {
 
         let response = await HTTP.delete({
-            endpoint: '/api/admin/v1/indexer',
+            endpoint: ENDPOINTS().indexer.indexer_index_records,
             params: {
                 uuid: uuid
             }

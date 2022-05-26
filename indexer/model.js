@@ -19,64 +19,35 @@
 'use strict';
 
 const CONFIG = require('../config/config'),
-    SERVICE = require('../indexer/service'),
-    MODS = require('../libs/display-record'),
     DB = require('../config/db')(),
+    HELPER = require('../indexer/helper'),
+    SERVICE = require('../indexer/service'),
+    INDEXER_TASKS = require('../indexer/tasks/indexer_tasks'),
+    // MODS = require('../libs/display-record'), // TODO: rename const variable to DRT
     LOGGER = require('../libs/log4'),
     INDEX_TIMER = CONFIG.indexTimer,
     REPO_OBJECTS = 'tbl_objects';
 
-// TODO: move to helper
-function uuid_pid (record) {
-    record.pid = record.uuid;
-    return record;
-}
-
 /**
- * Gets index record
- * @param req
+ * indexes record
+ * @param uuid
+ * @param index_name
  * @param callback
  * @returns {boolean}
  */
-exports.get_index_record = function (req, callback) {
+exports.index_record = function (uuid, index_name, callback) {
 
-    if (req.body.uuid === undefined || req.body.uuid.length === 0) {
-        callback({
-            status: 400,
-            message: 'Bad request.'
-        });
+    (async () => {
+        const TASK = new INDEXER_TASKS(uuid, DB, REPO_OBJECTS);
+        let record = await TASK.get_index_display_record_data();
 
-        return false;
-    }
-
-    let uuid = req.body.uuid,
-        elasticSearchIndex;
-
-    if (req.body.publish !== undefined && req.body.publish === 'true') {
-        elasticSearchIndex = CONFIG.elasticSearchFrontIndex;
-    } else {
-        elasticSearchIndex = CONFIG.elasticSearchBackIndex;
-    }
-
-    MODS.get_index_display_record_data(uuid, function(record) {
-
-        if (record === 'no_data') {
-
-            callback({
-                status: 400,
-                message: 'record not indexed'
-            });
-
-            return false;
-        }
-
-        record = uuid_pid(record);
+        record = HELPER.uuid_pid(record);
 
         SERVICE.index_record({
-            index: elasticSearchIndex,
+            index: index_name,
             id: record.pid,
             body: record
-        }, function (response) {
+        }, (response) => {
 
             if (response.result === 'created' || response.result === 'updated') {
 
@@ -90,27 +61,26 @@ exports.get_index_record = function (req, callback) {
                 LOGGER.module().error('ERROR: [/indexer/model module (get_index_record)] unable to index record');
 
                 callback({
-                    status: 201,  // TODO: change response code
+                    status: 200,
                     message: 'record not indexed'
                 });
             }
         });
-    });
+    })();
 };
 
 /**
  * Indexes all repository records
- * @param req
+ * @param index_name
  * @param callback
  * @returns {boolean}
  */
-exports.index_records = function (req, callback) {
+exports.index_records = function (index_name, callback) {
 
-    let index_name;
-    let frontend = false;
+    let is_frontend = false;
 
-    if (req.body.index_name !== undefined) {
-        frontend = true;
+    if (index_name !== undefined) {
+        is_frontend = true;
         index_name = req.body.index_name;
     } else {
         index_name = CONFIG.elasticSearchBackIndex;
@@ -122,7 +92,7 @@ exports.index_records = function (req, callback) {
             where_obj.is_indexed = 0;
             where_obj.is_active = 1;
 
-        if (frontend === true) {
+        if (is_frontend === true) {
             where_obj.is_published = 1;
         }
 
@@ -133,7 +103,7 @@ exports.index_records = function (req, callback) {
                 display_record: null
             })
             .limit(1)
-            .then(function (data) {
+            .then((data) => {
 
                 if (data === undefined || data.length === 0) {
                     return false;
@@ -141,6 +111,7 @@ exports.index_records = function (req, callback) {
 
                 let uuid = data[0].uuid;
 
+                // use task obj
                 MODS.get_index_display_record_data(uuid, function(record) {
 
                     if (record === 'no_data') {
@@ -149,11 +120,12 @@ exports.index_records = function (req, callback) {
                     }
 
                     if (record.pid === undefined) {
-                        record = uuid_pid(record);
+                        record = HELPER.uuid_pid(record);
                     }
 
                     console.log('indexing ', record.pid + ' into ' + index_name);
 
+                    // Index_record
                     SERVICE.index_record({
                         index: index_name,
                         id: record.pid,
@@ -200,6 +172,7 @@ exports.index_records = function (req, callback) {
             });
     }
 
+    // update flag
     // reset is_indexed fields
     DB(REPO_OBJECTS)
         .where({
@@ -224,60 +197,12 @@ exports.index_records = function (req, callback) {
     });
 };
 
-/** DEPRECATE
- * updates document fragment
- * @param req
- * @param callback
- */
-exports.update_fragment = function (req, callback) {
-
-    let uuid = req.body.uuid,
-        doc_fragment = req.body.fragment;
-
-    if (uuid === undefined || doc_fragment === undefined) {
-
-        callback({
-            status: 400,
-            message: 'Bad request.'
-        });
-
-        return false;
-    }
-
-    SERVICE.update_fragment({
-        index: CONFIG.elasticSearchBackIndex,
-        id: uuid,
-        body: doc_fragment
-    }, function (response) {
-
-        if (response.result === 'updated') {
-            callback({
-                status: 201,
-                message: 'fragment updated'
-            });
-        } else if (response.result === 'noop') {
-            callback({
-                status: 201,
-                message: 'published status is already set'
-            });
-        } else {
-
-            LOGGER.module().error('ERROR: [/indexer/model module (update_fragment)] unable to update record fragment ' + response);
-
-            callback({
-                status: 201,
-                message: 'fragment update failed'
-            });
-        }
-    });
-};
-
 /**
- * Copies doc from admin to public index
+ * Copies doc(s) from admin to public index
  * @param req
  * @param callback
  */
-exports.reindex = function (req, callback) {
+exports.publish_records = function (req, callback) {
 
     let query = req.body.query;
 
@@ -305,7 +230,7 @@ exports.reindex = function (req, callback) {
 
         callback({
             status: 201,
-            message: 'records reindexed'
+            message: 'record(s) published'
         });
     });
 };
@@ -397,12 +322,12 @@ exports.unindex_admin_record = function (req, callback) {
 
  */
 
-/**
+/** DEPRECATE
  * indexes all published records to public index after full reindex
  * @param req
  * @param callback
  * @returns {boolean}
- */
+
 exports.republish_record = function (req, callback) {
 
     let uuid = req.body.uuid;
@@ -578,3 +503,53 @@ exports.republish_record = function (req, callback) {
         message: 'reindexing (publishing) repository records...'
     });
 };
+ */
+
+/** DEPRECATE
+ * updates document fragment
+ * @param req
+ * @param callback
+
+exports.update_fragment = function (req, callback) {
+
+    let uuid = req.body.uuid,
+        doc_fragment = req.body.fragment;
+
+    if (uuid === undefined || doc_fragment === undefined) {
+
+        callback({
+            status: 400,
+            message: 'Bad request.'
+        });
+
+        return false;
+    }
+
+    SERVICE.update_fragment({
+        index: CONFIG.elasticSearchBackIndex,
+        id: uuid,
+        body: doc_fragment
+    }, function (response) {
+
+        if (response.result === 'updated') {
+            callback({
+                status: 201,
+                message: 'fragment updated'
+            });
+        } else if (response.result === 'noop') {
+            callback({
+                status: 201,
+                message: 'published status is already set'
+            });
+        } else {
+
+            LOGGER.module().error('ERROR: [/indexer/model module (update_fragment)] unable to update record fragment ' + response);
+
+            callback({
+                status: 201,
+                message: 'fragment update failed'
+            });
+        }
+    });
+};
+ */

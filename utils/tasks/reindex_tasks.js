@@ -17,6 +17,7 @@
  */
 
 const HTTP = require('../../libs/http');
+const ENDPOINTS = require('../../indexer/endpoints');
 const LOGGER = require('../../libs/log4');
 
 const Reindex_tasks = class {
@@ -70,10 +71,16 @@ const Reindex_tasks = class {
                 let data = {
                     'index_name': this.INDEX
                 };
-
+                /*
                 let response = await HTTP.post({
-                    endpoint: '/api/admin/v1/indexer/index/delete', // TODO: get from endpoints.js
+                    endpoint: ENDPOINTS().indexer.indexer_manage_index, // TODO: get from endpoints.js '/api/admin/v1/indexer/index/delete'
                     data: data
+                });
+                 */
+
+                // TODO: TEST
+                let response = await HTTP.delete({
+                    endpoint: ENDPOINTS().indexer.indexer_manage_index + '?index_name=' + this.INDEX
                 });
 
                 if (response.error === true) {
@@ -106,7 +113,7 @@ const Reindex_tasks = class {
                 };
 
                 let response = await HTTP.post({
-                    endpoint: '/api/admin/v1/indexer/index/create',
+                    endpoint: ENDPOINTS().indexer.indexer_manage_index,
                     data: data
                 });
 
@@ -141,14 +148,14 @@ const Reindex_tasks = class {
                     'reindex': true
                 };
 
-                let response = await HTTP.post({
-                    endpoint: '/api/admin/v1/indexer/all',  // TODO: get from endpoints.js
+                let response = await HTTP.put({
+                    endpoint: ENDPOINTS().indexer.indexer_index_records,
                     data: data
                 });
 
                 if (response.error === true) {
                     is_indexing = false;
-                    LOGGER.module().error('ERROR: [/import/utils module (reindex_backend/index/reindex)] backend indexer error ' + response.error);
+                    LOGGER.module().error('ERROR: [/import/utils module (index)] backend indexer error ' + response.error);
                 }
 
                 resolve(is_indexing);
