@@ -24,9 +24,9 @@ const LOGGER = require('../libs/log4');
  * Object contains display record methods
  * @param DB
  * @param TABLE
- * @type {Display_record_tasks}
+ * @type {Display_record_lib}
  */
-const Display_record_tasks = class {
+const Display_record_lib = class {
 
     constructor(DB, TABLE) {
         this.DB = DB;
@@ -195,6 +195,8 @@ const Display_record_tasks = class {
 
         return promise.then((display_record_data) => {
             return display_record_data;
+        }).catch((error) => {
+            return error;
         });
     };
 
@@ -307,39 +309,45 @@ const Display_record_tasks = class {
 
         record.display_record = JSON.parse(obj.metadata);
         record.display_record.title = escape(record.display_record.title);
+
         return JSON.stringify(record);
     };
 
     /**
      * Updates the display record
-     * @param obj
+     * @param where_obj
      * @param display_record
      */
-    update_display_record = (obj, display_record) => {
+    update_display_record = (where_obj, display_record) => {
 
-        if (display_record === null) {
-            return false;
-        }
+        let promise = new Promise((resolve, reject) => {
 
-        return this.DB(this.TABLE)
-            .where(obj)
-            .update({
-                display_record: display_record
-            })
-            .then((data) => {
+            this.DB(this.TABLE)
+                .where(where_obj)
+                .update({
+                    display_record: display_record
+                })
+                .then((data) => {
 
-                if (data === 1) {
-                    LOGGER.module().info('INFO: [/libs/display-record lib (update_display_record)] display record updated');
-                    return true;
-                }
+                    if (data === 1) {
+                        LOGGER.module().info('INFO: [/libs/display-record lib (update_display_record)] display record updated');
+                        resolve(true);
+                    }
 
-                return false;
-            })
-            .catch((error) => {
-                LOGGER.module().fatal('FATAL: [/libs/display-record lib (update_display_record)] unable to update display record ' + error);
-            });
+                    reject(false);
+                })
+                .catch((error) => {
+                    LOGGER.module().fatal('FATAL: [/libs/display-record lib (update_display_record)] unable to update display record ' + error);
+                    reject(false);
+                });
+        });
+
+        return promise.then((result) => {
+            return result;
+        }).catch((error) => {
+            return error;
+        });
     };
-
 };
 
-module.exports = Display_record_tasks;
+module.exports = Display_record_lib;

@@ -2,9 +2,8 @@ import {it, expect} from 'vitest';
 
 const ARCHIVESSPACE_CONFIG = require('../../test/archivesspace_config')(),
     ARCHIVESSPACE_LIB = require('../archivesspace'),
-    TEST_RECORDS = require('../../test/test_records')();
-
-const LIB = new ARCHIVESSPACE_LIB(
+    TEST_RECORDS = require('../../test/test_records')(),
+    LIB = new ARCHIVESSPACE_LIB(
     ARCHIVESSPACE_CONFIG.archivesspace_host,
     ARCHIVESSPACE_CONFIG.archivesspace_user,
     ARCHIVESSPACE_CONFIG.archivesspace_password,
@@ -30,8 +29,8 @@ it('Get Archivesspace resource record', async function () {
 }, 10000);
 
 it('Get Archivesspace archival record', async function () {
-    let records = TEST_RECORDS.child_records;
-    let uri = records[1].uri;
+    let record = TEST_RECORDS.child_records[1];
+    let uri = record.uri;
     await expect(LIB.get_archival_object_record(uri, session)).resolves.toBeDefined();
     console.log(await LIB.destroy_session_token(session));
 }, 10000);

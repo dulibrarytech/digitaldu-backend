@@ -18,7 +18,7 @@
 
 'use strict';
 
-const ARCHIVESSPACE = require('../libs/archivespace'),
+const ARCHIVESSPACE = require('../libs/archivesspace'),
     HTTP = require('../libs/http'),
     LOGGER = require('../libs/log4');
 

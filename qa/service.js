@@ -19,7 +19,7 @@
 'use strict';
 
 const CONFIG = require('../config/config'),
-    ARCHIVESSPACE = require('../libs/archivespace'),
+    ARCHIVESSPACE = require('../libs/archivesspace'),
     // KA = require('http'),
     HTTP = require('axios'),
     VALIDATOR = require('validator'),
