@@ -47,3 +47,7 @@ it('Archivematica Storage Service DIP usage', async function () {
 it('Archivematica sftp', async function () {
     await expect(LIB.list()).resolves.toBeDefined();
 }, 10000);
+
+it('Archivematica start transfer', async function () {
+    // TODO:
+}, 10000);
