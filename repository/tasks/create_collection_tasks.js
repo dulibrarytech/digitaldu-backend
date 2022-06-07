@@ -18,8 +18,10 @@
 
 const UUID = require('node-uuid');
 const ARCHIVESSPACE = require("../../libs/archivesspace");
-const HANDLES = require('../../libs/handles');
-const DR = require('../../libs/display-record');
+const ARCHIVESSPACE_CONFIG = require('../../test/archivesspace_config')();
+const HANDLE_CONFIG = require('../../test/handle_config')();
+const DISPLAY_RECORD_LIB = require('../../libs/display_record');
+const HANDLES_LIB = require('../../libs/handles');
 const HELPER = require('../../repository/helper');
 const LOGGER = require('../../libs/log4');
 
@@ -34,6 +36,14 @@ const Create_collection_tasks = class {
     constructor(DB, TABLE) {
         this.DB = DB;
         this.TABLE = TABLE;
+        this.DISPLAY_RECORD_LIB = new DISPLAY_RECORD_LIB(this.DB, this.TABLE);
+        this.HANDLES_LIB = new HANDLES_LIB(HANDLE_CONFIG);
+        this.ARCHIVESSPACE_LIB = new ARCHIVESSPACE(
+            ARCHIVESSPACE_CONFIG.archivesspace_host,
+            ARCHIVESSPACE_CONFIG.archivesspace_user,
+            ARCHIVESSPACE_CONFIG.archivesspace_password,
+            ARCHIVESSPACE_CONFIG.archivesspace_repository_id
+        );
     }
 
     /**
@@ -60,16 +70,15 @@ const Create_collection_tasks = class {
                 })
                 .catch((error) => {
                     LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks)] unable to check uri ' + error.message);
-                    reject(new Error('Unable to check uri ' + error.message));
+                    reject(error);
                 });
         });
 
         return promise.then((result) => {
             return result;
         }).catch((error) => {
-                return error;
-            });
-
+            return error;
+        });
     }
 
     /**
@@ -80,29 +89,23 @@ const Create_collection_tasks = class {
 
         let promise = new Promise((resolve, reject) => {
 
-            // TODO: convert to an object
-            ARCHIVESSPACE.get_session_token((response) => {
+            (async () => {
 
                 try {
-
-                    let token = JSON.parse(response.data);
-
-                    if (response.error === true) {
-                        reject(new Error('Unable to get session token'));
-                    } else {
-                        console.log(token.session);
-                        resolve(token.session);
-                    }
-
+                    let response = await this.ARCHIVESSPACE_LIB.get_session_token();
+                    let json = JSON.parse(response.data);
+                    resolve(json.session);
                 } catch (error) {
-                    reject(new Error('Unable to get session token'));
+                    reject(error);
                 }
-            });
+
+            })();
         });
 
         return promise.then((token) => {
             return token;
         }).catch((error) => {
+            LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks/get_session_token)] unable to get session token ' + error);
             return error;
         });
     }
@@ -117,16 +120,17 @@ const Create_collection_tasks = class {
 
         let promise = new Promise((resolve, reject) => {
 
-            ARCHIVESSPACE.get_resource_record(uri, token, (response) => {
+            (async () => {
 
-                if (response.error === true) {
-                    LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks/get_resource_record)] unable to get resource record');
-                    reject(new Error('Unable to get resource record'));
-                } else {
+                try {
+                    let response = await this.ARCHIVESSPACE_LIB.get_resource_record(uri, token);
                     resolve(JSON.stringify(response.metadata.data));
+                } catch (error) {
+                    LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks/get_resource_record)] unable to get resource record ' + error);
+                    reject(error);
                 }
 
-            });
+            })();
         });
 
         return promise.then((metadata) => {
@@ -149,7 +153,7 @@ const Create_collection_tasks = class {
                 resolve(UUID(uuidDomain, UUID.DNS));
             } catch (error) {
                 LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks/get_uuid)] unable to generate uuid ' + error.message);
-                reject(new Error('Unable to generate uuid'));
+                reject(error);
             }
 
         });
@@ -170,17 +174,15 @@ const Create_collection_tasks = class {
 
         let promise = new Promise((resolve, reject) => {
 
-            HANDLES.create_handle(uuid, (handle) => {
-
-                if (handle.error !== undefined && handle.error === true) {
-                    LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks/create_handle)] handle error');
-                    reject(new Error('Unable to create handle: ' + handle.message));
-                    return false;
+            (async () => {
+                try {
+                    resolve(await this.HANDLES_LIB.create_handle(uuid));
+                } catch (error) {
+                    LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks/create_handle)] handle error ' + error);
+                    reject(error);
                 }
 
-                resolve(handle);
-            });
-
+            })();
         });
 
         return promise.then((handle) => {
@@ -197,26 +199,12 @@ const Create_collection_tasks = class {
      */
     create_display_record = (obj) => {
 
-        let promise = new Promise((resolve, reject) => {
-
-            DR.create_display_record(obj, (display_record) => {
-
-                if (typeof display_record === 'object') {
-                    LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks/create_display_record)]');
-                    reject(new Error('Unable to create display record'));
-                    return false;
-                }
-
-                resolve(display_record);
-            });
-
-        });
-
-        return promise.then((display_record) => {
-            return display_record;
-        }).catch((error) => {
+        try {
+            return this.DISPLAY_RECORD_LIB.create_display_record(obj);
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks/create_display_record)]');
             return error;
-        });
+        }
     }
 
     /**
@@ -231,7 +219,9 @@ const Create_collection_tasks = class {
             this.DB(this.TABLE)
                 .insert(record)
                 .then((result) => {
-                    resolve(result);
+                    if (result.length === 1) {
+                        resolve(result);
+                    }
                 })
                 .catch((error) => {
                     LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks/save_record)] unable to save collection record ' + error.message);
@@ -239,13 +229,11 @@ const Create_collection_tasks = class {
                 });
         });
 
-        return promise.then((result) => {
-            if (result.length === 1) {
-                return true
-            }
-        }).catch((error) => {
-                return error;
-            });
+        return promise.then(() => {
+           return true;
+        }).catch(() => {
+            return false;
+        });
     }
 
     /**

@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2022 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -16,156 +16,124 @@
 
  */
 
-const CONFIG = require('../config/config'),
-    LOGGER = require('../libs/log4'),
-    HTTP = require('axios'),
-    HANDLE_HOST = CONFIG.handleHost,
-    HANDLE_PREFIX = CONFIG.handlePrefix,
-    HANDLE_USER = CONFIG.handleUsername,
-    HANDLE_PASSWORD = CONFIG.handlePwd,
-    HANDLE_TARGET = CONFIG.handleTarget,
-    HANDLE_SERVER = CONFIG.handleServer,
-    TIMEOUT = 35000;
+const HTTP = require('axios');
+const LOGGER = require('../libs/log4');
 
 /**
- * Creates handle
- * @param pid
- * @param callback
+ * Creates and updates record handles
+ * @type {Handles_lib}
  */
-exports.create_handle = function (pid, callback) {
+const Handles_lib = class {
 
-    'use strict';
-
-    if (pid === undefined) {
-
-        LOGGER.module().error('ERROR: Unable to create handle. (pid is undefined)');
-
-        callback({
-            error: true,
-            message: 'Unable to create handle. (pid is undefined)'
-        });
-
-        return false;
+    constructor(HANDLE_CONFIG) {
+        this.HANDLE_CONFIG = HANDLE_CONFIG;
+        this.auth = Buffer.from(this.HANDLE_CONFIG.handle_user + ':' + this.HANDLE_CONFIG.handle_password).toString('base64');
+        this.config = {
+            timeout: 45000,
+            headers: {
+                'Authorization': 'Basic ' + this.auth
+            }
+        }
     }
 
-    (async () => {
+    create_handle = (uuid) => {
 
-        try {
+        let promise = new Promise((resolve, reject) => {
 
-            let handleUrl = HANDLE_HOST + '/' + HANDLE_PREFIX + '/' + encodeURIComponent(pid) + '?target=' + HANDLE_TARGET + encodeURIComponent(pid),
-                auth = Buffer.from(HANDLE_USER + ':' + HANDLE_PASSWORD).toString('base64');
+            (async () => {
 
-            let response = await HTTP.post(handleUrl, '', {
-                timeout: TIMEOUT,
-                headers: {
-                    'Authorization': 'Basic ' + auth
+                try {
+
+                    let handle_url = this.HANDLE_CONFIG.handle_host;
+                    handle_url += '/';
+                    handle_url += this.HANDLE_CONFIG.handle_prefix;
+                    handle_url += '/' + encodeURIComponent(uuid);
+                    handle_url += '?target=';
+                    handle_url += this.HANDLE_CONFIG.handle_target;
+                    handle_url += encodeURIComponent(uuid);
+
+                    let response = await HTTP.post(handle_url, '', this.config);
+
+                    if (response.status === 201) {
+                        LOGGER.module().info('INFO: [/libs/handles lib (create_handle)] Handle for object: ' + uuid + ' had been created.');
+                        resolve(this.HANDLE_CONFIG.handle_server + this.HANDLE_CONFIG.handle_prefix + '/' + uuid);
+                    } else if (response.status === 409) {
+                        LOGGER.module().error('ERROR: [/libs/handles lib (create_handle)] Handle already exists (conflict)');
+                        reject({
+                            message: 'Error: [/libs/handles lib (create_handle)] Handle already exists (conflict)'
+                        });
+                    }
+
+                    return false;
+
+                } catch (error) {
+                    LOGGER.module().error('ERROR: [/libs/handles lib (create_handle)] Unable to create new handle ' + error);
+                    reject({
+                        message: 'Error: [/libs/handles lib (create_handle)] Unable to create new handle ' + error
+                    });
                 }
-            });
 
-            if (response.status === 201) {
-
-                LOGGER.module().info('INFO: [/libs/handles lib (create_handle)] Handle for object: ' + pid + ' had been created.');
-
-                let handle = HANDLE_SERVER + HANDLE_PREFIX + '/' + pid;
-                callback(handle);
-
-            } else if (response.status === 409) {
-
-                LOGGER.module().error('ERROR: [/libs/handles lib (create_handle)] Handle already exists (conflict)');
-
-                callback({
-                    error: true,
-                    message: 'Error: [/libs/handles lib (create_handle)] Handle already exists (conflict)'
-                });
-
-            } else {
-
-                LOGGER.module().error('ERROR: [/libs/handles lib (create_handle)] Unable to create new handle ' + response.status);
-
-                callback({
-                    error: true,
-                    message: 'Error: [/libs/handles lib (create_handle)] Unable to create new handle ' + response.status
-                });
-            }
-
-            return false;
-
-        } catch (error) {
-
-            LOGGER.module().error('ERROR: [/libs/handles lib (create_handle)] Unable to create new handle ' + error);
-
-            callback({
-                error: true,
-                message: 'Error: [/libs/handles lib (create_handle)] Unable to create new handle ' + error
-            });
-        }
-
-    })();
-};
-
-/**
- * Updates handle
- * @param pid
- * @param callback
- */
-exports.update_handle = function (pid, callback) {
-
-    'use strict';
-
-    if (pid === undefined) {
-
-        LOGGER.module().error('ERROR: [/libs/handles lib (update_handle)] Unable to create handle. (pid is undefined)');
-
-        callback({
-            error: true,
-            message: 'ERROR: [/libs/handles lib (update_handle)] Unable to update handle. (pid is undefined)'
+            })();
         });
 
-        return false;
-    }
+        return promise.then((handle) => {
+            return handle;
+        }).catch((error) => {
+            return error;
+        });
+    };
 
-    (async () => {
+    /**
+     * Updates handle
+     * @param uuid
+     */
+    update_handle = function (uuid) {
 
-        try {
+        let promise = new Promise((resolve, reject) => {
 
-            let handleUrl = HANDLE_HOST + '/' + HANDLE_PREFIX + '/' + encodeURIComponent(pid) + '?target=' + HANDLE_TARGET + encodeURIComponent(pid),
-                auth = Buffer.from(HANDLE_USER + ':' + HANDLE_PASSWORD).toString('base64');
+            (async () => {
 
-            let response = await HTTP.put(handleUrl, '', {
-                timeout: TIMEOUT,
-                headers: {
-                    'Authorization': 'Basic ' + auth
+                try {
+
+                    let handle_url = this.HANDLE_CONFIG.handle_host;
+                        handle_url += '/';
+                        handle_url += this.HANDLE_CONFIG.handle_prefix;
+                        handle_url += '/';
+                        handle_url += encodeURIComponent(uuid);
+                        handle_url += '?target=';
+                        handle_url += this.HANDLE_CONFIG.handle_target;
+                        handle_url += encodeURIComponent(uuid);
+
+                    let response = await HTTP.put(handle_url, '', this.config);
+
+                    if (response.status === 204) {
+                        LOGGER.module().info('INFO: [/libs/handles lib (update_handle)] Handle for object: ' + uuid + ' had been updated.');
+                        resolve(this.HANDLE_CONFIG.handle_server + this.HANDLE_CONFIG.handle_prefix + '/' + uuid);
+                    } else {
+                        LOGGER.module().error('ERROR: [/libs/handles lib (update_handle)] Unable to update handle.');
+                        reject({
+                            message: 'Error: [/libs/handles lib (update_handle)] Unable to update handle.'
+                        });
+                    }
+
+                    return false;
+
+                } catch (error) {
+                    LOGGER.module().error('ERROR: [/libs/handles lib (update_handle)] Unable to create handle. ' + error);
+                    reject({
+                        message: error
+                    });
                 }
-            });
 
-            if (response.status === 204) {
+            })();
+        });
 
-                LOGGER.module().info('INFO: [/libs/handles lib (update_handle)] Handle for object: ' + pid + ' had been updated.');
+        return promise.then((handle) => {
+            return handle;
+        }).catch((error) => {
+            return error;
+        });
+    };
+}
 
-                let handle = HANDLE_SERVER + HANDLE_PREFIX + '/' + pid;
-                callback(handle);
-
-            } else {
-
-                LOGGER.module().error('ERROR: [/libs/handles lib (update_handle)] Unable to update handle.');
-
-                callback({
-                    error: true,
-                    message: 'Error: [/libs/handles lib (update_handle)] Unable to update handle.'
-                });
-            }
-
-            return false;
-
-        } catch (error) {
-
-            LOGGER.module().error('ERROR: [/libs/handles lib (update_handle)] Unable to create handle. ' + error);
-
-            callback({
-                error: true,
-                message: error
-            });
-        }
-
-    })();
-};
+module.exports = Handles_lib;

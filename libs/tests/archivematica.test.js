@@ -51,3 +51,11 @@ it('Archivematica sftp', async function () {
 it('Archivematica start transfer', async function () {
     // TODO:
 }, 10000);
+
+it('Archivematica approve transfer', async function () {
+    // TODO:
+}, 10000);
+
+it('Archivematica get transfer status', async function () {
+    // TODO:
+}, 10000);

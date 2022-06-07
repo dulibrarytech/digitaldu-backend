@@ -28,7 +28,7 @@ const HTTP = require('axios'),
  * @param ARCHIVESSPACE_USER
  * @param ARCHIVESSPACE_PASSWORD
  * @param ARCHIVESSPACE_REPOSITORY_ID
- * @type {ArchivesSpace}
+ * @type {ArchivesSpace_lib}
  */
 const ArchivesSpace_lib = class {
 

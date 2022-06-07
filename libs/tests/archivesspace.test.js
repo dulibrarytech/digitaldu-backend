@@ -27,9 +27,13 @@ const ARCHIVESSPACE_CONFIG = require('../../test/archivesspace_config')(),
     ARCHIVESSPACE_CONFIG.archivesspace_password,
     ARCHIVESSPACE_CONFIG.archivesspace_repository_id);
 
-let result = await LIB.get_session_token();
-let json = JSON.parse(result.data);
-let session = json.session;
+try {
+    let result = await LIB.get_session_token();
+    let json = JSON.parse(result.data);
+    let session = json.session;
+} catch(error) {
+    console.log(error);
+}
 
 it('Archivesspace ping', async function () {
     const response = {
