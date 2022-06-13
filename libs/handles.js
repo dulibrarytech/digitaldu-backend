@@ -16,6 +16,8 @@
 
  */
 
+'use strict';
+
 const HTTP = require('axios');
 const LOGGER = require('../libs/log4');
 
@@ -36,11 +38,16 @@ const Handles_lib = class {
         }
     }
 
+    /**
+     * Creates handle
+     * @param uuid
+     * @returns {Promise<unknown>}
+     */
     create_handle = (uuid) => {
 
         let promise = new Promise((resolve, reject) => {
 
-            (async () => {
+         (async () => {
 
                 try {
 
@@ -52,13 +59,18 @@ const Handles_lib = class {
                     handle_url += this.HANDLE_CONFIG.handle_target;
                     handle_url += encodeURIComponent(uuid);
 
-                    let response = await HTTP.post(handle_url, '', this.config);
+                    let response = await HTTP.post(handle_url, '', {
+                        timeout: 45000,
+                        headers: {
+                            'Authorization': 'Basic ' + this.auth
+                        }
+                    });
 
                     if (response.status === 201) {
                         LOGGER.module().info('INFO: [/libs/handles lib (create_handle)] Handle for object: ' + uuid + ' had been created.');
                         resolve(this.HANDLE_CONFIG.handle_server + this.HANDLE_CONFIG.handle_prefix + '/' + uuid);
                     } else if (response.status === 409) {
-                        LOGGER.module().error('ERROR: [/libs/handles lib (create_handle)] Handle already exists (conflict)');
+                        LOGGER.module().error('ERROR: [/libs/handles lib (create_handle)] Handle already exists (conflict) ' + uuid);
                         reject({
                             message: 'Error: [/libs/handles lib (create_handle)] Handle already exists (conflict)'
                         });
@@ -73,7 +85,7 @@ const Handles_lib = class {
                     });
                 }
 
-            })();
+           })();
         });
 
         return promise.then((handle) => {
@@ -85,10 +97,11 @@ const Handles_lib = class {
 
     /**
      * Updates handle
-     * @param uuid
+     * @param prev_uuid
+     * @param new_uuid
      */
-    update_handle = function (uuid) {
-
+    update_handle = (prev_uuid, new_uuid) => {
+        // /10176/test-du-repo-update-2022?target=https://specialcollections.du.edu/object/test-du-repo-2022
         let promise = new Promise((resolve, reject) => {
 
             (async () => {
@@ -99,16 +112,16 @@ const Handles_lib = class {
                         handle_url += '/';
                         handle_url += this.HANDLE_CONFIG.handle_prefix;
                         handle_url += '/';
-                        handle_url += encodeURIComponent(uuid);
+                        handle_url += encodeURIComponent(prev_uuid);
                         handle_url += '?target=';
                         handle_url += this.HANDLE_CONFIG.handle_target;
-                        handle_url += encodeURIComponent(uuid);
+                        handle_url += encodeURIComponent(new_uuid);
 
                     let response = await HTTP.put(handle_url, '', this.config);
 
                     if (response.status === 204) {
-                        LOGGER.module().info('INFO: [/libs/handles lib (update_handle)] Handle for object: ' + uuid + ' had been updated.');
-                        resolve(this.HANDLE_CONFIG.handle_server + this.HANDLE_CONFIG.handle_prefix + '/' + uuid);
+                        LOGGER.module().info('INFO: [/libs/handles lib (update_handle)] Handle for object: ' + prev_uuid + ' had been updated with ' + new_uuid);
+                        resolve(this.HANDLE_CONFIG.handle_server + this.HANDLE_CONFIG.handle_prefix + '/' + new_uuid);
                     } else {
                         LOGGER.module().error('ERROR: [/libs/handles lib (update_handle)] Unable to update handle.');
                         reject({
@@ -134,6 +147,59 @@ const Handles_lib = class {
             return error;
         });
     };
+
+    /** TODO
+     * Deletes handle
+     */
+    delete_handle = (uuid) => {
+
+        let promise = new Promise((resolve, reject) => {
+
+            (async () => {
+
+                try {
+
+                    let handle_url = this.HANDLE_CONFIG.handle_host;
+                    handle_url += '/';
+                    handle_url += this.HANDLE_CONFIG.handle_prefix;
+                    handle_url += '/' + encodeURIComponent(uuid);
+                    handle_url += '?target=';
+                    handle_url += this.HANDLE_CONFIG.handle_target;
+                    handle_url += encodeURIComponent(uuid);
+
+                    // TODO: headers in axios delete
+                    let response = await HTTP.delete(handle_url, this.config);
+
+                    if (response.status === 204) {
+                        LOGGER.module().info('INFO: [/libs/handles lib (delete_handle)] Handle for object: ' + uuid + ' had been deleted.');
+                        resolve(this.HANDLE_CONFIG.handle_server + this.HANDLE_CONFIG.handle_prefix + '/' + uuid);
+                    } else {
+                        LOGGER.module().error('ERROR: [/libs/handles lib (delete_handle)] Unable to update handle.');
+                        reject({
+                            message: 'Error: [/libs/handles lib (delete_handle)] Unable to delete handle.'
+                        });
+                    }
+
+                    return false;
+
+                } catch (error) {
+                    LOGGER.module().error('ERROR: [/libs/handles lib (update_handle)] Unable to create handle. ' + error);
+                    reject({
+                        message: error
+                    });
+                }
+
+            })();
+        });
+
+        return promise.then((handle) => {
+            return handle;
+        }).catch((error) => {
+            return error;
+        });
+    };
 }
 
+// TODO: add delete method
+// DELETE http://hdl.coalliance.org:8080/handle-service-0.6/10176/test-du-repo-2022?target=https://specialcollections.du.edu/object/test-du-repo-2022
 module.exports = Handles_lib;

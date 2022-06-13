@@ -16,7 +16,7 @@
 
  */
 
-const UUID = require('node-uuid');
+const {v4: uuidv4} = require('uuid');
 const ARCHIVESSPACE = require("../../libs/archivesspace");
 const ARCHIVESSPACE_CONFIG = require('../../test/archivesspace_config')();
 const HANDLE_CONFIG = require('../../test/handle_config')();
@@ -142,15 +142,14 @@ const Create_collection_tasks = class {
 
     /**
      * Generates uuid
-     * @param uuidDomain
      * @returns Promise string
      */
-    get_uuid = (uuidDomain) => {
+    create_uuid = () => {
 
         let promise = new Promise((resolve, reject) => {
 
             try {
-                resolve(UUID(uuidDomain, UUID.DNS));
+                resolve(uuidv4());
             } catch (error) {
                 LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks/get_uuid)] unable to generate uuid ' + error.message);
                 reject(error);
@@ -198,11 +197,10 @@ const Create_collection_tasks = class {
      * returns Promise string
      */
     create_display_record = (obj) => {
-
         try {
             return this.DISPLAY_RECORD_LIB.create_display_record(obj);
         } catch (error) {
-            LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks/create_display_record)]');
+            LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks/create_display_record)] ' + error);
             return error;
         }
     }
@@ -220,17 +218,17 @@ const Create_collection_tasks = class {
                 .insert(record)
                 .then((result) => {
                     if (result.length === 1) {
-                        resolve(result);
+                        resolve(true);
                     }
                 })
                 .catch((error) => {
                     LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks/save_record)] unable to save collection record ' + error.message);
-                    reject(error);
+                    reject(false);
                 });
         });
 
         return promise.then(() => {
-           return true;
+            return true;
         }).catch(() => {
             return false;
         });
@@ -242,18 +240,20 @@ const Create_collection_tasks = class {
      * @returns Promise
      */
     index_record = (uuid) => {
-
+        console.log('TASK: ', uuid);
         let promise = new Promise((resolve, reject) => {
 
-            HELPER.index(uuid, (response) => {
+            (async () => {
+                HELPER.index(uuid, (response) => {
+                    console.log('MEOW: ', response);
+                    if (response.error === true) {
+                        LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/index_collection)] unable to index collection record');
+                        reject(new Error('Unable to index collection record'));
+                    }
 
-                if (response.error === true) {
-                    LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/index_collection)] unable to index collection record');
-                    reject(new Error('Unable to index collection record'));
-                }
-
-                resolve(response);
-            });
+                    resolve(response);
+                });
+            })();
         });
 
         return promise.then((response) => {

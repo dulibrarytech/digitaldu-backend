@@ -96,7 +96,7 @@ exports.create_collection_record = (uri, is_member_of_collection, callback) => {
             obj.uri = URI;
             token = await TASKS.get_session_token();
             obj.metadata = await TASKS.get_resource_record(URI, token);
-            obj.uuid = await TASKS.get_uuid(CONFIG.uuidDomain);
+            obj.uuid = await TASKS.create_uuid();
             obj.handle = await TASKS.create_handle(obj.uuid);
             obj.display_record = await TASKS.create_display_record(obj);
             await TASKS.save_record(obj);

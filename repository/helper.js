@@ -68,7 +68,7 @@ exports.publish_record = (match_phrase, callback) => {
  * @param callback
  */
 exports.index = (uuid, callback) => {
-
+    console.log('UUID helper index: ', uuid);
     (async () => {
 
         let response;
@@ -81,7 +81,7 @@ exports.index = (uuid, callback) => {
             endpoint: ENDPOINTS().indexer.indexer_index_records,
             data: data
         });
-
+        console.log('INDEX RESPONSE: ', response);
         if (response.error === true) {
             LOGGER.module().error('ERROR: [/repository/helper (index)] index failed.');
             result.error = true;

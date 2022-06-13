@@ -21,14 +21,24 @@ import {it, expect} from 'vitest';
 const HANDLE_CONFIG = require('../../test/handle_config')();
 const HANDLE_LIB = require('../../libs/handles');
 
-it('Create record handle', function () {
+it('Create record handle', async function () {
     const LIB = new HANDLE_LIB(HANDLE_CONFIG);
-    let uuid = 'test_du_repo';
-    expect(LIB.create_handle(uuid)).toBeTypeOf('string');
+    let uuid = 'test-du-repo-2022';
+    console.log(await LIB.create_handle(uuid));
+    // await expect(LIB.create_handle(uuid)).resolves.toBeTypeOf('string');
 }, 10000);
 
-it('Update record handle', function () {
+it('Update record handle', async function () {
     const LIB = new HANDLE_LIB(HANDLE_CONFIG);
-    let uuid = 'test_du_repo_update';
-    expect(LIB.update_handle(uuid)).toBeTypeOf('string');
+    let prev_uuid = 'test-du-repo-2022';
+    let new_uuid = 'test-du-repo-update-2022';
+    console.log(await LIB.update_handle(prev_uuid, new_uuid));
+    // await expect(LIB.update_handle(prev_uuid, new_uuid)).toBeTypeOf('string');
+}, 10000);
+
+it('Delete record handle', async function () {
+    const LIB = new HANDLE_LIB(HANDLE_CONFIG);
+    let uuid = 'test-du-repo-2022';let new_uuid = 'test-du-repo-update-2022';
+    console.log(await LIB.delete_handle(uuid));
+    // await expect(LIB.update_handle(prev_uuid, new_uuid)).toBeTypeOf('string');
 }, 10000);
