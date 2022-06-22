@@ -18,17 +18,14 @@
 
 'use strict';
 
-const APP_CONFIG = {
-    host: process.env.HOST,
-    app_name: process.env.APP_NAME,
-    app_version: process.env.APP_VERSION,
-    organization: process.env.ORGANIZATION,
-    app_host: process.env.APP_HOST,
-    app_port: process.env.APP_PORT,
-    api_url: process.env.API_URL,
-    tn_upload_path: process.env.TN_UPLOAD_PATH
+const TOKEN_CONFIG = {
+    api_key: process.env.API_KEY,
+    token_secret: process.env.TOKEN_SECRET,
+    token_algo: process.env.TOKEN_ALGO,
+    token_expires: process.env.TOKEN_EXPIRES,
+    token_issuer: process.env.TOKEN_ISSUER
 };
 
-module.exports = function() {
-    return APP_CONFIG;
+module.exports = function () {
+    return TOKEN_CONFIG;
 };

@@ -22,7 +22,6 @@ const CLIENT = require('ssh2-sftp-client'),
     HTTP = require('axios'),
     QS = require('querystring'),  // TODO: deprecated
     LOGGER = require('../libs/log4');
-const CONFIG = require("../config/config");
 
 /**
  * Object contains methods to access Archivematica
@@ -31,8 +30,8 @@ const CONFIG = require("../config/config");
  */
 const Archivematica_lib = class {
 
-    constructor(ARCHIVEMATICA) {
-        this.ARCHIVEMATICA = ARCHIVEMATICA;
+    constructor(ARCHIVEMATICA_CONFIG) {
+        this.ARCHIVEMATICA = ARCHIVEMATICA_CONFIG;
     }
 
     /**
@@ -59,22 +58,12 @@ const Archivematica_lib = class {
                     });
 
                     if (response.status === 200) {
-
-                        resolve({
-                            status: 'up',
-                            message: 'Archivematica service is available'
-                        });
-
+                        resolve(true);
                     }
 
                 } catch (error) {
-
                     LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_api)] unable to ping Archivematica. Request failed: ' + error);
-
-                    reject({
-                        status: 'down',
-                        message: 'ERROR: [/libs/archivematica lib (ping_api)] Unable to ping Archivematica'
-                    });
+                    reject(false);
                 }
 
                 return false;
@@ -96,15 +85,15 @@ const Archivematica_lib = class {
 
         let promise = new Promise((resolve, reject) => {
 
-            let endpoint = this.ARCHIVEMATICA.archivematica_storage_api;
-            endpoint += 'v2/file/?username=';
-            endpoint += this.ARCHIVEMATICA.archivematica_storage_username;
-            endpoint += '&api_key=';
-            endpoint += this.ARCHIVEMATICA.archivematica_storage_api_key;
-
             (async () => {
 
                 try {
+
+                    let endpoint = this.ARCHIVEMATICA.archivematica_storage_api;
+                    endpoint += 'v2/file/?username=';
+                    endpoint += this.ARCHIVEMATICA.archivematica_storage_username;
+                    endpoint += '&api_key=';
+                    endpoint += this.ARCHIVEMATICA.archivematica_storage_api_key;
 
                     let response = await HTTP.get(endpoint, {
                         timeout: this.ARCHIVEMATICA.archivematica_transfer_timeout,
@@ -114,24 +103,14 @@ const Archivematica_lib = class {
                     });
 
                     if (response.status === 200) {
-
-                        resolve({
-                            status: 'up',
-                            message: 'Archivematica storage api service is available'
-                        });
-
+                        resolve(true);
                     }
 
                     return false;
 
                 } catch (error) {
-
                     LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_storage_api)] unable to ping archivematica storage api. Request failed: ' + error);
-
-                    reject({
-                        status: 'down',
-                        message: 'ERROR: [/libs/archivematica lib (ping_storage_api)] Unable to ping archivematica storage api'
-                    });
+                    reject(false);
                 }
 
             })();
@@ -151,13 +130,13 @@ const Archivematica_lib = class {
 
         let promise = new Promise((resolve, reject) => {
 
-            let endpoint = this.ARCHIVEMATICA.archivematica_storage_api;
-            endpoint += 'v2/space/';
-            endpoint += this.ARCHIVEMATICA.archivematica_storage_dip_uuid;
-
             (async () => {
 
                 try {
+
+                    let endpoint = this.ARCHIVEMATICA.archivematica_storage_api;
+                    endpoint += 'v2/space/';
+                    endpoint += this.ARCHIVEMATICA.archivematica_storage_dip_uuid;
 
                     let response = await HTTP.get(endpoint, {
                         timeout: this.ARCHIVEMATICA.archivematica_transfer_timeout,
@@ -177,12 +156,8 @@ const Archivematica_lib = class {
                     return false;
 
                 } catch (error) {
-
                     LOGGER.module().error('ERROR: [/libs/archivematica lib (get_dip_storage_usage)] unable to get DIP storage usage. ' + error);
-
-                    reject({
-                        message: 'ERROR: [/libs/archivematica lib (get_dip_storage_usage)] unable to get DIP storage usage.'
-                    });
+                    reject(false);
                 }
 
             })();
@@ -457,17 +432,17 @@ const Archivematica_lib = class {
 
         let promise = new Promise((resolve, reject) => {
 
-            let endpoint = this.ARCHIVEMATICA.archivematica_api;
-                endpoint += 'v2/file/';
-                endpoint += uuid;
-                endpoint += '/?username=';
-                endpoint += this.ARCHIVEMATICA.archivematica_username;
-                endpoint += '&api_key=';
-                endpoint += this.ARCHIVEMATICA.archivematica_api_key;
-
             (async () => {
 
                 try {
+
+                    let endpoint = this.ARCHIVEMATICA.archivematica_storage_api;
+                    endpoint += 'v2/file/';
+                    endpoint += uuid;
+                    endpoint += '/?username=';
+                    endpoint += this.ARCHIVEMATICA.archivematica_storage_username;
+                    endpoint += '&api_key=';
+                    endpoint += this.ARCHIVEMATICA.archivematica_storage_api_key;
 
                     let response = await HTTP.get(endpoint, {
                         timeout: this.ARCHIVEMATICA.archivematica_transfer_timeout,
@@ -501,8 +476,8 @@ const Archivematica_lib = class {
                     return false;
 
                 } catch (error) {
-                    LOGGER.module().error('ERROR: [/libs/archivematica lib (get_dip_path)] unable to get dip path. Request failed: ' + error);
-                    reject(error);
+                    LOGGER.module().error('ERROR: [/libs/archivematica lib (get_dip_path)] unable to get dip path. Request failed: ' + error.message);
+                    reject(false);
                 }
 
             })();
@@ -523,17 +498,17 @@ const Archivematica_lib = class {
 
         let promise = new Promise((resolve, reject) => {
 
-            let endpoint = this.ARCHIVEMATICA.archivematica_api;
-                endpoint += 'transfer/';
-                endpoint += uuid;
-                endpoint += '/delete/?username=';
-                endpoint += this.ARCHIVEMATICA.archivematica_username;
-                endpoint += '&api_key=';
-                endpoint += this.ARCHIVEMATICA.archivematica_api_key;
-
             (async () => {
 
                 try {
+
+                    let endpoint = this.ARCHIVEMATICA.archivematica_api;
+                    endpoint += 'transfer/';
+                    endpoint += uuid;
+                    endpoint += '/delete/?username=';
+                    endpoint += this.ARCHIVEMATICA.archivematica_username;
+                    endpoint += '&api_key=';
+                    endpoint += this.ARCHIVEMATICA.archivematica_api_key;
 
                     let response = await HTTP.delete(endpoint);
 
@@ -566,17 +541,17 @@ const Archivematica_lib = class {
 
         let promise = new Promise((resolve, reject) => {
 
-            let endpoint = this.ARCHIVEMATICA.archivematica_api;
-                endpoint += 'ingest/';
-                endpoint += uuid;
-                endpoint += '/delete/?username=';
-                endpoint += this.ARCHIVEMATICA.archivematica_username;
-                endpoint += '&api_key=';
-                endpoint += this.ARCHIVEMATICA.archivematica_api_key;
-
             (async () => {
 
                 try {
+
+                    let endpoint = this.ARCHIVEMATICA.archivematica_api;
+                    endpoint += 'ingest/';
+                    endpoint += uuid;
+                    endpoint += '/delete/?username=';
+                    endpoint += this.ARCHIVEMATICA.archivematica_username;
+                    endpoint += '&api_key=';
+                    endpoint += this.ARCHIVEMATICA.archivematica_api_key;
 
                     let response = await HTTP.delete(endpoint);
 
@@ -601,7 +576,7 @@ const Archivematica_lib = class {
         });
     };
 
-    /**
+    /** TODO:
      * Generates a delete request
      * @param obj
      */

@@ -240,12 +240,12 @@ const Create_collection_tasks = class {
      * @returns Promise
      */
     index_record = (uuid) => {
-        console.log('TASK: ', uuid);
+
         let promise = new Promise((resolve, reject) => {
 
             (async () => {
                 HELPER.index(uuid, (response) => {
-                    console.log('MEOW: ', response);
+
                     if (response.error === true) {
                         LOGGER.module().error('ERROR: [/repository/model module (create_collection_object/index_collection)] unable to index collection record');
                         reject(new Error('Unable to index collection record'));

@@ -25,7 +25,7 @@ const MODEL = require('../repository/model'),
     VALIDATOR = require('validator');
 
 exports.ping = (req, res) => {
-    SERVICE.ping_services(req, (data) => {
+    SERVICE.ping_services((data) => {
         res.status(data.status).send(data.data);
     });
 };

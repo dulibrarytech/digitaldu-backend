@@ -17,45 +17,40 @@
  */
 
 import {it, expect} from 'vitest';
-
+const TEST_RECORDS = require('../../test/test_records')();
 const ARCHIVEMATICA_CONFIG = require('../../test/archivematica_config')(),
     ARCHIVEMATICA_LIB = require('../archivematica'),
     LIB = new ARCHIVEMATICA_LIB(ARCHIVEMATICA_CONFIG);
 
-it('Archivematica ping', async function () {
-    const response = {
-        status: 'up',
-        message: 'Archivematica service is available'
-    };
-
-    await expect(LIB.ping_api()).resolves.toMatchObject(response);
+it.concurrent('Archivematica ping', async function () {
+    await expect(LIB.ping_api()).resolves.toBeTruthy();
 }, 10000);
 
-it('Archivematica Storage Service ping', async function () {
-    const response = {
-        status: 'up',
-        message: 'Archivematica storage api service is available'
-    };
-
-    await expect(LIB.ping_storage_api()).resolves.toMatchObject(response);
+it.concurrent('Archivematica Storage Service ping', async function () {
+    await expect(LIB.ping_storage_api()).resolves.toBeTruthy();
 }, 10000);
 
-it('Archivematica Storage Service DIP usage', async function () {
-    await expect(LIB.get_dip_storage_usage()).resolves.toBeDefined();
+it.concurrent('Archivematica Storage Service DIP usage', async function () {
+    await expect(LIB.get_dip_storage_usage()).resolves.toBeTypeOf('object');
 }, 10000);
 
-it('Archivematica sftp', async function () {
+it.concurrent('Archivematica dip path', async function () {
+    let uuid = TEST_RECORDS.child_records[2].uuid;
+    await expect(LIB.get_dip_path(uuid)).resolves.toBeDefined();
+}, 10000);
+
+it.concurrent('Archivematica sftp', async function () {
     // TODO: await expect(LIB.list()).resolves.toBeDefined();
 }, 10000);
 
-it('Archivematica start transfer', async function () {
+it.concurrent('Archivematica start transfer', async function () {
     // TODO:
 }, 10000);
 
-it('Archivematica approve transfer', async function () {
+it.concurrent('Archivematica approve transfer', async function () {
     // TODO:
 }, 10000);
 
-it('Archivematica get transfer status', async function () {
+it.concurrent('Archivematica get transfer status', async function () {
     // TODO:
 }, 10000);

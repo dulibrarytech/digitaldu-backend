@@ -18,23 +18,21 @@
 
 'use strict';
 
-const CONFIG = require('../config/config'),
-    DURACLOUD = require('../libs/duracloud'),
+const ELASTICSEARCH_CONFIG = require('../config/elasticsearch_config')(),
     HTTP = require('axios'),
-    LOGGER = require('../libs/log4'),
+    ES = require('elasticsearch'),
+    DURACLOUD = require('../libs/duracloud'),
     CACHE = require('../libs/cache'),
     PING_TASKS = require('../repository/tasks/ping_tasks'),
-    ES = require('elasticsearch'),
     CLIENT = new ES.Client({
-        host: CONFIG.elasticSearch
+        host: ELASTICSEARCH_CONFIG.elasticsearch_host
     });
 
 /**
  * Pings third-party services to determine availability
- * @param req
  * @param callback
  */
-exports.ping_services = function (req, callback) {
+exports.ping_services = function (callback) {
 
     (async () => {
 
@@ -57,6 +55,7 @@ exports.ping_services = function (req, callback) {
             });
 
         } catch (error) {
+            LOGGER.module().error('ERROR: [/repository/service module (ping_services)] Unable to ping third-party services.');
             callback({
                 status: 500,
                 message: 'Unable to ping services ' + error.message

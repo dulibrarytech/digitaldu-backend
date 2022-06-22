@@ -16,377 +16,360 @@
 
  */
 
-const CONFIG = require('../config/config'),
-    LOGGER = require('../libs/log4'),
+const LOGGER = require('../libs/log4'),
     HTTP = require('axios'),
     TIMEOUT = 35000,
     HEADER = {
         'Content-Type': 'application/json'
     };
 
-/**
- * Pings duracloud service to check availability
- * @param callback
- */
-exports.ping = function (callback) {
-
-    'use strict';
-
-    let endpoint = 'https://' + CONFIG.duraCloudUser + ':' + CONFIG.duraCloudPwd + '@' + CONFIG.duraCloudApi;
-
-    (async () => {
-
-        try {
-
-            let response = await HTTP.get(endpoint, {
-                timeout: TIMEOUT,
-                headers: HEADER
-            });
-
-            if (response.status !== 200) {
-
-                LOGGER.module().error('ERROR: [/libs/duracloud lib (ping)] unable to ping duracloud.');
-
-                callback({
-                    error: true,
-                    status: 'down',
-                    message: error
-                });
-
-            } else if (response.status === 200) {
-
-                callback({
-                    error: false,
-                    status: 'up',
-                    message: 'Duracloud service is available'
-                });
-
-                return false;
-            }
-
-        } catch (error) {
-
-            LOGGER.module().error('ERROR: [/libs/duracloud lib (ping)] unable to ping duracloud ' + error);
-
-            callback({
-                error: true,
-                status: 'down',
-                message: error
-            });
-        }
-
-        return false;
-
-    })();
-};
-
-/**
- * Gets METS file
- * @param data
- * @param callback
- */
-exports.get_mets = function (data, callback) {
-
-    'use strict';
-
-    let mets = 'METS.' + data.sip_uuid + '.xml',
-        endpoint = 'https://' + CONFIG.duraCloudUser + ':' + CONFIG.duraCloudPwd + '@' + CONFIG.duraCloudApi + 'dip-store/' + data.dip_path + '/' + mets;
-
-    (async () => {
-
-        try {
-
-            let response = await HTTP.get(endpoint, {
-                timeout: TIMEOUT,
-                headers: HEADER
-            });
-
-            if (response.status !== 200) {
-
-                LOGGER.module().error('ERROR: [/libs/duracloud lib (get_mets)] Unable to get METS.');
-
-                callback({
-                    error: true,
-                    error_message: 'ERROR: [/libs/duracloud lib (get_mets)] Unable to get METS.'
-                });
-
-            } else if (response.status === 200) {
-
-                callback({
-                    error: false,
-                    mets: response.data,
-                    sip_uuid: data.sip_uuid
-                });
-            }
-
-            return false;
-
-        } catch (error) {
-
-            LOGGER.module().error('ERROR: [/libs/duracloud lib (get_mets)] Unable to get METS ' + error);
-
-            callback({
-                error: true,
-                error_message: error
-            });
-        }
-
-    })();
-};
-
-/**
- * Gets objects/header info
- * @param data
- * @param callback
- * @returns {boolean}
- */
-exports.get_object_info = function (data, callback) {
-
-    'use strict';
-
-    let dip_path = data.dip_path;
-    let endpoint = 'https://' + CONFIG.duraCloudUser + ':' + CONFIG.duraCloudPwd + '@' + CONFIG.duraCloudApi + 'dip-store/' + dip_path + '/objects/' + data.uuid + '-' + data.file;
-
-    (async () => {
-
-        try {
-
-            let response = await HTTP.head(endpoint, {
-                timeout: TIMEOUT
-            });
-
-            if (response.status !== 200) {
-
-                LOGGER.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud object.');
-
-                callback({
-                    error: true,
-                    error_message: error
-                });
-
-            } else if (response.status === 200) {
-
-                let resp = {};
-                resp.headers = response.headers;
-                resp.file = data.file;
-                callback(resp);
-            }
-
-            return false;
-
-        } catch (error) {
-
-            LOGGER.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud object ' + error);
-
-            callback({
-                error: true,
-                error_message: error
-            });
-        }
-
-    })();
-};
-
-/**
- * Used for archivespace uri.txt retrieval
- * @param data
- * @param callback
- */
-exports.get_uri = function (data, callback) {
-
-    'use strict';
-
-    let dip_path = data.dip_path,
-        endpoint = 'https://' + CONFIG.duraCloudUser + ':' + CONFIG.duraCloudPwd + '@' + CONFIG.duraCloudApi + 'dip-store/' + dip_path + '/objects/' + data.uuid + '-' + data.file;
-
-    (async () => {
-
-        try {
-
-            let response = await HTTP.get(endpoint, {
-                timeout: TIMEOUT,
-                headers: HEADER
-            });
-
-            if (response.status !== 200) {
-
-                LOGGER.module().error('ERROR: [/libs/duracloud lib (get_uri)] Unable to get duracloud uri object.');
-
-                callback({
-                    error: true,
-                    error_message: 'ERROR: [/libs/duracloud lib (get_uri)] Unable to get duracloud uri object.'
-                });
-
-            } else if (response.status === 200) {
-                callback(response.data);
-            }
-
-            return false;
-
-        } catch (error) {
-
-            LOGGER.module().error('ERROR: [/libs/duracloud lib (get_uri)] Unable to get duracloud uri object ' + error);
-
-            callback({
-                error: true,
-                error_message: error
-            });
-        }
-
-    })();
-};
-
-/**
- * Gets manifest for chunked files
- * @param data
- * @param callback
- */
-exports.get_object_manifest = function (data, callback) {
-
-    'use strict';
-
-    let dip_path = data.dip_path,
-        endpoint = 'https://' + CONFIG.duraCloudUser + ':' + CONFIG.duraCloudPwd + '@' + CONFIG.duraCloudApi + 'dip-store/' + dip_path + '/objects/' + data.uuid + '-' + data.file  + '.dura-manifest';
-
-    (async () => {
-
-        try {
-
-            let response = await HTTP.get(endpoint, {
-                timeout: TIMEOUT,
-                headers: HEADER
-            });
-
-            if (response.status !== 200) {
-
-                LOGGER.module().error('ERROR: [/libs/duracloud lib (get_object_manifest)] Unable to get duracloud manifest.');
-
-                callback({
-                    error: true,
-                    error_message: 'ERROR: [/libs/duracloud lib (get_object_manifest)] Unable to get duracloud manifest.'
-                });
-
-            } else if (response.status === 200) {
-                callback(response.data);
-            }
-
-            return false;
-
-        } catch (error) {
-
-            LOGGER.module().warn('WARN: [/libs/duracloud lib (get_object_manifest)] Unable to get duracloud manifest.  Objects under 1GB do not have a manifest. ' + error);
-
-            callback({
-                error: true,
-                error_message: error
-            });
-        }
-
-    })();
-};
-
-/**
- * Gets thumbnail and renders it for client to consume
- * @param tn
- * @param callback
- */
-exports.get_thumbnail = function (tn, callback) {
-
-    'use strict';
-
-    let endpoint = 'https://' + CONFIG.duraCloudUser + ':' + CONFIG.duraCloudPwd + '@' + CONFIG.duraCloudApi + 'dip-store/' + tn,
-        missing_tn = '/images/image-tn.png';
-
-    (async () => {
-
-        try {
-
-            let response = await HTTP.get(endpoint, {
-                timeout: TIMEOUT,
-                responseType: 'arraybuffer'
-            });
-
-            if (response.status !== 200) {
-
-                LOGGER.module().error('ERROR: [/libs/duracloud lib (get_thumbnail)] Unable to get duracloud thumbnail.');
-
-                callback({
-                    error: true,
-                    status: 200,
-                    data: missing_tn
-                });
-
-            } else if (response.status === 200) {
-                callback(response.data);
-            }
-
-            return false;
-
-        } catch (error) {
-
-            LOGGER.module().error('ERROR: [/libs/duracloud lib (get_thumbnail)] Unable to get duracloud thumbnail ' + error);
-
-            callback({
-                error: true,
-                status: 200,
-                data: missing_tn
-            });
-        }
-
-    })();
-};
-
-/**
- * Sends object data to convert service
- * @param data
- */
-exports.convert_service = function(data) {
-
-    let service = CONFIG.convertService;
-    let service_api_key = CONFIG.convertServiceApiKey;
-    let endpoint;
-
-    if (data.mime_type === 'image/tiff') {
-        endpoint = '/api/v1/convert/tiff';
+const Duracloud_lib = class {
+
+    constructor(DURACLOUD_CONFIG, CONVERT_SERVICE_CONFIG) {
+        this.DURACLOUD = DURACLOUD_CONFIG;
+        this.CONVERT_SERVICE = CONVERT_SERVICE_CONFIG;
     }
 
-    if (endpoint === undefined) {
-        LOGGER.module().info('INFO: [/duracloud/lib (convert_service)] Conversion not required.');
-        return false;
-    }
+    /**
+     * Pings duracloud service to check availability
+     */
+    ping = () => {
 
-    let url = service + endpoint + '?api_key=' + service_api_key;
+        let promise = new Promise((resolve, reject) => {
 
-    (async () => {
+            (async () => {
 
-        try {
+                try {
 
-            let response = await HTTP.post(url, data, {
-                timeout: '60000',
-                headers: {
-                    'Content-Type': 'application/json'
+                    let endpoint = 'https://' + this.DURACLOUD.duracloud_user;
+                    endpoint += ':';
+                    endpoint += this.DURACLOUD.duracloud_password;
+                    endpoint += '@';
+                    endpoint += this.DURACLOUD.duracloud_api;
+
+                    let response = await HTTP.get(endpoint, {
+                        timeout: TIMEOUT,
+                        headers: HEADER
+                    });
+
+                    if (response.status === 200) {
+                        resolve(true);
+                    }
+
+                } catch (error) {
+                    LOGGER.module().error('ERROR: [/libs/duracloud lib (ping)] unable to ping duracloud ' + error);
+                    reject(false);
                 }
-            });
 
-            if (response.status !== 201) {
+            })();
+        });
 
-                LOGGER.module().error('ERROR: [/libs/duracloud lib (convert_service)] unable to convert file.');
+        return promise.then((response) => {
+            return response;
+        }).catch((error) => {
+            return error;
+        });
+    };
 
-            } else if (response.status === 201) {
-                LOGGER.module().info('INFO: [/duracloud/lib (convert_service)] ' + response.data.data);
-            }
+    /**
+     * Gets METS file
+     * @param uuid
+     * @param dip_path
+     */
+    get_mets = (uuid, dip_path) => {
 
-            return false;
+        let promise = new Promise((resolve, reject) => {
 
-        } catch (error) {
+            (async () => {
 
-            LOGGER.module().error('ERROR: [/duracloud/lib (convert_service)] convert failed. Request failed: ' + error);
+                try {
 
-            callback({
-                error: true,
-                message: 'ERROR: [/duracloud/lib (convert_service)] convert failed. Request failed: ' + error
-            });
-        }
+                    let mets = 'METS.' + uuid + '.xml';
+                    let endpoint = 'https://' + this.DURACLOUD.duracloud_user;
+                    endpoint += ':';
+                    endpoint += this.DURACLOUD.duracloud_password;
+                    endpoint += '@' + this.DURACLOUD.duracloud_api;
+                    endpoint += 'dip-store/';
+                    endpoint +=  dip_path + '/' + mets;
 
-    })();
+                    let response = await HTTP.get(endpoint, {
+                        timeout: TIMEOUT,
+                        headers: HEADER
+                    });
+
+                    if (response.status === 200) {
+                        resolve({
+                            mets: response.data,
+                            uuid: uuid
+                        });
+                    }
+
+                } catch (error) {
+                    LOGGER.module().error('ERROR: [/libs/duracloud lib (get_mets)] Unable to get METS ' + error);
+                    reject(false);
+                }
+
+            })();
+        });
+
+        return promise.then((response) => {
+            return response;
+        }).catch((error) => {
+            return error;
+        });
+    };
+
+    /**
+     * Gets objects/header info
+     * @param uuid
+     * @param dip_path
+     * @param file
+     * @returns {boolean}
+     */
+    get_object_info = (uuid, dip_path, file) => {
+
+        let promise = new Promise((resolve, reject) => {
+
+            (async () => {
+
+                try {
+
+                    let endpoint = 'https://' + this.DURACLOUD.duracloud_user;
+                    endpoint += ':';
+                    endpoint += this.DURACLOUD.duracloud_password;
+                    endpoint += '@';
+                    endpoint += this.DURACLOUD.duracloud_api;
+                    endpoint += 'dip-store/';
+                    endpoint += dip_path;
+                    endpoint += '/objects/';
+                    endpoint += uuid + '-' + file;
+
+                    let response = await HTTP.head(endpoint, {
+                        timeout: TIMEOUT
+                    });
+
+                    if (response.status === 200) {
+                        resolve({
+                            headers: response.headers,
+                            file: file
+                        });
+                    }
+
+                } catch (error) {
+                    LOGGER.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud object ' + error);
+                    reject(false);
+                }
+
+            })();
+        });
+
+        return promise.then((response) => {
+            return response;
+        }).catch((error) => {
+            return error;
+        });
+    };
+
+    /**
+     * Used for archivespace uri.txt retrieval
+     * @param uuid
+     * @param dip_path
+     * @param file
+     */
+    get_uri = (uuid, dip_path, file) => {
+
+        let promise = new Promise((resolve, reject) => {
+
+            (async () => {
+
+                try {
+
+                    let endpoint = 'https://' + this.DURACLOUD.duracloud_user;
+                    endpoint += ':';
+                    endpoint += this.DURACLOUD.duracloud_password;
+                    endpoint += '@';
+                    endpoint += this.DURACLOUD.duracloud_api;
+                    endpoint += 'dip-store/';
+                    endpoint += dip_path;
+                    endpoint += '/objects/';
+                    endpoint += uuid + '-' + file;
+
+                    let response = await HTTP.get(endpoint, {
+                        timeout: TIMEOUT,
+                        headers: HEADER
+                    });
+
+                    if (response.status === 200) {
+                        resolve(response.data);
+                    }
+
+                    return false;
+
+                } catch (error) {
+                    LOGGER.module().error('ERROR: [/libs/duracloud lib (get_uri)] Unable to get duracloud uri object ' + error);
+                    reject(false);
+                }
+
+            })();
+        });
+
+        return promise.then((response) => {
+            return response;
+        }).catch((error) => {
+            return error;
+        });
+    };
+
+    /**
+     * Gets manifest for chunked files
+     * @param uuid
+     * @param dip_path
+     * @param file
+     */
+    get_object_manifest = (uuid, dip_path, file) => {
+
+        let promise = new Promise((resolve, reject) => {
+
+            (async () => {
+
+                try {
+
+                    let endpoint = 'https://' + this.DURACLOUD.duracloud_user;
+                    endpoint += ':';
+                    endpoint += this.DURACLOUD.duracloud_password;
+                    endpoint += '@';
+                    endpoint += this.DURACLOUD.duracloud_api;
+                    endpoint += 'dip-store/';
+                    endpoint += dip_path;
+                    endpoint += '/objects/';
+                    endpoint += uuid + '-' + file + '.dura-manifest';
+
+
+                    let response = await HTTP.get(endpoint, {
+                        timeout: TIMEOUT,
+                        headers: HEADER
+                    });
+
+                    if (response.status === 200) {
+                        resolve(response.data);
+                    }
+
+                } catch (error) {
+                    LOGGER.module().warn('WARN: [/libs/duracloud lib (get_object_manifest)] Unable to get duracloud manifest.  Objects under 1GB do not have a manifest. ' + error);
+                    reject(false);
+                }
+
+            })();
+        });
+
+        return promise.then((response) => {
+            return response;
+        }).catch((error) => {
+            return error;
+        });
+    };
+
+    /**
+     * Gets thumbnail and renders it for client to consume
+     * @param tn
+     */
+    get_thumbnail = (tn) => {
+
+        let promise = new Promise((resolve, reject) => {
+
+            (async () => {
+
+                try {
+
+                    let endpoint = 'https://' + this.DURACLOUD.duracloud_user;
+                        endpoint += ':';
+                        endpoint += this.DURACLOUD.duracloud_password;
+                        endpoint += '@';
+                        endpoint += this.DURACLOUD.duracloud_api;
+                        endpoint += 'dip-store/';
+                        endpoint += tn;
+
+                    let response = await HTTP.get(endpoint, {
+                        timeout: TIMEOUT,
+                        responseType: 'arraybuffer'
+                    });
+
+                    if (response.status === 200) {
+                        resolve(response.data);
+                    }
+
+                } catch (error) {
+                    LOGGER.module().error('ERROR: [/libs/duracloud lib (get_thumbnail)] Unable to get duracloud thumbnail ' + error);
+                    let missing_tn = '/images/image-tn.png';
+                    resolve({
+                        data: missing_tn
+                    });
+                }
+
+            })();
+        });
+
+        return promise.then((response) => {
+            return response;
+        }).catch((error) => {
+            return error;
+        });
+    };
+
+    /**
+     * Sends object data to convert service
+     * @param data
+     */
+    convert_service = (data) => {
+
+        let promise = new Promise((resolve, reject) => {
+
+            (async () => {
+
+                try {
+
+                    let service = this.CONVERT_SERVICE.convert_service_endpoint;
+                    let service_api_key = this.CONVERT_SERVICE.convert_service_api_key;
+                    let endpoint;
+
+                    if (data.mime_type === 'image/tiff') {
+                        endpoint = '/api/v1/convert/tiff';
+                    }
+
+                    if (endpoint === undefined) {
+                        LOGGER.module().info('INFO: [/duracloud/lib (convert_service)] Conversion not required.');
+                        resolve(true);
+                    }
+
+                    let url = service + endpoint + '?api_key=' + service_api_key;
+                    let response = await HTTP.post(url, data, {
+                        timeout: '60000',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.status === 201) {
+                        LOGGER.module().info('INFO: [/duracloud/lib (convert_service)] ' + response.data.data);
+                        resolve(true);
+                    }
+
+                    return false;
+
+                } catch (error) {
+                    LOGGER.module().error('ERROR: [/duracloud/lib (convert_service)] convert failed. Request failed: ' + error);
+                    reject(false);
+                }
+
+            })();
+        });
+
+        return promise.then((response) => {
+            return response;
+        }).catch((error) => {
+            return error;
+        });
+    };
 };
+
+module.exports = Duracloud_lib;

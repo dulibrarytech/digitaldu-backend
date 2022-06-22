@@ -18,8 +18,7 @@
 
 'use strict';
 
-const CONFIG = require('../config/config'),
-    VALIDATOR = require('validator'),
+const VALIDATOR = require('validator'),
     CREATE_COLLECTION_TASKS = require('../repository/tasks/create_collection_tasks'),
     UPDATE_THUMBNAIL_URL_TASKS = require('../repository/tasks/update_thumbnail_url_tasks'),
     PUBLISH_COLLECTION_RECORD_TASKS = require('../repository/tasks/publish_collection_record_tasks'),
@@ -29,7 +28,7 @@ const CONFIG = require('../config/config'),
     DISPLAY_RECORD_TASKS = require('../repository/tasks/display_record_tasks'),
     DELETE_RECORD_TASKS = require('../repository/tasks/delete_record_tasks'),
     LOGGER = require('../libs/log4'),
-    DB = require('../config/db')(),
+    DB = require('../config/db_config')(),
     REPO_OBJECTS = 'tbl_objects';
 
 /**
@@ -38,16 +37,6 @@ const CONFIG = require('../config/config'),
  * @param callback
  */
 exports.get_display_record = (uuid, callback) => {
-
-    if (uuid === undefined || typeof uuid !== 'string') {
-
-        callback({
-            status: 400,
-            message: 'Bad Request'
-        });
-
-        return false;
-    }
 
     (async () => {
 

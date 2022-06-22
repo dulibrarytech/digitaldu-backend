@@ -16,7 +16,7 @@
 
  */
 
-const DR = require('../../libs/display-record');
+const DR = require('../../libs/display_record');
 const CACHE = require('../../libs/cache');
 const HELPER = require('../../repository/helper');
 const LOGGER = require('../../libs/log4');

@@ -16,7 +16,6 @@
 
  */
 
-// const DR = require('../../libs/display-record');
 const DISPLAY_RECORD_LIB = require('../../libs/display_record');
 const HELPER = require('../../repository/helper');
 const LOGGER = require('../../libs/log4');
@@ -39,18 +38,31 @@ const Display_record_tasks = class {
      * Executes tasks to update display record
      */
     update = () => {
+        console.log(this.uuid);
+        let promise = new Promise((resolve, reject) => {
 
-        (async () => {
+            (async () => {
 
-            let data;
-            let display_record;
+                try {
+                    let data;
+                    let display_record;
+                    data = await this.get_display_record_data(this.uuid);
+                    display_record = await this.create_display_record(data);
+                    await this.update_display_record(display_record);
+                    await this.reindex_display_record(JSON.parse(display_record));
+                    resolve(true);
+                } catch (error) {
+                    console.log(error);
+                    LOGGER.module().fatal('FATAL: [/repository/tasks/display_record_tasks (update)] Unable to get display data ' + error);
+                    reject(false);
+                }
 
-            data = await this.get_display_record_data();
-            display_record = await this.create_display_record(data);
-            await this.update_display_record(display_record);
-            await this.reindex_display_record(JSON.parse(display_record));
+            })();
+        });
 
-        })();
+        return promise.then((result) => {
+            return result;
+        });
     };
 
     /**
@@ -71,11 +83,6 @@ const Display_record_tasks = class {
                 reject(error);
             }
 
-            /*
-            DR.get_display_record_data(this.uuid, (record_obj) => {
-                resolve(record_obj);
-            });
-             */
 
         });
 
@@ -102,18 +109,6 @@ const Display_record_tasks = class {
             } catch (error) {
                 reject(error);
             }
-
-            /*
-            DR.create_display_record(data, (display_record) => {
-
-                if (typeof display_record === 'object') {
-                    LOGGER.module().error('ERROR: [/repository/tasks (create_display_record)] Unable to create display record');
-                    reject(new Error('ERROR: [/repository/tasks (create_display_record)] Unable to create display record'));
-                }
-
-                resolve(display_record);
-            });
-             */
         });
 
         return promise.then((display_record) => {
@@ -145,19 +140,6 @@ const Display_record_tasks = class {
             } catch (error) {
                 reject(error);
             }
-
-            /*
-            DR.update_display_record(where_obj, display_record, (result) => {
-
-                if (typeof result === 'object') {
-                    LOGGER.module().error('ERROR: [/repository/tasks (update_display_record/DR.update_display_record)] Unable to update display record');
-                    reject(new Error('ERROR: [/repository/tasks (update_display_record/DR.update_display_record)] Unable to update display record'));
-                }
-
-                resolve(result);
-            });
-
-             */
         });
 
         return promise.then((display_record) => {

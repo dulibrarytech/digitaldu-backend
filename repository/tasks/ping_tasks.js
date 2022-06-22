@@ -16,8 +16,12 @@
 
  */
 
-const CONFIG = require('../../config/config');
-const ARCHIVEMATICA = require('../../libs/archivematica');
+const APP_CONFIG = require('../../config/app_config')();
+const ARCHIVEMATICA_CONFIG = require('../../config/archivematica_config')();
+const DURACLOUD_CONFIG = require('../../config/duracloud_config')();
+const HANDLE_CONFIG = require('../../config/handle_config')();
+const ARCHIVEMATICA_LIB = require('../../libs/archivematica');
+const DURACLOUD_LIB = require('../../libs/duracloud');
 const ARCHIVESSPACE = require('../../libs/archivesspace');
 const DURACLOUD = require('../../libs/duracloud');
 const HTTP = require('axios');
@@ -29,7 +33,10 @@ const LOGGER = require('../../libs/log4');
  */
 const Ping_tasks = class {
 
-    constructor() {}
+    constructor() {
+        this.ARCHIVEMATICA_LIB = new ARCHIVEMATICA_LIB(ARCHIVEMATICA_CONFIG);
+        this.DURACLOUD_LIB = new DURACLOUD_LIB(DURACLOUD_CONFIG);
+    }
 
     /**
      * Pings Archivematica
@@ -38,6 +45,20 @@ const Ping_tasks = class {
     ping_archivematica = () => {
 
         let promise = new Promise((resolve, reject) => {
+
+            (async () => {
+
+                try {
+                    let response = await ARCHIVEMATICA_LIB.ping_api();
+                    console.log(response);
+                } catch (error) {
+                    LOGGER.module().error('ERROR: [/repository/tasks (ping_archivematica)] unable to ping archivematica ' + error);
+                    console.log(error);
+                }
+
+            })();
+
+            /*
             ARCHIVEMATICA.ping_api(function (response) {
 
                 if (response.error === true) {
@@ -47,6 +68,7 @@ const Ping_tasks = class {
 
                 resolve(response.status);
             });
+             */
         });
 
         return promise.then((response) => {
@@ -61,6 +83,8 @@ const Ping_tasks = class {
     ping_archivematica_storage = () => {
 
         let promise = new Promise((resolve, reject) => {
+
+            /*
             ARCHIVEMATICA.ping_storage_api(function (response) {
 
                 if (response.error === true) {
@@ -70,6 +94,8 @@ const Ping_tasks = class {
 
                 resolve(response.status);
             });
+
+             */
         });
 
         return promise.then((response) => {
@@ -134,7 +160,7 @@ const Ping_tasks = class {
 
             try {
 
-                let endpoint = CONFIG.handleHost.replace('handle-service-0.6', '');
+                let endpoint = HANDLE_CONFIG.handle_host.replace('handle-service-0.6', '');
                 let response = await HTTP.get(endpoint, {
                     timeout: 25000
                 });

@@ -18,17 +18,12 @@
 
 'use strict';
 
-const APP_CONFIG = {
-    host: process.env.HOST,
-    app_name: process.env.APP_NAME,
-    app_version: process.env.APP_VERSION,
-    organization: process.env.ORGANIZATION,
-    app_host: process.env.APP_HOST,
-    app_port: process.env.APP_PORT,
-    api_url: process.env.API_URL,
-    tn_upload_path: process.env.TN_UPLOAD_PATH
+const DURACLOUD_CONFIG = {
+    duracloud_api: process.env.DURACLOUD_API,
+    duracloud_user: process.env.DURACLOUD_USER,
+    duracloud_password: process.env.DURACLOUD_PWD
 };
 
-module.exports = function() {
-    return APP_CONFIG;
+module.exports = function () {
+    return DURACLOUD_CONFIG;
 };

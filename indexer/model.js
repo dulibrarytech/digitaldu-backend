@@ -17,9 +17,9 @@
  */
 
 'use strict';
-
+// TODO:
 const CONFIG = require('../config/config'),
-    DB = require('../config/db')(),
+    DB = require('../config/db_config')(),
     HELPER = require('../indexer/helper'),
     SERVICE = require('../indexer/service'),
     INDEXER_TASKS = require('../indexer/tasks/indexer_tasks'),
@@ -28,6 +28,7 @@ const CONFIG = require('../config/config'),
     INDEX_TIMER = CONFIG.indexTimer,
     REPO_OBJECTS = 'tbl_objects';
 
+// TODO: figure out how to write tests for these functions
 /**
  * indexes record
  * @param uuid

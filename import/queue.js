@@ -20,7 +20,7 @@
 
 const CONFIG = require('../config/config'),
     FS = require('fs'),
-    MODS = require('../libs/display-record'),
+    MODS = require('../libs/display_record'),
     METS = require('../libs/mets'),
     TRANSFER_INGEST = require('../libs/transfer-ingest'),
     MIME_TYPE = require('../libs/mime-types'),

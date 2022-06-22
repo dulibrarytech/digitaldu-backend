@@ -18,10 +18,10 @@
 
 'use strict';
 
-const CONFIG = require('../config/config'),
+const CONFIG = require('../config/token_config')(),
     JWT = require('jsonwebtoken'),
     LOGGER = require('../libs/log4'),
-    VALIDATOR = require("validator");
+    VALIDATOR = require('validator');
 
 /**
  * Creates session token
@@ -32,12 +32,12 @@ exports.create = function (username) {
 
     let tokenData = {
         sub: username,
-        iss: CONFIG.tokenIssuer
+        iss: CONFIG.token_issuer
     };
 
-    return JWT.sign(tokenData, CONFIG.tokenSecret, {
-        algorithm: CONFIG.tokenAlgo,
-        expiresIn: CONFIG.tokenExpires
+    return JWT.sign(tokenData, CONFIG.token_secret, {
+        algorithm: CONFIG.token_algo,
+        expiresIn: CONFIG.token_expires
     });
 };
 
@@ -51,10 +51,10 @@ exports.verify = function (req, res, next) {
 
     let token = req.headers['x-access-token'] || req.query.t;
     let key = req.query.api_key;
-
+    console.log('KEY: ', key);
     if (token !== undefined && VALIDATOR.isJWT(token)) {
 
-        JWT.verify(token, CONFIG.tokenSecret, function (error, decoded) {
+        JWT.verify(token, CONFIG.token_secret, function (error, decoded) {
 
             if (error) {
 
@@ -71,10 +71,10 @@ exports.verify = function (req, res, next) {
             next();
         });
 
-    } else if (key !== undefined && key === CONFIG.apiKey)  {
+    } else if (key !== undefined && key === CONFIG.api_key)  {
 
         let api_key = key;
-
+        console.log(api_key);
         if (Array.isArray(key)) {
             api_key = key.pop();
         }
@@ -88,7 +88,6 @@ exports.verify = function (req, res, next) {
         }
 
         req.query.api_key = api_key;
-
         next();
 
     } else {
