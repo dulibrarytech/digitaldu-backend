@@ -171,7 +171,7 @@ const Duracloud_lib = class {
     };
 
     /**
-     * Used for archivespace uri.txt retrieval
+     * Used for archivesspace uri.txt retrieval
      * @param uuid
      * @param dip_path
      * @param file
@@ -299,11 +299,15 @@ const Duracloud_lib = class {
                     }
 
                 } catch (error) {
-                    LOGGER.module().error('ERROR: [/libs/duracloud lib (get_thumbnail)] Unable to get duracloud thumbnail ' + error);
+                    LOGGER.module().error('ERROR: [/libs/duracloud lib (get_thumbnail)] Unable to get duracloud thumbnail ' + error.message);
+                    // TODO: move missing_tn
+                    /*
                     let missing_tn = '/images/image-tn.png';
                     resolve({
                         data: missing_tn
                     });
+                     */
+                    reject(false);
                 }
 
             })();
