@@ -51,7 +51,7 @@ exports.verify = function (req, res, next) {
 
     let token = req.headers['x-access-token'] || req.query.t;
     let key = req.query.api_key;
-    console.log('KEY: ', key);
+
     if (token !== undefined && VALIDATOR.isJWT(token)) {
 
         JWT.verify(token, CONFIG.token_secret, function (error, decoded) {
@@ -74,7 +74,7 @@ exports.verify = function (req, res, next) {
     } else if (key !== undefined && key === CONFIG.api_key)  {
 
         let api_key = key;
-        console.log(api_key);
+
         if (Array.isArray(key)) {
             api_key = key.pop();
         }

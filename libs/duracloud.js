@@ -156,7 +156,7 @@ const Duracloud_lib = class {
                     }
 
                 } catch (error) {
-                    LOGGER.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud object ' + error);
+                    LOGGER.module().error('ERROR: [/libs/duracloud lib (get_object_info)] Unable to get duracloud object ' + error.message);
                     reject(false);
                 }
 
