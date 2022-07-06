@@ -1,4 +1,4 @@
-<% include partials/header.ejs %>
+<%- include('partials/header.ejs'); %>
 <link rel="stylesheet" href="../libs/viewerjs/css/spotlight.min.css">
 <body class="nav-md">
 <div class="container body">
@@ -6,16 +6,16 @@
         <div class="col-md-3 left_col">
             <div class="left_col scroll-view">
                 <div class="navbar nav_title" style="border: 0;">
-                    <% include partials/app-name.ejs %>
+                    <%- include('partials/app-name.ejs'); %>
                 </div>
                 <div class="clearfix"></div>
-                <% include partials/menu-profile.ejs %>
+                <%- include('partials/menu-profile.ejs'); %>
                 <br>
-                <% include partials/nav.ejs %>
-                <% include partials/sidebar-footer.ejs %>
+                <%- include('partials/nav.ejs'); %>
+                <%- include('partials/sidebar-footer.ejs'); %>
             </div>
         </div>
-        <% include partials/top-nav.ejs %>
+        <%- include('partials/top-nav.ejs'); %>
         <div class="right_col" role="main">
             <div id="message"></div>
             <div id="image-viewer">
@@ -25,7 +25,7 @@
 
             </div>
         </div>
-        <% include partials/footer.ejs %>
+        <%- include('partials/footer.ejs'); %>
     </div>
 </div>
 <script src="../libs/jquery/dist/jquery.min.js"></script>

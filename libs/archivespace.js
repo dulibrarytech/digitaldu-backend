@@ -122,32 +122,10 @@ exports.get_mods = function (id, session, callback) {
                 }
             });
 
-            if (response.status === 404) {
-
-                LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed (http status - ' + response.status + ')');
-
-                callback({
-                    error: true,
-                    error_message: 'ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed (http status - ' + response.status + ')'
-                });
-
-                return false;
-
-            } else if (response.status === 200) {
+            if (response.status === 200) {
 
                 callback({
                     error: false,
-                    mods: response
-                });
-
-                return false;
-
-            } else {
-
-                LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed (' + response + ')');
-
-                callback({
-                    error: true,
                     mods: response
                 });
 
@@ -156,15 +134,11 @@ exports.get_mods = function (id, session, callback) {
 
         } catch (error) {
 
-            if (error === null) {
-
-                callback({
-                    error: true,
-                    error_message: 'ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed - error object is null'
-                });
-
-                return false;
-            }
+            callback({
+                error: true,
+                status: error.response.status,
+                error_message: 'ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed'
+            });
 
             LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_mods)] request to archivesspace failed - ' + error);
             return false;

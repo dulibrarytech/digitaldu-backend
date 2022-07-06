@@ -45,7 +45,7 @@ exports.create_repo_index = function (req, callback) {
     }
 
     function create_index (callback) {
-
+        console.log(req.body.index_name);
         let obj = {};
         obj.index_name = req.body.index_name;
 

@@ -102,16 +102,22 @@ exports.get_mods = function(obj, callback) {
     ARCHIVESSPACE.get_mods(obj.mods_id, obj.session, function (result) {
 
         if (result.error === false) {
-
             obj.error = result.error;
             obj.mods = JSON.stringify(result.mods.data);
             callback(obj);
             return false;
 
-        } else if (result.error === true && result.status === 412) {
+        } else if (result.error === true) {
+            LOGGER.module().error('ERROR: [/import/service module (get_mods)] unable to get mods');
+            obj.error = result.error;
+            obj.status = result.status;
+            obj.mods = null;
+            callback(obj);
+            return false;
 
-            LOGGER.module().info('INFO: [/import/service module (get_mods)] a new session token is required ' + result.message);
+            // LOGGER.module().info('INFO: [/import/service module (get_mods)] a new session token is required ' + result.message);
 
+            /*
             (async() => {
 
                 let response = await HTTP.get({
@@ -142,15 +148,19 @@ exports.get_mods = function(obj, callback) {
                 }
 
             })();
+            */
+            // return false;
 
-            return false;
-
-        } else {
+        }
+        /*
+        else {
             LOGGER.module().error('ERROR: [/import/service module (get_mods)] unable to get mods');
             obj.error = result.error;
             obj.mods = null;
             callback(obj);
             return false;
         }
+
+         */
     });
 };
