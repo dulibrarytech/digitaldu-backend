@@ -18,8 +18,7 @@
 
 'use strict';
 
-const CONFIG = require('../config/config'),
-    MODS = require('../libs/display-record'),
+const MODS = require('../libs/display-record'),
     SERVICE = require('../import/service'),
     LOGGER = require('../libs/log4'),
     ASYNC = require('async'),
@@ -28,7 +27,7 @@ const CONFIG = require('../config/config'),
     DB = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects',
     CACHE = require('../libs/cache'),
-    REQUEST_TIME_INTERVAL = 4000;
+    REQUEST_TIME_INTERVAL = 10000;
 
 
 /**
@@ -55,7 +54,7 @@ exports.batch_update_metadata = function (req, callback) {
             DB(REPO_OBJECTS)
                 .select('sip_uuid')
                 .limit(1)
-                .orderBy('id', 'asc') // desc
+                .orderBy('id', 'desc') // desc
                 .where({
                     object_type: 'object',
                     is_active: 1,
@@ -319,7 +318,8 @@ exports.update_object_metadata_record = function (req, callback) {
         DB(REPO_OBJECTS)
             .select('mods', 'display_record')
             .where({
-                sip_uuid: obj.sip_uuid
+                sip_uuid: obj.sip_uuid,
+                is_active: 1
             })
             .then(function (data) {
 
@@ -368,7 +368,8 @@ exports.update_object_metadata_record = function (req, callback) {
                 display_record.display_record = mods; // apply new mods to display record
 
                 let where_obj = {
-                    sip_uuid: obj.sip_uuid
+                    sip_uuid: obj.sip_uuid,
+                    is_active: 1
                 };
 
                 MODS.update_display_record(where_obj, JSON.stringify(display_record), function (result) {
@@ -430,7 +431,7 @@ exports.update_object_metadata_record = function (req, callback) {
     // 6.) // TODO: re-index is failing silently
     function update_public_index(obj, callback) {
 
-        if (obj.session === null || obj.updated === false || obj.admin_index === false || obj.error === true) {
+        if (obj.mods === null || obj.updated === false || obj.admin_index === false || obj.error === true) {
             callback(null, obj);
             return false;
         }
@@ -474,7 +475,7 @@ exports.update_object_metadata_record = function (req, callback) {
                             // obj.admin_index = true;
                             callback(null, obj);
                         }
-                    }, 5000);
+                    }, 10000);
                 }
 
             })();
@@ -482,13 +483,12 @@ exports.update_object_metadata_record = function (req, callback) {
     }
 
     ASYNC.waterfall([
-        // get_token,
         get_mods_id,
         get_mods,
         update_mods,
         update_display_record,
         update_admin_index,
-        // update_public_index
+        update_public_index
     ], function (error, results) {
 
         if (error) {
