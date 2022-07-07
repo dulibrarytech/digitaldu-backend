@@ -194,6 +194,93 @@ exports.batch_update_metadata = function (req, callback) {
 };
 
 /**
+ * Temporary solution to update single metadata records
+ * @param req
+ * @param callback
+ */
+exports.update_single_metadata_record = function (req, callback) {
+
+    try {
+
+        (async () => {
+
+            let sip_uuid = req.body.sip_uuid;
+            let session;
+            let response = await HTTP.get({
+                endpoint: '/api/admin/v1/import/metadata/session'
+            });
+
+            if (response.error === true) {
+                session = null;
+            } else {
+                session = response.data.session;
+            }
+
+            function update_metadata_record(session) {
+
+                (async () => {
+
+                    let data = {
+                        'sip_uuid': sip_uuid,
+                        'session': session
+                    };
+
+                    let response = await HTTP.put({
+                        endpoint: '/api/admin/v1/import/metadata/object',
+                        data: data
+                    });
+
+                    if (response.data.status === 201) {
+
+                        callback({
+                            status: 201,
+                            message: 'Metadata record updated...'
+                        });
+                    }
+
+                    setTimeout(function () {
+
+                        (async () => {
+
+
+                            let session_destroy_data = {
+                                'session': session
+                            };
+
+                            let destroy_response = await HTTP.post({
+                                endpoint: '/api/admin/v1/import/metadata/session/destroy',
+                                data: session_destroy_data
+                            });
+
+                            if (destroy_response.error === true) {
+                                LOGGER.module().error('ERROR: [/import/model module (update_object_metadata_record/get_mods)] Unable to terminate session');
+                            } else {
+                                LOGGER.module().info('INFO: [/import/model module (update_object_metadata_record/get_mods)] ArchivesSpace session terminated.');
+                            }
+
+                        })();
+
+                    }, 5000);
+
+                })();
+            }
+
+            update_metadata_record(session);
+
+        })();
+
+    } catch (error) {
+
+        LOGGER.module().error('ERROR: [/import/model module (BATCH: update_metadata_record)] Unable to update metadata record: ' + error.message);
+
+        callback({
+            status: 500, // response.data.status
+            message: 'Metadata record not updated.'
+        });
+    }
+};
+
+/**
  * updates single metadata record
  * @param req
  * @param callback
@@ -212,6 +299,7 @@ exports.update_object_metadata_record = function (req, callback) {
 
     let sip_uuid = req.body.sip_uuid;
     let session = req.body.session;
+
 
     // 1.)
     function get_mods_id(callback) {

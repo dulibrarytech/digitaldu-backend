@@ -65,6 +65,9 @@ module.exports = function (app) {
         .put(TOKEN.verify, IMPORT.update_collection_metadata_record);
 
     // updates single object metadata record
+    app.route('/api/admin/v1/import/metadata/single')
+        .put(TOKEN.verify, IMPORT.update_single_metadata_record);
+
     app.route('/api/admin/v1/import/metadata/object')
         .put(TOKEN.verify, IMPORT.update_object_metadata_record);
 

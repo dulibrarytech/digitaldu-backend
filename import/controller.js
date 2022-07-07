@@ -108,6 +108,12 @@ exports.update_object_metadata_record = function(req, res) {
     });
 };
 
+exports.update_single_metadata_record = function(req, res) {
+    MODEL.update_single_metadata_record(req, function(data) {
+        res.status(data.status).send(data);
+    });
+};
+
 exports.batch_update_metadata = function(req, res) {
      MODEL.batch_update_metadata(req, function(data) {
         res.status(data.status).send(data.data);
