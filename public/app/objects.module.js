@@ -469,13 +469,7 @@ const objectsModule = (function () {
         const callback = function (response) {
 
             if (response.status === 201) {
-
-                setTimeout(function () {
-                    objectsModule.getObjects();
-                    location.hash = '#' + pid;
-                }, 4000);
-
-
+                domModule.html('#update-' + pid, '<i class="fa fa-code"></i> Update Metadata');
             } else if (response.status === 401) {
 
                 response.json().then(function (response) {
@@ -498,7 +492,6 @@ const objectsModule = (function () {
 
     /**
      * Starts delete process
-     * @param pid
      */
     obj.deleteObject = function() {
 
