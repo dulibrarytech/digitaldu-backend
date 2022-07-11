@@ -27,7 +27,7 @@ const MODS = require('../libs/display-record'),
     DB = require('../config/db')(),
     REPO_OBJECTS = 'tbl_objects',
     CACHE = require('../libs/cache'),
-    REQUEST_TIME_INTERVAL = 10000;
+    REQUEST_TIME_INTERVAL = 15000;
 
 
 /**
