@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2022 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,12 +18,22 @@
 
 'use strict';
 
-const STATS = require('../stats/controller'),
-    ENDPOINTS = require('../stats/endpoints'),
-    TOKEN = require('../libs/tokens');
+const PREFIX = '/api/';
+const VERSION = 'v2';
+const ENDPOINT = '/stats/';
+const ENDPOINTS = {
+    stats: {
+        get_stats: {
+            endpoint: `${PREFIX}${VERSION}${ENDPOINT}`,
+            description: 'Collects and delivers repository stats',
+            get: {
+                description: 'Collects and delivers repository stats',
+                params: 'token or api_key'
+            }
+        }
+    }
+};
 
-module.exports = function (app) {
-
-    app.route(ENDPOINTS().stats.get_stats.endpoint)
-        .get(TOKEN.verify, STATS.get_stats);
+module.exports = () => {
+    return ENDPOINTS;
 };

@@ -18,7 +18,7 @@
 
 'use strict';
 
-const CONFIG = require('../config/config'),
+const CONFIG = require('../config/webservices_config')(),
     HTTP = require('../libs/http'),
     LOGGER = require('../libs/log4');
 
@@ -32,7 +32,7 @@ exports.authenticate = function (username, password, callback) {
         };
 
         let response = await HTTP.post({
-            url: CONFIG.ldap,
+            url: CONFIG.ldap_service,
             data: data
         });
 

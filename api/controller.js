@@ -18,7 +18,7 @@
 
 'use strict';
 
-const API = require('../api/model');
+const MODEL = require('../api/model');
 const SERVICE = require("../api/service");
 
 exports.default = function (req, res) {
@@ -27,8 +27,15 @@ exports.default = function (req, res) {
     });
 };
 
+exports.get_endpoints = function (req, res) {
+    // TODO: load
+    const REPO_ENDPOINTS = require('../repository/endpoints');
+    console.log(REPO_ENDPOINTS());
+    console.log(req.query);
+};
+
 exports.get_records = function (req, res) {
-    API.get_records(req, function (data) {
+    MODEL.get_records(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
@@ -41,7 +48,7 @@ exports.get_images = function (req, res) {
 };
 
 exports.get_uuids = function (req, res) {
-    API.get_uuids(req, function (data) {
+    MODEL.get_uuids(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };

@@ -56,16 +56,16 @@ module.exports = () => {
     APP.set('view engine', 'ejs');
     APP.set('view cache', view_cache);
 
-    // require('../auth/routes.js')(APP);
-    // require('../users/routes.js')(APP);
+    require('../auth/routes.js')(APP);
+    require('../users/routes.js')(APP);
     require('../repository/routes.js')(APP);
     require('../indexer/routes.js')(APP);
-    // require('../dashboard/routes.js')(APP);
+    require('../dashboard/routes.js')(APP);
     // require('../stats/routes.js')(APP);
     // require('../import/routes.js')(APP);
     // require('../search/routes.js')(APP);
     // require('../utils/routes.js')(APP);
-    // require('../api/routes.js')(APP);
+    require('../api/routes.js')(APP);
     // require('../uploads/index.js')(APP);
     // require('../qa/routes.js')(APP);
 

@@ -27,7 +27,7 @@ const apiModule = (function () {
      */
     obj.endpoints = function () {
         return {
-            authenticate: '/api/authenticate',
+            authenticate: '/api/v2/authenticate',
             users: '/api/admin/v1/users',
             repo_object: '/api/admin/v1/repo/object',
             repo_objects: '/api/admin/v1/repo/objects',

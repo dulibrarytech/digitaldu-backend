@@ -64,8 +64,8 @@ exports.login = function (req, res) {
 };
 
 exports.login_form = function (req, res) {
-
-    res.renderStatic('login', {
+    // res.renderStatic
+    res.render('login', {
         host: CONFIG.host,
         message: '',
         username: ''

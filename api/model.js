@@ -20,7 +20,7 @@
 
 const ASYNC = require('async'),
     LOGGER = require('../libs/log4'),
-    DB = require('../config/db')(),
+    DB = require('../config/db_config')(),
     REPO_OBJECTS = 'tbl_objects',
     VALIDATOR = require('validator');
 

@@ -18,14 +18,15 @@
 
 'use strict';
 
-const AUTH = require('../auth/controller'),
+const CONTROLLER = require('../auth/controller'),
+    ENDPOINTS = require('../auth/endpoints'),
     FIELDS = require('../libs/validate');
 
 module.exports = function (app) {
 
     app.route('/login')
-        .get(AUTH.login_form);
+        .get(CONTROLLER.login_form);
 
-    app.route('/api/authenticate')
-        .post(FIELDS.validate_auth, AUTH.login);
+    app.route(ENDPOINTS().auth.authentication.endpoint)
+        .post(FIELDS.validate_auth, CONTROLLER.login);
 };

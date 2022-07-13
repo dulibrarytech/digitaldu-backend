@@ -18,20 +18,24 @@
 
 'use strict';
 
-const API = require('../api/controller'),
+const CONTROLLER = require('../api/controller'),
+    ENDPOINTS = require('../api/endpoints'),
     TOKEN = require('../libs/tokens');
 
 module.exports = function (app) {
 
-    app.route('/api/v1')
-        .get(TOKEN.verify, API.default);
+    app.route(ENDPOINTS().api.api_default.endpoint)
+        .get(TOKEN.verify, CONTROLLER.default);
 
-    app.route('/api/v1/uuids')
-        .get(TOKEN.verify, API.get_uuids);
+    app.route(ENDPOINTS().api.api_endpoints.endpoint)
+        .get(TOKEN.verify, CONTROLLER.get_endpoints);
 
-    app.route('/api/v1/records')
-        .get(TOKEN.verify, API.get_records);
+    app.route(ENDPOINTS().api.api_uuids.endpoint)
+        .get(TOKEN.verify, CONTROLLER.get_uuids);
 
-    app.route('/api/v1/images')
-        .get(TOKEN.verify, API.get_images);
+    app.route(ENDPOINTS().api.api_records.endpoint)
+        .get(TOKEN.verify, CONTROLLER.get_records);
+
+    app.route(ENDPOINTS().api.api_images)
+        .get(TOKEN.verify, CONTROLLER.get_images);
 };
