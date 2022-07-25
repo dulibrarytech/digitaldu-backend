@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2022 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,10 +18,10 @@
 
 'use strict';
 
-const CONFIG = require('../config/config'),
+const CONFIG = require('../config/app_config')(),
     TOKEN = require('../libs/tokens'),
     SERVICE = require('../auth/service'),
-    USER = require('../users/model');
+    MODEL = require('../auth/model');
 
 exports.login = function (req, res) {
 
@@ -36,13 +36,13 @@ exports.login = function (req, res) {
             token = encodeURIComponent(token);
 
             /* check if user has access to repo */
-            USER.check_auth_user(username, function (result) {
+            MODEL.check_auth_user(username, function (result) {
 
                 if (result.auth === true) {
 
                     res.status(200).send({
                         message: 'Authenticated',
-                        redirect: '/dashboard/home?t=' + token + '&uid=' + result.data
+                        redirect: '/dashboard/home?t=' + token + '&id=' + result.data
                     });
 
                 } else {
@@ -60,7 +60,13 @@ exports.login = function (req, res) {
             });
         }
     });
+};
 
+exports.get_auth_user_data = function (req, res) {
+    let id = req.query.id;
+    MODEL.get_auth_user_data(id, function(data) {
+        res.status(data.status).send(data.data);
+    });
 };
 
 exports.login_form = function (req, res) {

@@ -25,6 +25,7 @@ const TEST_RECORDS = require('../../test/test_records')();
 const DB = require('../../test/db')();
 const TABLE = 'tbl_objects_test';
 const CREATE_COLLECTION_TASKS = require('../tasks/create_collection_tasks');
+const TOKEN_CONFIG = require('../../test/token_config')();
 const ARCHIVESSPACE_CONFIG = require('../../test/archivesspace_config')();
 const ARCHIVESSPACE_LIB = require('../../libs/archivesspace');
 const ASPACE_LIB = new ARCHIVESSPACE_LIB(
@@ -37,7 +38,7 @@ let result = await ASPACE_LIB.get_session_token();
 let json = JSON.parse(result.data);
 let session = json.session;
 const LIB = new CREATE_COLLECTION_TASKS(DB, TABLE);
-const API_KEY = 'M7dHS21r47RsgyxSd7XJaEAgf7Miha01';
+const API_KEY = TOKEN_CONFIG.api_key;
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
 
@@ -106,5 +107,3 @@ it.concurrent('Repository API Endpoint ' + ENDPOINTS().repository.repo_records.e
         .get(ENDPOINTS().repository.repo_records.endpoint + '?api_key=' + API_KEY + '&uuid=' + uuid);
     expect(response.status).toBe(200);
 }, 10000);
-
-

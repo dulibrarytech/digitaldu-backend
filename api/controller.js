@@ -28,10 +28,12 @@ exports.default = function (req, res) {
 };
 
 exports.get_endpoints = function (req, res) {
-    // TODO: load
-    const REPO_ENDPOINTS = require('../repository/endpoints');
-    console.log(REPO_ENDPOINTS());
-    console.log(req.query);
+    let endpoints = {};
+    endpoints.api_endpoints = require('../api/endpoints')();
+    endpoints.stats_endpoints = require('../stats/endpoints')();
+    endpoints.repository_endpoints = require('../repository/endpoints')();
+    endpoints.users_endpoints = require('../users/endpoints')();
+    res.status(200).send(endpoints);
 };
 
 exports.get_records = function (req, res) {

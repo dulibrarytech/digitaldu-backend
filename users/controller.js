@@ -18,7 +18,7 @@
 
 'use strict';
 
-const USERS = require('../users/model'),
+const MODEL = require('../users/model'),
     CACHE = require('../libs/cache');
 
 /**
@@ -28,15 +28,41 @@ const USERS = require('../users/model'),
  */
 exports.get_users = function (req, res) {
 
+    if (req.query.id !== undefined && req.query.id.length !== 0) {
+
+        let id = req.query.id;
+
+        MODEL.get_user(id, function (data) {
+            res.status(data.status).send(data.data);
+        });
+
+        return false;
+    }
+
     let cache = CACHE.get_cache(req);
 
     if (cache) {
         res.send(cache);
     } else {
-        USERS.get_users(req, function (data) {
+        MODEL.get_users( function (data) {
             res.status(data.status).send(data.data);
         });
     }
+};
+
+/**
+ * Saves user
+ * @param req
+ * @param res
+ */
+exports.save_user = function (req, res) {
+
+    let user = req.body;
+
+    MODEL.save_user(user, function (data) {
+        CACHE.clear_cache();
+        res.status(data.status).send(data.data);
+    });
 };
 
 /**
@@ -45,8 +71,13 @@ exports.get_users = function (req, res) {
  * @param res
  */
 exports.update_user = function (req, res) {
-    CACHE.clear_cache();
-    USERS.update_user(req, function (data) {
+
+    let user = req.body;
+    let id = user.id;
+    delete user.id;
+
+    MODEL.update_user(id, user, function (data) {
+        CACHE.clear_cache();
         res.status(data.status).send(data.data);
     });
 };
@@ -57,20 +88,11 @@ exports.update_user = function (req, res) {
  * @param res
  */
 exports.delete_user = function (req, res) {
-    CACHE.clear_cache();
-    USERS.delete_user(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
 
-/**
- * Saves user
- * @param req
- * @param res
- */
-exports.save_user = function (req, res) {
-    CACHE.clear_cache();
-    USERS.save_user(req, function (data) {
+    let id = req.query.id;
+
+    MODEL.delete_user(id, function (data) {
+        CACHE.clear_cache();
         res.status(data.status).send(data.data);
     });
 };

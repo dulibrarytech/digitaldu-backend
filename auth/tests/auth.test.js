@@ -16,21 +16,57 @@
 
  */
 
-import {it, expect, beforeAll} from 'vitest';
+import {it, expect} from 'vitest';
 require('dotenv').load();
 const REQUEST = require('supertest');
 const ENDPOINTS = require('../endpoints');
 const EXPRESS = require('../../config/express');
-const TEST_RECORDS = require('../../test/test_records')();
-const DB = require('../../test/db')();
-const TABLE = 'tbl_users_test';
 const APP = EXPRESS();
-const API_KEY = 'M7dHS21r47RsgyxSd7XJaEAgf7Miha01';
-
+const TEST_USER_RECORDS = require('../../test/test_user_records')();
+const DB = require('../../test/db')();
+const AUTH_TASKS = require('../tasks/auth_tasks');
+const TOKEN_CONFIG = require('../../test/token_config')();
+const TABLE = 'tbl_users_test';
+const LIB = new AUTH_TASKS(DB, TABLE);
+const API_KEY = TOKEN_CONFIG.api_key;
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
 
-it.concurrent('Auth authenticate task (E2E)', async function () {
-    let uri = TEST_RECORDS.child_records[1].uri;
-    await expect(LIB.check_uri(uri)).resolves.toBeTruthy();
+it('Auth Tasks check_auth_user (Unit Test)', async function () {
+    const username = TEST_USER_RECORDS.username;
+    let data = { auth: true, data: 1 };
+    await expect(LIB.check_auth_user(username)).resolves.toMatchObject(data);
+}, 10000);
+
+it('Auth Tasks get_auth_user_data (Unit Test)', async function () {
+
+    const data = {
+        data: [
+            {
+                id: TEST_USER_RECORDS.user_record.id,
+                du_id: TEST_USER_RECORDS.username,
+                email: TEST_USER_RECORDS.user_record.email,
+                first_name: TEST_USER_RECORDS.user_record.first_name,
+                last_name: TEST_USER_RECORDS.user_record.last_name
+            }
+        ]
+    };
+
+    await expect(LIB.get_auth_user_data(TEST_USER_RECORDS.user_record.id)).resolves.toMatchObject(data);
+}, 10000);
+
+it('Auth API Endpoint authenticate user ' + ENDPOINTS().auth.authentication.endpoint + ' (E2E)', async function() {
+    let user = TEST_USER_RECORDS.auth;
+    let response = await REQUEST(APP)
+        .post(ENDPOINTS().auth.authentication.endpoint)
+        .send(user);
+    expect(response.status).toBe(200);
+}, 10000);
+
+it('Auth API Endpoint get_auth_user_data ' + ENDPOINTS().auth.authentication.endpoint + ' (E2E)', async function() {
+    let user = TEST_USER_RECORDS.user_record;
+    let id = user.id;
+    let response = await REQUEST(APP)
+        .get(ENDPOINTS().auth.authentication.endpoint + '?id=' + id + '&api_key=' + API_KEY);
+    expect(response.status).toBe(200);
 }, 10000);

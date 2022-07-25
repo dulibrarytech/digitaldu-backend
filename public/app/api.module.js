@@ -22,12 +22,13 @@ const apiModule = (function () {
 
     let obj = {};
 
-    /**
+    /** // TODO: get from localStorage
      * Contains api endpoints
      */
     obj.endpoints = function () {
         return {
             authenticate: '/api/v2/authenticate',
+            auth_user_data: '/api/v2/authenticate/',
             users: '/api/admin/v1/users',
             repo_object: '/api/admin/v1/repo/object',
             repo_objects: '/api/admin/v1/repo/objects',

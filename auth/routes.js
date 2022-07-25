@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2022 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -20,7 +20,8 @@
 
 const CONTROLLER = require('../auth/controller'),
     ENDPOINTS = require('../auth/endpoints'),
-    FIELDS = require('../libs/validate');
+    TOKENS = require('../libs/tokens'),
+    FIELDS = require('../auth/validate');
 
 module.exports = function (app) {
 
@@ -28,5 +29,6 @@ module.exports = function (app) {
         .get(CONTROLLER.login_form);
 
     app.route(ENDPOINTS().auth.authentication.endpoint)
-        .post(FIELDS.validate_auth, CONTROLLER.login);
+        .post(FIELDS.validate_auth, CONTROLLER.login)
+        .get(TOKENS.verify, CONTROLLER.get_auth_user_data);
 };

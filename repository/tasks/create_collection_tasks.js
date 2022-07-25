@@ -16,6 +16,8 @@
 
  */
 
+'use strict';
+
 const {v4: uuidv4} = require('uuid');
 const ARCHIVESSPACE = require("../../libs/archivesspace");
 const ARCHIVESSPACE_CONFIG = require('../../test/archivesspace_config')();

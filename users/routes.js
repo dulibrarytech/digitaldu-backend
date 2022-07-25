@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2022 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,15 +18,16 @@
 
 'use strict';
 
-const USERS = require('../users/controller'),
+const CONTROLLER = require('../users/controller'),
+    ENDPOINTS = require('../users/endpoints'),
     TOKEN = require('../libs/tokens'),
-    FIELDS = require('../libs/validate');
+    FIELDS = require('../users/validate');
 
 module.exports = function (app) {
 
-    app.route('/api/admin/v1/users')
-        .get(TOKEN.verify, USERS.get_users)
-        .put(TOKEN.verify, USERS.update_user)
-        .post(TOKEN.verify, FIELDS.validate_user, USERS.save_user)
-        .delete(TOKEN.verify, USERS.delete_user);
+    app.route(ENDPOINTS().users.endpoint)
+        .get(TOKEN.verify, CONTROLLER.get_users)
+        .put(TOKEN.verify, CONTROLLER.update_user)
+        .post(TOKEN.verify, FIELDS.validate_user, CONTROLLER.save_user)
+        .delete(TOKEN.verify, CONTROLLER.delete_user);
 };

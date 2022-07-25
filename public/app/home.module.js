@@ -26,8 +26,6 @@ const homeModule = (function () {
 
         if (!userModule.checkUserData()) {
             userModule.getAuthUserData();
-            // TODO: get api endpoints and store in localstorage
-            // helperModule.getEndpoints();
         } else {
             userModule.renderUserName();
         }
