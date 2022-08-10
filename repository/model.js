@@ -18,18 +18,22 @@
 
 'use strict';
 
-const VALIDATOR = require('validator'),
-    CREATE_COLLECTION_TASKS = require('../repository/tasks/create_collection_tasks'),
-    UPDATE_THUMBNAIL_URL_TASKS = require('../repository/tasks/update_thumbnail_url_tasks'),
-    PUBLISH_COLLECTION_RECORD_TASKS = require('../repository/tasks/publish_collection_record_tasks'),
-    PUBLISH_CHILD_RECORD_TASKS = require('../repository/tasks/publish_child_record_tasks'),
-    SUPPRESS_COLLECTION_RECORD_TASKS = require('../repository/tasks/suppress_collection_record_tasks'),
-    SUPPRESS_CHILD_RECORD_TASKS = require('../repository/tasks/suppress_child_record_tasks'),
-    DISPLAY_RECORD_TASKS = require('../repository/tasks/display_record_tasks'),
-    DELETE_RECORD_TASKS = require('../repository/tasks/delete_record_tasks'),
-    LOGGER = require('../libs/log4'),
-    DB = require('../config/db_config')(),
-    REPO_OBJECTS = 'tbl_objects';
+const VALIDATOR = require('validator');
+const CREATE_COLLECTION_TASKS = require('../repository/tasks/create_collection_tasks');
+const UPDATE_THUMBNAIL_URL_TASKS = require('../repository/tasks/update_thumbnail_url_tasks');
+const PUBLISH_COLLECTION_RECORD_TASKS = require('../repository/tasks/publish_collection_record_tasks');
+const PUBLISH_CHILD_RECORD_TASKS = require('../repository/tasks/publish_child_record_tasks');
+const SUPPRESS_COLLECTION_RECORD_TASKS = require('../repository/tasks/suppress_collection_record_tasks');
+const SUPPRESS_CHILD_RECORD_TASKS = require('../repository/tasks/suppress_child_record_tasks');
+const DISPLAY_RECORD_TASKS = require('../repository/tasks/display_record_tasks');
+const DELETE_RECORD_TASKS = require('../repository/tasks/delete_record_tasks');
+const LOGGER = require('../libs/log4');
+const DB = require('../config/db_config')();
+const REPO_OBJECTS = 'tbl_objects';
+const ARCHIVEMATICA_CONFIG = require('../config/archivematica_config')();
+const ARCHIVEMATICA = require('../libs/archivematica');
+const ARCHIVESSPACE_CONFIG = require('../config/archivesspace_config')();
+const ARCHIVESSPACE = require('../libs/archivesspace');
 
 /**
  * Gets metadata display record
@@ -40,7 +44,7 @@ exports.get_display_record = (uuid, callback) => {
 
     (async () => {
 
-        const DRL = new DISPLAY_RECORD_TASKS(uuid, DB, REPO_OBJECTS)
+        const DRL = new DISPLAY_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
         const data = await DRL.get_db_display_record_data();
 
         callback({
@@ -61,7 +65,8 @@ exports.get_display_record = (uuid, callback) => {
 exports.create_collection_record = (uri, is_member_of_collection, callback) => {
 
     const URI = VALIDATOR.unescape(uri);
-    const TASKS = new CREATE_COLLECTION_TASKS(DB, REPO_OBJECTS);
+    const ARCHIVESSPACE_LIB = new ARCHIVESSPACE(ARCHIVESSPACE_CONFIG);
+    const TASKS = new CREATE_COLLECTION_TASKS(DB, REPO_OBJECTS, ARCHIVESSPACE_LIB);
 
     (async () => {
 
@@ -175,8 +180,8 @@ exports.publish_record = (uuid, type, callback) => {
 
             setTimeout(async () => {
                 await COLLECTION_TASKS.publish();
-                LOGGER.module().info('INFO: [/repository/model module (publish_record)] Collection published');
                 await CHILD_RECORD_TASKS.publish_child_records();
+                LOGGER.module().info('INFO: [/repository/model module (publish_record)] Collection published');
                 LOGGER.module().info('INFO: [/repository/model module (publish_record)] Child records published');
             }, 60000 * 5);
 
@@ -312,7 +317,7 @@ exports.rebuild_display_record = (uuid, callback) => {
     });
 };
 
-/**
+/** // TODO: test
  * Deletes repository record (DB, Index, and creates archivematica delete request)
  * @param uuid
  * @param delete_reason
@@ -323,6 +328,7 @@ exports.delete_record = (uuid, delete_reason, callback) => {
     (async () => {
 
         const TASK = new DELETE_RECORD_TASKS(uuid, delete_reason, DB, REPO_OBJECTS);
+        let ARCHIVEMATICA_LIB = new ARCHIVEMATICA(ARCHIVEMATICA_CONFIG);
         let is_published = await TASK.check_if_published(); // delete only if object is not published
 
         if (is_published === 1) {
@@ -336,7 +342,7 @@ exports.delete_record = (uuid, delete_reason, callback) => {
 
         await TASK.set_to_inactive();
         await TASK.delete_from_index();
-        // TASK.delete_aip_request(); // TODO: ingest test record
+        // TASK.delete_aip_request(ARCHIVEMATICA_LIB); // TODO: ingest test record
 
         callback({
             status: 204,

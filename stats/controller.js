@@ -18,17 +18,18 @@
 
 'use strict';
 
-const STATS = require('../stats/model'),
-    CACHE = require('../libs/cache');
+const MODEL = require('../stats/model');
+const CACHE = require('../libs/cache');
 
-exports.get_stats = function (req, res) {
+exports.get_stats = (req, res) => {
 
     let cache = CACHE.get_cache(req);
 
     if (cache) {
         res.send(cache);
     } else {
-        STATS.get_stats(req, function (data) {
+
+        MODEL.get_stats(function (data) {
             res.status(data.status).send(data.data);
         });
     }

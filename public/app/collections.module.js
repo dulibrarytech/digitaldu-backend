@@ -21,7 +21,7 @@ const collectionsModule = (function () {
     'use strict';
 
     const api = configModule.getApi();
-    const endpoints = apiModule.endpoints();
+    const endpoints = endpointsModule.endpoints();
     let obj = {};
 
     /**

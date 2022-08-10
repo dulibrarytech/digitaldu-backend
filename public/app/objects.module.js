@@ -21,7 +21,7 @@ const objectsModule = (function () {
     'use strict';
 
     const api = configModule.getApi();
-    const endpoints = apiModule.endpoints();
+    const endpoints = endpointsModule.endpoints();
     let obj = {};
 
     /**
@@ -626,7 +626,7 @@ const objectsModule = (function () {
                                     let object_path = display_record.display_record.parts[i].object;
                                     let object_arr = object_path.split('/');
                                     let file_name = object_arr[object_arr.length - 1].replace('tif', 'jpg');
-                                    let img = api + apiModule.endpoints().repo_object_image + '?sip_uuid=' + sip_uuid + '&full_path=' + object_path + '&object_name=' + file_name + '&mime_type=image/tiff&t=' + token;
+                                    let img = api + endpointsModule.endpoints().repo_object_image + '?sip_uuid=' + sip_uuid + '&full_path=' + object_path + '&object_name=' + file_name + '&mime_type=image/tiff&t=' + token;
 
                                     html += `
                                     <div class="row">
@@ -780,7 +780,7 @@ const objectsModule = (function () {
                                 fileName = objArr[objArr.length - 1].replace('.jp2', '.jpg');
                             }
 
-                            let image = api + apiModule.endpoints().repo_object_image + '?sip_uuid=' + pid + '&full_path=' + objectPath + '&object_name=' + fileName + '&mime_type=image/tiff&t=' + t;
+                            let image = api + endpointsModule.endpoints().repo_object_image + '?sip_uuid=' + pid + '&full_path=' + objectPath + '&object_name=' + fileName + '&mime_type=image/tiff&t=' + t;
 
                             imageArr.push({
                                 title: fileName,
@@ -817,7 +817,7 @@ const objectsModule = (function () {
                                         fileName = objArr[objArr.length - 1].replace('.jp2', '.jpg');
                                     }
 
-                                    let image = api + apiModule.endpoints().repo_object_image + '?sip_uuid=' + pid + '&full_path=' + objectPath + '&object_name=' + fileName + '&mime_type=image/tiff&t=' + t;
+                                    let image = api + endpointsModule.endpoints().repo_object_image + '?sip_uuid=' + pid + '&full_path=' + objectPath + '&object_name=' + fileName + '&mime_type=image/tiff&t=' + t;
 
                                     imageArr.push({
                                         title: fileName,

@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2022 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -16,20 +16,40 @@
 
  */
 
-const apiModule = (function () {
+const endpointsModule = (function () {
 
     'use strict';
 
     let obj = {};
 
-    /** // TODO: get from localStorage
+    obj.get_stat_endpoints = function() {
+        const repo_endpoints_stats = window.localStorage.getItem('repo_endpoints_stats');
+        return JSON.parse(repo_endpoints_stats);
+    };
+
+    obj.get_users_endpoints = function() {
+        const repo_endpoints_users = window.localStorage.getItem('repo_endpoints_users');
+        return JSON.parse(repo_endpoints_users);
+    };
+
+    obj.get_repository_endpoints = function() {
+        const repo_endpoints_repository = window.localStorage.getItem('repo_endpoints_repository');
+        return JSON.parse(repo_endpoints_repository);
+    };
+
+    /**
      * Contains api endpoints
      */
     obj.endpoints = function () {
+
+        let repo_endpoints = window.localStorage.getItem('repo_endpoints');
+        let endpoints = JSON.parse(repo_endpoints);
+
         return {
             authenticate: '/api/v2/authenticate',
             auth_user_data: '/api/v2/authenticate/',
-            users: '/api/admin/v1/users',
+            stats: endpoints.stats.endpoint,  // '/api/admin/v1/stats'
+            users: endpoints.users.endpoint,  // '/api/admin/v1/users'
             repo_object: '/api/admin/v1/repo/object',
             repo_objects: '/api/admin/v1/repo/objects',
             repo_object_thumbnail: '/api/admin/v1/repo/object/thumbnail', // gets thumbnails from duracloud
@@ -57,9 +77,14 @@ const apiModule = (function () {
             qa_check_collection: '/api/v1/qa/check-collection',
             qa_move_to_ingest: '/api/v1/qa/move-to-ingest',
             qa_move_to_sftp: '/api/v1/qa/move-to-sftp',
-            qa_upload_status: '/api/v1/qa/upload-status',
-            stats: '/api/admin/v1/stats'
+            qa_upload_status: '/api/v1/qa/upload-status'
         };
+    };
+
+    obj.init = function () {
+        return {
+            authenticate: '/api/v2/authenticate'
+        }
     };
 
     return obj;

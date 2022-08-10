@@ -19,11 +19,7 @@
 'use strict';
 
 const {v4: uuidv4} = require('uuid');
-const ARCHIVESSPACE = require("../../libs/archivesspace");
-const ARCHIVESSPACE_CONFIG = require('../../test/archivesspace_config')();
-const HANDLE_CONFIG = require('../../test/handle_config')();
 const DISPLAY_RECORD_LIB = require('../../libs/display_record');
-const HANDLES_LIB = require('../../libs/handles');
 const HELPER = require('../../repository/helper');
 const LOGGER = require('../../libs/log4');
 
@@ -35,17 +31,12 @@ const LOGGER = require('../../libs/log4');
  */
 const Create_collection_tasks = class {
 
-    constructor(DB, TABLE) {
+    constructor(DB, TABLE, ARCHIVESSPACE_LIB, HANDLES_LIB) { // TODO: pass in archivesspace and handle configs into respective class constructors
         this.DB = DB;
         this.TABLE = TABLE;
         this.DISPLAY_RECORD_LIB = new DISPLAY_RECORD_LIB(this.DB, this.TABLE);
-        this.HANDLES_LIB = new HANDLES_LIB(HANDLE_CONFIG);
-        this.ARCHIVESSPACE_LIB = new ARCHIVESSPACE(
-            ARCHIVESSPACE_CONFIG.archivesspace_host,
-            ARCHIVESSPACE_CONFIG.archivesspace_user,
-            ARCHIVESSPACE_CONFIG.archivesspace_password,
-            ARCHIVESSPACE_CONFIG.archivesspace_repository_id
-        );
+        this.ARCHIVESSPACE_LIB = ARCHIVESSPACE_LIB;
+        this.HANDLES_LIB = HANDLES_LIB;
     }
 
     /**

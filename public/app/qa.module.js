@@ -21,7 +21,7 @@ const qaModule = (function () {
     'use strict';
 
     const api = configModule.getApi();
-    const endpoints = apiModule.endpoints();
+    const endpoints = endpointsModule.endpoints();
     let obj = {};
     let total_batch_file_count;
 

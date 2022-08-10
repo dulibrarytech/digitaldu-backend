@@ -156,6 +156,7 @@ const Archivematica_lib = class {
                     return false;
 
                 } catch (error) {
+                    console.log('DURACLOUD: ', error);
                     LOGGER.module().error('ERROR: [/libs/archivematica lib (get_dip_storage_usage)] unable to get DIP storage usage. ' + error);
                     reject(false);
                 }

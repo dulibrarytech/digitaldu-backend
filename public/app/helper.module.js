@@ -21,7 +21,6 @@ const helperModule = (function () {
     'use strict';
 
     const api = configModule.getApi();
-    const endpoints = apiModule.endpoints();
     let obj = {};
 
     /**
@@ -94,7 +93,7 @@ const helperModule = (function () {
     obj.getTn = function (tn, mime_type) {
 
         let tnObj = configModule.getTnUrls();
-        let token = userModule.getUserToken();
+        let token = authModule.getUserToken();
 
         if (tn !== null && tn !== undefined && tn.indexOf('http') !== -1) {
             return tn;
@@ -119,7 +118,8 @@ const helperModule = (function () {
      */
     obj.ping = function () {
 
-        let token = userModule.getUserToken();
+        const endpoints = endpointsModule.endpoints();
+        let token = authModule.getUserToken();
         let url = api + endpoints.repo_ping_services,
             request = new Request(url, {
                 method: 'GET',
@@ -354,6 +354,16 @@ const helperModule = (function () {
 
         return parseFloat((bytes / Math.pow(K, I)).toFixed(DM)) + ' ' + SIZES[I];
     }
+
+    /**
+     * Load JS script
+     * @param file
+     */
+    obj.load_script = function(file) {
+        let elem = document.createElement('script');
+        elem.src = file;
+        document.body.appendChild(elem);
+    };
 
     obj.init = function () {
         npProgress();

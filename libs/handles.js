@@ -39,6 +39,36 @@ const Handles_lib = class {
     }
 
     /**
+     *
+     * @returns {Promise<string|undefined>}
+     */
+    ping = () => {
+
+        return (async () => {
+
+            let handle_server_status = 'down';
+
+            try {
+
+                let endpoint = HANDLE_CONFIG.handle_host.replace('handle-service-0.6', '');
+                let response = await HTTP.get(endpoint, {
+                    timeout: 25000
+                });
+
+                if (response.status === 200) {
+                    handle_server_status = 'up';
+                }
+
+                return handle_server_status;
+
+            } catch (error) {
+                LOGGER.module().error('ERROR: [/repository/tasks (ping_handle_server)] Unable to ping handle server. ' + error.message);
+            }
+
+        })();
+    }
+
+    /**
      * Creates handle
      * @param uuid
      * @returns {Promise<unknown>}

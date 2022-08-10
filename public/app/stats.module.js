@@ -20,8 +20,7 @@ const statsModule = (function () {
 
     'use strict';
 
-    const api = configModule.getApi();
-    const endpoints = apiModule.endpoints();
+    const api = configModule.getApi();;
     let obj = {};
 
     /**
@@ -29,6 +28,9 @@ const statsModule = (function () {
      * @param data
      */
     const renderStats = function (data) {
+
+        console.log(data);
+        console.log(data.total_yearly_ingests);
 
         // create line chart
         let line_chart_data = data.total_yearly_ingests;
@@ -63,7 +65,6 @@ const statsModule = (function () {
         );
 
         let total_duracloud_usage = (data.dip_storage_usage + data.aip_storage_usage);
-
         domModule.html('#total-published-collections', DOMPurify.sanitize(data.total_published_collections.toLocaleString('en')));
         domModule.html('#total-collections', DOMPurify.sanitize(data.total_collections.toLocaleString('en')));
         domModule.html('#total-published-objects', DOMPurify.sanitize(data.total_published_objects.toLocaleString('en')));
@@ -98,8 +99,9 @@ const statsModule = (function () {
      */
     obj.getStats = function () {
 
-        let token = userModule.getUserToken();
-        let url = api + endpoints.stats,
+        let endpoints = endpointsModule.get_stat_endpoints();
+        let token = authModule.getUserToken();
+        let url = api + endpoints.stats.endpoint,
             request = new Request(url, {
                 method: 'GET',
                 mode: 'cors',
@@ -139,7 +141,14 @@ const statsModule = (function () {
     };
 
     obj.init = function () {
-        obj.getStats();
+        // obj.getStats();
+        /*
+        setTimeout(function() {
+            obj.getStats();
+            console.log('init');
+        }, 50);
+
+         */
     };
 
     return obj;

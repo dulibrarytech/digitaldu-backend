@@ -20,11 +20,11 @@
 
 const PREFIX = '/api/';
 const VERSION = 'v2';
-const ENDPOINT = '/stats/';
+const ENDPOINT = '/stats';
 const ENDPOINTS = {
     stats: {
+        endpoint: `${PREFIX}${VERSION}${ENDPOINT}`,
         get_stats: {
-            endpoint: `${PREFIX}${VERSION}${ENDPOINT}`,
             description: 'Collects and delivers repository stats',
             get: {
                 description: 'Collects and delivers repository stats',

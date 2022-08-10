@@ -21,9 +21,9 @@ const userModule = (function () {
     'use strict';
 
     const api = configModule.getApi();
-    const endpoints = apiModule.endpoints();
+    // const endpoints = endpointsModule.endpoints();
     let obj = {};
-
+    console.log('userModule');
     /**
      * Renders user profile data
      * @param data
@@ -134,7 +134,8 @@ const userModule = (function () {
      */
     obj.getUsers = function () {
 
-        let token = userModule.getUserToken();
+        const endpoints = endpointsModule.endpoints();
+        let token = authModule.getUserToken();
         let url = api + endpoints.users,
             request = new Request(url, {
                 method: 'GET',
@@ -176,8 +177,9 @@ const userModule = (function () {
      */
     obj.getUserDetails = function () {
 
+        const endpoints = endpointsModule.endpoints();
         let id = helperModule.getParameterByName('id');
-        let token = userModule.getUserToken();
+        let token = authModule.getUserToken();
         let url = api + endpoints.users + '?id=' + id,
             request = new Request(url, {
                 method: 'GET',
@@ -220,7 +222,8 @@ const userModule = (function () {
      */
     obj.checkUserData = function () {
         let data = window.sessionStorage.getItem('repo_user');
-
+        console.log(data);
+        alert('check data ');
         if (data !== null) {
             return true;
         }
@@ -298,6 +301,7 @@ const userModule = (function () {
      */
     const addUser = function () {
 
+        const endpoints = endpointsModule.endpoints();
         let user = getUserFormData('#user-form');
         let arr = user.split('&');
         let obj = {};
@@ -310,7 +314,7 @@ const userModule = (function () {
             obj[propsVal[0]] = propsVal[1];
         }
 
-        let token = userModule.getUserToken();
+        let token = authModule.getUserToken();
         let url = api + endpoints.users,
             request = new Request(url, {
                 method: 'POST',
@@ -362,7 +366,7 @@ const userModule = (function () {
                     domModule.show('#user-form');
 
                     setTimeout(function () {
-                        // domModule.html('#message', null);
+                        domModule.html('#message', null);
                     }, 3000);
                 });
             } else {
@@ -378,6 +382,7 @@ const userModule = (function () {
      */
     const updateUser = function () {
 
+        const endpoints = endpointsModule.endpoints();
         let obj = getUserFormUpateData();
         domModule.hide('#user-update-form');
         domModule.html('#message', '<div class="alert alert-info">Updating User...</div>');
@@ -431,11 +436,12 @@ const userModule = (function () {
      */
     obj.deleteUser = function () {
 
+        const endpoints = endpointsModule.endpoints();
         let id = helperModule.getParameterByName('id');
         domModule.hide('#user-delete-form');
         domModule.html('#message', '<div class="alert alert-info">Deleting User...</div>');
 
-        let token = userModule.getUserToken();
+        let token = authModule.getUserToken();
         let url = api + endpoints.users + '?id=' + id,
             request = new Request(url, {
                 method: 'DELETE',
@@ -505,200 +511,8 @@ const userModule = (function () {
         });
     };
 
-    /**
-     * Gets token from session storage
-     * @returns {*|Color}
-     */
-    obj.getUserToken = function () {
-
-        let data = JSON.parse(window.sessionStorage.getItem('repo_token'));
-
-        if (data !== null && data.token === null) {
-
-            setTimeout(function () {
-                window.location.replace('/login');
-            }, 0);
-
-        } else if (data === null) {
-            window.location.replace('/login');
-        } else {
-            return DOMPurify.sanitize(data.token);
-        }
-    };
-
-    /**
-     * Gets user profile data after authentication
-     */
-    obj.getAuthUserData = function () {
-
-        let id = helperModule.getParameterByName('id');
-        userModule.saveToken();
-
-        if (id !== null) {
-
-            let token = userModule.getUserToken();
-            let url = api + endpoints.auth_user_data + '?id=' + id,
-                request = new Request(url, {
-                    method: 'GET',
-                    mode: 'cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                });
-
-            const callback = function (response) {
-
-                if (response.status === 200) {
-
-                    response.json().then(function (data) {
-                        userModule.saveUserAuthData(data);
-                        userModule.renderUserName();
-                    });
-
-                } else if (response.status === 401) {
-
-                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
-
-                    setTimeout(function () {
-                        window.location.replace('/login');
-                    }, 3000);
-
-                } else {
-                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to retrieve user profile.');
-                    window.location.replace('/login');
-                }
-            };
-
-            httpModule.req(request, callback);
-
-        } else {
-            userModule.renderUserName();
-        }
-    };
-
-    /**
-     * Destroys session data and redirects user to login
-     */
-    obj.sessionExpired = function () {
-        window.sessionStorage.removeItem('repo_user');
-        setTimeout(function () {
-            window.location.replace('/login');
-        }, 500);
-    };
-
-    /**
-     * Saves user profile data to session storage
-     * @param data
-     */
-    obj.saveUserAuthData = function (data) {
-
-        let userObj = {
-            uid: DOMPurify.sanitize(data[0].id),
-            name: DOMPurify.sanitize(data[0].first_name) + ' ' + DOMPurify.sanitize(data[0].last_name)
-        };
-
-        window.sessionStorage.setItem('repo_user', JSON.stringify(userObj));
-    };
-
-    /**
-     * Gets session token from URL params
-     */
-    obj.saveToken = function () {
-
-        let token = helperModule.getParameterByName('t');
-
-        if (token !== null) {
-
-            let data = {
-                token: DOMPurify.sanitize(token)
-            };
-
-            window.sessionStorage.setItem('repo_token', JSON.stringify(data));
-        }
-    };
-
-    /**
-     * Clears out session storage - used when user logs out
-     */
-    obj.reset = function () {
-        window.sessionStorage.clear();
-    };
-
-    /**
-     * Creates request used to authenticates users
-     */
-    const authenticate = function () {
-
-        document.querySelector('#login-button').disabled = true;
-
-        let user = {
-            username: domModule.val('#username', null),
-            password: domModule.val('#password', null)
-        };
-
-        let url = api + endpoints.authenticate,
-            request = new Request(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(user),
-                mode: 'cors'
-            });
-
-        const callback = function (response) {
-
-            if (response.status === 200) {
-
-                response.json().then(function (response) {
-
-                    domModule.html('#message', '<div class="alert alert-success"><i class="fa fa-check-circle"></i> ' + DOMPurify.sanitize(response.message) + '</div>');
-
-                    setTimeout(function () {
-                        window.location.replace(response.redirect);
-                    }, 500);
-
-                });
-
-            } else if (response.status === 401) {
-
-                response.json().then(function (response) {
-
-                    if (response.errors !== undefined && Array.isArray(response.errors)) {
-                        helperModule.renderError(DOMPurify.sanitize(response.errors[0].message));
-                        document.querySelector('#login-button').disabled = false;
-                    } else {
-                        document.querySelector('#login-button').disabled = false;
-                        helperModule.renderError(DOMPurify.sanitize(response.message));
-                    }
-                });
-
-            } else {
-                document.querySelector('#login-button').disabled = false;
-                helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to authenticate user.');
-            }
-        };
-
-        httpModule.req(request, callback);
-    };
-
-    /**
-     * Enable validation on login form
-     */
-    obj.loginFormValidation = function () {
-
-        document.addEventListener('DOMContentLoaded', function() {
-            $('#login-form').validate({
-                submitHandler: function () {
-                    authenticate();
-                }
-            });
-        });
-    };
-
     obj.init = function () {
-        obj.renderUserName();
+        // obj.renderUserName();
     };
 
     return obj;

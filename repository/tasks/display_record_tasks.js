@@ -38,7 +38,7 @@ const Display_record_tasks = class {
      * Executes tasks to update display record
      */
     update = () => {
-        console.log(this.uuid);
+
         let promise = new Promise((resolve, reject) => {
 
             (async () => {

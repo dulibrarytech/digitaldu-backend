@@ -18,13 +18,20 @@
 
 'use strict';
 
-const ELASTICSEARCH_CONFIG = require('../config/elasticsearch_config')(),
-    HTTP = require('axios'),
-    ES = require('elasticsearch'),
-    DURACLOUD = require('../libs/duracloud'),
-    CACHE = require('../libs/cache'),
-    PING_TASKS = require('../repository/tasks/ping_tasks'),
-    CLIENT = new ES.Client({
+const ELASTICSEARCH_CONFIG = require('../config/elasticsearch_config')();
+const HTTP = require('axios');
+const ES = require('elasticsearch');
+const ARCHIVESSPACE_CONFIG = require('../config/archivesspace_config')();
+const ARCHIVEMATICA_CONFIG = require('../config/archivematica_config')();
+const HANDLE_CONFIG = require('../config/handle_config')();
+const HANDLES = require('../libs/handles');
+const DURACLOUD = require('../libs/duracloud');
+const ARCHIVEMATICA = require('../libs/archivematica');
+const ARCHIVESSPACE = require('../libs/archivesspace');
+const CACHE = require('../libs/cache');
+const PING_TASKS = require('../repository/tasks/ping_tasks');
+const LOGGER = require('../libs/log4');
+const CLIENT = new ES.Client({
         host: ELASTICSEARCH_CONFIG.elasticsearch_host
     });
 
@@ -39,7 +46,11 @@ exports.ping_services = function (callback) {
         try {
 
             let results = {};
-            const TASKS = new PING_TASKS();
+            const ARCHIVEMATICA_LIB = new ARCHIVEMATICA(ARCHIVEMATICA_CONFIG);
+            const DURACLOUD_LIB = new DURACLOUD(DURACLOUD_CONFIG);
+            const HANDLES_LIB = new HANDLES(HANDLE_CONFIG);
+            const ARCHIVESSPACE_LIB = new ARCHIVESSPACE(ARCHIVESSPACE_CONFIG);
+            const TASKS = new PING_TASKS(ARCHIVEMATICA_LIB, DURACLOUD_LIB, HANDLES_LIB, ARCHIVESSPACE_LIB, ARCHIVESSPACE_LIB);
             results.archivematica_status = await TASKS.ping_archivematica();
             results.archivematica_storage_status = await TASKS.ping_archivematica_storage();
             results.archivesspace_status = await TASKS.ping_archivesspace();

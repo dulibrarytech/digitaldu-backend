@@ -16,7 +16,6 @@
 
  */
 
-const ARCHIVEMATICA = require('../../libs/archivematica');
 const HELPER = require('../../repository/helper');
 const LOGGER = require('../../libs/log4');
 
@@ -106,8 +105,9 @@ const Delete_record_tasks = class {
      * Generates an archivematica AIP delete request
      * @return {boolean}
      */
-    delete_aip_request = () => {
+    delete_aip_request = (ARCHIVEMATICA) => {
 
+        // TODO: refactor to a promise
         ARCHIVEMATICA.delete_aip_request(this.uuid, (result) => {
 
             if (result.error === false) {
