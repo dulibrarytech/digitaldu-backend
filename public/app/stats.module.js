@@ -29,9 +29,6 @@ const statsModule = (function () {
      */
     const renderStats = function (data) {
 
-        console.log(data);
-        console.log(data.total_yearly_ingests);
-
         // create line chart
         let line_chart_data = data.total_yearly_ingests;
 

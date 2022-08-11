@@ -39,7 +39,7 @@ const endpointsModule = (function () {
 
     /**
      * Contains api endpoints
-     */
+
     obj.endpoints = function () {
 
         let repo_endpoints = window.localStorage.getItem('repo_endpoints');
@@ -80,7 +80,7 @@ const endpointsModule = (function () {
             qa_upload_status: '/api/v1/qa/upload-status'
         };
     };
-
+     */
     obj.init = function () {
         return {
             authenticate: '/api/v2/authenticate'

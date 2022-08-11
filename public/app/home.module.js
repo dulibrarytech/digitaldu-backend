@@ -34,7 +34,7 @@ const homeModule = (function () {
         history.pushState({}, '', '/dashboard/home');
         setTimeout(function() {
             statsModule.getStats();
-        }, 1000);
+        }, 250);
     };
 
     return obj;

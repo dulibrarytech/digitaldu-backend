@@ -21,21 +21,23 @@ const collectionsModule = (function () {
     'use strict';
 
     const api = configModule.getApi();
-    const endpoints = endpointsModule.endpoints();
+    const endpoints = endpointsModule.get_repository_endpoints();
     let obj = {};
 
+    console.log(endpoints.repository.repo_records.endpoint);
+    return false;
     /**
      * Gets collection name
-     * @param pid
+     * @param uuid
      */
-    obj.getCollectionName = function (pid) {
+    obj.getCollectionName = function (uuid) {
 
-        if (pid === null) {
+        if (uuid === null) {
             return false;
         }
 
-        if (pid === undefined) {
-            let pid = helperModule.getParameterByName('pid');
+        if (uuid === undefined) {
+            let uuid = helperModule.getParameterByName('uuid');
         }
 
         // used add collection form
@@ -46,8 +48,8 @@ const collectionsModule = (function () {
             domModule.html('#collection-type', 'Add sub-level collection');
         }
 
-        let token = userModule.getUserToken();
-        let url = api + endpoints.repo_object + '?pid=' + pid,
+        let token = authModule.getUserToken();
+        let url = api + endpoints.repository.repo_records.endpoint + '?uuid=' + uuid,
             request = new Request(url, {
                 method: 'GET',
                 mode: 'cors',
@@ -108,17 +110,17 @@ const collectionsModule = (function () {
     obj.updateThumbnail = function () {
 
         let obj = {};
-        obj.pid = helperModule.getParameterByName('pid');
+        obj.pid = helperModule.getParameterByName('uuid');
         obj.thumbnail_url = domModule.val('#thumbnail-url', null);
 
         if (obj.thumbnail_url.length === 0 || obj.pid.length === 0) {
-            domModule.html('#message', '<div class="alert alert-danger"><i class="fa fa-exclamation"></i> Please enter a Repository PID or Thumbnail URL.</div>');
+            domModule.html('#message', '<div class="alert alert-danger"><i class="fa fa-exclamation"></i> Please enter a Repository UUID or Thumbnail URL.</div>');
             return false;
         }
 
         domModule.html('#message', '');
         let token = userModule.getUserToken();
-        let url = api + endpoints.repo_object_thumbnail,
+        let url = api + endpoints.repository.repo_thumbnail_custom,  // TODO: figure out if this is the correct endpoint // endpoints.repo_object_thumbnail
             request = new Request(url, {
                 method: 'POST',
                 headers: {
@@ -177,7 +179,7 @@ const collectionsModule = (function () {
         const form = document.querySelector('form');
         let pid = helperModule.getParameterByName('pid');
         let input = '<input name="sip_uuid" type="hidden" value="' + pid + '">';
-        let token = userModule.getUserToken();
+        let token = authModule.getUserToken();
         collectionsModule.getCollectionName(pid);
         domModule.html('#sip-uuid-input', input);
         form.setAttribute('action', '/repo/tn/upload?pid=' + pid + '&t=' + token);
@@ -230,7 +232,7 @@ const collectionsModule = (function () {
         }
 
         let token = userModule.getUserToken();
-        let url = api + endpoints.repo_object,
+        let url = api + endpoints.repository.repo_records,  // endpoints.repo_object
             request = new Request(url, {
                 method: 'POST',
                 headers: {
@@ -306,7 +308,7 @@ const collectionsModule = (function () {
         let obj = {};
         obj.sip_uuid = pid;
 
-        let url = api + endpoints.import_metadata_collection,
+        let url = api + endpoints.import_metadata_collection,  // TODO: get from import endpoints?
             token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'PUT',

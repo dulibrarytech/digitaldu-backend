@@ -21,9 +21,9 @@ const userModule = (function () {
     'use strict';
 
     const api = configModule.getApi();
-    // const endpoints = endpointsModule.endpoints();
+    const endpoints = endpointsModule.get_users_endpoints();
     let obj = {};
-    console.log('userModule');
+
     /**
      * Renders user profile data
      * @param data
@@ -134,9 +134,9 @@ const userModule = (function () {
      */
     obj.getUsers = function () {
 
-        const endpoints = endpointsModule.endpoints();
+        // const endpoints = endpointsModule.get_users_endpoints();
         let token = authModule.getUserToken();
-        let url = api + endpoints.users,
+        let url = api + endpoints.users.endpoint,
             request = new Request(url, {
                 method: 'GET',
                 mode: 'cors',
@@ -177,10 +177,9 @@ const userModule = (function () {
      */
     obj.getUserDetails = function () {
 
-        const endpoints = endpointsModule.endpoints();
         let id = helperModule.getParameterByName('id');
         let token = authModule.getUserToken();
-        let url = api + endpoints.users + '?id=' + id,
+        let url = api + endpoints.users.endpoint + '?id=' + id,
             request = new Request(url, {
                 method: 'GET',
                 mode: 'cors',
@@ -222,8 +221,7 @@ const userModule = (function () {
      */
     obj.checkUserData = function () {
         let data = window.sessionStorage.getItem('repo_user');
-        console.log(data);
-        alert('check data ');
+
         if (data !== null) {
             return true;
         }
@@ -301,7 +299,6 @@ const userModule = (function () {
      */
     const addUser = function () {
 
-        const endpoints = endpointsModule.endpoints();
         let user = getUserFormData('#user-form');
         let arr = user.split('&');
         let obj = {};
@@ -315,7 +312,7 @@ const userModule = (function () {
         }
 
         let token = authModule.getUserToken();
-        let url = api + endpoints.users,
+        let url = api + endpoints.users.endpoint,
             request = new Request(url, {
                 method: 'POST',
                 headers: {
@@ -382,13 +379,12 @@ const userModule = (function () {
      */
     const updateUser = function () {
 
-        const endpoints = endpointsModule.endpoints();
-        let obj = getUserFormUpateData();
         domModule.hide('#user-update-form');
         domModule.html('#message', '<div class="alert alert-info">Updating User...</div>');
 
-        let token = userModule.getUserToken();
-        let url = api + endpoints.users,
+        let obj = getUserFormUpateData();
+        let token = authModule.getUserToken();
+        let url = api + endpoints.users.endpoint,
             request = new Request(url, {
                 method: 'PUT',
                 headers: {
@@ -436,13 +432,13 @@ const userModule = (function () {
      */
     obj.deleteUser = function () {
 
-        const endpoints = endpointsModule.endpoints();
+        // const endpoints = endpointsModule.endpoints();
         let id = helperModule.getParameterByName('id');
         domModule.hide('#user-delete-form');
         domModule.html('#message', '<div class="alert alert-info">Deleting User...</div>');
 
         let token = authModule.getUserToken();
-        let url = api + endpoints.users + '?id=' + id,
+        let url = api + endpoints.users.endpoint + '?id=' + id,
             request = new Request(url, {
                 method: 'DELETE',
                 headers: {
@@ -487,7 +483,6 @@ const userModule = (function () {
      * Applies user form validation when adding new user
      */
     obj.userFormValidation = function () {
-
         document.addEventListener('DOMContentLoaded', function() {
             $('#user-form').validate({
                 submitHandler: function () {
@@ -501,7 +496,6 @@ const userModule = (function () {
      * Applies user form validation when updating a user
      */
     obj.userUpdateFormValidation = function () {
-
         document.addEventListener('DOMContentLoaded', function() {
             $('#user-update-form').validate({
                 submitHandler: function () {
@@ -511,9 +505,7 @@ const userModule = (function () {
         });
     };
 
-    obj.init = function () {
-        // obj.renderUserName();
-    };
+    obj.init = function () {};
 
     return obj;
 
