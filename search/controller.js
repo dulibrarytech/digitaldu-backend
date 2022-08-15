@@ -18,10 +18,15 @@
 
 'use strict';
 
-const SEARCH = require('../search/service');
+const SERVICE = require('../search/service');
 
-exports.get_search_results = function (req, res) {
-    SEARCH.get_search_results(req, function (data) {
+exports.search = function (req, res) {
+
+    let q = req.query.q;
+    let page = req.query.page;
+    let total_on_page = req.query.total_on_page;
+
+    SERVICE.search(q, page, total_on_page, (data) => {
         res.status(data.status).send(data.data);
     });
 };

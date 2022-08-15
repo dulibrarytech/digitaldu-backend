@@ -505,7 +505,9 @@ const userModule = (function () {
         });
     };
 
-    obj.init = function () {};
+    obj.init = function () {
+        userModule.renderUserName();
+    };
 
     return obj;
 

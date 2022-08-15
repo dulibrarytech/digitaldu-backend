@@ -18,12 +18,13 @@
 
 'use strict';
 
-const SEARCH = require('../search/controller'),
+const CONTROLLER = require('../search/controller'),
+    ENDPOINTS = require('../search/endpoints'),
     TOKEN = require('../libs/tokens');
 
 module.exports = function (app) {
 
-    app.route('/api/admin/v1/search')
-        .get(TOKEN.verify, SEARCH.get_search_results);
+    app.route(ENDPOINTS().search.endpoint)  // '/api/admin/v1/search'
+        .get(TOKEN.verify, CONTROLLER.search); // get_search_results
 
 };

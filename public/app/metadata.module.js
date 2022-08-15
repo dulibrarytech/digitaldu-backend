@@ -21,7 +21,7 @@ const metadataModule = (function () {
     'use strict';
 
     const api = configModule.getApi();
-    const endpoints = endpointsModule.endpoints();
+    const endpoints = endpointsModule.get_repository_endpoints(); // endpointsModule.endpoints();
     let obj = {};
 
     /**
@@ -54,20 +54,20 @@ const metadataModule = (function () {
     obj.createThumbnailLink = function (record) {
 
         let tn = '';
-        let token = userModule.getUserToken();
+        let token = authModule.getUserToken();
 
         if (record.object_type === 'collection') {
-
+            // endpoints.repo_object_tn
             if (record.thumbnail === undefined || record.thumbnail === null) {
-                tn = api + endpoints.repo_object_tn + '?uuid=' + DOMPurify.sanitize(record.pid) + '&type=' + DOMPurify.sanitize(record.mime_type) + '&t=' + token;
+                tn = api + endpoints.repo_thumbnail_service + '?uuid=' + DOMPurify.sanitize(record.pid) + '&type=' + DOMPurify.sanitize(record.mime_type) + '&t=' + token;
             } else if (record.thumbnail.search('http://') === 0 || record.thumbnail.search('https://') === 0) {
                 tn = DOMPurify.sanitize(record.thumbnail.replace('http://', 'https://'));
             } else {
-                tn = api + endpoints.repo_object_tn + '?uuid=' + DOMPurify.sanitize(record.thumbnail) + '&type=' + DOMPurify.sanitize(record.mime_type) + '&t=' + token;
+                tn = api + endpoints.repo_thumbnail_service + '?uuid=' + DOMPurify.sanitize(record.thumbnail) + '&type=' + DOMPurify.sanitize(record.mime_type) + '&t=' + token;
             }
 
         } else if(record.object_type === 'object' && tn.length !== 0) {
-            tn = api + endpoints.repo_object_tn + '?uuid=' + DOMPurify.sanitize(record.pid) + '&type=' + DOMPurify.sanitize(record.mime_type) + '&t=' + token;
+            tn = api + endpoints.repo_thumbnail_service + '?uuid=' + DOMPurify.sanitize(record.pid) + '&type=' + DOMPurify.sanitize(record.mime_type) + '&t=' + token;
         }
 
         return tn;
@@ -82,18 +82,18 @@ const metadataModule = (function () {
     obj.createThumbnailDisplay = function(record, tn) {
 
         let tnDisplay = '';
-        let token = userModule.getUserToken();
+        let token = authModule.getUserToken();
 
         if (record.object_type === 'object') {
 
             if (record.mime_type === 'image/tiff') {
                 let thumbnail = record.thumbnail;
-                let thumbnailPath = api + endpoints.repo_object_thumbnail + '?tn=' + thumbnail + '&t=' + token;
+                let thumbnailPath = api + endpoints.repo_thumbnail_duracloud + '?tn=' + thumbnail + '&t=' + token;
                 tnDisplay += '<a href="/dashboard/viewer' + '?pid=' + DOMPurify.sanitize(record.pid) + '&t=' + token + '" target="_blank">';
                 tnDisplay += '<img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + thumbnailPath + '" alt="' + record.pid + '" />';
                 tnDisplay += '</a>';
             } else {
-                tnDisplay += '<a href="' + api + endpoints.repo_object_viewer + '?uuid=' + DOMPurify.sanitize(record.pid) + '&t=' + token + '" target="_blank">';
+                tnDisplay += '<a href="' + api + endpoints.repo_viewer + '?uuid=' + DOMPurify.sanitize(record.pid) + '&t=' + token + '" target="_blank">';
                 tnDisplay += '<img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + api + endpoints.repo_object_tn + '?uuid=' + DOMPurify.sanitize(record.pid) + '&t=' + token + '" alt="' + record.pid + '" />';
                 tnDisplay += '</a>';
             }
@@ -451,7 +451,7 @@ const metadataModule = (function () {
 
     /**
      * Creates subjects fragment
-     * @param records
+     * @param record
      */
     function createSubjects(record) {
 

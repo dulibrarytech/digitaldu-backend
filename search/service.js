@@ -18,7 +18,8 @@
 
 'use strict';
 
-const CONFIG = require('../config/config'),
+const CONFIG = require('../config/elasticsearch_config')(),
+    SEARCH_TASKS = require('../search/tasks/search_tasks'),
     ES = require('elasticsearch'),
     CLIENT = new ES.Client({
         host: CONFIG.elasticSearch
@@ -26,52 +27,22 @@ const CONFIG = require('../config/config'),
 
 /**
  * Full-text search
- * @param req
+ * @param q
+ * @param page
+ * @param total_on_page
  * @param callback
  */
-exports.get_search_results = function (req, callback) {
+exports.search = function (q, page, total_on_page, callback) {
 
-    if (req.query.q === undefined) {
+    (async () => {
 
-        callback({
-            status: 400,
-            message: 'Bad request.'
-        });
-
-        return false;
-    }
-
-    let q = req.query.q,
-        page = req.query.page,
-        total_on_page = 10;
-
-    if (q.length === 0) {
-        q = '*:*';
-    }
-
-    if (req.query.total_on_page !== undefined) {
-        total_on_page = req.query.total_on_page;
-    }
-
-    if (page === undefined) {
-        page = 0;
-    } else {
-        page = (page - 1) * total_on_page;
-    }
-
-    CLIENT.search({
-        from: page,
-        size: total_on_page,
-        index: CONFIG.elasticSearchBackIndex,
-        q: q
-    }).then(function (body) {
+        const TASK = new SEARCH_TASKS(CLIENT, CONFIG);
+        const data = await TASK.search(q, page, total_on_page);
 
         callback({
             status: 200,
-            data: body.hits
+            message: 'Search record(s) retrieved.',
+            data: data
         });
-
-    }, function (error) {
-        callback(error);
-    });
+    })();
 };

@@ -21,7 +21,7 @@ const objectsModule = (function () {
     'use strict';
 
     const api = configModule.getApi();
-    const endpoints = endpointsModule.endpoints();
+    const endpoints = endpointsModule.get_repository_endpoints(); // endpointsModule.endpoints();
     let obj = {};
 
     /**
@@ -29,7 +29,7 @@ const objectsModule = (function () {
      */
     obj.getObjects = function () {
 
-        let pid = helperModule.getParameterByName('pid'),
+        let pid = helperModule.getParameterByName('uuid'),
             page = helperModule.getParameterByName('page'),
             total_on_page = helperModule.getParameterByName('total_on_page'),
             sort = helperModule.getParameterByName('sort');
@@ -37,16 +37,17 @@ const objectsModule = (function () {
         if (pid === null || pid === configModule.getRootPid()) {
             pid = configModule.getRootPid();
         } else {
-            collectionsModule.getCollectionName(pid);
+            collectionsModule.getCollectionName(uuid);
         }
 
-        let url = api + endpoints.repo_objects + '?pid=' + pid;
+        // endpoints.repo_objects
+        let url = api + endpoints.repo_records + '?uuid=' + uuid;
 
         if (page !== null && total_on_page !== null) {
             url = api + endpoints.repo_objects + '?pid=' + pid + '&page=' + page + '&total_on_page=' + total_on_page;
         }
 
-        let token = userModule.getUserToken(),
+        let token = authModule.getUserToken(),
             request = new Request(url, {
                 method: 'GET',
                 mode: 'cors',
@@ -108,8 +109,9 @@ const objectsModule = (function () {
         // handles DOM changes on completed import page
         domModule.html('#publish-import-' + pid, '<em><i class="fa fa-exclamation-circle"></i> Publishing...</em>');
 
+        // endpoints.repo_publish
         let url = api + endpoints.repo_publish,
-            token = userModule.getUserToken(),
+            token = authModule.getUserToken(),
             request = new Request(url, {
                 method: 'POST',
                 headers: {
@@ -176,6 +178,7 @@ const objectsModule = (function () {
     /**
      * Unpublishes admin objects
      * @param pid
+     * @param type
      */
     obj.unpublishObject = function (pid, type) {
 
@@ -186,8 +189,9 @@ const objectsModule = (function () {
 
         domModule.html('#unpublish-' + pid, '<em><i class="fa fa-exclamation-circle"></i> Unpublishing...</em>');
 
-        let url = api + endpoints.repo_unpublish,
-            token = userModule.getUserToken(),
+        // endpoints.repo_unpublish
+        let url = api + endpoints.repo_suppress,
+            token = authModule.getUserToken(),
             request = new Request(url, {
                 method: 'POST',
                 headers: {
@@ -232,17 +236,17 @@ const objectsModule = (function () {
         httpModule.req(request, callback);
     };
 
-    /**
+    /** TODO: change to "suppressed"
      * Gets unpublished records
      */
     obj.getUnPublishedObjects = function () {
 
-        let pid = helperModule.getParameterByName('pid'),
+        let uuid = helperModule.getParameterByName('uuid'),
             token = userModule.getUserToken();
 
-        collectionsModule.getCollectionName(pid);
-
-        let url = api + endpoints.repo_object_unpublished + '?pid=' + pid,
+        collectionsModule.getCollectionName(uuid);
+        // repo_object_unpublished
+        let url = api + endpoints.repo_suppress + '?uuid=' + uuid,
             request = new Request(url, {
                 method: 'GET',
                 mode: 'cors',
@@ -281,7 +285,7 @@ const objectsModule = (function () {
     obj.search = function () {
 
         let q = helperModule.getParameterByName('q');
-        let token = userModule.getUserToken(),
+        let token = authModule.getUserToken(),
             page = helperModule.getParameterByName('page'),
             total_on_page = helperModule.getParameterByName('total_on_page'),
             sort = helperModule.getParameterByName('sort'),

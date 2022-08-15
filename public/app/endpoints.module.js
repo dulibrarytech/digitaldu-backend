@@ -22,17 +22,17 @@ const endpointsModule = (function () {
 
     let obj = {};
 
-    obj.get_stat_endpoints = function() {
+    obj.get_stat_endpoints = () => {
         const repo_endpoints_stats = window.localStorage.getItem('repo_endpoints_stats');
         return JSON.parse(repo_endpoints_stats);
     };
 
-    obj.get_users_endpoints = function() {
+    obj.get_users_endpoints = () => {
         const repo_endpoints_users = window.localStorage.getItem('repo_endpoints_users');
         return JSON.parse(repo_endpoints_users);
     };
 
-    obj.get_repository_endpoints = function() {
+    obj.get_repository_endpoints = () => {
         const repo_endpoints_repository = window.localStorage.getItem('repo_endpoints_repository');
         return JSON.parse(repo_endpoints_repository);
     };
