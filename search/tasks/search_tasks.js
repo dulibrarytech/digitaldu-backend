@@ -43,16 +43,11 @@ const Search_tasks = class {
 
         let promise = new Promise((resolve, reject) => {
 
-            // TODO
-            // page = page,
-            // let total_on_page = 10;
             if (q.length === 0) {
                 q = '*:*';
             }
 
-            // TODO
             if (total_on_page === undefined) {
-                // total_on_page = total_on_page;
                 total_on_page = 10;
             }
 
@@ -70,10 +65,71 @@ const Search_tasks = class {
             }).then(function (body) {
                 resolve(body.hits);
             }, function (error) {
-                // TODO: log error
+                LOGGER.module().error('ERROR: [/search/tasks (search)] unable to search index');
                 reject(false);
             });
 
+        });
+
+        return promise.then((response) => {
+            return response;
+        }).catch((error) => {
+            return error;
+        });
+    };
+
+    /**
+     *
+     * @param is_member_of_collection
+     * @param page
+     * @param total_on_page
+     * @param sort
+     */
+    get_records = function (is_member_of_collection, page, total_on_page, sort) {
+
+        let promise = new Promise((resolve, reject) => {
+
+            let total_on_page_default = 10;
+            let sort_default = 'title.keyword:asc';
+
+            if (total_on_page === undefined) {
+                total_on_page = total_on_page_default;
+            }
+
+            if (sort === undefined) {
+                sort = sort_default;
+            }
+
+            if (page === undefined) {
+                page = 0;
+            } else {
+                page = (page - 1) * total_on_page;
+            }
+
+            let query = {
+                'query': {
+                    'bool': {
+                        'must': {
+                            'match': {
+                                'is_member_of_collection.keyword': is_member_of_collection
+                            }
+                        }
+                    }
+                }
+            };
+
+            this.CLIENT.search({
+                from: page,
+                size: total_on_page,
+                index: this.CONFIG.elasticsearch_back_index,
+                sort: sort,
+                body: query
+            }).then((body) => {
+                resolve(body.hits);
+            }, (error) => {
+                LOGGER.module().error('ERROR: [/repository/service module (get_records)] Request to Elasticsearch failed: ' + error.message);
+                reject(false);
+            });
         });
 
         return promise.then((response) => {

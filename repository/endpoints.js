@@ -36,7 +36,7 @@ const ENDPOINTS = {
             description: '',
             get: {
                 description: 'Retrieves repository display records',
-                params: 'token or api_key, gets single display record with uuid - gets all display records without uuid param'
+                params: 'token or api_key, gets all display records by collection uuid param'
             },
             post: {
                 description: 'Creates collection record',
@@ -46,6 +46,14 @@ const ENDPOINTS = {
             delete: {
                 description: 'Deletes repository record',
                 params: 'token or api_key, uuid, delete_reason'
+            }
+        },
+        repo_record: {
+            endpoint: `${PREFIX}${VERSION}${ENDPOINT}record`,
+            description: '',
+            get: {
+                description: 'Retrieves repository display record',
+                params: 'token or api_key, gets single display record with uuid'
             }
         },
         repo_publish: {

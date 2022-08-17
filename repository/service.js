@@ -18,11 +18,12 @@
 
 'use strict';
 
-const ELASTICSEARCH_CONFIG = require('../config/elasticsearch_config')();
 const HTTP = require('axios');
 const ES = require('elasticsearch');
+const ELASTICSEARCH_CONFIG = require('../config/elasticsearch_config')();
 const ARCHIVESSPACE_CONFIG = require('../config/archivesspace_config')();
 const ARCHIVEMATICA_CONFIG = require('../config/archivematica_config')();
+const DURACLOUD_CONFIG = require('../config/duracloud_config')();
 const HANDLE_CONFIG = require('../config/handle_config')();
 const HANDLES = require('../libs/handles');
 const DURACLOUD = require('../libs/duracloud');
@@ -30,6 +31,7 @@ const ARCHIVEMATICA = require('../libs/archivematica');
 const ARCHIVESSPACE = require('../libs/archivesspace');
 const CACHE = require('../libs/cache');
 const PING_TASKS = require('../repository/tasks/ping_tasks');
+const SEARCH_TASKS = require('../search/tasks/search_tasks');
 const LOGGER = require('../libs/log4');
 const CLIENT = new ES.Client({
         host: ELASTICSEARCH_CONFIG.elasticsearch_host
@@ -77,15 +79,60 @@ exports.ping_services = function (callback) {
 };
 
 /**
+ * Gets records by collection
+ * @param is_member_of_collection
+ * @param page
+ * @param total_on_page
+ * @param sort
+ * @param callback
+ */
+exports.get_records = function (is_member_of_collection, page, total_on_page, sort, callback) {
+
+    (async () => {
+
+        try {
+
+            const TASK = new SEARCH_TASKS(CLIENT, ELASTICSEARCH_CONFIG);
+            let data = await TASK.get_records(is_member_of_collection, page, total_on_page, sort);
+
+            if (data !== false) {
+                callback({
+                    status: 200,
+                    data: data
+                });
+            }
+
+        } catch (error) {
+
+            LOGGER.module().error('ERROR: [/repository/service module (get_records)] Request to Elasticsearch failed: ' + error.message);
+
+            callback({
+                status: 500,
+                data: error
+            });
+        }
+
+    })();
+};
+
+/**
  * Gets thumbnail from duracloud service
  * @param tn
  * @param callback
- * @returns response
  */
 exports.get_duracloud_thumbnail = function (tn, callback) {
-    DURACLOUD.get_thumbnail(tn, function (response) {
-        callback(response);
-    });
+
+    (async () => {
+
+        try {
+            const DURACLOUD_LIB = new DURACLOUD(DURACLOUD_CONFIG);
+            let response = await DURACLOUD_LIB.get_thumbnail(tn);
+            callback(response);
+        } catch (error) {
+            callback(error);
+        }
+
+    })();
 };
 
 /**
@@ -196,68 +243,6 @@ exports.get_object_viewer = function (uuid, callback) {
     callback({
         status: 200,
         data: apiUrl
-    });
-};
-
-/**
- * Gets records by collection
- * @param is_member_of_collection
- * @param page
- * @param total_on_page
- * @param sort
- * @param callback
- */
-exports.get_records = function (is_member_of_collection, page, total_on_page, sort, callback) {
-
-    let total_on_page_default = 10;
-    let sort_default = 'title.keyword:asc';
-
-    if (total_on_page === undefined) {
-        total_on_page = total_on_page_default;
-    }
-
-    if (sort === undefined) {
-        sort = sort_default;
-    }
-
-    if (page === undefined) {
-        page = 0;
-    } else {
-        page = (page - 1) * total_on_page;
-    }
-
-    let query = {
-        'query': {
-            'bool': {
-                'must': {
-                    'match': {
-                        'is_member_of_collection.keyword': is_member_of_collection
-                    }
-                }
-            }
-        }
-    };
-
-    CLIENT.search({
-        from: page,
-        size: total_on_page,
-        index: CONFIG.elasticSearchBackIndex,
-        sort: sort,
-        body: query
-    }).then(function (body) {
-
-        callback({
-            status: 200,
-            data: body.hits
-        });
-    }, function (error) {
-
-        LOGGER.module().error('ERROR: [/repository/service module (get_records)] Request to Elasticsearch failed: ' + error);
-
-        callback({
-            status: 500,
-            data: error
-        });
     });
 };
 

@@ -16,8 +16,8 @@
 
  */
 
-const LOGGER = require('../libs/log4'),
-    HTTP = require('axios'),
+const HTTP = require('axios'),
+    LOGGER = require('../libs/log4'),
     TIMEOUT = 35000,
     HEADER = {
         'Content-Type': 'application/json'

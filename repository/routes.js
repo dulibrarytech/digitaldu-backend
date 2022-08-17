@@ -28,9 +28,12 @@ module.exports = (app) => {
         .get(TOKEN.verify, CONTROLLER.ping);
 
     app.route(ENDPOINTS().repository.repo_records.endpoint)
-        .get(TOKEN.verify, CONTROLLER.get_record)
+        .get(TOKEN.verify, CONTROLLER.get_records)
         .post(TOKEN.verify, CONTROLLER.create_collection_record)
         .delete(TOKEN.verify, CONTROLLER.delete_record);
+
+    app.route(ENDPOINTS().repository.repo_record.endpoint)
+        .get(TOKEN.verify, CONTROLLER.get_record)
 
     app.route(ENDPOINTS().repository.repo_publish.endpoint)
         .post(TOKEN.verify, CONTROLLER.publish_record);

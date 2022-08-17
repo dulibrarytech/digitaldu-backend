@@ -30,7 +30,21 @@ exports.ping = (req, res) => {
     });
 };
 
-const get_records = (req, res) => {
+exports.get_record = (req, res) => {
+
+    let uuid = req.query.uuid;
+
+    if (req.query.uuid === undefined || req.query.uuid.length === 0) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    MODEL.get_display_record(uuid, (data) => {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.get_records = (req, res) => {
 
     if (req.query.uuid === undefined || req.query.uuid.length === 0) {
         res.status(400).send('Bad request.');
@@ -53,20 +67,6 @@ const get_records = (req, res) => {
             res.status(data.status).send(data.data);
         });
     }
-};
-
-exports.get_record = (req, res) => {
-
-    let uuid = req.query.uuid;
-
-    if (uuid === undefined) {
-        get_records(req);
-        return false;
-    }
-
-    MODEL.get_display_record(uuid, (data) => {
-        res.status(data.status).send(data.data);
-    });
 };
 
 exports.update_thumbnail_url = (req, res) => {

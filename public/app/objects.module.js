@@ -21,7 +21,7 @@ const objectsModule = (function () {
     'use strict';
 
     const api = configModule.getApi();
-    const endpoints = endpointsModule.get_repository_endpoints(); // endpointsModule.endpoints();
+    const endpoints = endpointsModule.get_repository_endpoints();
     let obj = {};
 
     /**
@@ -29,22 +29,21 @@ const objectsModule = (function () {
      */
     obj.getObjects = function () {
 
-        let pid = helperModule.getParameterByName('uuid'),
+        let uuid = helperModule.getParameterByName('uuid'),
             page = helperModule.getParameterByName('page'),
             total_on_page = helperModule.getParameterByName('total_on_page'),
             sort = helperModule.getParameterByName('sort');
 
-        if (pid === null || pid === configModule.getRootPid()) {
-            pid = configModule.getRootPid();
+        if (uuid === null || uuid === configModule.getRootPid()) {
+            uuid = configModule.getRootPid();
         } else {
             collectionsModule.getCollectionName(uuid);
         }
 
-        // endpoints.repo_objects
-        let url = api + endpoints.repo_records + '?uuid=' + uuid;
+        let url = api + endpoints.repository.repo_records.endpoint + '?uuid=' + uuid;
 
         if (page !== null && total_on_page !== null) {
-            url = api + endpoints.repo_objects + '?pid=' + pid + '&page=' + page + '&total_on_page=' + total_on_page;
+            url = api + endpoints.repository.repo_records.endpoint + '?uuid=' + uuid + '&page=' + page + '&total_on_page=' + total_on_page;
         }
 
         let token = authModule.getUserToken(),

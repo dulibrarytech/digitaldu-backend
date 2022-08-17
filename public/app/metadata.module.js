@@ -59,15 +59,15 @@ const metadataModule = (function () {
         if (record.object_type === 'collection') {
             // endpoints.repo_object_tn
             if (record.thumbnail === undefined || record.thumbnail === null) {
-                tn = api + endpoints.repo_thumbnail_service + '?uuid=' + DOMPurify.sanitize(record.pid) + '&type=' + DOMPurify.sanitize(record.mime_type) + '&t=' + token;
+                tn = api + endpoints.repository.repo_thumbnail_service.endpoint + '?uuid=' + DOMPurify.sanitize(record.pid) + '&type=' + DOMPurify.sanitize(record.mime_type) + '&t=' + token;
             } else if (record.thumbnail.search('http://') === 0 || record.thumbnail.search('https://') === 0) {
                 tn = DOMPurify.sanitize(record.thumbnail.replace('http://', 'https://'));
             } else {
-                tn = api + endpoints.repo_thumbnail_service + '?uuid=' + DOMPurify.sanitize(record.thumbnail) + '&type=' + DOMPurify.sanitize(record.mime_type) + '&t=' + token;
+                tn = api + endpoints.repository.repo_thumbnail_service.endpoint + '?uuid=' + DOMPurify.sanitize(record.thumbnail) + '&type=' + DOMPurify.sanitize(record.mime_type) + '&t=' + token;
             }
 
         } else if(record.object_type === 'object' && tn.length !== 0) {
-            tn = api + endpoints.repo_thumbnail_service + '?uuid=' + DOMPurify.sanitize(record.pid) + '&type=' + DOMPurify.sanitize(record.mime_type) + '&t=' + token;
+            tn = api + endpoints.repository.repo_thumbnail_service.endpoint + '?uuid=' + DOMPurify.sanitize(record.pid) + '&type=' + DOMPurify.sanitize(record.mime_type) + '&t=' + token;
         }
 
         return tn;
@@ -80,7 +80,7 @@ const metadataModule = (function () {
      * @returns {string}
      */
     obj.createThumbnailDisplay = function(record, tn) {
-
+        console.log(endpoints.repository.repo_thumbnail_duracloud.endpoint);
         let tnDisplay = '';
         let token = authModule.getUserToken();
 
@@ -88,8 +88,8 @@ const metadataModule = (function () {
 
             if (record.mime_type === 'image/tiff') {
                 let thumbnail = record.thumbnail;
-                let thumbnailPath = api + endpoints.repo_thumbnail_duracloud + '?tn=' + thumbnail + '&t=' + token;
-                tnDisplay += '<a href="/dashboard/viewer' + '?pid=' + DOMPurify.sanitize(record.pid) + '&t=' + token + '" target="_blank">';
+                let thumbnailPath = api + endpoints.repository.repo_thumbnail_duracloud.endpoint + '?tn=' + thumbnail + '&t=' + token;
+                tnDisplay += '<a href="/dashboard/viewer' + '?uuid=' + DOMPurify.sanitize(record.pid) + '&t=' + token + '" target="_blank">';
                 tnDisplay += '<img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + thumbnailPath + '" alt="' + record.pid + '" />';
                 tnDisplay += '</a>';
             } else {
@@ -131,8 +131,8 @@ const metadataModule = (function () {
                 menu += '</div>';
             }
 
-            menu += '<p><a href="' + api + '/dashboard/objects/unpublished?pid=' + DOMPurify.sanitize(record.pid) + '&unpublished"><i class="fa fa-info-circle"></i>&nbsp;Unpublished objects</a></p>';
-            menu += '<p><a href="' + api + '/dashboard/object/thumbnail?pid=' + DOMPurify.sanitize(record.pid) + '"><i class="fa fa-edit"></i>&nbsp;Change Thumbnail</a></p>';
+            menu += '<p><a href="' + api + '/dashboard/objects/unpublished?uuid=' + DOMPurify.sanitize(record.pid) + '&unpublished"><i class="fa fa-info-circle"></i>&nbsp;Unpublished objects</a></p>';
+            menu += '<p><a href="' + api + '/dashboard/object/thumbnail?uuid=' + DOMPurify.sanitize(record.pid) + '"><i class="fa fa-edit"></i>&nbsp;Change Thumbnail</a></p>';
             menu += '<p><a id="update-' + record.pid + '" href="#' + record.pid + '" onclick="collectionsModule.updateCollectionMetadata(\'' + DOMPurify.sanitize(record.pid) + '\', \'collection\'); return false;"><i class="fa fa-code"></i>&nbsp;Update Collection Metadata</a></p>';
         }
 
@@ -167,7 +167,7 @@ const metadataModule = (function () {
                 menu += '<div id="status-unpublished-' + record.pid + '">';
                 menu += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
                 menu += '<p><a id="publish-' + record.pid + '" href="#' + record.pid + '" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(record.pid) + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
-                menu += '<p><a href="/dashboard/object/delete?pid=' +  DOMPurify.sanitize(record.pid) + '"><i class="fa fa-trash"></i>&nbsp;Delete</a></p>';
+                menu += '<p><a href="/dashboard/object/delete?uuid=' +  DOMPurify.sanitize(record.pid) + '"><i class="fa fa-trash"></i>&nbsp;Delete</a></p>';
                 menu += '</div>';
             }
 
@@ -193,7 +193,7 @@ const metadataModule = (function () {
         let title = '';
 
         if (record.display_record.title !== undefined && record.object_type === 'collection') {
-            title += '<h4><a href="' + api + '/dashboard/objects/?pid=' + DOMPurify.sanitize(record.pid) + '">' + DOMPurify.sanitize(record.display_record.title) + '</a></h4>';
+            title += '<h4><a href="' + api + '/dashboard/objects/?uuid=' + DOMPurify.sanitize(record.pid) + '">' + DOMPurify.sanitize(record.display_record.title) + '</a></h4>';
         } else if (record.object_type === 'object') {
             title += '<h4>' + DOMPurify.sanitize(record.display_record.title) + '</h4>';
         } else {
@@ -212,7 +212,7 @@ const metadataModule = (function () {
 
         let handle = '';
 
-        if (record.display_record.handle !== undefined) { // object  &nbsp;&nbsp;<i class="fa fa-copy"></i>
+        if (record.display_record.handle !== undefined) {
             handle += '<ul><li><strong>Handle:</strong>&nbsp;' + DOMPurify.sanitize(record.display_record.handle) + '</li></ul>';
         } else if (record.handle !== undefined) { // collection
             handle += '<ul><li><strong>Handle:</strong>&nbsp;' + DOMPurify.sanitize(record.handle) + '</li></ul>';
@@ -232,9 +232,9 @@ const metadataModule = (function () {
         pid += '<ul>';
 
         if (record.is_published === 0) {
-            pid += '<li><strong>Pid:</strong>&nbsp;' + DOMPurify.sanitize(record.pid) + '&nbsp;&nbsp;<i class="fa fa-external-link"></i></li>';
+            pid += '<li><strong>UUID:</strong>&nbsp;' + DOMPurify.sanitize(record.pid) + '&nbsp;&nbsp;<i class="fa fa-external-link"></i></li>';
         } else {
-            pid += '<li><strong>Pid:</strong>&nbsp;<a target="_blank" href="' + DOMPurify.sanitize(record.handle) + '">' + DOMPurify.sanitize(record.pid) + '</a>&nbsp;&nbsp;<i class="fa fa-external-link"></i></li>';
+            pid += '<li><strong>UUID:</strong>&nbsp;<a target="_blank" href="' + DOMPurify.sanitize(record.handle) + '">' + DOMPurify.sanitize(record.pid) + '</a>&nbsp;&nbsp;<i class="fa fa-external-link"></i></li>';
         }
 
         pid += '</ul>';

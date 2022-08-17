@@ -39,10 +39,18 @@ exports.search = function (q, page, total_on_page, callback) {
         const TASK = new SEARCH_TASKS(CLIENT, CONFIG);
         const data = await TASK.search(q, page, total_on_page);
 
-        callback({
-            status: 200,
-            message: 'Search record(s) retrieved.',
-            data: data
-        });
+        if (data !== false) {
+            callback({
+                status: 200,
+                message: 'Search record(s) retrieved.',
+                data: data
+            });
+        } else {
+            callback({
+                status: 500,
+                message: 'Unable to retrieve Search record(s).'
+            });
+        }
+
     })();
 };

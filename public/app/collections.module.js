@@ -24,8 +24,6 @@ const collectionsModule = (function () {
     const endpoints = endpointsModule.get_repository_endpoints();
     let obj = {};
 
-    console.log(endpoints.repository.repo_records.endpoint);
-    return false;
     /**
      * Gets collection name
      * @param uuid

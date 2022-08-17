@@ -23,8 +23,7 @@ const CONTROLLER = require('../search/controller'),
     TOKEN = require('../libs/tokens');
 
 module.exports = function (app) {
-
-    app.route(ENDPOINTS().search.endpoint)  // '/api/admin/v1/search'
-        .get(TOKEN.verify, CONTROLLER.search); // get_search_results
+    app.route(ENDPOINTS().search.endpoint)
+        .get(TOKEN.verify, CONTROLLER.search);
 
 };
