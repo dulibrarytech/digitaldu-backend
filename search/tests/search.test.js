@@ -57,13 +57,3 @@ it('Search Tasks get_suppressed_records (Unit)', async function () {
     // console.log(await LIB.get_suppressed_records(uuid));
     await expect(LIB.get_suppressed_records(uuid)).resolves.toBeDefined();
 }, 10000);
-
-/* TODO:
-it('Search API Endpoint search ' + ENDPOINTS().search.endpoint + ' (E2E)', async function() {
-    let query = 'q=dogs&page=1&total_on_page=undefined';
-    let response = await REQUEST(APP)
-        .get(ENDPOINTS().search.endpoint + '?' + query + '&api_key=' + API_KEY);
-    expect(response.status).toBe(200);
-}, 10000);
-
- */

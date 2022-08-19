@@ -66,14 +66,14 @@ const collectionsModule = (function () {
                     if (data.length === 0) {
                         return domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-info-circle"></i> Collection name not found.</div>');
                     }
-
+                    // console.log(JSON.parse(data[0].display_record));
                     let record = JSON.parse(data[0].display_record);
                     let title = 'No title.';
 
                     if (record.title !== undefined) {
                         title = record.title;
                     }
-
+                    console.log(DOMPurify.sanitize(title));
                     domModule.html('#collection-name', DOMPurify.sanitize(title));
                 });
 

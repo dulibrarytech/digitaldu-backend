@@ -1,4 +1,4 @@
-<% include partials/header.ejs %>
+<%- include('partials/header.ejs'); %>
 
 <body class="nav-md">
 <div class="container body">
@@ -6,11 +6,11 @@
         <div class="col-md-3 left_col">
             <div class="left_col scroll-view">
                 <div class="navbar nav_title" style="border: 0;">
-                    <% include partials/app-name.ejs %>
+                    <%- include('partials/app-name.ejs'); %>
                 </div>
                 <div class="clearfix"></div>
                 <br>
-                <% include partials/sidebar-footer.ejs %>
+                <%- include('partials/sidebar-footer.ejs'); %>
             </div>
         </div>
         <div class="right_col" role="main">
@@ -21,7 +21,7 @@
                 <div class="row"></div>
             </div>
         </div>
-        <% include partials/footer.ejs %>
+        <%- include('partials/footer.ejs'); %>
     </div>
 </div>
 <script src="../libs/jquery/dist/jquery.min.js"></script>
@@ -29,7 +29,7 @@
 <script src="../libs/nprogress/nprogress.js"></script>
 <script src="../assets/js/custom.js"></script>
 <script src="../app/config.module.js"></script>
-<script src="../app/user.module.js"></script>
-<script>userModule.sessionExpired();</script>
+<script src="../app/auth.module.js"></script>
+<script>authModule.sessionExpired();</script>
 </body>
 </html>
