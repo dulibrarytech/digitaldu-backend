@@ -38,7 +38,7 @@ const collectionsModule = (function () {
             let uuid = helperModule.getParameterByName('uuid');
         }
 
-        // used add collection form
+        // used by add collection form
         if (helperModule.getParameterByName('is_member_of_collection') !== null && helperModule.getParameterByName('is_member_of_collection') === configModule.getRootPid()) {
             domModule.html('#collection-type', 'Add top-level collection');
             return false;
@@ -47,7 +47,7 @@ const collectionsModule = (function () {
         }
 
         let token = authModule.getUserToken();
-        let url = api + endpoints.repository.repo_records.endpoint + '?uuid=' + uuid,
+        let url = api + endpoints.repository.repo_record.endpoint + '?uuid=' + uuid,
             request = new Request(url, {
                 method: 'GET',
                 mode: 'cors',

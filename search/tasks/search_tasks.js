@@ -138,6 +138,56 @@ const Search_tasks = class {
             return error;
         });
     };
+
+    /**
+     * Gets suppressed records by collection
+     * @param uuid
+     */
+    get_suppressed_records = (uuid) => {
+
+        let promise = new Promise((resolve, reject) => {
+
+            let page = 0
+            let total_on_page = 10000;
+            let sort = 'title.keyword:asc';
+            let query = {
+                'query': {
+                    'bool': {
+                        'must': [{
+                            'match': {
+                                'is_member_of_collection.keyword': uuid
+                            }
+                        },
+                            {
+                                'match': {
+                                    'is_published': 0
+                                }
+                            }]
+                    }
+                }
+            };
+
+            this.CLIENT.search({
+                from: page,
+                size: total_on_page,
+                index: this.CONFIG.elasticsearch_back_index,
+                sort: sort,
+                body: query
+            }).then((body) => {
+                resolve(body.hits);
+            }, function (error) {
+                LOGGER.module().error('ERROR: [/repository/service module (get_suppressed_records)] Request to Elasticsearch failed: ' + error.message);
+                reject(false);
+            });
+        });
+
+        return promise.then((response) => {
+            return response;
+        }).catch((error) => {
+            return error;
+        });
+    };
+
 }
 
 module.exports = Search_tasks;

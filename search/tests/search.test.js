@@ -52,6 +52,12 @@ it('Search Tasks get_records (Unit)', async function () {
     await expect(LIB.get_records(is_member_of_collection, page, total_on_page, sort)).resolves.toBeDefined();
 }, 10000);
 
+it('Search Tasks get_suppressed_records (Unit)', async function () {
+    let uuid = 'codu:root';
+    // console.log(await LIB.get_suppressed_records(uuid));
+    await expect(LIB.get_suppressed_records(uuid)).resolves.toBeDefined();
+}, 10000);
+
 /* TODO:
 it('Search API Endpoint search ' + ENDPOINTS().search.endpoint + ' (E2E)', async function() {
     let query = 'q=dogs&page=1&total_on_page=undefined';

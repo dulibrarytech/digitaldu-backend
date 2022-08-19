@@ -42,9 +42,11 @@ const configModule = (function () {
      * @returns {{duracloud: string, default: string, default_pdf: string, default_audio: string, default_video: string}}
      */
     obj.getTnUrls = function () {
+        const endpoints = endpointsModule.get_repository_endpoints();
+        console.log(endpoints.repository.repo_thumbnail_service);
         return {
-            duracloud: '/api/admin/v1/repo/object/thumbnail',
-            discovery: '/api/admin/v1/repo/object/tn',
+            duracloud: endpoints.repository.repo_thumbnail_duracloud.endpoint,
+            discovery: endpoints.repository.repo_thumbnail_service, // '/api/admin/v1/repo/object/tn',
             default: configModule.getApi() + '/images/media.jpg',
             default_pdf: configModule.getApi() + '/images/pdf-tn.png',
             default_audio: configModule.getApi() + '/images/audio-tn.png',

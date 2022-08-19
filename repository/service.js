@@ -25,6 +25,7 @@ const ARCHIVESSPACE_CONFIG = require('../config/archivesspace_config')();
 const ARCHIVEMATICA_CONFIG = require('../config/archivematica_config')();
 const DURACLOUD_CONFIG = require('../config/duracloud_config')();
 const HANDLE_CONFIG = require('../config/handle_config')();
+const WEBSERVICES_CONFIG = require('../config/webservices_config')();
 const HANDLES = require('../libs/handles');
 const DURACLOUD = require('../libs/duracloud');
 const ARCHIVEMATICA = require('../libs/archivematica');
@@ -148,26 +149,16 @@ exports.get_tn_service_image = function (uuid, callback) {
 
         try {
 
-            let endpoint = CONFIG.tnService + 'datastream/' + uuid + '/tn?key=' + CONFIG.tnServiceApiKey;
+            let endpoint = WEBSERVICES_CONFIG.tn_service + 'datastream/' + uuid + '/tn?key=' + WEBSERVICES_CONFIG.tn_service_api_key;
             let response = await HTTP.get(endpoint, {
                 timeout: 45000,
                 responseType: 'arraybuffer',
                 headers: {
-                    'x-api-key': CONFIG.tnServiceApiKey
+                    'x-api-key': WEBSERVICES_CONFIG.tn_service_api_key
                 }
             });
 
-            if (response.status !== 200) {
-
-                LOGGER.module().error('ERROR: [/repository/service module (get_tn_service_image)] Unable to get thumbnail from TN service.');
-
-                callback({
-                    error: true,
-                    status: 200,
-                    data: missing_tn
-                });
-
-            } else if (response.status === 200) {
+            if (response.status === 200) {
                 CACHE.cache_tn(uuid, response.data);
                 callback({
                     error: false,
@@ -175,8 +166,6 @@ exports.get_tn_service_image = function (uuid, callback) {
                     data: response.data
                 });
             }
-
-            return false;
 
         } catch (error) {
 
@@ -203,7 +192,7 @@ exports.get_convert_service_image = function (obj, callback) {
 
         try {
 
-            let endpoint = CONFIG.convertService + CONFIG.convertServiceEndpoint + obj.object_name + '&api_key=' + CONFIG.convertServiceApiKey;
+            let endpoint = WEBSERVICES_CONFIG.convert_service + WEBSERVICES_CONFIG.convert_service_endpoint + obj.object_name + '&api_key=' + WEBSERVICES_CONFIG.convert_service_api_key;
             let response = await HTTP.get(endpoint, {
                 timeout: 45000,
                 responseType: 'arraybuffer'
@@ -238,7 +227,7 @@ exports.get_convert_service_image = function (obj, callback) {
  */
 exports.get_object_viewer = function (uuid, callback) {
 
-    let apiUrl = CONFIG.tnService + 'viewer/' + uuid + '?key=' + CONFIG.tnServiceApiKey;
+    let apiUrl =  WEBSERVICES_CONFIG.tn_service + 'viewer/' + uuid + '?key=' + WEBSERVICES_CONFIG.tn_service_api_key;
 
     callback({
         status: 200,
@@ -253,47 +242,29 @@ exports.get_object_viewer = function (uuid, callback) {
  */
 exports.get_suppressed_records = function (uuid, callback) {
 
-    let is_member_of_collection = req.query.uuid,
-        page = 0,
-        total_on_page = 10000,
-        sort = 'title.keyword:asc';
+    (async () => {
 
-    let query = {
-        'query': {
-            'bool': {
-                'must': [{
-                    'match': {
-                        'is_member_of_collection.keyword': is_member_of_collection
-                    }
-                },
-                    {
-                        'match': {
-                            'is_published': 0
-                        }
-                    }]
+        try {
+
+            const TASK = new SEARCH_TASKS(CLIENT, ELASTICSEARCH_CONFIG);
+            let data = await TASK.get_suppressed_records(uuid);
+
+            if (data !== false) {
+                callback({
+                    status: 200,
+                    data: data
+                });
             }
+
+        } catch (error) {
+
+            LOGGER.module().error('ERROR: [/repository/service module (get_suppressed_records)] Request to Elasticsearch failed: ' + error.message);
+
+            callback({
+                status: 500,
+                data: error
+            });
         }
-    };
 
-    CLIENT.search({
-        from: page,
-        size: total_on_page,
-        index: CONFIG.elasticSearchBackIndex,
-        sort: sort,
-        body: query
-    }).then(function (body) {
-
-        callback({
-            status: 200,
-            data: body.hits
-        });
-    }, function (error) {
-
-        LOGGER.module().error('ERROR: [/repository/service module (get_suppressed_records)] Request to Elasticsearch failed: ' + error);
-
-        callback({
-            status: 500,
-            data: error
-        });
-    });
+    })();
 };

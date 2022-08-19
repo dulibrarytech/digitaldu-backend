@@ -21,7 +21,7 @@ const metadataModule = (function () {
     'use strict';
 
     const api = configModule.getApi();
-    const endpoints = endpointsModule.get_repository_endpoints(); // endpointsModule.endpoints();
+    const endpoints = endpointsModule.get_repository_endpoints();
     let obj = {};
 
     /**
@@ -80,7 +80,7 @@ const metadataModule = (function () {
      * @returns {string}
      */
     obj.createThumbnailDisplay = function(record, tn) {
-        console.log(endpoints.repository.repo_thumbnail_duracloud.endpoint);
+
         let tnDisplay = '';
         let token = authModule.getUserToken();
 
@@ -93,8 +93,8 @@ const metadataModule = (function () {
                 tnDisplay += '<img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + thumbnailPath + '" alt="' + record.pid + '" />';
                 tnDisplay += '</a>';
             } else {
-                tnDisplay += '<a href="' + api + endpoints.repo_viewer + '?uuid=' + DOMPurify.sanitize(record.pid) + '&t=' + token + '" target="_blank">';
-                tnDisplay += '<img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + api + endpoints.repo_object_tn + '?uuid=' + DOMPurify.sanitize(record.pid) + '&t=' + token + '" alt="' + record.pid + '" />';
+                tnDisplay += '<a href="' + api + endpoints.repository.repo_viewer.endpoint + '?uuid=' + DOMPurify.sanitize(record.pid) + '&t=' + token + '" target="_blank">';
+                tnDisplay += '<img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + api + endpoints.repository.repo_thumbnail_service.endpoint + '?uuid=' + DOMPurify.sanitize(record.pid) + '&t=' + token + '" alt="' + record.pid + '" />';
                 tnDisplay += '</a>';
             }
 
