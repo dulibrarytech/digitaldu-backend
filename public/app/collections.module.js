@@ -73,7 +73,7 @@ const collectionsModule = (function () {
                     if (record.title !== undefined) {
                         title = record.title;
                     }
-                    console.log(DOMPurify.sanitize(title));
+
                     domModule.html('#collection-name', DOMPurify.sanitize(title));
                 });
 
@@ -175,12 +175,12 @@ const collectionsModule = (function () {
     obj.setCollectionInformation = function () {
 
         const form = document.querySelector('form');
-        let pid = helperModule.getParameterByName('pid');
-        let input = '<input name="sip_uuid" type="hidden" value="' + pid + '">';
+        let uuid = helperModule.getParameterByName('uuid');
+        let input = '<input name="sip_uuid" type="hidden" value="' + uuid + '">';
         let token = authModule.getUserToken();
-        collectionsModule.getCollectionName(pid);
+        collectionsModule.getCollectionName(uuid);
         domModule.html('#sip-uuid-input', input);
-        form.setAttribute('action', '/repo/tn/upload?pid=' + pid + '&t=' + token);
+        form.setAttribute('action', '/repo/tn/upload?uuid=' + uuid + '&t=' + token);
     };
 
     /**
@@ -229,7 +229,7 @@ const collectionsModule = (function () {
             obj[propsVal[0]] = propsVal[1];
         }
 
-        let token = userModule.getUserToken();
+        let token = authModule.getUserToken();
         let url = api + endpoints.repository.repo_records,  // endpoints.repo_object
             request = new Request(url, {
                 method: 'POST',

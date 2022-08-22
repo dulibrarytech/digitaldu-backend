@@ -235,7 +235,7 @@ const objectsModule = (function () {
         httpModule.req(request, callback);
     };
 
-    /** TODO: change to "suppressed"
+    /**
      * Gets unpublished records
      */
     obj.getUnPublishedObjects = function () {
@@ -244,7 +244,7 @@ const objectsModule = (function () {
             token = userModule.getUserToken();
 
         collectionsModule.getCollectionName(uuid);
-        // repo_object_unpublished
+
         let url = api + endpoints.repo_suppress + '?uuid=' + uuid,
             request = new Request(url, {
                 method: 'GET',
@@ -384,7 +384,7 @@ const objectsModule = (function () {
      */
     obj.renderDisplayRecords = function (data) {
 
-        let is_member_of_collection = helperModule.getParameterByName('pid'),
+        let is_member_of_collection = helperModule.getParameterByName('uuid'),
             q = helperModule.getParameterByName('q'),
             unpublished = helperModule.getParameterByName('unpublished'),
             total_records = data.total.value,
@@ -393,7 +393,6 @@ const objectsModule = (function () {
 
         if (q === null && is_member_of_collection === null || is_member_of_collection === configModule.getRootPid()) {
             add_collection_link = '<a href="/dashboard/collections/add?is_member_of_collection=' + configModule.getRootPid() + '"><i class="fa fa-plus"></i>&nbsp;Add top-level collection</a>';
-            domModule.html('#collection-name', 'Collections');
             domModule.html('#total-records', '<p>Total Collections: ' + total_records + '</p>');
         } else if (q === null && is_member_of_collection !== null && is_member_of_collection !== configModule.getRootPid()) {
             add_collection_link = '<a href="/dashboard/collections/add?is_member_of_collection=' + is_member_of_collection + '"><i class="fa fa-plus"></i>&nbsp;Add sub-collection</a>';
@@ -448,14 +447,14 @@ const objectsModule = (function () {
 
     /**
      * Updates metadata record
-     * @param pid
+     * @param uuid
      */
-    obj.updateMetadata = function(pid) {
+    obj.updateMetadata = function(uuid) {
 
-        domModule.html('#update-' + pid, '<em><i class="fa fa-exclamation-circle"></i> Updating Metadata...</em>');
+        domModule.html('#update-' + uuid, '<em><i class="fa fa-exclamation-circle"></i> Updating Metadata...</em>');
 
         let obj = {};
-        obj.sip_uuid = pid;
+        obj.sip_uuid = uuid;
 
         let url = api + endpoints.import_metadata_object,
             token = userModule.getUserToken(),
@@ -475,7 +474,7 @@ const objectsModule = (function () {
 
                 setTimeout(function () {
                     objectsModule.getObjects();
-                    location.hash = '#' + pid;
+                    location.hash = '#' + uuid;
                 }, 4000);
 
 
@@ -501,16 +500,15 @@ const objectsModule = (function () {
 
     /**
      * Starts delete process
-     * @param pid
      */
     obj.deleteObject = function() {
 
         let obj = {};
-        obj.pid = helperModule.getParameterByName('pid');
+        obj.uuid = helperModule.getParameterByName('uuid');
         obj.delete_reason = domModule.val('#delete-reason', null) + '  --deleted by ' + userModule.getUserFullName();
 
-        let url = api + endpoints.repo_object + '?pid=' + obj.pid,
-            token = userModule.getUserToken(),
+        let url = api + endpoints.repo_object + '?uuid=' + obj.uuid,
+            token = authModule.getUserToken(),
             request = new Request(url, {
                 method: 'DELETE',
                 headers: {
@@ -563,8 +561,8 @@ const objectsModule = (function () {
      */
     obj.getTranscript = function () {
 
-        let sip_uuid = helperModule.getParameterByName('sip_uuid');
-        let url = api + endpoints.repo_object + '?pid=' + sip_uuid;
+        let sip_uuid = helperModule.getParameterByName('uuid');
+        let url = api + endpoints.repo_object + '?uuid=' + uuid;
         let mode = helperModule.getParameterByName('mode');
         let token = userModule.getUserToken(),
             request = new Request(url, {
@@ -681,16 +679,16 @@ const objectsModule = (function () {
      */
     obj.saveTranscript = function () {
 
-        let sip_uuid = helperModule.getParameterByName('sip_uuid');
+        let uuid = helperModule.getParameterByName('uuid');
 
-        if (sip_uuid === null) {
+        if (uuid === null) {
             return false;
         }
 
         domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> <em>Saving Transcript...</em></div>');
 
         let obj = {
-            sip_uuid: sip_uuid,
+            uuid: uuid,
             transcript: CKEDITOR.instances.transcript.getData()
         };
 
@@ -713,7 +711,7 @@ const objectsModule = (function () {
             if (response.status === 201) {
 
                 setTimeout(function () {
-                    window.location.replace('/dashboard/transcript?mode=view&sip_uuid=' + sip_uuid);
+                    window.location.replace('/dashboard/transcript?mode=view&uuid=' + uuid);
                 }, 10000);
 
             } else if (response.status === 401) {
@@ -741,9 +739,9 @@ const objectsModule = (function () {
      */
     obj.getImageData = function () {
 
-        let pid = helperModule.getParameterByName('pid');
+        let uuid = helperModule.getParameterByName('uuid');
         let t = helperModule.getParameterByName('t');
-        let url = api + endpoints.repo_object + '?pid=' + pid + '&t=' + t;
+        let url = api + endpoints.repo_object + '?uuid=' + uuid + '&t=' + t;
         // let token = userModule.getUserToken(),
         let request = new Request(url, {
                 method: 'GET',
@@ -820,7 +818,7 @@ const objectsModule = (function () {
                                         fileName = objArr[objArr.length - 1].replace('.jp2', '.jpg');
                                     }
 
-                                    let image = api + endpointsModule.endpoints().repo_object_image + '?sip_uuid=' + pid + '&full_path=' + objectPath + '&object_name=' + fileName + '&mime_type=image/tiff&t=' + t;
+                                    let image = api + endpointsModule.endpoints().repo_object_image + '?uuid=' + uuid + '&full_path=' + objectPath + '&object_name=' + fileName + '&mime_type=image/tiff&t=' + t;
 
                                     imageArr.push({
                                         title: fileName,
