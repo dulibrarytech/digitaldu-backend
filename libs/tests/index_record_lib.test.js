@@ -20,7 +20,7 @@ import {it, expect} from 'vitest';
 
 const DB = require('../../test/db')(),
     REPO_OBJECTS = 'tbl_objects_test',
-    DISPLAY_RECORD_LIB = require('../display_record'),
+    DISPLAY_RECORD_LIB = require('../index_record_lib'),
     LIB = new DISPLAY_RECORD_LIB(DB, REPO_OBJECTS),
     TEST_RECORDS = require('../../test/test_records')();
 
@@ -50,6 +50,7 @@ it('Get DB display record', function () {
     expect(LIB.get_db_display_record_data(uuid)).toBeTypeOf('object');
 }, 10000);
 
+/*
 it('Get index display record', function () {
     let record = TEST_RECORDS.child_records[1];
     let uuid = record.uuid;
@@ -61,3 +62,5 @@ it('Get display record data', function () {
     let uuid = record.uuid;
     expect(LIB.get_display_record_data(uuid)).toBeTypeOf('object');
 }, 10000);
+
+ */

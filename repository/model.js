@@ -27,7 +27,6 @@ const SUPPRESS_COLLECTION_RECORD_TASKS = require('../repository/tasks/suppress_c
 const SUPPRESS_CHILD_RECORD_TASKS = require('../repository/tasks/suppress_child_record_tasks');
 const DISPLAY_RECORD_TASKS = require('../repository/tasks/display_record_tasks');
 const DELETE_RECORD_TASKS = require('../repository/tasks/delete_record_tasks');
-const LOGGER = require('../libs/log4');
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
 const REPO_OBJECTS = DB_TABLES.repo.repo_objects;
@@ -35,6 +34,7 @@ const ARCHIVEMATICA_CONFIG = require('../config/archivematica_config')();
 const ARCHIVEMATICA = require('../libs/archivematica');
 const ARCHIVESSPACE_CONFIG = require('../config/archivesspace_config')();
 const ARCHIVESSPACE = require('../libs/archivesspace');
+const LOGGER = require('../libs/log4');
 
 /**
  * Gets metadata display record
@@ -278,16 +278,24 @@ exports.suppress_record = (uuid, type, callback) => {
 
         } else if (type === 'object') {
 
-            const REINDEX_TASK = new PUBLISH_CHILD_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
-            await CHILD_TASK.update_child_record_status(type, 0);
-            await CHILD_TASK.suppress_child_records(type);
-            REINDEX_TASK.reindex_child_records(type);
+            try {
 
-            response = {
-                status: 201,
-                message: 'Record suppressed',
-                data: []
+                const REINDEX_TASK = new PUBLISH_CHILD_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
+                await CHILD_TASK.update_child_record_status(type, 0);
+                await CHILD_TASK.suppress_child_records(type);
+                REINDEX_TASK.reindex_child_records(type);
+
+                response = {
+                    status: 201,
+                    message: 'Record suppressed',
+                    data: []
+                }
+
+            } catch (error) {
+                // TODO: log
+                console.log(error);
             }
+
 
         } else {
             response = {
@@ -309,7 +317,7 @@ exports.suppress_record = (uuid, type, callback) => {
  */
 exports.rebuild_display_record = (uuid, callback) => {
 
-    const task = new DISPLAY_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
+    const task = new DISPLAY_RECORD_TASKS(DB, REPO_OBJECTS, uuid);
     task.update();
 
     callback({

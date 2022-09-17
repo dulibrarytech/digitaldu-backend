@@ -18,16 +18,26 @@
 
 'use strict';
 
-const CONFIG = require('../config/config'),
+const // CONFIG = require('../config/config'),
     // HTTP = require('../libs/http'),
+    VALIDATOR = require('validator'),
     LOGGER = require('../libs/log4'),
     CACHE = require('../libs/cache'),
     DURACLOUD = require('../libs/duracloud'),
-    DB = require('../config/db')(),
-    DBQ = require('../config/dbqueue')(),
+    ES_CONFIG = require('../config/elasticsearch_config')(),
+    DB = require('../config/db_config')(),
+    DBQ = require('../config/dbqueue_config')(),
     REINDEX_TASKS = require('../utils/tasks/reindex_tasks'),
-    REPO_OBJECTS = 'tbl_objects',
+    DB_TABLES = require('../config/db_tables_config')(),
+    REPO_OBJECTS = DB_TABLES.repo.repo_objects,
     CONVERT_QUEUE = 'tbl_convert_queue';
+
+const UTILS_NORMALIZE_RECORDS_TASKS = require('../utils/tasks/utils_normalize_records_tasks');
+// const INDEXER_INDEX_TASKS = require("../indexer/tasks/indexer_index_tasks");
+// const INDEXER_DISPLAY_RECORD_TASKS = require("../indexer/tasks/indexer_display_record_tasks");
+// const HELPER = require("../indexer/helper");
+// const INDEXER_DISPLAY_RECORD_TASKS = require("../indexer/tasks/indexer_display_record_tasks");
+const INDEX_RECORD_LIB = require('../libs/index_record_lib');
 
 /**
  * Re-indexes repository records
@@ -44,14 +54,14 @@ exports.reindex = (index, callback) => {
             where_obj.is_indexed = 0;
             where_obj.is_active = 1;
             where_obj.is_published = 1;
-            index = CONFIG.elasticSearchFrontIndex;
+            index = ES_CONFIG.elasticsearch_front_index;
         } else if (index === 'backend') {
             where_obj.is_indexed = 0;
             where_obj.is_active = 1;
-            index = CONFIG.elasticSearchBackIndex;
+            index = ES_CONFIG.elasticsearch_back_index;
         }
 
-        const TASKS = new REINDEX_TASKS(CONFIG.elasticSearch, index, DB, REPO_OBJECTS);
+        const TASKS = new REINDEX_TASKS(ES_CONFIG.elasticsearch_back_index, index, DB, REPO_OBJECTS);
         let is_deleted;
         let is_created = true;
         let is_indexing;
@@ -100,6 +110,248 @@ exports.reindex = (index, callback) => {
 };
 
 /**
+ * Normalize collection metadata and index records
+ * @param callback
+ */
+exports.normalize_collection_records = function (callback) {
+
+    (async () => {
+
+        console.log('normalizing collection records...');
+
+        const INDEX_RECORD_TASKS = new INDEX_RECORD_LIB(DB, REPO_OBJECTS);
+        const NORMALIZE_RECORDS_TASK = new UTILS_NORMALIZE_RECORDS_TASKS(DB, REPO_OBJECTS);
+        let token = await NORMALIZE_RECORDS_TASK.get_session_token();
+        let result = await NORMALIZE_RECORDS_TASK.reset_updated_flags();
+
+        if (result === false) {
+            // TODO: log failure
+            console.log('is_updated flag reset failed.');
+            // Stop process
+            return false;
+        }
+
+        let timer = setInterval(async () => {
+
+            try {
+
+                let uri;
+                let uuid;
+                let data;
+                let where_obj = {};
+                where_obj.object_type = 'collection';
+                where_obj.is_updated = 0;
+                where_obj.is_active = 1;
+
+                data = await NORMALIZE_RECORDS_TASK.get_record_uri(where_obj);
+
+                if (data.length === 0) {
+                    clearInterval(timer);
+                    console.log('Normalization complete.');
+                    // TODO: log completion
+                    return false;
+                }
+
+                uuid = data[0].uuid;
+                uri = VALIDATOR.unescape(data[0].uri);
+                console.log(uri);
+
+                let record = await NORMALIZE_RECORDS_TASK.get_aspace_record(uri, token);
+                console.log(record.metadata);
+
+                // update metadata
+                let is_updated = await NORMALIZE_RECORDS_TASK.update_collection_data(uuid, uri, record.metadata)
+
+                if (is_updated === true) {
+                    let result = await NORMALIZE_RECORDS_TASK.update_status(uuid);
+                    console.log(result);
+                } else {
+                    console.log(uuid + 'not updated');
+                }
+
+                /*
+                record = await INDEX_RECORD_TASKS.get_index_record_data(uuid);
+
+                if (record.metadata === null) {
+                    console.log('no metadata record for ' + uuid);
+                    result = await NORMALIZE_RECORDS_TASK.update_status(uuid);
+                    console.log(result);
+                    return false;
+                }
+
+                console.log('Processing: ', uuid);
+
+                let metadata = JSON.parse(record.metadata);
+
+                if (metadata.identifiers !== undefined && metadata.identifiers[0].type === 'local') {
+                    NORMALIZE_RECORDS_TASK.save_call_number(uuid, metadata.identifiers[0].identifier);
+                }
+
+                if (record.is_compound === 1) {
+
+                    let index_record = JSON.parse(record.index_record);
+
+                    if (index_record.display_record !== undefined && index_record.display_record.parts !== undefined) {
+
+                        let compound_parts = JSON.stringify(index_record.display_record.parts);
+                        let where_obj = {
+                            uuid: uuid,
+                            is_compound: 1
+                        };
+
+                        NORMALIZE_RECORDS_TASK.save_parts(where_obj, compound_parts);
+                    }
+                }
+
+                if (record.handle !== null && record.handle.length > 0) {
+                    await NORMALIZE_RECORDS_TASK.update_handle(uuid, record.handle.replace('http://', 'https://'));
+                }
+
+                if (record.object_type === 'collection') {
+
+                    let new_record = await INDEX_RECORD_TASKS.create_index_record(record);
+
+                    console.log(uuid + ' normalized.');
+
+                    let where_obj = {
+                        uuid: uuid
+                    };
+
+                    let is_updated = await NORMALIZE_RECORDS_TASK.update_index_record(where_obj, new_record);
+
+                    if (is_updated === true) {
+                        let result = await NORMALIZE_RECORDS_TASK.update_status(uuid);
+                        console.log(result);
+                    }
+                } else {
+                    let result = await NORMALIZE_RECORDS_TASK.update_status(uuid);
+                    console.log(result);
+                }
+
+                 */
+
+            } catch (error) {
+                // TODO: log error
+                console.log(error.message);
+            }
+
+        }, 8000); // TIMERS_CONFIG.index_timer
+
+    })();
+
+    callback({
+        status: 201,
+        message: 'Normalizing repository collection records...'
+    });
+};
+
+/**
+ * Normalize index records
+ * @param callback
+ */
+exports.normalize_records = function (callback) {
+
+    (async () => {
+
+        console.log('normalizing records...');
+        const INDEX_RECORD_TASKS = new INDEX_RECORD_LIB(DB, REPO_OBJECTS);
+        const NORMALIZE_RECORDS_TASK = new UTILS_NORMALIZE_RECORDS_TASKS(DB, REPO_OBJECTS);
+        let result = await NORMALIZE_RECORDS_TASK.reset_updated_flags();
+
+        if (result === false) {
+            // TODO: log failure
+            console.log('is_updated flag reset failed.');
+            // Stop index processs[
+            return false;
+        }
+
+        let timer = setInterval(async () => {
+
+            try {
+
+                let uuid;
+                let result;
+                let record;
+
+                uuid = await NORMALIZE_RECORDS_TASK.get_record_uuid({
+                    is_updated: 0,
+                    is_active: 1
+                });
+
+                if (uuid === undefined || uuid === 0) {
+                    clearInterval(timer);
+                    console.log('Normalization complete.');
+                    // TODO: log completion
+                    return false;
+                }
+
+                record = await INDEX_RECORD_TASKS.get_index_record_data(uuid);
+
+                if (record.metadata === null) {
+                    console.log('no metadata record for ' + uuid);
+                    result = await NORMALIZE_RECORDS_TASK.update_status(uuid);
+                    console.log(result);
+                    return false;
+                }
+
+                console.log('Processing: ', uuid);
+
+                let metadata = JSON.parse(record.metadata);
+
+                if (metadata.identifiers !== undefined && metadata.identifiers[0].type === 'local') {
+                    NORMALIZE_RECORDS_TASK.save_call_number(uuid, metadata.identifiers[0].identifier);
+                }
+
+                if (record.is_compound === 1) {
+
+                    let index_record = JSON.parse(record.index_record);
+
+                    if (index_record.display_record !== undefined && index_record.display_record.parts !== undefined) {
+
+                        let compound_parts = JSON.stringify(index_record.display_record.parts);
+
+                        NORMALIZE_RECORDS_TASK.save_parts({
+                            uuid: uuid,
+                            is_compound: 1
+                        }, compound_parts);
+                    }
+                }
+
+                if (record.handle !== null && record.handle.length > 0) {
+                    await NORMALIZE_RECORDS_TASK.update_handle(uuid, record.handle.replace('http://', 'https://'));
+                }
+
+                let new_record = await INDEX_RECORD_TASKS.create_index_record(record);
+
+                console.log(uuid + ' normalized.');
+
+                let is_updated = await NORMALIZE_RECORDS_TASK.update_index_record({
+                    uuid: uuid
+                }, new_record);
+
+                if (is_updated === true) {
+                    let result = await NORMALIZE_RECORDS_TASK.update_status(uuid);
+                    console.log(result);
+                }
+
+            } catch (error) {
+                // TODO: log error
+                console.log(error.message);
+            }
+
+        }, 100); // TIMERS_CONFIG.index_timer
+
+    })();
+
+    callback({
+        status: 201,
+        message: 'Normalizing repository records...'
+    });
+};
+
+// TODO: update collection metadata records - use aspace plugin
+
+/**
  * Retrieves files
  * @param req
  * @param callback
@@ -142,7 +394,7 @@ exports.batch_convert = function (req, callback) {
                     if (data.length === 0) {
                         clearInterval(timer1);
                         console.log('Compound objects complete!');
-                        setTimeout(function() {
+                        setTimeout(function () {
                             console.log('Starting conversions...');
                             convert();
                         }, 35000);
@@ -229,7 +481,7 @@ exports.batch_convert = function (req, callback) {
         };
 
         DB(REPO_OBJECTS)
-            .select('uuid','file_name')
+            .select('uuid', 'file_name')
             .where(whereObj)
             .orderBy('id', 'desc')
             .then(function (data) {
@@ -312,7 +564,7 @@ exports.batch_convert = function (req, callback) {
     function convert() {
 
         DBQ(CONVERT_QUEUE)
-            .select('uuid','full_path', 'object_name', 'mime_type')
+            .select('uuid', 'full_path', 'object_name', 'mime_type')
             .then(function (data) {
 
                 let timer = setInterval(function () {
@@ -356,7 +608,7 @@ exports.batch_fix = function () {
         importlib = require('../libs/transfer-ingest');
 
     async function get_display_records() {
-        return await DB(REPO_OBJECTS).select('sip_uuid','display_record').where({object_type: 'object'});
+        return await DB(REPO_OBJECTS).select('sip_uuid', 'display_record').where({object_type: 'object'});
     }
 
     function find_broken_display_records(data) {
@@ -366,7 +618,7 @@ exports.batch_fix = function () {
             if (data.length === 0) {
                 clearInterval(timer);
                 console.log('done');
-                setTimeout(function() {
+                setTimeout(function () {
                     fix_broken_display_records();
                 }, 5000);
                 return false;
@@ -445,7 +697,7 @@ exports.batch_fix = function () {
                     if (data.length === 0) {
                         clearInterval(timer);
                         console.log('done!');
-                        setTimeout(function() {
+                        setTimeout(function () {
                             fix_display_records();
                         }, 5000);
 
@@ -462,7 +714,7 @@ exports.batch_fix = function () {
                         .update({
                             object_path: object_path
                         })
-                        .then(function(data) {
+                        .then(function (data) {
                             console.log(data);
                         })
                         .catch(function (error) {
@@ -507,7 +759,7 @@ exports.batch_fix = function () {
                         .update({
                             display_record: JSON.stringify(display_record)
                         })
-                        .then(function(data) {
+                        .then(function (data) {
                             console.log(data);
                         })
                         .catch(function (error) {
@@ -550,7 +802,7 @@ exports.batch_fix = function () {
                         .update({
                             display_record: display_record
                         })
-                        .then(function(data) {
+                        .then(function (data) {
                             console.log(data);
                         })
                         .catch(function (error) {
@@ -567,7 +819,7 @@ exports.batch_fix = function () {
 
     }
 
-    (async function(){
+    (async function () {
 
         try {
 
@@ -575,14 +827,14 @@ exports.batch_fix = function () {
             find_broken_display_records(data);
             // update_display_records();
 
-        } catch(error) {
+        } catch (error) {
             console.log(error);
         }
 
     })();
 };
 
-exports.save_call_number = function(req, callback) {
+exports.save_call_number = function (req, callback) {
 
     DB(REPO_OBJECTS)
         .select('uuid', 'display_record')
@@ -615,7 +867,7 @@ exports.save_call_number = function(req, callback) {
                     return false;
                 }
 
-                for (let i=0;i<identifiers.length;i++) {
+                for (let i = 0; i < identifiers.length; i++) {
 
                     if (identifiers[i].type === 'local') {
 
@@ -628,7 +880,7 @@ exports.save_call_number = function(req, callback) {
                             .update({
                                 call_number: identifiers[i].identifier
                             })
-                            .then(function(data) {
+                            .then(function (data) {
                                 // console.log(data);
                             })
                             .catch(function (error) {

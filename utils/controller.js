@@ -18,7 +18,7 @@
 
 'use strict';
 
-const UTILS = require('../utils/model'),
+const MODEL = require('../utils/model'),
     CACHE = require('../libs/cache');
 
 exports.default = function (req, res) {
@@ -31,7 +31,19 @@ exports.reindex = function (req, res) {
 
     let index = req.body.index;
 
-    UTILS.reindex(index, function (data) {
+    MODEL.reindex(index, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.normalize_records = function (req, res) {
+    MODEL.normalize_records(function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.normalize_collection_records = function (req, res) {
+    MODEL.normalize_collection_records(function (data) {
         res.status(data.status).send(data.data);
     });
 };
@@ -44,19 +56,19 @@ exports.clear_cache = function (req, res) {
 };
 
 exports.batch_convert = function (req, res) {
-    UTILS.batch_convert(req, function (data) {
+    MODEL.batch_convert(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
 
 exports.save_call_number = function (req, res) {
-    UTILS.save_call_number(req, function (data) {
+    MODEL.save_call_number(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
 
 exports.batch_fix = function (req, res) {
-    UTILS.batch_fix(req, function (data) {
+    MODEL.batch_fix(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };

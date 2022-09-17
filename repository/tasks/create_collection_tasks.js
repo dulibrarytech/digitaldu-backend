@@ -19,7 +19,7 @@
 'use strict';
 
 const {v4: uuidv4} = require('uuid');
-const DISPLAY_RECORD_LIB = require('../../libs/display_record');
+const INDEX_RECORD_LIB = require('../../libs/index_record_lib');
 const HELPER = require('../../repository/helper');
 const LOGGER = require('../../libs/log4');
 
@@ -34,7 +34,7 @@ const Create_collection_tasks = class {
     constructor(DB, TABLE, ARCHIVESSPACE_LIB, HANDLES_LIB) { // TODO: pass in archivesspace and handle configs into respective class constructors
         this.DB = DB;
         this.TABLE = TABLE;
-        this.DISPLAY_RECORD_LIB = new DISPLAY_RECORD_LIB(this.DB, this.TABLE);
+        this.DISPLAY_RECORD_LIB = new INDEX_RECORD_LIB(this.DB, this.TABLE);
         this.ARCHIVESSPACE_LIB = ARCHIVESSPACE_LIB;
         this.HANDLES_LIB = HANDLES_LIB;
     }
@@ -186,14 +186,14 @@ const Create_collection_tasks = class {
 
     /**
      * Creates display record for repository database and search index
-     * @param obj
+     * @param data object
      * returns Promise string
      */
-    create_display_record = (obj) => {
+    create_display_record = (data) => {
         try {
-            return this.DISPLAY_RECORD_LIB.create_display_record(obj);
+            return this.INDEX_RECORD_LIB.create_index_record(data);
         } catch (error) {
-            LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks/create_display_record)] ' + error);
+            LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks/create_display_record)] ' + error.message);
             return error;
         }
     }

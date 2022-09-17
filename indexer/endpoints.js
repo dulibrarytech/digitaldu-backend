@@ -24,16 +24,16 @@ const ENDPOINT = '/indexer/';
 const ENDPOINTS = {
     indexer: {
         indexer_index_records: {
-            endpoint: `${PREFIX}${VERSION}${ENDPOINT}index_records`,
+            endpoint: `${PREFIX}${VERSION}${ENDPOINT}index`,
             description: 'Allows us to perform a full index, index a single record and delete a record',
             post: {
-                description: 'Single record index',
+                description: 'Single repository record index',
                 params: 'token or api_key',
-                body: 'uuid'
+                body: 'uuid, is_published=true/false'
             },
             put: {
-                description: 'Full reindex',
-                params: 'token or api_key'
+                description: 'Full repository reindex',
+                params: 'token or api_key, optional param (index) === "frontend" or "backend"'
             },
             delete: {
                 description: 'Deletes record',

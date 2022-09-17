@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2022 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,11 +18,11 @@
 
 'use strict';
 
-const MODEL = require('../repository/model'),
-    SERVICE = require('../repository/service'),
-    CACHE = require('../libs/cache'),
-    PATH = require('path'),
-    VALIDATOR = require('validator');
+const MODEL = require('../repository/model');
+const SERVICE = require('../repository/service');
+const CACHE = require('../libs/cache');
+const PATH = require('path');
+const VALIDATOR = require('validator');
 
 exports.ping = (req, res) => {
     SERVICE.ping_services((data) => {

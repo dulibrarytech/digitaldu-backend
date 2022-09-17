@@ -176,20 +176,19 @@ const objectsModule = (function () {
 
     /**
      * Unpublishes admin objects
-     * @param pid
+     * @param uuid
      * @param type
      */
-    obj.unpublishObject = function (pid, type) {
+    obj.unpublishObject = function (uuid, type) {
 
         let obj = {
-            pid: pid,
+            uuid: uuid,
             type: type
         };
 
-        domModule.html('#unpublish-' + pid, '<em><i class="fa fa-exclamation-circle"></i> Unpublishing...</em>');
+        domModule.html('#unpublish-' + uuid, '<em><i class="fa fa-exclamation-circle"></i> Unpublishing...</em>');
 
-        // endpoints.repo_unpublish
-        let url = api + endpoints.repo_suppress,
+        let url = api + endpoints.repository.repo_suppress.endpoint,
             token = authModule.getUserToken(),
             request = new Request(url, {
                 method: 'POST',
@@ -202,17 +201,17 @@ const objectsModule = (function () {
             });
 
         const callback = function (response) {
-
+            console.log(response);
             if (response.status === 201) {
 
                 setTimeout(function () {
-                    domModule.html('#unpublish-' + pid, null);
+                    domModule.html('#unpublish-' + uuid, null);
                     let unpublished = '';
                     unpublished += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
-                    unpublished += '<p><a id="publish-' + pid + '" href="#' + pid + '" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(pid) + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
-                    unpublished += '<p><a href="/dashboard/object/delete?pid=' +  DOMPurify.sanitize(pid) + '"><i class="fa fa-trash"></i>&nbsp;Delete</a></p>';
-                    domModule.html('#status-published-' + pid, unpublished);
-                    domModule.id('status-published-' + pid, 'status-unpublished-' + pid);
+                    unpublished += '<p><a id="publish-' + uuid + '" href="#' + uuid + '" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(uuid) + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
+                    unpublished += '<p><a href="/dashboard/object/delete?uuid=' +  DOMPurify.sanitize(uuid) + '"><i class="fa fa-trash"></i>&nbsp;Delete</a></p>';
+                    domModule.html('#status-published-' + uuid, unpublished);
+                    domModule.id('status-published-' + uuid, 'status-unpublished-' + uuid);
                 }, 5000);
 
 

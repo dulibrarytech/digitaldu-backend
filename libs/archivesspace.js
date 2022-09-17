@@ -81,7 +81,8 @@ const ArchivesSpace_lib = class {
     };
 
     /**
-     * Gets session token from Archivesspace
+     * Gets session token from ArchivesSpace
+     * @return token <string>
      */
     get_session_token = () => {
 
@@ -106,11 +107,7 @@ const ArchivesSpace_lib = class {
                     });
 
                     if (response.status === 200) {
-                        resolve({
-                            data: JSON.stringify(response.data)
-                        });
-
-                        return false;
+                        resolve(response.data.session);
                     }
 
                 } catch (error) {
@@ -181,28 +178,28 @@ const ArchivesSpace_lib = class {
      * @param uri
      * @param token
      */
-    get_archival_object_record = (uri, token) => {
+    get_record = (uri, token) => { // get_archival_object_record
 
         let promise = new Promise((resolve, reject) => {
 
-            let api_url = this.ARCHIVESSPACE_HOST + uri + '/repository';
+            let api_endpoint = this.ARCHIVESSPACE_HOST + uri + '/repository';
 
             (async() => {
 
                 try {
 
-                    let response = await HTTP.get(api_url, {
+                    let response = await HTTP.get(api_endpoint, {
                         timeout: TIMEOUT,
                         headers: {
                             'Content-Type': 'application/json',
                             'X-ArchivesSpace-Session': token
                         }
                     });
-                    console.log(response);
+
                     if (response.status === 200) {
 
                         resolve({
-                            metadata: response
+                            metadata: response.data
                         });
 
                         return false;

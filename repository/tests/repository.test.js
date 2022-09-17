@@ -62,6 +62,8 @@ it.concurrent('Repository create UUID task', async function () {
     await expect(LIB.create_uuid()).resolves.toBeTypeOf('string');
 }, 10000);
 
+// TODO: suppress child records
+
 it.concurrent('Repository create handle task (Integration Test)', async function () {
     let uuid = 'test-du-repo-2022-task'
     console.log(await LIB.create_handle(uuid));

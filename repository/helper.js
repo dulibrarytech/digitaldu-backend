@@ -46,7 +46,7 @@ exports.publish_record = (match_phrase, callback) => {
         };
 
         response = await HTTP.post({
-            endpoint: ENDPOINTS().indexer.indexer_publish_records,
+            endpoint: ENDPOINTS().indexer.indexer_publish_records.endpoint,
             data: data
         });
 
@@ -78,7 +78,7 @@ exports.index = (uuid, callback) => {
         };
 
         response = await HTTP.post({
-            endpoint: ENDPOINTS().indexer.indexer_index_records,
+            endpoint: ENDPOINTS().indexer.indexer_index_records.endpoint,
             data: data
         });
 
@@ -104,7 +104,7 @@ exports.del = (uuid, callback) => {
     (async () => {
 
         let response = await HTTP.delete({
-            endpoint: ENDPOINTS().indexer.indexer_index_records,
+            endpoint: ENDPOINTS().indexer.indexer_index_records.endpoint,
             params: {
                 uuid: uuid
             }

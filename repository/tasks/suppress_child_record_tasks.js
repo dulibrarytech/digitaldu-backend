@@ -95,7 +95,7 @@ const Suppress_child_record_tasks = class {
                             return false;
                         }
 
-                        TASK = new DISPLAY_RECORD_TASKS(record.uuid);
+                        TASK = new DISPLAY_RECORD_TASKS(record.uuid, this.DB, this.TABLE);
                         TASK.update();
 
                         // remove child records from public index

@@ -29,30 +29,18 @@ const API_KEY = TOKEN_CONFIG.api_key;
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
 
-const SEARCH_TASKS = require('../tasks/search_tasks');
 const ES = require('elasticsearch');
+const INDEXER_DISPLAY_RECORD_TASKS = require('../tasks/indexer_display_record_tasks');
+const INDEXER_INDEX_TASKS = require('../tasks/indexer_index_tasks');
 const CONFIG = require('../../test/elasticsearch_config')();
 const CLIENT = new ES.Client({
-        host: CONFIG.elasticsearch_host
-    });
-const LIB = new SEARCH_TASKS(CLIENT, CONFIG);
+    host: CONFIG.elasticsearch_host
+});
+const LIB = new INDEXER_DISPLAY_RECORD_TASKS(CLIENT, CONFIG);
 
-it('Search Tasks search (Unit)', async function () {
+it('Indexer Tasks search (Unit)', async function () {
     let q = 'dogs';
     let page = 1;
     let total_on_page = undefined;
     await expect(LIB.search(q, page, total_on_page)).resolves.toBeDefined();
-}, 10000);
-
-it('Search Tasks get_records (Unit)', async function () {
-    let is_member_of_collection = 'codu:root';
-    let page = 1;
-    let total_on_page;
-    let sort;
-    await expect(LIB.get_records(is_member_of_collection, page, total_on_page, sort)).resolves.toBeDefined();
-}, 10000);
-
-it('Search Tasks get_suppressed_records (Unit)', async function () {
-    let uuid = 'codu:root';
-    await expect(LIB.get_suppressed_records(uuid)).resolves.toBeDefined();
 }, 10000);

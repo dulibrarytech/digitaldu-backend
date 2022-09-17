@@ -62,10 +62,10 @@ const Search_tasks = class {
                 size: total_on_page,
                 index: this.CONFIG.elasticsearch_back_index,
                 q: q
-            }).then(function (body) {
+            }).then((body) => {
                 resolve(body.hits);
-            }, function (error) {
-                LOGGER.module().error('ERROR: [/search/tasks (search)] unable to search index');
+            }, (error) => {
+                LOGGER.module().error('ERROR: [/search/tasks (search)] unable to search index ' + error.message);
                 reject(false);
             });
 

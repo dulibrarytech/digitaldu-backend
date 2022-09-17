@@ -16,7 +16,7 @@
 
  */
 
-const DISPLAY_RECORD_LIB = require('../../libs/display_record');
+const INDEX_RECORD_LIB = require('../../libs/index_record_lib');
 const HELPER = require('../../repository/helper');
 const LOGGER = require('../../libs/log4');
 
@@ -31,7 +31,7 @@ const Display_record_tasks = class {
         this.uuid = uuid;
         this.DB = DB;
         this.TABLE = TABLE;
-        this.DRL = new DISPLAY_RECORD_LIB(this.DB, this.TABLE);
+        this.DRL = new INDEX_RECORD_LIB(this.DB, this.TABLE);
     }
 
     /**
@@ -45,15 +45,14 @@ const Display_record_tasks = class {
 
                 try {
                     let data;
-                    let display_record;
+                    let index_record;
                     data = await this.get_display_record_data(this.uuid);
-                    display_record = await this.create_display_record(data);
-                    await this.update_display_record(display_record);
-                    await this.reindex_display_record(JSON.parse(display_record));
+                    index_record = await this.create_index_record(data);
+                    await this.update_display_record(index_record);
+                    await this.reindex_display_record(JSON.parse(index_record));
                     resolve(true);
                 } catch (error) {
-                    console.log(error);
-                    LOGGER.module().fatal('FATAL: [/repository/tasks/display_record_tasks (update)] Unable to get display data ' + error);
+                    LOGGER.module().fatal('FATAL: [/repository/tasks/display_record_tasks (update)] Unable to get display data ' + error.message);
                     reject(false);
                 }
 
@@ -82,8 +81,6 @@ const Display_record_tasks = class {
             } catch (error) {
                 reject(error);
             }
-
-
         });
 
         return promise.then((data) => {
@@ -96,14 +93,14 @@ const Display_record_tasks = class {
      * @param data
      * returns Promise
      */
-    create_display_record = (data) => {
+    create_index_record = (data) => {
 
         let promise = new Promise((resolve, reject) => {
 
             try {
 
                 (async () => {
-                    resolve(this.DRL.create_display_record(data));
+                    resolve(this.DRL.create_index_record(data));
                 })();
 
             } catch (error) {

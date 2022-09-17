@@ -16,6 +16,7 @@
 
 */
 
+// TODO: move to import module tasks
 const HTTP = require('../libs/http'),
     DB = require('../config/db')(),
     DBQ = require('../config/dbqueue')(),

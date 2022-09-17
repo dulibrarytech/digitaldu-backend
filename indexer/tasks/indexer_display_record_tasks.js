@@ -16,38 +16,39 @@
 
  */
 
-const DISPLAY_RECORD_LIB = require('../../libs/display_record');
+const INDEX_RECORD_LIB = require('../../libs/index_record_lib');
 const LOGGER = require('../../libs/log4');
 
 /**
  * Object contains tasks used to index record(s)
  * @param DB
  * @param TABLE
- * @type {Indexer_tasks}
+ * @type {Indexer_display_record_tasks}
  */
-const Indexer_tasks = class {
+const Indexer_display_record_tasks = class {
 
-    constructor(uuid, DB, TABLE) {
-        this.uuid = uuid;
+    constructor(DB, TABLE) {
         this.DB = DB;
         this.TABLE = TABLE;
-        this.DRL = new DISPLAY_RECORD_LIB(this.DB, this.TABLE);
+        this.DRL = new INDEX_RECORD_LIB(this.DB, this.TABLE);
     }
 
     /**
-     * Retrieves display record data by uuid
+     * Retrieves index display record data by uuid
+     * @param uuid
      */
-    get_index_display_record_data = () => {
+    get_index_display_record_data = (uuid) => {
 
         let promise = new Promise((resolve, reject) => {
 
             try {
 
                 (async () => {
-                    resolve(await this.DRL.get_db_display_record_data(this.uuid));
+                    resolve(await this.DRL.get_index_display_record_data(uuid));
                 })();
 
             } catch (error) {
+                LOGGER.module().error('ERROR: [/indexer/indexer_display_record_tasks (get_index_display_record_data)] unable to get index db record ' + error.message);
                 reject(error);
             }
 
@@ -58,16 +59,17 @@ const Indexer_tasks = class {
         });
     }
 
-    /**
+    /** TODO?
      * Creates display record for repository database and search index
      * @param obj
      * returns Promise string
-     */
+
     create_display_record = (obj) => {
 
         let promise = new Promise((resolve, reject) => {
 
-            DR.create_display_record(obj, (display_record) => {
+            // TODO  test
+            this.DRL.create_display_record(obj, (display_record) => {
 
                 if (typeof display_record === 'object') {
                     LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks/create_display_record)]');
@@ -84,6 +86,7 @@ const Indexer_tasks = class {
             return display_record;
         });
     }
+     */
 };
 
-module.exports = Indexer_tasks;
+module.exports = Indexer_display_record_tasks;

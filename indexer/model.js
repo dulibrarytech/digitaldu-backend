@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2022 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -17,38 +17,44 @@
  */
 
 'use strict';
-// TODO:
-const CONFIG = require('../config/config'),
-    DB = require('../config/db_config')(),
-    HELPER = require('../indexer/helper'),
-    SERVICE = require('../indexer/service'),
-    INDEXER_TASKS = require('../indexer/tasks/indexer_tasks'),
-    // MODS = require('../libs/display-record'), // TODO: rename const variable to DRT
-    LOGGER = require('../libs/log4'),
-    INDEX_TIMER = CONFIG.indexTimer,
-    REPO_OBJECTS = 'tbl_objects';
 
-// TODO: figure out how to write tests for these functions
+const ES = require('elasticsearch');
+const TIMERS_CONFIG = require('../config/timers_config')();
+const ES_CONFIG = require('../config/elasticsearch_config')();
+const DB = require('../config/db_config')();
+const HELPER = require('../indexer/helper');
+const SERVICE = require('../indexer/service');
+const INDEXER_DISPLAY_RECORD_TASKS = require('../indexer/tasks/indexer_display_record_tasks');
+const INDEXER_INDEX_TASKS = require('../indexer/tasks/indexer_index_tasks');
+const DB_TABLES = require('../config/db_tables_config')();
+const REPO_OBJECTS = DB_TABLES.repo.repo_objects;
+const LOGGER = require('../libs/log4');
+const CLIENT = new ES.Client({
+        host: ES_CONFIG.elasticsearch_host
+    });
+
 /**
- * indexes record
+ * Indexes single repository record
  * @param uuid
- * @param index_name
+ * @param is_published
  * @param callback
  * @returns {boolean}
  */
-exports.index_record = function (uuid, index_name, callback) {
+exports.index_record = function (uuid, is_published, callback) {
 
     (async () => {
-        const TASK = new INDEXER_TASKS(uuid, DB, REPO_OBJECTS);
-        let record = await TASK.get_index_display_record_data();
 
-        record = HELPER.uuid_pid(record);
+        try {
 
-        SERVICE.index_record({
-            index: index_name,
-            id: record.pid,
-            body: record
-        }, (response) => {
+            const DISPLAY_RECORD_TASKS = new INDEXER_DISPLAY_RECORD_TASKS(DB, REPO_OBJECTS);
+            const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, REPO_OBJECTS, CLIENT, ES_CONFIG);
+            let record = await DISPLAY_RECORD_TASKS.get_index_display_record_data(uuid);
+
+            if (record.pid === undefined) {
+                record = HELPER.uuid_pid(record);
+            }
+
+            let response = await INDEX_TASKS.index_record(uuid, is_published, record);
 
             if (response.result === 'created' || response.result === 'updated') {
 
@@ -57,140 +63,102 @@ exports.index_record = function (uuid, index_name, callback) {
                     message: 'record indexed'
                 });
 
-            } else {
-
-                LOGGER.module().error('ERROR: [/indexer/model module (get_index_record)] unable to index record');
-
-                callback({
-                    status: 200,
-                    message: 'record not indexed'
-                });
             }
-        });
+
+        } catch (error) {
+
+            callback({
+                status: 200,
+                message: 'Unable to index record'
+            });
+        }
+
     })();
 };
 
 /**
  * Indexes all repository records
- * @param index_name
+ * @param index
  * @param callback
  * @returns {boolean}
  */
-exports.index_records = function (index_name, callback) {
+exports.index_records = function (index, callback) {
 
-    let is_frontend = false;
+    (async () => {
 
-    if (index_name !== undefined) {
-        is_frontend = true;
-        index_name = req.body.index_name;
-    } else {
-        index_name = CONFIG.elasticSearchBackIndex;
-    }
+        console.log('indexing...');
 
-    function index (index_name) {
-
+        const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, REPO_OBJECTS, CLIENT, ES_CONFIG);
+        const DISPLAY_RECORD_TASKS = new INDEXER_DISPLAY_RECORD_TASKS(DB, REPO_OBJECTS);
+        let is_published = false;
         let where_obj = {};
-            where_obj.is_indexed = 0;
-            where_obj.is_active = 1;
 
-        if (is_frontend === true) {
-            where_obj.is_published = 1;
+        where_obj.is_indexed = 0;
+        where_obj.is_active = 1;
+
+        if (index === undefined) {
+            index = 'backend';
         }
 
-        DB(REPO_OBJECTS)
-            .select('uuid')
-            .where(where_obj)
-            .whereNot({
-                display_record: null
-            })
-            .limit(1)
-            .then((data) => {
+        if (index === 'frontend') {
+            where_obj.is_published = 1;
+            where_obj.is_active = 1;
+            is_published = true;
+        }
 
-                if (data === undefined || data.length === 0) {
+        let result = await INDEX_TASKS.reset_indexed_flags();
+
+        if (result === false) {
+            // TODO: log failure
+            console.log('is_indexed flag reset failed.');
+            // Stop index processs
+            return false;
+        }
+
+        let timer = setInterval(async () => {
+
+            try {
+
+                let uuid;
+                let result;
+                let record;
+                let response;
+
+                uuid = await INDEX_TASKS.get_record_uuid(where_obj);
+
+                if (uuid === 0) {
+                    clearInterval(timer);
+                    console.log('Full re-indexing complete.');
+                    // TODO: log completion
                     return false;
                 }
 
-                let uuid = data[0].uuid;
+                record = await DISPLAY_RECORD_TASKS.get_index_display_record_data(uuid);
 
-                // use task obj
-                MODS.get_index_display_record_data(uuid, function(record) {
+                if (record.pid === undefined) {
+                    record = HELPER.uuid_pid(record);
+                }
 
-                    if (record === 'no_data') {
-                        LOGGER.module().error('ERROR: [/indexer/model module (MODS.get_index_display_record_data)] record not found.');
-                        return false;
+                response = await INDEX_TASKS.index_record(uuid, is_published, record);
+
+                if (response.result === 'created' || response.result === 'updated') {
+                    console.log(uuid + ' indexed.');
+                    result = await INDEX_TASKS.update_indexing_status(uuid);
+
+                    if (result !== true) {
+                        // TODO: log
+                        console.log('index status update failed.');
                     }
+                }
 
-                    if (record.pid === undefined) {
-                        record = HELPER.uuid_pid(record);
-                    }
+            } catch (error) {
+                // TODO: log error
+                console.log(error.message);
+            }
 
-                    console.log('indexing ', record.pid + ' into ' + index_name);
+        }, TIMERS_CONFIG.index_timer);
 
-                    // Index_record
-                    SERVICE.index_record({
-                        index: index_name,
-                        id: record.pid,
-                        body: record
-                    }, function (response) {
-
-                        if (response.result === 'created' || response.result === 'updated') {
-
-                            DB(REPO_OBJECTS)
-                                .where({
-                                    uuid: record.pid
-                                })
-                                .update({
-                                    is_indexed: 1
-                                })
-                                .then(function (data) {
-
-                                    if (data === 1) {
-
-                                        setTimeout(function () {
-                                            // index next record
-                                            index(index_name);
-                                        }, INDEX_TIMER);
-
-                                    } else {
-                                        LOGGER.module().error('ERROR: [/indexer/model module (index_records)] more than one record was updated');
-                                    }
-
-                                })
-                                .catch(function (error) {
-                                    LOGGER.module().fatal('FATAL: [/indexer/model module (index_records)] unable to update is_indexed field ' + error);
-                                    throw 'FATAL: [/indexer/model module (index_records)] unable to update is_indexed field ' + error;
-                                });
-
-                        } else {
-                            LOGGER.module().error('ERROR: [/indexer/model module (index_records)] unable to index record');
-                        }
-                    });
-                });
-            })
-            .catch(function (error) {
-                LOGGER.module().error('ERROR: [/indexer/model module (index_records)] unable to get record ' + error);
-                throw error;
-            });
-    }
-
-    // update flag
-    // reset is_indexed fields
-    DB(REPO_OBJECTS)
-        .where({
-            is_indexed: 1,
-            is_active: 1
-        })
-        .update({
-            is_indexed: 0,
-            is_active: 1
-        })
-        .then(function (data) {
-            index(index_name);
-        })
-        .catch(function (error) {
-            LOGGER.module().error('ERROR: [/indexer/model module (index_records)] unable to reset is_indexed fields ' + error);
-            throw error;
-        });
+    })();
 
     callback({
         status: 201,
@@ -220,11 +188,11 @@ exports.publish_records = function (req, callback) {
     SERVICE.reindex({
         body: {
             'source': {
-                'index': CONFIG.elasticSearchBackIndex,
+                'index': ES_CONFIG.elasticsearch_back_index,
                 'query': query
             },
             'dest': {
-                'index': CONFIG.elasticSearchFrontIndex
+                'index': ES_CONFIG.elasticsearch_front_index
             }
         }
     }, function (response) {
@@ -236,7 +204,7 @@ exports.publish_records = function (req, callback) {
     });
 };
 
-/**
+/** // TODO:
  * Removes record from public index
  * @param uuid
  * @param index
@@ -247,9 +215,9 @@ exports.unindex_record = function (uuid, index, callback) {
     let index_type;
 
     if (index === 'backend') {
-        index_type = CONFIG.elasticSearchBackIndex;
+        index_type = ES_CONFIG.elasticsearch_back_index;
     } else if (index === 'frontend') {
-        index_type = CONFIG.elasticSearchFrontIndex;
+        index_type = ES_CONFIG.elasticsearch_front_index;
     } else {
         callback({
             status: 500,

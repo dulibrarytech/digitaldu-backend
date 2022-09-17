@@ -35,6 +35,12 @@ module.exports = function (app) {
     app.route(ENDPOINTS().utils.utils_reindex)
         .post(TOKEN.verify, UTILS.reindex);
 
+    app.route('/normalize')
+        .post(UTILS.normalize_records);
+
+    app.route('/normalize/collections')
+        .post(UTILS.normalize_collection_records);
+
     app.route(ENDPOINTS().utils.utils_clear_cache)
         .post(TOKEN.verify, UTILS.clear_cache);
 

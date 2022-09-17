@@ -18,17 +18,26 @@
 
 'use strict';
 
-const CONFIG = require('../config/config'),
-    LOGGER = require('../libs/log4'),
-    ASYNC = require('async'),
-    ES = require('elasticsearch'),
-    FS = require('fs'),
-    ES_MAPPINGS = './indexer/mappings.json',
-    CLIENT = new ES.Client({
-        host: CONFIG.elasticSearch,
+const CONFIG = require('../config/config');
+const LOGGER = require('../libs/log4');
+const ASYNC = require('async');
+const ES = require('elasticsearch');
+const ES_CONFIG = require('../config/elasticsearch_config')();
+const FS = require('fs');
+const ES_MAPPINGS = './indexer/mappings.json';
+const INDEXER_TASKS = require("./tasks/indexer_display_record_tasks");
+const DB = require('../config/db_config')();
+const DB_TABLES = require('../config/db_tables_config')();
+const REPO_OBJECTS = DB_TABLES.repo.repo_objects;
+const HELPER = require('../indexer/helper');
+const CLIENT = new ES.Client({
+        host: ES_CONFIG.elasticsearch_host,
         requestTimeout: 60000*4
     });
 
+
+// TODO: move calls to index utils tasks lib
+//============================
 /**
  * Create new index and mapping
  * @param index_name
@@ -145,12 +154,15 @@ exports.delete_repo_index = function (index_name, callback) {
     });
 };
 
-/**
+//============================
+
+/** // TODO: move to tasks
  * Indexes record
  * @param obj
  * @param callback
  */
 exports.index_record = function (obj, callback) {
+
     // TODO: check payload
     CLIENT.index(obj, function (error, response) {
 

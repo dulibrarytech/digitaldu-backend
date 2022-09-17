@@ -16,7 +16,7 @@
 
  */
 
-const DR = require('../../libs/display_record');
+const INDEX_RECORD_LIB = require('../../libs/index_record_lib');
 const CACHE = require('../../libs/cache');
 const HELPER = require('../../repository/helper');
 const LOGGER = require('../../libs/log4');
@@ -67,7 +67,7 @@ const Update_thumbnail_url_tasks = class {
 
         let promise = new Promise((resolve, reject) => {
 
-            DR.get_display_record_data(this.uuid, (record_obj) => {
+            INDEX_RECORD_LIB.get_display_record_data(this.uuid, (record_obj) => {
                 resolve(record_obj);
             });
 
@@ -118,7 +118,7 @@ const Update_thumbnail_url_tasks = class {
                 is_active: 1
             };
 
-            DR.update_display_record(where_obj, display_record, (result) => {
+            INDEX_RECORD_LIB.update_display_record(where_obj, display_record, (result) => {
 
                 if (typeof result === 'object') {
                     LOGGER.module().error('ERROR: [/repository/tasks (update_thumbnail_url_tasks/update_display_record)] Unable to update display record');
