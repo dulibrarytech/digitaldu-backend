@@ -75,20 +75,30 @@ const Index_record_lib = class {
     };
 
     /**
-     * Takes DB record and constructs the index record
-     * Creates index/metadata display record
+     * Constructs index record from DB data
      * @param data
-     * @return object
+     * @return object <index record> / returns false if an error occurs
      */
     create_index_record = (data) => {
 
         let metadata;
         let index_record = {};
+        let config;
+
+        if (data.object_type === 'collection') {
+            config = VALIDATOR_CONFIG.parent_index_record;
+        } else if (data.object_type === 'object') {
+            config = VALIDATOR_CONFIG.child_index_record;
+        } else {
+            LOGGER.module().fatal('FATAL: [/libs/index_record_lib (create_index_record)] Unable to get index record schema validation');
+            return false;
+        }
 
         try {
             metadata = JSON.parse(data.metadata);
         } catch (error) {
             LOGGER.module().fatal('FATAL: [/libs/index_record_lib (create_index_record)] Unable to create index record ' + error.message);
+            return false;
         }
 
         index_record.uuid = data.uuid;
@@ -102,7 +112,7 @@ const Index_record_lib = class {
         index_record.handle = data.handle;
         index_record.uri = data.uri;
 
-        if (data.call_number !== undefined && typeof data.call_number === 'string') {
+        if (data.call_number !== null) {
             index_record.call_number = data.call_number;
         }
 
@@ -112,53 +122,48 @@ const Index_record_lib = class {
             index_record.thumbnail = '';
         }
 
-        if (data.master !== null) {
-            index_record.master = data.master;
-        } else {
-            index_record.master = '';
-        }
+        if (data.object_type === 'object') {
 
-        index_record.mime_type = data.mime_type;
+            if (data.master !== null) {
+                index_record.master = data.master;
+            }
 
-        if (metadata.resource_type !== undefined && metadata.resource_type.length > 0) {
-            index_record.type = metadata.resource_type;
-        } else {
-            index_record.type = '';
-        }
+            if (data.mime_type !== null) {
+                index_record.mime_type = data.mime_type;
+            }
 
-        if (data.transcript !== null && data.transcript.length > 0) {
+            if (metadata.resource_type !== undefined && metadata.resource_type.length > 0) {
+                index_record.resource_type = metadata.resource_type;
+            }
 
-            let transcript_arr = JSON.parse(data.transcript);
+            if (data.transcript !== null && data.transcript.length > 0) {
 
-            for (let i=0;i<metadata.parts.length;i++) {
-                for (let j=0;j<transcript_arr.length;j++) {
-                    if (transcript_arr[j].call_number === metadata.parts[i].title.replace('.tif', '')) {
-                        metadata.parts[i].transcript = transcript_arr[j].transcript_text;
+                let transcript_arr = JSON.parse(data.transcript);
+
+                for (let i=0;i<metadata.parts.length;i++) {
+                    for (let j=0;j<transcript_arr.length;j++) {
+                        if (transcript_arr[j].call_number === metadata.parts[i].title.replace('.tif', '')) {
+                            metadata.parts[i].transcript = transcript_arr[j].transcript_text;
+                        }
                     }
                 }
             }
-        } else {
-            index_record.transcript = '';
-        }
 
-        if (data.transcript_search !== null && data.transcript_search.length > 0) {
-            index_record.transcript_search = data.transcript_search;
-        } else {
-            index_record.transcript_search = '';
-        }
-
-        if (metadata.parts !== undefined && metadata.parts.length > 0) {
-
-            if (data.is_compound === 1 && data.compound_parts !== null) {
-                metadata.parts = JSON.parse(data.compound_parts);
+            if (data.transcript_search !== null && data.transcript_search.length > 0) {
+                index_record.transcript_search = data.transcript_search;
             }
 
-            for (let i=0;i<metadata.parts.length;i++) {
+            if (metadata.parts !== undefined && metadata.parts.length > 0) {
 
-                if (metadata.parts[i].kaltura_id !== undefined && typeof metadata.parts[i].kaltura_id === 'string') {
-                    index_record.kaltura_id = metadata.parts[i].kaltura_id;
-                } else {
-                    index_record.kaltura_id = '';
+                if (data.is_compound === 1 && data.compound_parts !== null) {
+                    metadata.parts = JSON.parse(data.compound_parts);
+                }
+
+                for (let i=0;i<metadata.parts.length;i++) {
+
+                    if (metadata.parts[i].kaltura_id !== undefined && typeof metadata.parts[i].kaltura_id === 'string') {
+                        index_record.kaltura_id = metadata.parts[i].kaltura_id;
+                    }
                 }
             }
         }
@@ -170,8 +175,6 @@ const Index_record_lib = class {
             for (let i=0;i<names.length;i++) {
                 if (names[i].role !== undefined && names[i].role === 'creator') {
                     index_record.creator = names[i].title;
-                } else {
-                    index_record.creator = '';
                 }
             }
         }
@@ -179,12 +182,14 @@ const Index_record_lib = class {
         if (metadata.subjects !== undefined) {
             let subjectsArr = [];
             for (let i=0;i<metadata.subjects.length;i++) {
-                if (metadata.subjects[i].title === 'string') {
+                if (metadata.subjects[i].title !== null) {
                     subjectsArr.push(metadata.subjects[i].title);
                 }
             }
 
-            index_record.f_subjects = subjectsArr;
+            if (subjectsArr.length > 0) {
+                index_record.facets = subjectsArr;
+            }
         }
 
         if (metadata.notes !== undefined && metadata.notes.length > 0) {
@@ -194,8 +199,6 @@ const Index_record_lib = class {
             for (let i=0;i<notes.length;i++) {
                 if (notes[i].type !== undefined && notes[i].type === 'abstract') {
                     index_record.abstract = notes[i].content;
-                } else {
-                    index_record.abstract = '';
                 }
             }
         }
@@ -209,10 +212,9 @@ const Index_record_lib = class {
         }
 
         index_record.display_record = metadata;
-        index_record.display_record.title = escape(index_record.display_record.title);
         index_record.created = data.created;
 
-        const VALIDATOR = new VALIDATE(VALIDATOR_CONFIG.index_record);
+        const VALIDATOR = new VALIDATE(config);
         let is_valid = VALIDATOR.validate(index_record);
 
         if (is_valid !== true) {
@@ -286,179 +288,6 @@ const Index_record_lib = class {
             return error;
         });
     };
-
-    /**
-     * Gets display record for indexing
-     * @param uuid
-
-    get_index_display_record_data = (uuid) => {
-
-        let promise = new Promise((resolve, reject) => {
-
-            this.DB(this.TABLE)
-                .select('*')
-                .where({
-                    uuid: uuid,
-                    is_active: 1
-                })
-                .then((data) => {
-
-                    if (data.length === 0) {
-                        resolve('no_data');
-                    }
-
-                    let record = JSON.parse(data[0].display_record);
-
-                    if (record.display_record.jsonmodel_type !== undefined && record.display_record.jsonmodel_type === 'resource') {
-
-                        let collection_record = {};
-                        collection_record.uuid = data[0].uuid;
-                        collection_record.pid = data[0].uuid; // legacy
-                        collection_record.uri = data[0].uri;
-                        collection_record.is_member_of_collection = data[0].is_member_of_collection;
-                        collection_record.handle = data[0].handle;
-                        collection_record.object_type = data[0].object_type;
-                        collection_record.title = unescape(record.display_record.title);
-                        collection_record.thumbnail = data[0].thumbnail;
-                        collection_record.is_published = data[0].is_published;
-                        collection_record.created = data[0].created;
-
-                        // get collection abstract
-                        if (record.display_record.notes !== undefined) {
-
-                            for (let i = 0; i < record.display_record.notes.length; i++) {
-
-                                if (record.display_record.notes[i].type === 'abstract') {
-                                    collection_record.abstract = record.display_record.notes[i].content.toString();
-                                }
-                            }
-                        }
-
-                        collection_record.display_record = {
-                            title: unescape(record.display_record.title),
-                            abstract: collection_record.abstract
-                        };
-
-                        record = collection_record;
-
-                    } else {
-                        record.title = unescape(record.title);
-                        record.display_record.title = unescape(record.display_record.title);
-
-                        if (record.display_record.language !== undefined) {
-
-                            if (typeof record.display_record.language !== 'object') {
-
-                                record.display_record.t_language = {
-                                    language: record.display_record.language
-                                };
-
-                                delete record.display_record.language;
-
-                            } else {
-                                record.display_record.t_language = record.display_record.language;
-                                delete record.display_record.language;
-                            }
-                        }
-                    }
-
-                    /*
-                    const VALIDATOR = new VALIDATE(VALIDATOR_CONFIG.index_record);
-                    let is_valid = VALIDATOR.validate(record);
-
-                    if (is_valid === true) {
-                        resolve(record);
-                    } else {
-                        reject(false);
-                    }
-
-                     *
-
-                    resolve(record);
-                })
-                .catch((error) => {
-                    LOGGER.module().fatal('FATAL: [/libs/display-record lib (get_display_record_data)] unable to get display record data for indexing ' + error.message);
-                    reject(false);
-                });
-        });
-
-
-        return promise.then((index_display_record_data) => {
-            return index_display_record_data;
-        });
-    };
-     */
-
-    /**
-     * Gets display record data (preps data before creating display record)
-     * @param uuid
-
-    get_display_record_data = (uuid) => {
-
-        let promise = new Promise((resolve, reject) => {
-
-            this.DB(this.TABLE)
-                .select('*')
-                .where({
-                    uuid: uuid,
-                    is_active: 1
-                })
-                .then((data) => {
-
-                    let record = {};
-                    record.uuid = data[0].uuid;
-                    record.pid = data[0].uuid; // legacy
-                    record.is_member_of_collection = data[0].is_member_of_collection;
-                    record.object_type = data[0].object_type;
-                    record.handle = data[0].handle;
-                    record.thumbnail = data[0].thumbnail;
-                    record.master = data[0].master;
-                    // record.object = data[0].master; // legacy
-                    record.mime_type = data[0].mime_type;
-                    record.created = data[0].created;
-
-                    if (data[0].transcript === null) {
-                        record.transcript = '';
-                    } else {
-                        record.transcript = data[0].transcript;
-                    }
-
-                    if (data[0].transcript_search === null) {
-                        record.transcript_search = '';
-                    } else {
-                        record.transcript_search = data[0].transcript_search;
-                    }
-
-                    record.is_published = parseInt(data[0].is_published);
-                    record.metadata = data[0].metadata;
-
-                    /*
-                    const VALIDATOR = new VALIDATE(VALIDATOR_CONFIG.index_record);
-                    let is_valid = VALIDATOR.validate(record);
-
-                    if (is_valid === true) {
-                        resolve(record);
-                    } else {
-                        reject(false);
-                    }
-
-                     *
-
-                    resolve(record);
-                })
-                .catch((error) => {
-                    LOGGER.module().fatal('FATAL: [/libs/display-record lib (get_display_record_data)] unable to get display record data ' + error.message);
-                    reject(false);
-                });
-        });
-
-        return promise.then((display_record_data) => {
-            return display_record_data;
-        }).catch((error) => {
-            return error;
-        });
-    };
-*/
 };
 
 module.exports = Index_record_lib;

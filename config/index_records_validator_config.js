@@ -18,7 +18,24 @@
 
 'use strict';
 
-const index_record_schema = {
+const parent_index_record_schema = {
+    is_member_of_collection: {type: 'string'},
+    uuid: {type: 'string'},
+    handle: {type: 'string'},
+    uri: {type: 'string'},
+    call_number: {type: 'string'},
+    thumbnail: {type: 'string'},
+    object_type: {type: 'string'},
+    title: {type: 'string'},
+    facets: {type: 'array'},
+    abstract: {type: 'string'},
+    is_published: {type: 'number'},
+    is_compound: {type: 'number'},
+    display_record: {type: 'object'},
+    created: {type: 'object'}
+};
+
+const child_index_record_schema = {
     is_member_of_collection: {type: 'string'},
     uuid: {type: 'string'},
     handle: {type: 'string'},
@@ -29,18 +46,16 @@ const index_record_schema = {
     mime_type: {type: 'string'},
     object_type: {type: 'string'},
     title: {type: 'string'},
-    creator: {type: 'string'},
-    f_subjects: {type: 'array'},
+    facets: {type: 'array'},
     abstract: {type: 'string'},
-    type: {type: 'string'},
+    resource_type: {type: 'string'},
     is_published: {type: 'number'},
     is_compound: {type: 'number'},
     display_record: {type: 'object'},
-    transcript: {type: 'string'},
-    transcript_search: {type: 'string'}
-    // created: {type: 'object'}
+    created: {type: 'object'}
 };
 
+/* TODO:
 const index_display_record_validator_schema = { // TODO: use in import
     title: {type: 'string'},
     uri: {type: 'string'},
@@ -54,10 +69,15 @@ const index_display_record_validator_schema = { // TODO: use in import
     is_compound: {type: 'boolean'},
 };
 
+ */
+
+// TODO: add DB schema validation
+
 module.exports = function () {
 
     return {
-        index_record: index_record_schema,
-        display_record: index_display_record_validator_schema
+        parent_index_record: parent_index_record_schema,
+        child_index_record: child_index_record_schema,
+        // display_record: index_display_record_validator_schema
     };
 };

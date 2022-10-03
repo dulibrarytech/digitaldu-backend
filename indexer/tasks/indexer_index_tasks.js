@@ -60,7 +60,7 @@ const Indexer_index_tasks = class {
                     this.CLIENT.index({
                         index: index,
                         id: uuid,
-                        body: record
+                        body: JSON.parse(record.index_record)
                     }, (error, response) => {
 
                         if (error) {
@@ -97,7 +97,7 @@ const Indexer_index_tasks = class {
                 .select('uuid')
                 .where(where_obj)
                 .whereNot({
-                    display_record: null
+                    index_record: null
                 })
                 .limit(1)
                 .then((data) => {
@@ -109,7 +109,7 @@ const Indexer_index_tasks = class {
                     resolve(data[0].uuid);
                 })
                 .catch((error) => {
-                    LOGGER.module().error('ERROR: [/indexer/model module (index_records)] unable to get record ' + error.message);
+                    LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (get_record_uuid)] unable to get record ' + error.message);
                     reject(false);
                 });
         });
@@ -170,8 +170,7 @@ const Indexer_index_tasks = class {
                     is_active: 1
                 })
                 .update({
-                    is_indexed: 0,
-                    is_active: 1
+                    is_indexed: 0
                 })
                 .then((data) => {
                     resolve(true);
@@ -187,6 +186,100 @@ const Indexer_index_tasks = class {
         });
     }
 
+    /**
+     * Moves index record(s) from admin to public index
+     * @return {boolean}
+     */
+    publish = (query) => {
+
+        let promise = new Promise((resolve, reject) => {
+
+            this.CLIENT.reindex({
+                body: {
+                    'source': {
+                        'index': this.CONFIG.elasticsearch_back_index,
+                        'query': query
+                    },
+                    'dest': {
+                        'index': this.CONFIG.elasticsearch_front_index
+                    }
+                }
+            }, (error, response) => {
+
+                if (error) {
+                    LOGGER.module().error('ERROR: [/indexer/task (publish_records)] unable to publish record(s) ' + error.message);
+                    reject(false);
+                }
+
+                resolve(response);
+            });
+        });
+
+        return promise.then((response) => {
+            return response;
+        }).catch(() => {
+            return false;
+        });
+    };
+
+    /**
+     * Deletes record from public index
+     * @param uuid
+     */
+    suppress = (uuid) => {
+
+        let promise = new Promise((resolve, reject) => {
+
+            this.CLIENT.delete({
+                index: this.CONFIG.elasticsearch_front_index,
+                id: uuid
+            }, (error, response) => {
+
+                if (error) {
+                    LOGGER.module().error('ERROR: [/indexer/tasks (suppress_record)] unable to suppress record ' + error.message);
+                    reject(false);
+                }
+
+                resolve(response);
+            });
+        });
+
+        return promise.then((response) => {
+            return response;
+        }).catch(() => {
+            return false;
+        });
+    }
+
+    /**
+     * Deletes record from admin index
+     * @param uuid
+     * @return {Promise<unknown | boolean>}
+     */
+    delete = (uuid) => {
+
+        let promise = new Promise((resolve, reject) => {
+
+            this.CLIENT.delete({
+                index: this.CONFIG.elasticsearch_back_index,
+                id: uuid
+            }, (error, response) => {
+
+                if (error) {
+                    LOGGER.module().error('ERROR: [/indexer/tasks (delete_record)] unable to delete record ' + error.message);
+                    reject(false);
+                }
+
+                resolve(response);
+            });
+        });
+
+        return promise.then((response) => {
+            return response;
+        }).catch(() => {
+            return false;
+        });
+    }
 };
 
 module.exports = Indexer_index_tasks;

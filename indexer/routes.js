@@ -25,28 +25,17 @@ const CONTROLLER = require('../indexer/controller'),
 module.exports = function (app) {
 
     app.route(ENDPOINTS().indexer.indexer_index_records.endpoint)
-        .put(TOKEN.verify, CONTROLLER.index_records)
         .post(TOKEN.verify, CONTROLLER.index_record)
-        .delete(TOKEN.verify, CONTROLLER.unindex_record);
+        .put(TOKEN.verify, CONTROLLER.index_records)
+        .delete(TOKEN.verify, CONTROLLER.delete);
 
     app.route(ENDPOINTS().indexer.indexer_manage_index)
-        .post(TOKEN.verify, CONTROLLER.create_repo_index)
-        .delete(TOKEN.verify, CONTROLLER.delete_repo_index);
+        .post(TOKEN.verify, CONTROLLER.create_index)
+        .delete(TOKEN.verify, CONTROLLER.delete_index);
 
-    app.route(ENDPOINTS().indexer.indexer_publish_records)
-        .post(TOKEN.verify, CONTROLLER.publish_records);
+    app.route(ENDPOINTS().indexer.indexer_publish)
+        .post(TOKEN.verify, CONTROLLER.publish);
 
-    /*
-    app.route('/api/admin/v1/indexer/republish')
-        .post(TOKEN.verify, CONTROLLER.republish_record);
-
-    app.route('/api/admin/v1/indexer/delete')
-        .delete(TOKEN.verify, INDEXER.unindex_admin_record); // removes record from admin index
-    */
-
-    /*
-    app.route('/api/admin/v1/indexer/update_fragment')
-        .put(TOKEN.verify, INDEXER.update_fragment);
-
-     */
+    app.route(ENDPOINTS().indexer.indexer_suppress)
+        .delete(TOKEN.verify, CONTROLLER.supress);
 };

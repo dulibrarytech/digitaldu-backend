@@ -20,6 +20,7 @@ import {it, expect, beforeAll} from 'vitest';
 
 // INTEGRATION
 require('dotenv').load();
+/*
 const EXPRESS = require('express');
 const REQUEST = require('supertest');
 const ENDPOINTS = require('../endpoints');
@@ -29,18 +30,61 @@ const API_KEY = TOKEN_CONFIG.api_key;
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
 
-const ES = require('elasticsearch');
-const INDEXER_DISPLAY_RECORD_TASKS = require('../tasks/indexer_display_record_tasks');
-const INDEXER_INDEX_TASKS = require('../tasks/indexer_index_tasks');
-const CONFIG = require('../../test/elasticsearch_config')();
-const CLIENT = new ES.Client({
-    host: CONFIG.elasticsearch_host
-});
-const LIB = new INDEXER_DISPLAY_RECORD_TASKS(CLIENT, CONFIG);
+ */
 
-it('Indexer Tasks search (Unit)', async function () {
-    let q = 'dogs';
-    let page = 1;
-    let total_on_page = undefined;
-    await expect(LIB.search(q, page, total_on_page)).resolves.toBeDefined();
+const ES = require('elasticsearch');
+const TEST_RECORDS = require('../../test/test_records')();
+const DB = require('../../test/db')();
+const TABLE = 'tbl_objects_test';
+const INDEXER_INDEX_TASKS = require('../tasks/indexer_index_tasks');
+const ES_CONFIG = require('../../test/elasticsearch_config')();
+const CLIENT = new ES.Client({
+    host: ES_CONFIG.elasticsearch_host
+});
+
+const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLE, CLIENT, ES_CONFIG)
+
+it('Index Tasks index_record (Unit)', async function () {
+    const uuid = TEST_RECORDS.test_index_record.uuid
+    const is_published = true;
+    const record = {};
+    record.index_record = JSON.stringify(TEST_RECORDS.test_index_record);
+    await expect(INDEX_TASKS.index_record(uuid, is_published, record)).resolves.toBeDefined();
 }, 10000);
+
+it('Index Tasks reset_indexed_flags (Unit)', async function () {
+    await expect(INDEX_TASKS.reset_indexed_flags()).resolves.toBeTruthy();
+}, 10000);
+
+it('Index Tasks get_record_uuid (Unit)', async function () {
+    await expect(INDEX_TASKS.get_record_uuid({
+        is_indexed: 0,
+        is_active: 1
+    })).resolves.toBe('a5efb5d1-0484-429c-95a5-15c12ff40ca0');
+}, 10000);
+
+it('Index Tasks update_indexing_status (Unit)', async function () {
+    const uuid = 'a5efb5d1-0484-429c-95a5-15c12ff40ca0';
+    await expect(INDEX_TASKS.update_indexing_status(uuid)).resolves.toBeTruthy();
+}, 10000);
+
+it('Index Tasks publish (Unit)', async function () {
+    let match_phrase = {
+        'is_member_of_collection': TEST_RECORDS.test_index_record.uuid
+    };
+    let query = {};
+    let bool = {};
+    bool.must = {};
+    bool.must.match_phrase = match_phrase;
+    query.bool = bool;
+    await expect(INDEX_TASKS.publish(query)).resolves.toBeDefined();
+}, 10000);
+
+it('Index Tasks suppress (Unit)', async function () {
+
+}, 10000);
+
+it('Index Tasks delete (Unit)', async function () {
+
+}, 10000);
+

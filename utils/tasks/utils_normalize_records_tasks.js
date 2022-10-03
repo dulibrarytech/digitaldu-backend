@@ -91,6 +91,7 @@ const Utils_normalize_records_tasks = class {
     /**
      * Gets aspace record
      * @param uri
+     * @param token
      */
     get_aspace_record = (uri, token) => {
 

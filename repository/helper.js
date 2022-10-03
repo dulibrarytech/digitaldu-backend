@@ -46,7 +46,7 @@ exports.publish_record = (match_phrase, callback) => {
         };
 
         response = await HTTP.post({
-            endpoint: ENDPOINTS().indexer.indexer_publish_records.endpoint,
+            endpoint: ENDPOINTS().indexer.indexer_publish.endpoint,
             data: data
         });
 

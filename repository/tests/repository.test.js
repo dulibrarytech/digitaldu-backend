@@ -107,7 +107,7 @@ it('Repository API Endpoint (E2E) ' + ENDPOINTS().repository.repo_ping.endpoint,
 */
 
 it.concurrent('Repository API Endpoint ' + ENDPOINTS().repository.repo_record.endpoint + ' (E2E)', async function() {
-    let uuid = 'codu:root'; // TEST_RECORDS.child_records[2].uuid;
+    let uuid = 'root'; // TEST_RECORDS.child_records[2].uuid;
     let response = await REQUEST(APP)
         .get(ENDPOINTS().repository.repo_record.endpoint + '?api_key=' + API_KEY + '&uuid=' + uuid);
     expect(response.status).toBe(200);

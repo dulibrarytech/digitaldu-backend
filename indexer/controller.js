@@ -21,6 +21,12 @@
 const MODEL = require('../indexer/model');
 const SERVICE = require('../indexer/service');
 
+/**
+ * Indexes a record
+ * @param req
+ * @param res
+ * @return {boolean}
+ */
 exports.index_record = (req, res) => {
 
     let uuid = req.body.uuid;
@@ -36,83 +42,78 @@ exports.index_record = (req, res) => {
     });
 };
 
+/**
+ * Indexes all active repository records
+ * @param req
+ * @param res
+ */
 exports.index_records = (req, res) => {
 
     let index = req.body.index;
+
+    if (index === undefined) {
+        index = 'backend';
+    }
 
     MODEL.index_records(index, (data) => {
         res.status(data.status).send(data);
     });
 };
 
-// TODO: move to service
-exports.unindex_record = function (req, res) {
+/**
+ * Moves published records from admin to public index
+ * @param req
+ * @param res
+ */
+exports.publish = function (req, res) {
+    MODEL.publish(req, function (data) {
+        res.status(data.status).send(data);
+    });
+};
+
+/**
+ * Deletes record from public index
+ * @param req
+ * @param res
+ */
+exports.supress = function (req, res) {
 
     let uuid = req.query.uuid;
-    let index = req.query.index;
 
-    SERVICE.unindex_record(uuid, index, () => {
-        res.status(data.status).send(data);
-    });
-
-    /*
-    MODEL.unindex_record(uuid, index, function (data) {
-        res.status(data.status).send(data);
-    });
-
-     */
-};
-
-// TODO: move to service
-exports.publish_records = function (req, res) {
-    MODEL.publish_records(req, function (data) {
+    MODEL.suppress(uuid, (data) => {
         res.status(data.status).send(data);
     });
 };
 
-exports.create_repo_index = function (req, res) {
+/**
+ * Deletes record from admin index
+ * @param req
+ * @param res
+ */
+exports.delete = function (req, res) {
 
-    // TODO: create tasks object
+    let uuid = req.query.uuid;
+
+    MODEL.delete(uuid, (data) => {
+        res.status(data.status).send(data);
+    });
+};
+
+exports.create_index = function (req, res) {
+
     let index_name = req.body.index_name;
 
-    SERVICE.create_repo_index(index_name, function (data) {
+    SERVICE.create_index(index_name, function (data) {
         res.status(data.status).send(data);
     });
 };
 
-exports.delete_repo_index = function (req, res) {
+exports.delete_index = function (req, res) {
 
     // TODO: create task object
     let index_name = req.query.index_name;
 
-    SERVICE.delete_repo_index(index_name, function (data) {
+    SERVICE.delete_index(index_name, function (data) {
         res.status(data.status).send(data);
     });
 };
-
-/*
-exports.update_fragment = function (req, res) {
-    MODEL.update_fragment(req, function (data) {
-        res.status(data.status).send(data);
-    });
-};
-
- */
-
-/*
-exports.republish_record = function (req, res) {
-    MODEL.republish_record(req, function (data) {
-        res.status(data.status).send(data);
-    });
-};
-
- */
-
-/*
-exports.index_data = function (req, res) {
-    MODEL.index_data(req, function (data) {
-        res.status(data.status).send(data);
-    });
-};
-
- */

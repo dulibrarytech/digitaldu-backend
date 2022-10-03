@@ -18,25 +18,18 @@
 
 'use strict';
 
-const // CONFIG = require('../config/config'),
-    // HTTP = require('../libs/http'),
-    VALIDATOR = require('validator'),
-    LOGGER = require('../libs/log4'),
-    CACHE = require('../libs/cache'),
-    DURACLOUD = require('../libs/duracloud'),
-    ES_CONFIG = require('../config/elasticsearch_config')(),
-    DB = require('../config/db_config')(),
-    DBQ = require('../config/dbqueue_config')(),
-    REINDEX_TASKS = require('../utils/tasks/reindex_tasks'),
-    DB_TABLES = require('../config/db_tables_config')(),
-    REPO_OBJECTS = DB_TABLES.repo.repo_objects,
-    CONVERT_QUEUE = 'tbl_convert_queue';
-
+const VALIDATOR = require('validator');
+const LOGGER = require('../libs/log4');
+const CACHE = require('../libs/cache');
+const DURACLOUD = require('../libs/duracloud');
+const ES_CONFIG = require('../config/elasticsearch_config')();
+const DB = require('../config/db_config')();
+const DBQ = require('../config/dbqueue_config')();
+const REINDEX_TASKS = require('../utils/tasks/reindex_tasks');
+const DB_TABLES = require('../config/db_tables_config')();
+const REPO_OBJECTS = DB_TABLES.repo.repo_objects;
+const CONVERT_QUEUE = 'tbl_convert_queue';
 const UTILS_NORMALIZE_RECORDS_TASKS = require('../utils/tasks/utils_normalize_records_tasks');
-// const INDEXER_INDEX_TASKS = require("../indexer/tasks/indexer_index_tasks");
-// const INDEXER_DISPLAY_RECORD_TASKS = require("../indexer/tasks/indexer_display_record_tasks");
-// const HELPER = require("../indexer/helper");
-// const INDEXER_DISPLAY_RECORD_TASKS = require("../indexer/tasks/indexer_display_record_tasks");
 const INDEX_RECORD_LIB = require('../libs/index_record_lib');
 
 /**
@@ -119,7 +112,7 @@ exports.normalize_collection_records = function (callback) {
 
         console.log('normalizing collection records...');
 
-        const INDEX_RECORD_TASKS = new INDEX_RECORD_LIB(DB, REPO_OBJECTS);
+        // const INDEX_RECORD_TASKS = new INDEX_RECORD_LIB(DB, REPO_OBJECTS);
         const NORMALIZE_RECORDS_TASK = new UTILS_NORMALIZE_RECORDS_TASKS(DB, REPO_OBJECTS);
         let token = await NORMALIZE_RECORDS_TASK.get_session_token();
         let result = await NORMALIZE_RECORDS_TASK.reset_updated_flags();
@@ -144,8 +137,8 @@ exports.normalize_collection_records = function (callback) {
                 where_obj.is_active = 1;
 
                 data = await NORMALIZE_RECORDS_TASK.get_record_uri(where_obj);
-
-                if (data.length === 0) {
+                console.log(data);
+                if (data === 0) {
                     clearInterval(timer);
                     console.log('Normalization complete.');
                     // TODO: log completion
@@ -169,73 +162,12 @@ exports.normalize_collection_records = function (callback) {
                     console.log(uuid + 'not updated');
                 }
 
-                /*
-                record = await INDEX_RECORD_TASKS.get_index_record_data(uuid);
-
-                if (record.metadata === null) {
-                    console.log('no metadata record for ' + uuid);
-                    result = await NORMALIZE_RECORDS_TASK.update_status(uuid);
-                    console.log(result);
-                    return false;
-                }
-
-                console.log('Processing: ', uuid);
-
-                let metadata = JSON.parse(record.metadata);
-
-                if (metadata.identifiers !== undefined && metadata.identifiers[0].type === 'local') {
-                    NORMALIZE_RECORDS_TASK.save_call_number(uuid, metadata.identifiers[0].identifier);
-                }
-
-                if (record.is_compound === 1) {
-
-                    let index_record = JSON.parse(record.index_record);
-
-                    if (index_record.display_record !== undefined && index_record.display_record.parts !== undefined) {
-
-                        let compound_parts = JSON.stringify(index_record.display_record.parts);
-                        let where_obj = {
-                            uuid: uuid,
-                            is_compound: 1
-                        };
-
-                        NORMALIZE_RECORDS_TASK.save_parts(where_obj, compound_parts);
-                    }
-                }
-
-                if (record.handle !== null && record.handle.length > 0) {
-                    await NORMALIZE_RECORDS_TASK.update_handle(uuid, record.handle.replace('http://', 'https://'));
-                }
-
-                if (record.object_type === 'collection') {
-
-                    let new_record = await INDEX_RECORD_TASKS.create_index_record(record);
-
-                    console.log(uuid + ' normalized.');
-
-                    let where_obj = {
-                        uuid: uuid
-                    };
-
-                    let is_updated = await NORMALIZE_RECORDS_TASK.update_index_record(where_obj, new_record);
-
-                    if (is_updated === true) {
-                        let result = await NORMALIZE_RECORDS_TASK.update_status(uuid);
-                        console.log(result);
-                    }
-                } else {
-                    let result = await NORMALIZE_RECORDS_TASK.update_status(uuid);
-                    console.log(result);
-                }
-
-                 */
-
             } catch (error) {
                 // TODO: log error
                 console.log(error.message);
             }
 
-        }, 8000); // TIMERS_CONFIG.index_timer
+        }, 10000); // TIMERS_CONFIG.index_timer
 
     })();
 
@@ -297,6 +229,7 @@ exports.normalize_records = function (callback) {
                 console.log('Processing: ', uuid);
 
                 let metadata = JSON.parse(record.metadata);
+                metadata.title = unescape(metadata.title);
 
                 if (metadata.identifiers !== undefined && metadata.identifiers[0].type === 'local') {
                     NORMALIZE_RECORDS_TASK.save_call_number(uuid, metadata.identifiers[0].identifier);
@@ -322,7 +255,7 @@ exports.normalize_records = function (callback) {
                 }
 
                 let new_record = await INDEX_RECORD_TASKS.create_index_record(record);
-
+                new_record.display_record.title = unescape(new_record.display_record.title);
                 console.log(uuid + ' normalized.');
 
                 let is_updated = await NORMALIZE_RECORDS_TASK.update_index_record({
@@ -339,7 +272,7 @@ exports.normalize_records = function (callback) {
                 console.log(error.message);
             }
 
-        }, 100); // TIMERS_CONFIG.index_timer
+        }, 50); // TIMERS_CONFIG.index_timer
 
     })();
 

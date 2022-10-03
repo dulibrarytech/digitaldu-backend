@@ -44,7 +44,7 @@ const Indexer_display_record_tasks = class {
             try {
 
                 (async () => {
-                    resolve(await this.DRL.get_index_display_record_data(uuid));
+                    resolve(await this.DRL.get_index_record_data(uuid));
                 })();
 
             } catch (error) {
@@ -58,35 +58,6 @@ const Indexer_display_record_tasks = class {
             return data;
         });
     }
-
-    /** TODO?
-     * Creates display record for repository database and search index
-     * @param obj
-     * returns Promise string
-
-    create_display_record = (obj) => {
-
-        let promise = new Promise((resolve, reject) => {
-
-            // TODO  test
-            this.DRL.create_display_record(obj, (display_record) => {
-
-                if (typeof display_record === 'object') {
-                    LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks/create_display_record)]');
-                    reject(new Error('Unable to create display record'));
-                    return false;
-                }
-
-                resolve(display_record);
-            });
-
-        });
-
-        return promise.then((display_record) => {
-            return display_record;
-        });
-    }
-     */
 };
 
 module.exports = Indexer_display_record_tasks;

@@ -18,111 +18,61 @@
 
 'use strict';
 
-const CONFIG = require('../config/config');
-const LOGGER = require('../libs/log4');
-const ASYNC = require('async');
 const ES = require('elasticsearch');
 const ES_CONFIG = require('../config/elasticsearch_config')();
-const FS = require('fs');
-const ES_MAPPINGS = './indexer/mappings.json';
-const INDEXER_TASKS = require("./tasks/indexer_display_record_tasks");
-const DB = require('../config/db_config')();
-const DB_TABLES = require('../config/db_tables_config')();
-const REPO_OBJECTS = DB_TABLES.repo.repo_objects;
-const HELPER = require('../indexer/helper');
+const INDEXER_UTILS_TASKS = require('./tasks/indexer_index_utils_tasks');
+const LOGGER = require('../libs/log4');
 const CLIENT = new ES.Client({
         host: ES_CONFIG.elasticsearch_host,
         requestTimeout: 60000*4
     });
 
-
-// TODO: move calls to index utils tasks lib
-//============================
 /**
  * Create new index and mapping
  * @param index_name
  * @param callback
  */
-exports.create_repo_index = function (index_name, callback) {
+exports.create_index = function (index_name, callback) {
 
-    function create_index (callback) {
+    (async () => {
 
-        let obj = {};
-        obj.index_name = index_name;
-
-        CLIENT.indices.create({
-            index: obj.index_name,
-            body: {
-                'settings': {
-                    'number_of_shards': CONFIG.elasticSearchShards,
-                    'number_of_replicas': CONFIG.elasticSearchReplicas
-                }
-            }
-
-        }).then(function (result) {
-
-            if (result.acknowledged === true) {
-                LOGGER.module().info('INFO: [/indexer/service module (create_repo_index/create_index)] new index created');
-                obj.index_created = true;
-                callback(null, obj);
-            } else {
-                LOGGER.module().error('ERROR: [/indexer/service module (create_repo_index/create_index)] unable to create new index (createIndex)');
-                obj.index_created = false;
-                callback(null, obj);
-            }
-
-        });
-
-        return false;
-    }
-
-    function create_mapping (obj, callback) {
-
-        if (obj.index_created === false) {
-            callback(null, obj);
-            return false;
-        }
-
-        let mappingObj = get_mapping(),
-            body = {
-            properties: mappingObj
+        let cb = {
+            status: 200,
+            data: 'Index not created'
         };
 
-        CLIENT.indices.putMapping({
-            index: obj.index_name,
-            body: body
-        }).then(function (result) {
+        try {
 
-            if (result.acknowledged === true) {
-                LOGGER.module().info('INFO: [/indexer/service module (create_repo_index/create_mapping)] mapping created');
-                obj.mappingCreated = true;
-                callback(null, obj);
-                return false;
+            const INDEX_UTILS_TASKS = new INDEXER_UTILS_TASKS(index_name, CLIENT, ES_CONFIG);
+            let is_index_created = await INDEX_UTILS_TASKS.create_index();
+
+            if (is_index_created === true) {
+
+                let is_mappings_created = INDEX_UTILS_TASKS.create_mappings();
+
+                if (is_mappings_created === true) {
+
+                    callback({
+                        status: 201,
+                        data: 'Creating index...'
+                    });
+
+                } else {
+                    LOGGER.module().error('ERROR: [/indexer/service module (create_index)] Unable to create index.');
+                    callback(cb);
+                }
+
             } else {
-                LOGGER.module().error('ERROR: [/indexer/service module (create_repo_index/create_mapping)] unable to create mapping');
-                obj.mappingCreated = false;
-                return false;
+                LOGGER.module().error('ERROR: [/indexer/service module (create_index)] Unable to create index.');
+                callback(cb);
             }
-        });
-    }
 
-    // TODO: create tasks object
-    ASYNC.waterfall([
-        create_index,
-        create_mapping
-    ], function (error, results) {
-
-        if (error) {
-            LOGGER.module().error('ERROR: [/indexer/service module (create_repo_index/async.waterfall)] ' + error);
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/indexer/service module (create_index)] Unable to create index. ' + error.message);
+            callback(cb);
         }
 
-        LOGGER.module().info('INFO: [/indexer/service module (create_repo_index/async.waterfall)] index created');
-    });
-
-    callback({
-        status: 201,
-        data: 'Creating index...'
-    });
+    })();
 };
 
 /**
@@ -130,132 +80,34 @@ exports.create_repo_index = function (index_name, callback) {
  * @param index_name
  * @param callback
  */
-exports.delete_repo_index = function (index_name, callback) {
+exports.delete_index = function (index_name, callback) {
 
-    CLIENT.indices.delete({
-        index: index_name
-    }).then(function (result) {
+    (async () => {
 
-        let message = '';
+        let cb = {
+            status: 200,
+            message: 'Index not deleted.'
+        };
 
-        if (result.acknowledged === true) {
-            LOGGER.module().info('INFO: [/indexer/service module (create_repo_index/delete_repo_index)] index deleted');
-            message = 'index deleted';
-        } else {
-            LOGGER.module().error('ERROR: [/indexer/service module (create_repo_index/delete_repo_index)] unable to delete index (deleteIndex)');
-            message = 'index not deleted';
+        try {
+
+            const INDEX_UTILS_TASKS = new INDEXER_UTILS_TASKS(index_name, CLIENT, ES_CONFIG);
+            let is_index_deleted = await INDEX_UTILS_TASKS.delete_index();
+
+            if (is_index_deleted === true) {
+
+                callback({
+                    status: 204,
+                    message: 'Index deleted.'
+                });
+
+            } else {
+                callback(cb);
+            }
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/indexer/service module (delete_index)] Unable to delete index ' + error.message);
+            callback(cb);
         }
-
-        callback({
-            status: 201,
-            message: message
-        });
-
-    });
+    })();
 };
-
-//============================
-
-/** // TODO: move to tasks
- * Indexes record
- * @param obj
- * @param callback
- */
-exports.index_record = function (obj, callback) {
-
-    // TODO: check payload
-    CLIENT.index(obj, function (error, response) {
-
-        if (error) {
-
-            LOGGER.module().error('ERROR: [/indexer/service module (index_record/client.index)] unable to index record ' + error);
-
-            callback({
-                message: 'ERROR: unable to index record ' + error
-            });
-
-            return false;
-        }
-
-        callback(response);
-    });
-};
-
-/** DEPRECATE
- * Updates document fragments
- * @param obj
- * @param callback
- */
-exports.update_fragment = function (obj, callback) {
-
-    CLIENT.update(obj, function (error, response) {
-
-        if (error) {
-
-            LOGGER.module().error('ERROR: [/indexer/service module (update_fragment/client.update)] unable to update fragment ' + error);
-
-            callback({
-                message: 'ERROR: unable to update fragment ' + error
-            });
-
-            return false;
-        }
-
-        callback(response);
-    });
-};
-
-/**
- * Moves document from admin to public index
- * @param obj
- * @param callback
- */
-exports.reindex = function (obj, callback) {
-
-    CLIENT.reindex(obj, function (error, response) {
-
-        if (error) {
-
-            LOGGER.module().error('ERROR: [/indexer/service module (reindex/client.reindex)] unable to reindex record ' + error);
-
-            callback({
-                message: 'ERROR: unable to reindex record ' + error
-            });
-
-            return false;
-        }
-
-        callback(response);
-    });
-};
-
-/**
- * Unindexes record
- * @param obj
- * @param callback
- */
-exports.unindex_record = function (obj, callback) {
-
-    CLIENT.delete(obj, function (error, response) {
-
-        if (error) {
-
-            LOGGER.module().error('ERROR: [/indexer/service module (unindex_record/client.delete)] unable to unindex record ' + error);
-
-            callback({
-                message: 'ERROR: unable to unindex record ' + error
-            });
-
-            return false;
-        }
-
-        callback(response);
-    });
-};
-
-/**
- *  Returns field mappings
- */
-function get_mapping() {
-    return JSON.parse(FS.readFileSync(ES_MAPPINGS, 'utf8'));
-}
