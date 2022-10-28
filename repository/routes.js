@@ -36,11 +36,11 @@ module.exports = (app) => {
         .get(TOKEN.verify, CONTROLLER.get_record)
 
     app.route(ENDPOINTS().repository.repo_publish.endpoint)
-        .post(TOKEN.verify, CONTROLLER.publish_record);
+        .post(TOKEN.verify, CONTROLLER.publish);
 
     app.route(ENDPOINTS().repository.repo_suppress.endpoint)
         .get(TOKEN.verify, CONTROLLER.get_suppressed_records)
-        .post(TOKEN.verify, CONTROLLER.suppress_record);
+        .post(TOKEN.verify, CONTROLLER.suppress);
 
     app.route(ENDPOINTS().repository.repo_rebuild_display_record.endpoint)
         .post(TOKEN.verify, CONTROLLER.rebuild_display_record);

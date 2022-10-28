@@ -161,7 +161,7 @@ exports.update_thumbnail_url = (uuid, thumbnail_url, callback) => {
  * @param type
  * @param callback
  */
-exports.publish_record = (uuid, type, callback) => {
+exports.publish = (uuid, type, callback) => {
 
     const COLLECTION_TASKS = new PUBLISH_COLLECTION_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
     const CHILD_RECORD_TASKS = new PUBLISH_CHILD_RECORD_TASKS(uuid, DB, REPO_OBJECTS); // .Publish_child_record_tasks
@@ -237,7 +237,7 @@ exports.publish_record = (uuid, type, callback) => {
  * @param type
  * @param callback
  */
-exports.suppress_record = (uuid, type, callback) => {
+exports.suppress = (uuid, type, callback) => {
 
     const COLLECTION_TASK = new SUPPRESS_COLLECTION_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
     const CHILD_TASK = new SUPPRESS_CHILD_RECORD_TASKS(uuid, DB, REPO_OBJECTS);

@@ -27,23 +27,25 @@ exports.default = function (req, res) {
     });
 };
 
-exports.reindex = function (req, res) {
-
-    let index = req.body.index;
-
-    MODEL.reindex(index, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
+// TEST
 exports.normalize_records = function (req, res) {
     MODEL.normalize_records(function (data) {
         res.status(data.status).send(data.data);
     });
 };
 
+// TEST
 exports.normalize_collection_records = function (req, res) {
     MODEL.normalize_collection_records(function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.reindex = function (req, res) {
+
+    let index = req.body.index;
+    console.log('CONTROLLER: ', index);
+    MODEL.reindex(index, function (data) {
         res.status(data.status).send(data.data);
     });
 };

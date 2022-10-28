@@ -89,4 +89,3 @@ it('Index Tasks delete (Unit)', async function () {
     const uuid = TEST_RECORDS.test_index_record.uuid;
     await expect(INDEX_TASKS.delete(uuid)).resolves.toBeDefined();
 }, 10000);
-

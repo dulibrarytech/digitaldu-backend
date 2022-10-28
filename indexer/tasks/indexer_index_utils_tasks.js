@@ -107,14 +107,14 @@ const Indexer_index_utils_tasks = class {
     }
 
     /**
-     *  Returns field mappings
+     *  Gets field mappings
      */
     get_mappings = () => {
         return JSON.parse(FS.readFileSync(ES_MAPPINGS, 'utf8'));
     }
 
     /**
-     * Deletes
+     * Deletes index
      * @return {Promise<boolean>}
      */
     delete_index = () => {
@@ -125,8 +125,6 @@ const Indexer_index_utils_tasks = class {
                 index: this.index_name
             }).then((result) => {
 
-                let message = '';
-
                 if (result.acknowledged === true) {
                     LOGGER.module().info('INFO: [/indexer/service module (create_repo_index/delete_repo_index)] index deleted');
                     resolve(true);
@@ -134,12 +132,6 @@ const Indexer_index_utils_tasks = class {
                     LOGGER.module().error('ERROR: [/indexer/service module (create_repo_index/delete_repo_index)] unable to delete index (deleteIndex)');
                     reject(true);
                 }
-
-                callback({
-                    status: 201,
-                    message: message
-                });
-
             });
         });
 

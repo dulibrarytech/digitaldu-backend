@@ -116,6 +116,8 @@ const Indexer_index_tasks = class {
 
         return promise.then((record) => {
             return record;
+        }).catch(() => {
+            return false;
         });
     }
 
@@ -153,6 +155,8 @@ const Indexer_index_tasks = class {
 
         return promise.then((result) => {
             return result;
+        }).catch(() => {
+            return false;
         });
     }
 
@@ -183,6 +187,8 @@ const Indexer_index_tasks = class {
 
         return promise.then((result) => {
             return result;
+        }).catch(() => {
+            return false;
         });
     }
 

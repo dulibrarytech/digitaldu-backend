@@ -16,17 +16,22 @@
 
  */
 
+const ES = require('elasticsearch');
 const HTTP = require('../../libs/http');
 const ENDPOINTS = require('../../indexer/endpoints');
+const INDEXER_UTILS_TASKS = require('../../indexer/tasks/indexer_index_utils_tasks');
 const LOGGER = require('../../libs/log4');
 
 const Reindex_tasks = class {
 
-    constructor(ES, INDEX, DB, TABLE) {
-        this.ES = ES;
+    constructor(ES_CONFIG, INDEX, DB, TABLE) {
+        this.ES_CONFIG = ES_CONFIG;
         this.INDEX = INDEX;
         this.DB = DB;
         this.TABLE = TABLE;
+        this.CLIENT = new ES.Client({
+            host: this.ES_CONFIG.elasticsearch_host
+        });
     }
 
     /**
@@ -38,23 +43,24 @@ const Reindex_tasks = class {
 
             (async () => {
 
-                let result = true;
                 let response = await HTTP.head({
-                    url: this.ES + '/' + this.INDEX
+                    url: this.ES_CONFIG.elasticsearch_host + '/' + this.INDEX
                 });
 
                 if (response.error === true) {
-                    LOGGER.module().error('ERROR: [/utils/tasks (check_backend_index)] request failed. Backend index does not exist.');
-                    result = false;
+                    LOGGER.module().error('ERROR: [/utils/tasks (check_index)] request failed. Index does not exist.');
+                    reject(false);
                 }
 
-                resolve(result);
+                resolve(true);
 
             })();
         });
 
         return promise.then((result) => {
             return result;
+        }).catch(() => {
+            return false;
         });
     }
 
@@ -66,40 +72,26 @@ const Reindex_tasks = class {
         let promise = new Promise((resolve, reject) => {
 
             (async () => {
-
-                let is_deleted = true;
-                let data = {
-                    'index_name': this.INDEX
-                };
-                /*
-                let response = await HTTP.post({
-                    endpoint: ENDPOINTS().indexer.indexer_manage_index, // TODO: get from endpoints.js '/api/admin/v1/indexer/index/delete'
-                    data: data
-                });
-                 */
-
-                // TODO: TEST
-                let response = await HTTP.delete({
-                    endpoint: ENDPOINTS().indexer.indexer_manage_index + '?index_name=' + this.INDEX
-                });
-
-                if (response.error === true) {
-                    LOGGER.module().error('ERROR: [/utils/tasks (delete_index)] backend indexer error ' + response.error);
-                    is_deleted = false;
+                try {
+                    const UTILS_TASKS = new INDEXER_UTILS_TASKS(this.INDEX, this.CLIENT, this.ES_CONFIG);
+                    resolve(await UTILS_TASKS.delete_index());
+                } catch (error) {
+                    LOGGER.module().error('ERROR: [/utils/tasks (check_index)] Unable to delete index.');
+                    reject(true);
                 }
-
-                resolve(is_deleted);
 
             })();
         });
 
         return promise.then((result) => {
             return result;
+        }).catch(() => {
+            return false;
         });
     }
 
     /**
-     * Creates index (admin)
+     * Creates index
      */
     create_index = () => {
 
@@ -107,69 +99,69 @@ const Reindex_tasks = class {
 
             (async () => {
 
-                let is_created = true;
-                let data = {
-                    'index_name': this.INDEX
-                };
-
-                let response = await HTTP.post({
-                    endpoint: ENDPOINTS().indexer.indexer_manage_index,
-                    data: data
-                });
-
-                if (response.error === true) {
-                    is_created = false;
-                    LOGGER.module().error('ERROR: [/import/utils module (backend_reindex/create_index/create)] backend indexer error ' + response.error);
+                try {
+                    const UTILS_TASKS = new INDEXER_UTILS_TASKS(this.INDEX, this.CLIENT, this.ES_CONFIG);
+                    resolve(await UTILS_TASKS.create_index());
+                } catch(error) {
+                    LOGGER.module().error('ERROR: [/import/utils module (backend_reindex/create_index/create)] backend indexer error ' + error.message);
+                    reject(true);
                 }
 
-                resolve(is_created);
+                resolve(true);
 
             })();
         });
 
         return promise.then((result) => {
             return result;
+        }).catch(() => {
+            return false;
         });
     }
 
     /**
-     * indexes repository records
-     * @return {boolean}
+     * Initiates repository records indexing
+     * @param index
+     * @return boolean
      */
-    index = () => {
+    index = (index) => {
 
         let promise = new Promise((resolve, reject) => {
 
             (async () => {
 
-                let is_indexing = true;
                 let data = {
                     'index_name': this.INDEX,
-                    'reindex': true
+                    'reindex': true,
+                    'index': index
                 };
 
                 let response = await HTTP.put({
-                    endpoint: ENDPOINTS().indexer.indexer_index_records,
+                    endpoint: ENDPOINTS().indexer.indexer_index_records.endpoint,
                     data: data
                 });
 
                 if (response.error === true) {
-                    is_indexing = false;
                     LOGGER.module().error('ERROR: [/import/utils module (index)] backend indexer error ' + response.error);
+                    reject(false);
                 }
 
-                resolve(is_indexing);
+                resolve(true);
 
             })();
         });
 
         return promise.then((result) => {
             return result;
+        }).catch(() => {
+            return false;
         });
     }
 
     /**
-     * Monitors index progress
+     * Monitors indexing progress
+     * @param where_obj
+     * @return boolean
      */
     monitor_index_progress = (where_obj) => {
 
@@ -188,17 +180,17 @@ const Reindex_tasks = class {
                         resolve(true);
                     }
 
-                    return null;
                 })
                 .catch((error) => {
-                    LOGGER.module().fatal('FATAL: [/stats/model module (get_stats/monitor_index_progress)] unable to monitor backend index progress ' + error);
+                    LOGGER.module().error('ERROR: [/utils/tasks (monitor_index_progress)] unable to monitor backend index progress ' + error.message);
                     resolve(false);
                 });
-
         });
 
         return promise.then((result) => {
             return result;
+        }).catch(() => {
+            return false;
         });
     }
 };

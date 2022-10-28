@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2022 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ module.exports = function (app) {
         .post(TOKEN.verify, CONTROLLER.index_record)
         .put(TOKEN.verify, CONTROLLER.index_records)
         .delete(TOKEN.verify, CONTROLLER.delete);
-
+    // TODO: update route
     app.route(ENDPOINTS().indexer.indexer_manage_index)
         .post(TOKEN.verify, CONTROLLER.create_index)
         .delete(TOKEN.verify, CONTROLLER.delete_index);

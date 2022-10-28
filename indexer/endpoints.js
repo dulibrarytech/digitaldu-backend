@@ -33,23 +33,24 @@ const ENDPOINTS = {
             },
             put: {
                 description: 'Full repository reindex',
-                params: 'token or api_key, optional param (index) === "frontend" or "backend"'
+                params: 'token or api_key, optional param',
+                body: 'index=frontend/backend'
             },
             delete: {
                 description: 'Deletes record from admin index',
-                params: 'token or api_key, uuid'
+                params: 'token=api_key, uuid'
             }
         },
         indexer_manage_index: {
-            endpoint: `${PREFIX}${VERSION}${ENDPOINT}manage_index`,
+            endpoint: `${PREFIX}${VERSION}${ENDPOINT}manage`,
             description: 'Allows us to create and delete indices',
             post: {
-                description: 'Creates new repository search index',
+                description: 'Creates new search index',
                 params: 'token or api_key',
                 body: 'index_name'
             },
             delete: {
-                description: 'Deletes existing repository search index',
+                description: 'Deletes existing search index',
                 params: 'token or api_key, uuid, index (frontend/backend)'
             }
         },

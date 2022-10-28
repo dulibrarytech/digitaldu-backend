@@ -49,6 +49,11 @@ exports.index_record = (req, res) => {
  */
 exports.index_records = (req, res) => {
 
+    if (req.body === undefined) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
     let index = req.body.index;
 
     if (index === undefined) {
@@ -60,7 +65,7 @@ exports.index_records = (req, res) => {
     });
 };
 
-/**
+/** TODO
  * Moves published records from admin to public index
  * @param req
  * @param res
@@ -78,6 +83,11 @@ exports.publish = function (req, res) {
  */
 exports.supress = function (req, res) {
 
+    if (req.query.uuid === undefined) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
     let uuid = req.query.uuid;
 
     MODEL.suppress(uuid, (data) => {
@@ -92,6 +102,11 @@ exports.supress = function (req, res) {
  */
 exports.delete = function (req, res) {
 
+    if (req.query.uuid === undefined) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
     let uuid = req.query.uuid;
 
     MODEL.delete(uuid, (data) => {
@@ -100,6 +115,11 @@ exports.delete = function (req, res) {
 };
 
 exports.create_index = function (req, res) {
+
+    if (req.body.index_name === undefined) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
 
     let index_name = req.body.index_name;
 
@@ -110,7 +130,11 @@ exports.create_index = function (req, res) {
 
 exports.delete_index = function (req, res) {
 
-    // TODO: create task object
+    if (req.query.index_name === undefined) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
     let index_name = req.query.index_name;
 
     SERVICE.delete_index(index_name, function (data) {

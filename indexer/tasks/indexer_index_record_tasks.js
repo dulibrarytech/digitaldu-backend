@@ -49,13 +49,15 @@ const Indexer_display_record_tasks = class {
 
             } catch (error) {
                 LOGGER.module().error('ERROR: [/indexer/indexer_display_record_tasks (get_index_display_record_data)] unable to get index db record ' + error.message);
-                reject(error);
+                reject(false);
             }
 
         });
 
         return promise.then((data) => {
             return data;
+        }).catch(() => {
+            return false;
         });
     }
 };

@@ -98,7 +98,7 @@ exports.create_collection_record = (req, res) => {
     });
 };
 
-exports.publish_record = (req, res) => {
+exports.publish = (req, res) => {
 
     let uuid = req.body.uuid;
     let type = req.body.type;
@@ -108,13 +108,13 @@ exports.publish_record = (req, res) => {
         return false;
     }
 
-    MODEL.publish_record(uuid, type, (data) => {
+    MODEL.publish(uuid, type, (data) => {
         CACHE.clear_cache();
         res.status(data.status).send(data.data);
     });
 };
 
-exports.suppress_record = (req, res) => {
+exports.suppress = (req, res) => {
 
     let uuid = req.body.uuid;
     let type = req.body.type;
@@ -124,7 +124,7 @@ exports.suppress_record = (req, res) => {
         return false;
     }
 
-    MODEL.suppress_record(uuid, type, (data) => {
+    MODEL.suppress(uuid, type, (data) => {
         CACHE.clear_cache();
         res.status(data.status).send(data.data);
     });

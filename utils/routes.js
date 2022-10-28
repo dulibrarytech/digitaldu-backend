@@ -32,14 +32,15 @@ module.exports = function (app) {
         res.send('User-agent: *\nDisallow: /');
     });
 
-    app.route(ENDPOINTS().utils.utils_reindex)
-        .post(TOKEN.verify, UTILS.reindex);
-
-    app.route('/normalize')
+    // temporary test routes
+    app.route('/normalize') // TEST
         .post(UTILS.normalize_records);
 
-    app.route('/normalize/collections')
+    app.route('/normalize/collections') // TEST
         .post(UTILS.normalize_collection_records);
+
+    app.route(ENDPOINTS().utils.utils_reindex.endpoint)
+        .post(TOKEN.verify, UTILS.reindex);
 
     app.route(ENDPOINTS().utils.utils_clear_cache)
         .post(TOKEN.verify, UTILS.clear_cache);

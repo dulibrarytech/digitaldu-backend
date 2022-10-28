@@ -19,7 +19,6 @@
 'use strict';
 
 const VALIDATOR = require('validator');
-const LOGGER = require('../libs/log4');
 const CACHE = require('../libs/cache');
 const DURACLOUD = require('../libs/duracloud');
 const ES_CONFIG = require('../config/elasticsearch_config')();
@@ -31,6 +30,7 @@ const REPO_OBJECTS = DB_TABLES.repo.repo_objects;
 const CONVERT_QUEUE = 'tbl_convert_queue';
 const UTILS_NORMALIZE_RECORDS_TASKS = require('../utils/tasks/utils_normalize_records_tasks');
 const INDEX_RECORD_LIB = require('../libs/index_record_lib');
+const LOGGER = require('../libs/log4');
 
 /**
  * Re-indexes repository records
@@ -41,34 +41,30 @@ exports.reindex = (index, callback) => {
 
     (async () => {
 
+        let es_index = ES_CONFIG.elasticsearch_back_index;
         let where_obj = {};
+        where_obj.is_indexed = 0;
+        where_obj.is_active = 1;
 
         if (index === 'frontend') {
-            where_obj.is_indexed = 0;
-            where_obj.is_active = 1;
             where_obj.is_published = 1;
-            index = ES_CONFIG.elasticsearch_front_index;
-        } else if (index === 'backend') {
-            where_obj.is_indexed = 0;
-            where_obj.is_active = 1;
-            index = ES_CONFIG.elasticsearch_back_index;
+            es_index = ES_CONFIG.elasticsearch_front_index;
         }
 
-        const TASKS = new REINDEX_TASKS(ES_CONFIG.elasticsearch_back_index, index, DB, REPO_OBJECTS);
-        let is_deleted;
+        const TASKS = new REINDEX_TASKS(ES_CONFIG, es_index, DB, REPO_OBJECTS);
         let is_created = true;
         let is_indexing;
         let index_exists = await TASKS.check_index();
 
         if (index_exists === true) {
-            is_deleted = await TASKS.delete_index();
+            await TASKS.delete_index();
         } else if (index_exists === false) {
             is_created = await TASKS.create_index();
         }
 
         if (is_created !== false) {
 
-            is_indexing = await TASKS.index();
+            is_indexing = await TASKS.index(index);
 
             if (is_indexing === true) {
 

@@ -93,14 +93,12 @@ exports.index_records = (index, callback) => {
         let is_published = false;
         let is_reset = await INDEX_TASKS.reset_indexed_flags();
         let where_obj = {};
+        where_obj.is_active = 1;
+        where_obj.is_indexed = 0;
 
         if (index === 'frontend') {
-            where_obj.is_published = 1;
-            where_obj.is_active = 1;
             is_published = true;
-        } else if (index === 'backend') {
-            where_obj.is_indexed = 0;
-            where_obj.is_active = 1;
+            where_obj.is_published = 1;
         }
 
         if (is_reset === false) {
@@ -119,7 +117,7 @@ exports.index_records = (index, callback) => {
 
                 uuid = await INDEX_TASKS.get_record_uuid(where_obj);
 
-                if (uuid === 0) {
+                if (uuid === 0 || uuid === undefined) {
                     clearInterval(timer);
                     LOGGER.module().info('INFO: [/indexer/model (index_records)] Full re-indexing complete.');
                     return false;
@@ -134,7 +132,7 @@ exports.index_records = (index, callback) => {
                 response = await INDEX_TASKS.index_record(uuid, is_published, record);
 
                 if (response.result === 'created' || response.result === 'updated') {
-                    console.log(uuid + ' indexed.');
+
                     LOGGER.module().info('INFO: [/indexer/model (index_records)] ' + uuid + ' indexed.');
                     result = await INDEX_TASKS.update_indexing_status(uuid);
 
@@ -158,7 +156,7 @@ exports.index_records = (index, callback) => {
     });
 };
 
-/**
+/** TODO
  * Copies ES index records from admin to public index
  * @param query
  * @param callback
@@ -169,7 +167,7 @@ exports.publish = (query, callback) => {
 
         let cb = {
             status: 200,
-            message: 'Unable to pulish record(s).'
+            message: 'Unable to publish record(s).'
         };
 
         const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, REPO_OBJECTS, CLIENT, ES_CONFIG);
