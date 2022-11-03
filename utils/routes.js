@@ -32,7 +32,7 @@ module.exports = function (app) {
         res.send('User-agent: *\nDisallow: /');
     });
 
-    // temporary test routes
+    // temporary refactor routes
     app.route('/normalize') // TEST
         .post(UTILS.normalize_records);
 

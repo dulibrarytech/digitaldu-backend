@@ -18,7 +18,7 @@
 
 'use strict';
 
-const VALIDATOR_CONFIG = require('../config/index_records_validator_config')();
+// const VALIDATOR_CONFIG = require('../config/index_records_validator_config')();
 const VALIDATE = require('../libs/validate_lib');
 const LOGGER = require('../libs/log4');
 
@@ -30,9 +30,10 @@ const LOGGER = require('../libs/log4');
  */
 const Index_record_lib = class {
 
-    constructor(DB, TABLE) {
+    constructor(DB, TABLE, VALIDATOR_CONFIG) {
         this.DB = DB;
         this.TABLE = TABLE;
+        this.VALIDATOR_CONFIG = VALIDATOR_CONFIG;
     }
 
     /**
@@ -76,7 +77,7 @@ const Index_record_lib = class {
 
     /**
      * Constructs index record from DB data
-     * @param data
+     * @param data (data object from get_index_record_data)
      * @return object <index record> / returns false if an error occurs
      */
     create_index_record = (data) => {
@@ -86,9 +87,9 @@ const Index_record_lib = class {
         let config;
 
         if (data.object_type === 'collection') {
-            config = VALIDATOR_CONFIG.parent_index_record;
+            config = this.VALIDATOR_CONFIG.parent_index_record;
         } else if (data.object_type === 'object') {
-            config = VALIDATOR_CONFIG.child_index_record;
+            config = this.VALIDATOR_CONFIG.child_index_record;
         } else {
             LOGGER.module().fatal('FATAL: [/libs/index_record_lib (create_index_record)] Unable to get index record schema validation');
             return false;
@@ -140,8 +141,8 @@ const Index_record_lib = class {
 
                 let transcript_arr = JSON.parse(data.transcript);
 
-                for (let i=0;i<metadata.parts.length;i++) {
-                    for (let j=0;j<transcript_arr.length;j++) {
+                for (let i = 0; i < metadata.parts.length; i++) {
+                    for (let j = 0; j < transcript_arr.length; j++) {
                         if (transcript_arr[j].call_number === metadata.parts[i].title.replace('.tif', '')) {
                             metadata.parts[i].transcript = transcript_arr[j].transcript_text;
                         }
@@ -159,7 +160,7 @@ const Index_record_lib = class {
                     metadata.parts = JSON.parse(data.compound_parts);
                 }
 
-                for (let i=0;i<metadata.parts.length;i++) {
+                for (let i = 0; i < metadata.parts.length; i++) {
 
                     if (metadata.parts[i].kaltura_id !== undefined && typeof metadata.parts[i].kaltura_id === 'string') {
                         index_record.kaltura_id = metadata.parts[i].kaltura_id;
@@ -172,7 +173,7 @@ const Index_record_lib = class {
 
             let names = metadata.names;
 
-            for (let i=0;i<names.length;i++) {
+            for (let i = 0; i < names.length; i++) {
                 if (names[i].role !== undefined && names[i].role === 'creator') {
                     index_record.creator = names[i].title;
                 }
@@ -181,7 +182,7 @@ const Index_record_lib = class {
 
         if (metadata.subjects !== undefined) {
             let subjectsArr = [];
-            for (let i=0;i<metadata.subjects.length;i++) {
+            for (let i = 0; i < metadata.subjects.length; i++) {
                 if (metadata.subjects[i].title !== null) {
                     subjectsArr.push(metadata.subjects[i].title);
                 }
@@ -196,7 +197,7 @@ const Index_record_lib = class {
 
             let notes = metadata.notes;
 
-            for (let i=0;i<notes.length;i++) {
+            for (let i = 0; i < notes.length; i++) {
                 if (notes[i].type !== undefined && notes[i].type === 'abstract') {
                     index_record.abstract = notes[i].content;
                 }
@@ -231,39 +232,52 @@ const Index_record_lib = class {
      */
     flag_record = (uuid, errors) => {
 
-        this.DB(this.TABLE)
-            .where({
-                uuid: uuid
-            })
-            .update({
-                is_valid: 0,
-                validation_errors: JSON.stringify(errors)
-            })
-            .then((data) => {
+        let promise = new Promise((resolve, reject) => {
 
-                if (data === 1) {
-                    LOGGER.module().info('INFO: [/libs/display-record lib (flag_record)] Record flagged');
-                }
+            this.DB(this.TABLE)
+                .where({
+                    uuid: uuid
+                })
+                .update({
+                    is_valid: 0,
+                    validation_errors: JSON.stringify(errors)
+                })
+                .then((data) => {
 
+                    if (data === 1) {
+                        LOGGER.module().info('INFO: [/libs/display-record lib (flag_record)] Record flagged');
+                        resolve(true);
+                    }
+                })
+                .catch((error) => {
+                    LOGGER.module().error('ERROR: [/libs/display-record lib (flag_record)] unable to flag record ' + error.message);
+                    reject(false);
+                });
 
-            })
-            .catch((error) => {
-                LOGGER.module().error('ERROR: [/libs/display-record lib (flag_record)] unable to flag record ' + error.message);
-            });
+        });
+
+        return promise.then((result) => {
+            return result;
+        }).catch((error) => {
+            return error;
+        });
     };
 
     /**
      * Updates the display record
-     * @param where_obj
-     * @param index_record
+     * @param uuid
+     * @param index_record (constructed by create_index_record)
      * @return boolean
      */
-    update_index_record = (where_obj, index_record) => {
+    update_index_record = (uuid, index_record) => {
 
         let promise = new Promise((resolve, reject) => {
 
             this.DB(this.TABLE)
-                .where(where_obj)
+                .where({
+                    uuid: uuid,
+                    is_active: 1
+                })
                 .update({
                     index_record: JSON.stringify(index_record)
                 })

@@ -34,7 +34,7 @@ const Create_collection_tasks = class {
     constructor(DB, TABLE, ARCHIVESSPACE_LIB, HANDLES_LIB) { // TODO: pass in archivesspace and handle configs into respective class constructors
         this.DB = DB;
         this.TABLE = TABLE;
-        this.DISPLAY_RECORD_LIB = new INDEX_RECORD_LIB(this.DB, this.TABLE);
+        this.INDEX_RECORD = new INDEX_RECORD_LIB(this.DB, this.TABLE);
         this.ARCHIVESSPACE_LIB = ARCHIVESSPACE_LIB;
         this.HANDLES_LIB = HANDLES_LIB;
     }
@@ -63,7 +63,7 @@ const Create_collection_tasks = class {
                 })
                 .catch((error) => {
                     LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks)] unable to check uri ' + error.message);
-                    reject(error);
+                    reject(false);
                 });
         });
 
@@ -85,11 +85,10 @@ const Create_collection_tasks = class {
             (async () => {
 
                 try {
-                    let response = await this.ARCHIVESSPACE_LIB.get_session_token();
-                    let json = JSON.parse(response.data);
-                    resolve(json.session);
+                    resolve(await this.ARCHIVESSPACE_LIB.get_session_token());
                 } catch (error) {
-                    reject(error);
+                    LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks)] unable to get ArchivesSpace session token ' + error.message);
+                    reject(false);
                 }
 
             })();
@@ -104,7 +103,7 @@ const Create_collection_tasks = class {
     }
 
     /**
-     * Gets archivesspace resource (collection) record
+     * Gets ArchivesSpace resource (collection) record
      * @param uri
      * @param token
      * @returns Promise string
@@ -116,18 +115,18 @@ const Create_collection_tasks = class {
             (async () => {
 
                 try {
-                    let response = await this.ARCHIVESSPACE_LIB.get_resource_record(uri, token);
-                    resolve(JSON.stringify(response.metadata.data));
+                    // TODO: check uri for resource uri section
+                    resolve(JSON.stringify(await this.ARCHIVESSPACE_LIB.get_record(uri, token)));
                 } catch (error) {
                     LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks/get_resource_record)] unable to get resource record ' + error);
-                    reject(error);
+                    reject(false);
                 }
 
             })();
         });
 
-        return promise.then((metadata) => {
-            return metadata;
+        return promise.then((record) => {
+            return record;
         }).catch((error) => {
             return error;
         });
@@ -189,9 +188,10 @@ const Create_collection_tasks = class {
      * @param data object
      * returns Promise string
      */
-    create_display_record = (data) => {
+    create_index_record = (data) => {
+
         try {
-            return this.INDEX_RECORD_LIB.create_index_record(data);
+            return this.INDEX_RECORD.create_index_record(data);
         } catch (error) {
             LOGGER.module().error('ERROR: [/repository/tasks (create_collection_tasks/create_display_record)] ' + error.message);
             return error;
@@ -227,7 +227,7 @@ const Create_collection_tasks = class {
         });
     }
 
-    /**
+    /** TODO: import indexer task?
      * Indexes display record
      * @param uuid
      * @returns Promise

@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2022 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@
 
 const VALIDATOR = require('validator');
 const CACHE = require('../libs/cache');
-const DURACLOUD = require('../libs/duracloud');
+const DURACLOUD_LIB = require('../libs/duracloud');
 const ES_CONFIG = require('../config/elasticsearch_config')();
 const DB = require('../config/db_config')();
 const DBQ = require('../config/dbqueue_config')();
@@ -98,7 +98,7 @@ exports.reindex = (index, callback) => {
     });
 };
 
-/**
+/** TEST
  * Normalize collection metadata and index records
  * @param callback
  */
@@ -107,8 +107,6 @@ exports.normalize_collection_records = function (callback) {
     (async () => {
 
         console.log('normalizing collection records...');
-
-        // const INDEX_RECORD_TASKS = new INDEX_RECORD_LIB(DB, REPO_OBJECTS);
         const NORMALIZE_RECORDS_TASK = new UTILS_NORMALIZE_RECORDS_TASKS(DB, REPO_OBJECTS);
         let token = await NORMALIZE_RECORDS_TASK.get_session_token();
         let result = await NORMALIZE_RECORDS_TASK.reset_updated_flags();
@@ -133,7 +131,7 @@ exports.normalize_collection_records = function (callback) {
                 where_obj.is_active = 1;
 
                 data = await NORMALIZE_RECORDS_TASK.get_record_uri(where_obj);
-                console.log(data);
+
                 if (data === 0) {
                     clearInterval(timer);
                     console.log('Normalization complete.');
@@ -173,7 +171,7 @@ exports.normalize_collection_records = function (callback) {
     });
 };
 
-/**
+/** TEST
  * Normalize index records
  * @param callback
  */
@@ -277,8 +275,6 @@ exports.normalize_records = function (callback) {
         message: 'Normalizing repository records...'
     });
 };
-
-// TODO: update collection metadata records - use aspace plugin
 
 /**
  * Retrieves files
@@ -507,7 +503,7 @@ exports.batch_convert = function (req, callback) {
                     }
 
                     let record = data.pop();
-                    DURACLOUD.convert_service(record);
+                    DURACLOUD_LIB.convert_service(record);
 
                 }, 6000);
 

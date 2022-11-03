@@ -28,9 +28,9 @@ const HTTP = require('axios'),
  * @param ARCHIVESSPACE_USER
  * @param ARCHIVESSPACE_PASSWORD
  * @param ARCHIVESSPACE_REPOSITORY_ID
- * @type {ArchivesSpace_lib}
+ * @type {Archivesspace}
  */
-const ArchivesSpace_lib = class {
+const Archivesspace = class {
 
     constructor(ARCHIVESSPACE_CONFIG) {
         this.ARCHIVESSPACE_HOST = ARCHIVESSPACE_CONFIG.archivesspace_host;
@@ -126,59 +126,11 @@ const ArchivesSpace_lib = class {
     };
 
     /**
-     * Gets JSON representation of metadata resource record from archivesspace
+     * Gets JSON representation of metadata archival object and resource record(s) from Archivesspace
      * @param uri
      * @param token
      */
-    get_resource_record = (uri, token) => {
-
-        let promise = new Promise((resolve, reject) => {
-
-            (async () => {
-
-                let api_url = this.ARCHIVESSPACE_HOST + uri;
-
-                try {
-
-                    let response = await HTTP.get(api_url, {
-                        timeout: TIMEOUT,
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-ArchivesSpace-Session': token
-                        }
-                    });
-
-                    if (response.status === 200) {
-
-                        resolve({
-                            error: false,
-                            metadata: response
-                        });
-
-                        return false;
-                    }
-
-                } catch (error) {
-                    LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_metadata)] Unable to get archivesspace resource: (http status code ' + error.response.status + ') ' + error.message);
-                    reject(error);
-                }
-
-            })();
-        });
-
-        return promise.then((response) => {
-            return response;
-        }).catch((error) => {
-            return error;
-        });
-    };
-
-    /**
-     * Gets JSON representation of metadata archival object record from archivesspace
-     * @param uri
-     * @param token
-     */
-    get_record = (uri, token) => { // get_archival_object_record
+    get_record = (uri, token) => {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -269,4 +221,53 @@ const ArchivesSpace_lib = class {
     }
 };
 
-module.exports = ArchivesSpace_lib;
+module.exports = Archivesspace;
+
+/** // TODO: remove
+ * Gets JSON representation of metadata resource record from archivesspace
+ * @param uri
+ * @param token
+
+ get_resource_record = (uri, token) => {
+
+        let promise = new Promise((resolve, reject) => {
+
+            (async () => {
+
+                let api_url = this.ARCHIVESSPACE_HOST + uri;
+
+                try {
+
+                    let response = await HTTP.get(api_url, {
+                        timeout: TIMEOUT,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-ArchivesSpace-Session': token
+                        }
+                    });
+
+                    if (response.status === 200) {
+
+                        resolve({
+                            error: false,
+                            metadata: response
+                        });
+
+                        return false;
+                    }
+
+                } catch (error) {
+                    LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_metadata)] Unable to get archivesspace resource: (http status code ' + error.response.status + ') ' + error.message);
+                    reject(error);
+                }
+
+            })();
+        });
+
+        return promise.then((response) => {
+            return response;
+        }).catch((error) => {
+            return error;
+        });
+    };
+ */

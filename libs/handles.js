@@ -23,9 +23,9 @@ const LOGGER = require('../libs/log4');
 
 /**
  * Creates and updates record handles
- * @type {Handles_lib}
+ * @type {Handles}
  */
-const Handles_lib = class {
+const Handles = class {
 
     constructor(HANDLE_CONFIG) {
         this.HANDLE_CONFIG = HANDLE_CONFIG;
@@ -232,4 +232,4 @@ const Handles_lib = class {
 
 // TODO: add delete method
 // DELETE http://hdl.coalliance.org:8080/handle-service-0.6/10176/test-du-repo-2022?target=https://specialcollections.du.edu/object/test-du-repo-2022
-module.exports = Handles_lib;
+module.exports = Handles;

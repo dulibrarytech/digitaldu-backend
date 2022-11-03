@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2022 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -106,7 +106,7 @@ exports.create_collection_record = (uri, is_member_of_collection, callback) => {
         } catch (error) {
 
             callback({
-                status: 500,
+                status: 200,
                 message: 'Unable to create collection record ' + error.message
             });
         }

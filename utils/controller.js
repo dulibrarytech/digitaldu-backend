@@ -57,6 +57,7 @@ exports.clear_cache = function (req, res) {
     });
 };
 
+// TODO: remove functions below?
 exports.batch_convert = function (req, res) {
     MODEL.batch_convert(req, function (data) {
         res.status(data.status).send(data.data);

@@ -18,18 +18,11 @@
 
 import {it, expect} from 'vitest';
 
-const ARCHIVESSPACE_CONFIG = require('../../test/archivesspace_config')(),
-    ARCHIVESSPACE_LIB = require('../archivesspace'),
-    TEST_RECORDS = require('../../test/test_records')(),
-    LIB = new ARCHIVESSPACE_LIB(
-    ARCHIVESSPACE_CONFIG.archivesspace_host,
-    ARCHIVESSPACE_CONFIG.archivesspace_user,
-    ARCHIVESSPACE_CONFIG.archivesspace_password,
-    ARCHIVESSPACE_CONFIG.archivesspace_repository_id);
-
-let result = await LIB.get_session_token();
-let json = JSON.parse(result.data);
-let session = json.session;
+const ARCHIVESSPACE_CONFIG = require('../../test/archivesspace_config')();
+const ARCHIVESSPACE_LIB = require('../archivesspace');
+const TEST_RECORDS = require('../../test/test_records')();
+const LIB = new ARCHIVESSPACE_LIB(ARCHIVESSPACE_CONFIG);
+let session = await LIB.get_session_token();
 
 it('Archivesspace ping', async function () {
     const response = {
@@ -41,13 +34,17 @@ it('Archivesspace ping', async function () {
     await expect(LIB.ping()).resolves.toMatchObject(response);
 }, 10000);
 
+it('Get Archivesspace archival record', async function () {
+    let record = TEST_RECORDS.child_records[1];
+    let uri = record.uri;
+    await expect(LIB.get_record(uri, session)).resolves.toBeDefined();
+}, 10000);
+
+// TODO: test - get resource record using get_record() function
+/* TODO: function has been consolidated with get_record - handles both archival and resource records/objects
 it('Get Archivesspace resource record', async function () {
     let record = TEST_RECORDS.collection_record;
     await expect(LIB.get_resource_record(record.uri, session)).resolves.toBeDefined();
 }, 10000);
 
-it('Get Archivesspace archival record', async function () {
-    let record = TEST_RECORDS.child_records[1];
-    let uri = record.uri;
-    await expect(LIB.get_archival_object_record(uri, session)).resolves.toBeDefined();
-}, 10000);
+ */

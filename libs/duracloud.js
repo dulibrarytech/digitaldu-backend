@@ -23,7 +23,7 @@ const HTTP = require('axios'),
         'Content-Type': 'application/json'
     };
 
-const Duracloud_lib = class {
+const Duracloud = class {
 
     constructor(DURACLOUD_CONFIG, CONVERT_SERVICE_CONFIG) {
         this.DURACLOUD = DURACLOUD_CONFIG;
@@ -376,4 +376,4 @@ const Duracloud_lib = class {
     };
 };
 
-module.exports = Duracloud_lib;
+module.exports = Duracloud;

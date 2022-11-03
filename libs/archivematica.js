@@ -26,9 +26,9 @@ const CLIENT = require('ssh2-sftp-client'),
 /**
  * Object contains methods to access Archivematica
  * @param ARCHIVESSPACE (object)
- * @type {Archivematica_lib}
+ * @type {Archivematica}
  */
-const Archivematica_lib = class {
+const Archivematica = class {
 
     constructor(ARCHIVEMATICA_CONFIG) {
         this.ARCHIVEMATICA = ARCHIVEMATICA_CONFIG;
@@ -652,4 +652,4 @@ const Archivematica_lib = class {
     };
 };
 
-module.exports = Archivematica_lib;
+module.exports = Archivematica;

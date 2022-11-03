@@ -64,26 +64,3 @@ it.concurrent('Duracloud get_thumbnail (Unit Test)', async function () {
     let tn = dip_path + file;
     await expect(DURACLOUD.get_thumbnail(tn)).resolves.not.toBeFalsy();
 }, 10000);
-
-/*
-it('Archivematica Storage Service DIP usage', async function () {
-    await expect(LIB.get_dip_storage_usage()).resolves.toBeDefined();
-}, 10000);
-
-it('Archivematica sftp', async function () {
-    // TODO: await expect(LIB.list()).resolves.toBeDefined();
-}, 10000);
-
-it('Archivematica start transfer', async function () {
-    // TODO:
-}, 10000);
-
-it('Archivematica approve transfer', async function () {
-    // TODO:
-}, 10000);
-
-it('Archivematica get transfer status', async function () {
-    // TODO:
-}, 10000);
-
- */
