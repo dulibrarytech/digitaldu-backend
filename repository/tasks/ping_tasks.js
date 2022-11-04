@@ -16,7 +16,6 @@
 
  */
 
-// const ARCHIVESSPACE = require('../../libs/archivesspace');
 const HTTP = require('axios');
 const LOGGER = require('../../libs/log4');
 

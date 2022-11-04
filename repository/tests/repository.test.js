@@ -19,6 +19,7 @@
 import {it, expect, beforeAll} from 'vitest';
 const TEST_RECORDS = require('../../test/test_records')();
 const CREATE_COLLECTION_TASKS = require('../tasks/create_collection_tasks');
+const VALIDATOR_CONFIG = require('../../config/index_records_validator_config')();
 const ARCHIVESSPACE_CONFIG = require('../../test/archivesspace_config')();
 const ARCHIVESSPACE = require('../../libs/archivesspace');
 const ARCHIVESSPACE_LIB = new ARCHIVESSPACE(ARCHIVESSPACE_CONFIG);
@@ -34,6 +35,7 @@ const TEST_SESSION_TOKEN = await ARCHIVESSPACE_LIB.get_session_token();
 const TEST_RESOURCE_RECORD = await ARCHIVESSPACE_LIB.get_record(TEST_RESOURCE_URI, TEST_SESSION_TOKEN);
 
 // INTEGRATION
+/*
 require('dotenv').load();
 const EXPRESS = require('express');
 const REQUEST = require('supertest');
@@ -43,6 +45,7 @@ const APP = EXPRESS();
 const API_KEY = TOKEN_CONFIG.api_key;
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
+*/
 
 it.concurrent('Repository create collection check_uri task (Unit Test)', async function () {
     let uri = TEST_RECORDS.child_records[1].uri;
@@ -61,30 +64,14 @@ it.concurrent('Repository create_uuid task (Unit Test)', async function () {
     await expect(COLLECTION_TASKS.create_uuid()).resolves.toBeTypeOf('string');
 }, 10000);
 
-// TODO: add clean up function
+// TODO: add clean up (delete) function
 it.concurrent('Repository create_handle task (Integration Test)', async function () {
     let uuid = 'test-du-repo-2022-task';
     console.log(await COLLECTION_TASKS.create_handle(uuid));
     // await expect(LIB.create_handle(uuid)).resolves.toBeTypeOf('string');
 }, 10000);
 
-// TODO
-it.concurrent('Repository create display record task (Integration Test)', function () {
-    let obj = {};
-    obj.is_member_of_collection = 'root';
-    obj.uri = TEST_RESOURCE_URI;
-    obj.token = TEST_SESSION_TOKEN;
-    obj.metadata = JSON.stringify(TEST_RESOURCE_RECORD.metadata);
-    obj.uuid = '589f9eb5-6bfb-403c-b836-7f067a167249';
-    obj.handle = 'https://test-handle/test-du-repo-2022-task';
-    // console.log(obj);
-    // TODO: validator path needs to be adjusted
-    console.log('create dr: ', COLLECTION_TASKS.create_index_record(obj));
-    // expect(COLLECTION_TASKS.create_display_record(record)).toBeTypeOf('string');
-}, 10000);
-
-/*
-it.concurrent('Repository save record task (Integration Test)', async function () {
+it.concurrent('Repository create_index_record task (Integration Test)', function () {
 
     try {
         let record = {};
@@ -93,16 +80,34 @@ it.concurrent('Repository save record task (Integration Test)', async function (
         record.metadata = TEST_RECORDS.child_records[2].metadata;
         record.uuid = TEST_RECORDS.child_records[2].uuid;
         record.handle = TEST_RECORDS.child_records[2].handle;
-        record.display_record = TEST_RECORDS.child_records[2].display_record;
+        record.object_type = 'collection';
+        record.call_number = 'B002.TEST';
         record.metadata = JSON.stringify(record.metadata);
-        record.display_record = JSON.stringify(record.display_record);
-        await expect(COLLECTION_TASKS.save_record(record)).resolves.toBeTruthy();
+        expect(COLLECTION_TASKS.create_index_record(record)).toBeTypeOf('object');
+    } catch(error) {
+        console.log(error);
+    }
+}, 10000);
+
+it.concurrent('Repository save_record task (Integration Test)', async function () {
+
+    try {
+        let record = {};
+        record.is_member_of_collection = TEST_RECORDS.child_records[2].is_member_of_collection;
+        record.uri = TEST_RECORDS.child_records[2].uri;
+        record.metadata = TEST_RECORDS.child_records[2].metadata;
+        record.uuid = TEST_RECORDS.child_records[2].uuid;
+        record.handle = TEST_RECORDS.child_records[2].handle;
+        record.object_type = 'collection';
+        record.call_number = 'B002.TEST';
+        record.metadata = JSON.stringify(record.metadata);
+        record.index_record = JSON.stringify(COLLECTION_TASKS.create_index_record(record));
+        await expect(COLLECTION_TASKS.save_record(record)).resolves.toBeTypeOf('boolean');
     } catch(error) {
         console.log(error);
     }
 
 }, 10000);
-*/
 
 /* TODO
 it('Repository API Endpoint (E2E) ' + ENDPOINTS().repository.repo_ping.endpoint, async function() {

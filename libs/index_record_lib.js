@@ -18,7 +18,6 @@
 
 'use strict';
 
-// const VALIDATOR_CONFIG = require('../config/index_records_validator_config')();
 const VALIDATE = require('../libs/validate_lib');
 const LOGGER = require('../libs/log4');
 

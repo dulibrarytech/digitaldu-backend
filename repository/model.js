@@ -74,6 +74,7 @@ exports.create_collection_record = (uri, is_member_of_collection, callback) => {
         try {
 
             let obj = {};
+            let is_saved = false;
             let token;
             let is_duplicate = await TASKS.check_uri(URI);
 
@@ -92,10 +93,14 @@ exports.create_collection_record = (uri, is_member_of_collection, callback) => {
             token = await TASKS.get_session_token();
             obj.metadata = await TASKS.get_resource_record(URI, token);
             obj.uuid = await TASKS.create_uuid();
-            obj.handle = await TASKS.create_handle(obj.uuid);
-            obj.display_record = await TASKS.create_display_record(obj);
-            await TASKS.save_record(obj);
-            await TASKS.index_record(obj.uuid);
+            obj.handle = 'https://test-handle.net/' + obj.uuid; // await TASKS.create_handle(obj.uuid);
+            is_saved = await TASKS.save_record(obj);
+            console.log('SAVED?: ', is_saved);
+            // TODO: get data from db - db data creates index record
+            // TODO: save resource record to db, then create index record
+
+            // obj.display_record = await TASKS.create_index_record(obj);
+            // await TASKS.index_record(obj.uuid);
 
             callback({
                 status: 201,
