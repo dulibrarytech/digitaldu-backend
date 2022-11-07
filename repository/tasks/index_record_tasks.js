@@ -23,9 +23,9 @@ const LOGGER = require('../../libs/log4');
 /**
  * Updates display record
  * @param uuid
- * @type {Display_record_tasks}
+ * @type {Index_record_tasks}
  */
-const Display_record_tasks = class {
+const Index_record_tasks = class {
 
     constructor(uuid, DB, TABLE) {
         this.uuid = uuid;
@@ -193,4 +193,4 @@ const Display_record_tasks = class {
     }
 };
 
-module.exports = Display_record_tasks;
+module.exports = Index_record_tasks;

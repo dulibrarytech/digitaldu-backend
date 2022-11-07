@@ -30,9 +30,7 @@ const HANDLES_LIB = new HANDLES(HANDLE_CONFIG);
 const TABLE = 'tbl_objects_test';
 const COLLECTION_TASKS = new CREATE_COLLECTION_TASKS(DB, TABLE, ARCHIVESSPACE_LIB, HANDLES_LIB);
 const TEST_RESOURCE_URI = '/repositories/2/resources/519';
-const TEST_ARCHIVAL_OBJECT_URI = '';
 const TEST_SESSION_TOKEN = await ARCHIVESSPACE_LIB.get_session_token();
-const TEST_RESOURCE_RECORD = await ARCHIVESSPACE_LIB.get_record(TEST_RESOURCE_URI, TEST_SESSION_TOKEN);
 
 // INTEGRATION
 /*
@@ -45,7 +43,7 @@ const APP = EXPRESS();
 const API_KEY = TOKEN_CONFIG.api_key;
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
-*/
+ */
 
 it.concurrent('Repository create collection check_uri task (Unit Test)', async function () {
     let uri = TEST_RECORDS.child_records[1].uri;
@@ -109,7 +107,9 @@ it.concurrent('Repository save_record task (Integration Test)', async function (
 
 }, 10000);
 
-/* TODO
+// TODO: cleanup
+
+/* TODO  - returning 404
 it('Repository API Endpoint (E2E) ' + ENDPOINTS().repository.repo_ping.endpoint, async function() {
     let response = await REQUEST(APP)
         .get(ENDPOINTS().repository.repo_ping.endpoint + '?api_key=' + API_KEY);

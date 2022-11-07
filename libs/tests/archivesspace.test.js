@@ -24,27 +24,22 @@ const TEST_RECORDS = require('../../test/test_records')();
 const LIB = new ARCHIVESSPACE_LIB(ARCHIVESSPACE_CONFIG);
 let session = await LIB.get_session_token();
 
-it('Archivesspace ping', async function () {
+it('ArchivesSpace ping', async function () {
     const response = {
         error: false,
         status: 'up',
-        message: 'Archivespace service is available'
+        message: 'ArchivesSpace service is available'
     };
 
     await expect(LIB.ping()).resolves.toMatchObject(response);
 }, 10000);
 
-it('Get Archivesspace archival record', async function () {
-    let record = TEST_RECORDS.child_records[1];
-    let uri = record.uri;
+it('Get ArchivesSpace record', async function () {
+    let uri = '/repositories/2/archival_objects/143818';
     await expect(LIB.get_record(uri, session)).resolves.toBeDefined();
 }, 10000);
 
-// TODO: test - get resource record using get_record() function
-/* TODO: function has been consolidated with get_record - handles both archival and resource records/objects
-it('Get Archivesspace resource record', async function () {
-    let record = TEST_RECORDS.collection_record;
-    await expect(LIB.get_resource_record(record.uri, session)).resolves.toBeDefined();
+it('Destroy ArchivesSpace session', async function () {
+    const response = { data: { status: 'session_logged_out' } };
+    await expect(LIB.destroy_session_token(session)).resolves.toMatchObject(response);
 }, 10000);
-
- */

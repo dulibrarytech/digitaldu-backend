@@ -62,7 +62,7 @@ const Archivesspace = class {
                         resolve({
                             error: false,
                             status: 'up',
-                            message: 'Archivespace service is available'
+                            message: 'ArchivesSpace service is available'
                         });
                     }
 
@@ -153,19 +153,18 @@ const Archivesspace = class {
                         resolve({
                             metadata: response.data
                         });
-
-                        return false;
                     }
 
                 } catch (error) {
-                    LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_metadata)] Unable to get archivesspace resource: (http status code ' + error.response.status + ') ' + error.message);
-                    reject(error);
+                    LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_record)] Unable to get archivesspace resource: ' + error.message);
+                    reject(false);
                 }
 
             })();
         });
 
         return promise.then((response) => {
+            console.log(response);
             return response;
         }).catch((error) => {
             return error;
@@ -174,9 +173,9 @@ const Archivesspace = class {
 
     /**
      * Terminates current session
-     * @param session
+     * @param token
      */
-    destroy_session_token = (session) => {
+    destroy_session_token = (token) => {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -191,7 +190,7 @@ const Archivesspace = class {
                         url: api_url,
                         timeout: TIMEOUT,
                         headers: {
-                            'X-ArchivesSpace-Session': session,
+                            'X-ArchivesSpace-Session': token,
                             'Content-Type': 'application/json'
                         }
                     });
@@ -201,8 +200,6 @@ const Archivesspace = class {
                         resolve({
                             data: response.data
                         });
-
-                        return false;
                     }
 
                 } catch (error) {
@@ -222,52 +219,3 @@ const Archivesspace = class {
 };
 
 module.exports = Archivesspace;
-
-/** // TODO: remove
- * Gets JSON representation of metadata resource record from archivesspace
- * @param uri
- * @param token
-
- get_resource_record = (uri, token) => {
-
-        let promise = new Promise((resolve, reject) => {
-
-            (async () => {
-
-                let api_url = this.ARCHIVESSPACE_HOST + uri;
-
-                try {
-
-                    let response = await HTTP.get(api_url, {
-                        timeout: TIMEOUT,
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-ArchivesSpace-Session': token
-                        }
-                    });
-
-                    if (response.status === 200) {
-
-                        resolve({
-                            error: false,
-                            metadata: response
-                        });
-
-                        return false;
-                    }
-
-                } catch (error) {
-                    LOGGER.module().error('ERROR: [/libs/archivesspace lib (get_metadata)] Unable to get archivesspace resource: (http status code ' + error.response.status + ') ' + error.message);
-                    reject(error);
-                }
-
-            })();
-        });
-
-        return promise.then((response) => {
-            return response;
-        }).catch((error) => {
-            return error;
-        });
-    };
- */

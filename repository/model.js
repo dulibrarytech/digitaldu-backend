@@ -94,13 +94,14 @@ exports.create_collection_record = (uri, is_member_of_collection, callback) => {
             obj.metadata = await TASKS.get_resource_record(URI, token);
             obj.uuid = await TASKS.create_uuid();
             obj.handle = 'https://test-handle.net/' + obj.uuid; // await TASKS.create_handle(obj.uuid);
+            obj.display_record = await JSON.stringify(TASKS.create_index_record(obj));
             is_saved = await TASKS.save_record(obj);
-            console.log('SAVED?: ', is_saved);
-            // TODO: get data from db - db data creates index record
-            // TODO: save resource record to db, then create index record
 
-            // obj.display_record = await TASKS.create_index_record(obj);
-            // await TASKS.index_record(obj.uuid);
+            if (is_saved === true) {
+                // await TASKS.index_record(obj.uuid);
+            } else {
+                // LOG
+            }
 
             callback({
                 status: 201,
@@ -137,6 +138,7 @@ exports.update_thumbnail_url = (uuid, thumbnail_url, callback) => {
             let data;
             let display_record;
 
+            // TODO: refactor
             await TASKS.update_repo_record();
             data = await TASKS.get_display_record_data();
             display_record = await TASKS.create_display_record(data);
