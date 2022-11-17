@@ -62,7 +62,7 @@ exports.publish_record = (match_phrase, callback) => {
     })();
 };
 
-/**
+/** TODO: Deprecate
  * Indexes record
  * @param uuid
  * @param callback

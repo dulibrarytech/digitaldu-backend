@@ -164,7 +164,6 @@ const Archivesspace = class {
         });
 
         return promise.then((response) => {
-            console.log(response);
             return response;
         }).catch((error) => {
             return error;

@@ -19,7 +19,6 @@
 import {it, expect, beforeAll} from 'vitest';
 const TEST_RECORDS = require('../../test/test_records')();
 const CREATE_COLLECTION_TASKS = require('../tasks/create_collection_tasks');
-const VALIDATOR_CONFIG = require('../../config/index_records_validator_config')();
 const ARCHIVESSPACE_CONFIG = require('../../test/archivesspace_config')();
 const ARCHIVESSPACE = require('../../libs/archivesspace');
 const ARCHIVESSPACE_LIB = new ARCHIVESSPACE(ARCHIVESSPACE_CONFIG);

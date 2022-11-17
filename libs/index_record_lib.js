@@ -225,6 +225,46 @@ const Index_record_lib = class {
     };
 
     /**
+     * Updates the display record
+     * @param uuid
+     * @param index_record (constructed by create_index_record)
+     * @return boolean
+     */
+    update_index_record = (uuid, index_record) => {
+
+        let promise = new Promise((resolve, reject) => {
+
+            this.DB(this.TABLE)
+                .where({
+                    uuid: uuid,
+                    is_active: 1
+                })
+                .update({
+                    index_record: JSON.stringify(index_record)
+                })
+                .then((data) => {
+
+                    if (data === 1) {
+                        LOGGER.module().info('INFO: [/libs/index_record_lib (update_index_record)] index record updated');
+                        resolve(true);
+                    }
+
+                    reject(false);
+                })
+                .catch((error) => {
+                    LOGGER.module().error('ERROR: [/libs/index_record_lib (update_index_record)] unable to update index record ' + error);
+                    reject(false);
+                });
+        });
+
+        return promise.then((result) => {
+            return result;
+        }).catch(() => {
+            return false;
+        });
+    };
+
+    /**
      * Flags invalid index record
      * @param uuid
      * @param errors
@@ -250,47 +290,6 @@ const Index_record_lib = class {
                 })
                 .catch((error) => {
                     LOGGER.module().error('ERROR: [/libs/display-record lib (flag_record)] unable to flag record ' + error.message);
-                    reject(false);
-                });
-
-        });
-
-        return promise.then((result) => {
-            return result;
-        }).catch((error) => {
-            return error;
-        });
-    };
-
-    /**
-     * Updates the display record
-     * @param uuid
-     * @param index_record (constructed by create_index_record)
-     * @return boolean
-     */
-    update_index_record = (uuid, index_record) => {
-
-        let promise = new Promise((resolve, reject) => {
-
-            this.DB(this.TABLE)
-                .where({
-                    uuid: uuid,
-                    is_active: 1
-                })
-                .update({
-                    index_record: JSON.stringify(index_record)
-                })
-                .then((data) => {
-
-                    if (data === 1) {
-                        LOGGER.module().info('INFO: [/libs/display-record lib (update_display_record)] display record updated');
-                        resolve(true);
-                    }
-
-                    reject(false);
-                })
-                .catch((error) => {
-                    LOGGER.module().fatal('FATAL: [/libs/display-record lib (update_display_record)] unable to update display record ' + error);
                     reject(false);
                 });
         });
