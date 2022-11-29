@@ -16,8 +16,9 @@
 
  */
 
-const TASK = require('../../repository/tasks/publish_record_tasks');
+const PUBLISH = require('../../repository/tasks/publish_record_tasks');
 const LOGGER = require('../../libs/log4');
+const INDEXER_INDEX_TASKS = require("../../indexer/tasks/indexer_index_tasks");
 
 /**
  * Publishes collection record
@@ -28,8 +29,8 @@ const LOGGER = require('../../libs/log4');
  */
 const Publish_collection_record_tasks = class {
 
-    constructor(uuid, DB, TABLE) {
-        this.uuid = uuid;
+    constructor(UUID, DB, TABLE) {
+        this.UUID = UUID;
         this.DB = DB;
         this.TABLE = TABLE;
     }
@@ -38,36 +39,80 @@ const Publish_collection_record_tasks = class {
      * Publishes record
      */
     publish = () => {
-        (async () => {
-            const task = new TASK(this.uuid);
-            await task.publish_record();
-        })();
+
+        let promise = new Promise((resolve, reject) => {
+
+            (async () => {
+
+                try {
+
+                    let match_phrase = {
+                        'uuid': this.UUID
+                    };
+                    let query = {};
+                    let bool = {};
+                    bool.must = {};
+                    bool.must.match_phrase = match_phrase;
+                    query.bool = bool;
+
+                    const TASK = new PUBLISH(this.UUID, this.DB, this.TABLE);
+                    let is_published = await TASK.publish_record(query);
+                    console.log('IS PUBLISHED task: ', is_published);
+
+                    if (is_published === true) {
+                        resolve(true);
+                    } else {
+                        resolve(false);
+                    }
+
+                } catch (error) {
+
+                }
+
+            })();
+        });
+
+        return promise.then((is_published) => {
+            return is_published;
+        }).catch(() => {
+            return false;
+        });
     };
 
     /**
      * Updates collection publish status
-     * @param status
+     * @param status (int) 1=0
      * @return boolean
      */
     update_collection_status = (status) => {
 
-        return this.DB(this.TABLE)
-            .where({
-                uuid: this.uuid,
-                is_active: 1
-            })
-            .update({
-                is_published: status
-            })
-            .then((data) => {
+        let promise = new Promise((resolve, reject) => {
 
-                if (data === 1) {
-                    return true;
-                }
-            })
-            .catch((error) => {
-                LOGGER.module().fatal('FATAL: [/repository/tasks (update_collection_status)] unable to update collection publish status ' + error.message);
-            });
+            this.DB(this.TABLE)
+                .where({
+                    uuid: this.UUID,
+                    is_active: 1
+                })
+                .update({
+                    is_published: status
+                })
+                .then((data) => {
+
+                    if (data === 1) {
+                        resolve(true);
+                    }
+                })
+                .catch((error) => {
+                    LOGGER.module().error('ERROR: [/repository/tasks (update_collection_status)] unable to update collection publish status ' + error.message);
+                    reject(false);
+                });
+        });
+
+        return promise.then((result) => {
+            return result;
+        }).catch(() => {
+            return false;
+        });
     };
 
     /**
@@ -76,18 +121,28 @@ const Publish_collection_record_tasks = class {
      */
     get_collection_uuid = () => {
 
-        return this.DB(this.TABLE)
-            .select('is_member_of_collection')
-            .where({
-                uuid: this.uuid,
-                is_active: 1
-            })
-            .then((data) => {
-                return data[0].is_member_of_collection;
-            })
-            .catch((error) => {
-                LOGGER.module().fatal('FATAL: [/repository/tasks (get_collection_uuid)] Unable to get collection uuid ' + error.message);
-            });
+        let promise = new Promise((resolve, reject) => {
+
+            return this.DB(this.TABLE)
+                .select('is_member_of_collection')
+                .where({
+                    uuid: this.UUID,
+                    is_active: 1
+                })
+                .then((data) => {
+                    resolve(data[0].is_member_of_collection);
+                })
+                .catch((error) => {
+                    LOGGER.module().error('ERROR: [/repository/tasks (get_collection_uuid)] Unable to get collection uuid ' + error.message);
+                    reject(false);
+                });
+        });
+
+        return promise.then((uuid) => {
+            return uuid;
+        }).catch(() => {
+            return false;
+        });
     }
 
     /**
@@ -97,25 +152,32 @@ const Publish_collection_record_tasks = class {
      */
     check_collection_publish_status = (collection_uuid) => {
 
-        return this.DB(this.TABLE)
-            .select('is_published')
-            .where({
-                uuid: collection_uuid,
-                is_active: 1
-            })
-            .then((data) => {
+        let promise = new Promise((resolve, reject) => {
 
-                let is_published = false;
+            return this.DB(this.TABLE)
+                .select('is_published')
+                .where({
+                    uuid: collection_uuid,
+                    is_active: 1
+                })
+                .then((data) => {
 
-                if (data[0].is_published === 1) {
-                    is_published = true;
-                }
+                    if (data[0].is_published === 1) {
+                        resolve(true);
+                    }
 
-                return is_published;
-            })
-            .catch((error) => {
-                LOGGER.module().fatal('FATAL: [/repository/tasks (check_collection_publish_status)] Unable to check collection status ' + error.message);
-            });
+                    resolve(false);
+                })
+                .catch((error) => {
+                    LOGGER.module().error('ERROR: [/repository/tasks (check_collection_publish_status)] Unable to check collection status ' + error.message);
+                    reject(false);
+                });
+        });
+        return promise.then((is_published) => {
+            return is_published;
+        }).catch(() => {
+            return false;
+        });
     }
 };
 

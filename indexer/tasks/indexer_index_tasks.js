@@ -57,6 +57,21 @@ const Indexer_index_tasks = class {
 
                     console.log('indexing ' + uuid + ' into ' + index);
 
+                    let response = await this.CLIENT.index({
+                        index: index,
+                        id: uuid,
+                        body: JSON.parse(record.index_record),
+                        refresh: true
+                    });
+
+                    console.log(response);
+                    if (response.StatusCode === 201) {
+                        resolve(true);
+                    } else {
+                        resolve(false);
+                    }
+
+                    /*
                     this.CLIENT.index({
                         index: index,
                         id: uuid,
@@ -70,6 +85,8 @@ const Indexer_index_tasks = class {
 
                         resolve(response);
                     });
+
+                     */
 
                 } catch (error) {
                     LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (index_record)] unable to index record ' + error.message);
@@ -197,7 +214,7 @@ const Indexer_index_tasks = class {
      * @return {boolean}
      */
     publish = (query) => {
-
+        console.log(query);
         let promise = new Promise((resolve, reject) => {
 
             this.CLIENT.reindex({
@@ -211,7 +228,8 @@ const Indexer_index_tasks = class {
                     }
                 }
             }, (error, response) => {
-
+                console.log('ERROR', error);
+                console.log('RESPOSNE: ', response);
                 if (error) {
                     LOGGER.module().error('ERROR: [/indexer/task (publish_records)] unable to publish record(s) ' + error.message);
                     reject(false);

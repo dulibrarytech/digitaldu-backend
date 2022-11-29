@@ -156,7 +156,7 @@ exports.index_records = (index, callback) => {
     });
 };
 
-/** TODO
+/**
  * Copies ES index records from admin to public index
  * @param query
  * @param callback

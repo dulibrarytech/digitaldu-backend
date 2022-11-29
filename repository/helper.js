@@ -22,7 +22,7 @@ const HTTP = require('../libs/http'),
     ENDPOINTS = require('../indexer/endpoints'),
     LOGGER = require('../libs/log4');
 
-/**
+/** TODO: deprecate
  * Moves records from admin to public index (publishes record)
  * @param match_phrase
  * @param callback

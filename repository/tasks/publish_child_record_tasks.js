@@ -16,7 +16,7 @@
 
  */
 
-const DISPLAY_RECORD_TASKS = require('../../repository/tasks/display_record_tasks');
+const INDEX_RECORD_TASKS = require('../../repository/tasks/index_record_tasks');
 const TASK = require('../../repository/tasks/publish_record_tasks');
 const HELPER = require('../../repository/helper');
 const LOGGER = require('../../libs/log4');
@@ -96,7 +96,7 @@ const Publish_child_record_tasks = class {
                             return false;
                         }
 
-                        TASK = new DISPLAY_RECORD_TASKS(record.uuid);
+                        TASK = new INDEX_RECORD_TASKS(record.uuid);
                         TASK.update();
 
                     } else {
@@ -118,7 +118,7 @@ const Publish_child_record_tasks = class {
      * @return boolean
      */
     reindex_child_records = (type) => {
-
+        // TODO: replace where_obj?,  arguments are not clear
         let where_obj = {};
             where_obj.is_active = 1;
 

@@ -25,7 +25,7 @@ const PUBLISH_COLLECTION_RECORD_TASKS = require('../repository/tasks/publish_col
 const PUBLISH_CHILD_RECORD_TASKS = require('../repository/tasks/publish_child_record_tasks');
 const SUPPRESS_COLLECTION_RECORD_TASKS = require('../repository/tasks/suppress_collection_record_tasks');
 const SUPPRESS_CHILD_RECORD_TASKS = require('../repository/tasks/suppress_child_record_tasks');
-const DISPLAY_RECORD_TASKS = require('../repository/tasks/display_record_tasks');
+const INDEX_RECORD_TASKS = require('../repository/tasks/index_record_tasks');
 const DELETE_RECORD_TASKS = require('../repository/tasks/delete_record_tasks');
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
@@ -36,7 +36,7 @@ const ARCHIVESSPACE_CONFIG = require('../config/archivesspace_config')();
 const ARCHIVESSPACE = require('../libs/archivesspace');
 const LOGGER = require('../libs/log4');
 
-/**
+/** TODO: refactor
  * Gets metadata display record
  * @param uuid
  * @param callback
@@ -45,7 +45,7 @@ exports.get_display_record = (uuid, callback) => {
 
     (async () => {
 
-        const DRL = new DISPLAY_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
+        const DRL = new INDEX_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
         const data = await DRL.get_db_display_record_data();
 
         callback({
@@ -56,7 +56,7 @@ exports.get_display_record = (uuid, callback) => {
     })();
 };
 
-/**
+/** TODO: remove test code
  * Creates repository collection record
  * @param uri
  * @param is_member_of_collection
@@ -120,7 +120,7 @@ exports.create_collection_record = (uri, is_member_of_collection, callback) => {
     })();
 };
 
-/**
+/** TODO: rename display record to index record
  * Updates thumbnail url
  * @param uuid
  * @param thumbnail_url
@@ -172,7 +172,7 @@ exports.publish = (uuid, type, callback) => {
 
     const COLLECTION_TASKS = new PUBLISH_COLLECTION_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
     const CHILD_RECORD_TASKS = new PUBLISH_CHILD_RECORD_TASKS(uuid, DB, REPO_OBJECTS); // .Publish_child_record_tasks
-    const DISPLAY_RECORD_TASK = new DISPLAY_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
+    const INDEX_RECORD_TASK = new INDEX_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
 
     (async () => {
 
@@ -181,7 +181,7 @@ exports.publish = (uuid, type, callback) => {
         if (type === 'collection') {
 
             await COLLECTION_TASKS.update_collection_status(1);
-            DISPLAY_RECORD_TASK.update();
+            INDEX_RECORD_TASK.update();
             await CHILD_RECORD_TASKS.update_child_records_status(1);
             CHILD_RECORD_TASKS.update_child_display_records();
             CHILD_RECORD_TASKS.reindex_child_records();
