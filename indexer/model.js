@@ -18,7 +18,7 @@
 
 'use strict';
 
-const ES = require('elasticsearch');
+const { Client } = require('@elastic/elasticsearch');
 const TIMERS_CONFIG = require('../config/timers_config')();
 const ES_CONFIG = require('../config/elasticsearch_config')();
 const DB = require('../config/db_config')();
@@ -28,9 +28,9 @@ const INDEXER_INDEX_TASKS = require('../indexer/tasks/indexer_index_tasks');
 const DB_TABLES = require('../config/db_tables_config')();
 const REPO_OBJECTS = DB_TABLES.repo.repo_objects;
 const LOGGER = require('../libs/log4');
-const CLIENT = new ES.Client({
-        host: ES_CONFIG.elasticsearch_host
-    });
+const CLIENT = new Client({
+    node: ES_CONFIG.elasticsearch_host
+});
 
 /**
  * Indexes single repository record

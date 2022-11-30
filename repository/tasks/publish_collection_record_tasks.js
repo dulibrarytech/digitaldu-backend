@@ -17,6 +17,7 @@
  */
 
 const PUBLISH = require('../../repository/tasks/publish_record_tasks');
+const INDEXER_RECORD_TASKS = require('../../indexer/tasks/indexer_index_record_tasks');
 const LOGGER = require('../../libs/log4');
 const INDEXER_INDEX_TASKS = require("../../indexer/tasks/indexer_index_tasks");
 
@@ -36,7 +37,7 @@ const Publish_collection_record_tasks = class {
     }
 
     /**
-     * Publishes record
+     * Publishes single collection record
      */
     publish = () => {
 
@@ -45,28 +46,17 @@ const Publish_collection_record_tasks = class {
             (async () => {
 
                 try {
-
-                    let match_phrase = {
-                        'uuid': this.UUID
-                    };
-                    let query = {};
-                    let bool = {};
-                    bool.must = {};
-                    bool.must.match_phrase = match_phrase;
-                    query.bool = bool;
-
-                    const TASK = new PUBLISH(this.UUID, this.DB, this.TABLE);
-                    let is_published = await TASK.publish_record(query);
-                    console.log('IS PUBLISHED task: ', is_published);
+                    const PUBLISH_TASK = new PUBLISH(this.UUID, this.DB, this.TABLE);
+                    let is_published = await PUBLISH_TASK.publish_collection_record();
 
                     if (is_published === true) {
                         resolve(true);
                     } else {
                         resolve(false);
                     }
-
                 } catch (error) {
-
+                    LOGGER.module().error('ERROR: [/repository/tasks (publish)] unable to publish collection record ' + error.message);
+                    reject(false);
                 }
 
             })();

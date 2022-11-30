@@ -20,10 +20,10 @@ const INDEX_RECORD_LIB = require('../../libs/index_record_lib');
 const VALIDATOR_CONFIG = require('../../config/index_records_validator_config')();
 const INDEXER_TASKS = require('../../indexer/tasks/indexer_index_tasks');
 const LOGGER = require('../../libs/log4');
+const {Client} = require("@elastic/elasticsearch");
 const ES_CONFIG = require('../../test/elasticsearch_config')();
-const ES = require('elasticsearch');
-const CLIENT = new ES.Client({
-    host: ES_CONFIG.elasticsearch_host
+const CLIENT = new Client({
+    node: ES_CONFIG.elasticsearch_host
 });
 
 /**
@@ -33,8 +33,8 @@ const CLIENT = new ES.Client({
  */
 const Index_record_tasks = class {
 
-    constructor(uuid, DB, TABLE) {
-        this.UUID = uuid;
+    constructor(UUID, DB, TABLE) {
+        this.UUID = UUID;
         this.DB = DB;
         this.TABLE = TABLE;
         this.RECORD_LIB = new INDEX_RECORD_LIB(this.DB, this.TABLE, VALIDATOR_CONFIG);

@@ -16,7 +16,7 @@
 
  */
 
-const ES = require('elasticsearch');
+const {Client} = require("@elastic/elasticsearch");
 const HTTP = require('../../libs/http');
 const ENDPOINTS = require('../../indexer/endpoints');
 const INDEXER_UTILS_TASKS = require('../../indexer/tasks/indexer_index_utils_tasks');

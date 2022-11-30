@@ -30,7 +30,7 @@ process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
 
 const SEARCH_TASKS = require('../tasks/search_tasks');
-const ES = require('elasticsearch');
+const {Client} = require("@elastic/elasticsearch");
 const CONFIG = require('../../test/elasticsearch_config')();
 const CLIENT = new ES.Client({
         host: CONFIG.elasticsearch_host

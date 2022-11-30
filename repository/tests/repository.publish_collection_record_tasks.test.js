@@ -38,6 +38,5 @@ it.concurrent('Repository publish collection check_collection_publish_status tas
 }, 10000);
 
 it.concurrent('Repository publish collection publish task (Integration Test)', async function () {
-    console.log('PUBLISH TEST: ', await COLLECTION_TASKS.publish());
-    // await expect(COLLECTION_TASKS.publish()).resolves.toBeTypeOf('object');
+    await expect(COLLECTION_TASKS.publish()).resolves.toBeTruthy();
 }, 10000);

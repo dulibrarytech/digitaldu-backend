@@ -18,7 +18,7 @@
 
 'use strict';
 
-const ES = require('elasticsearch');
+const {Client} = require("@elastic/elasticsearch");
 const ES_CONFIG = require('../config/elasticsearch_config')();
 const INDEXER_UTILS_TASKS = require('./tasks/indexer_index_utils_tasks');
 const LOGGER = require('../libs/log4');

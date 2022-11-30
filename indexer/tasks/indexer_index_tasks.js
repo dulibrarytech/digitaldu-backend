@@ -64,29 +64,11 @@ const Indexer_index_tasks = class {
                         refresh: true
                     });
 
-                    console.log(response);
-                    if (response.StatusCode === 201) {
-                        resolve(true);
+                    if (response.statusCode === 201 || response.statusCode === 200) {
+                        resolve(response);
                     } else {
                         resolve(false);
                     }
-
-                    /*
-                    this.CLIENT.index({
-                        index: index,
-                        id: uuid,
-                        body: JSON.parse(record.index_record)
-                    }, (error, response) => {
-
-                        if (error) {
-                            LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (index_record)] unable to index record ' + error.message);
-                            reject(false);
-                        }
-
-                        resolve(response);
-                    });
-
-                     */
 
                 } catch (error) {
                     LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (index_record)] unable to index record ' + error.message);
@@ -98,6 +80,8 @@ const Indexer_index_tasks = class {
 
         return promise.then((response) => {
             return response;
+        }).catch(() => {
+            return false;
         });
     }
 

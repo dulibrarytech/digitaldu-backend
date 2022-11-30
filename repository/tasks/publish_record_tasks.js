@@ -16,12 +16,13 @@
 
  */
 
-const ES = require('elasticsearch');
-const ES_CONFIG = require('../../test/elasticsearch_config')();
-const INDEXER_TASKS = require('../../indexer/tasks/indexer_index_tasks');
+const REPOSITORY_RECORD_TASKS = require('../../repository/tasks/index_record_tasks');
+const INDEXER_RECORD_TASKS = require('../../indexer/tasks/indexer_index_tasks');
 const LOGGER = require('../../libs/log4');
-const CLIENT = new ES.Client({
-    host: ES_CONFIG.elasticsearch_host
+const {Client} = require("@elastic/elasticsearch");
+const ES_CONFIG = require('../../test/elasticsearch_config')();
+const CLIENT = new Client({
+    node: ES_CONFIG.elasticsearch_host
 });
 
 /**
@@ -39,36 +40,39 @@ const Publish_record_tasks = class {
     }
 
     /**
-     * Publishes both collection and child records
-     * @param query
+     * Publishes both collection and child records - publish_collection_record
      */
-    publish_record = (query) => {
+    publish_collection_record = () => {
 
         let promise = new Promise((resolve, reject) => {
 
             (async () => {
 
                 try {
+                    const INDEXER_TASKS = new INDEXER_RECORD_TASKS(this.DB, this.TABLE, CLIENT, ES_CONFIG);
+                    const RECORD_TASKS = new REPOSITORY_RECORD_TASKS(this.UUID, this.DB, this.TABLE);
+                    let record = {};
+                    let record_data = await RECORD_TASKS.get_index_record_data();
+                    let index_record = await RECORD_TASKS.create_index_record(record_data);
+                    record.index_record = JSON.stringify(index_record);
+                    let response = await INDEXER_TASKS.index_record(this.UUID, true, record);
 
-                    const INDEXER_TASK = new INDEXER_TASKS(this.DB, this.TABLE, CLIENT, ES_CONFIG);
-                    let is_published = await INDEXER_TASK.publish(query);
-                    console.log('IS PUBLISHED RESULT: ', is_published);
-
-                    if (is_published === true) {
+                    if (response.statusCode === 201 || response.statusCode === 200) {
                         resolve(true);
                     } else {
                         resolve(false);
                     }
 
                 } catch (error) {
+                    LOGGER.module().error('ERROR: [/repository/tasks (publish_collection_record)] unable to publish collection record ' + error.message);
                     reject(false);
-                    LOGGER.module().error('ERROR: [/repository/tasks (publish_record_tasks)] Unable to publish record ' + error.message);
                 }
+
             })();
         });
 
-        return promise.then((response) => {
-            return response;
+        return promise.then((is_published) => {
+            return is_published;
         }).catch(() => {
             return false;
         });

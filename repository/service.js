@@ -19,7 +19,7 @@
 'use strict';
 
 const HTTP = require('axios');
-const ES = require('elasticsearch');
+const {Client} = require("@elastic/elasticsearch");
 const ELASTICSEARCH_CONFIG = require('../config/elasticsearch_config')();
 const ARCHIVESSPACE_CONFIG = require('../config/archivesspace_config')();
 const ARCHIVEMATICA_CONFIG = require('../config/archivematica_config')();

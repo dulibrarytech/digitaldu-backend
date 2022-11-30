@@ -30,7 +30,7 @@ const Indexer_display_record_tasks = class {
     constructor(DB, TABLE) {
         this.DB = DB;
         this.TABLE = TABLE;
-        this.DRL = new INDEX_RECORD_LIB(this.DB, this.TABLE);
+        this.IRL = new INDEX_RECORD_LIB(this.DB, this.TABLE);
     }
 
     /**
@@ -41,16 +41,16 @@ const Indexer_display_record_tasks = class {
 
         let promise = new Promise((resolve, reject) => {
 
-            try {
+            (async () => {
 
-                (async () => {
-                    resolve(await this.DRL.get_index_record_data(uuid));
-                })();
+                try {
+                    resolve(await this.IRL.get_index_record_data(uuid));
+                } catch (error) {
+                    LOGGER.module().error('ERROR: [/indexer/indexer_display_record_tasks (get_index_display_record_data)] unable to get index db record ' + error.message);
+                    reject(false);
+                }
 
-            } catch (error) {
-                LOGGER.module().error('ERROR: [/indexer/indexer_display_record_tasks (get_index_display_record_data)] unable to get index db record ' + error.message);
-                reject(false);
-            }
+            })();
 
         });
 
@@ -60,6 +60,37 @@ const Indexer_display_record_tasks = class {
             return false;
         });
     }
+
+    /**
+     * Creates index record
+     * @param data
+     * @return {Promise<unknown | boolean>}
+
+    create_index_record = (data) => {
+
+        let promise = new Promise((resolve, reject) => {
+            // console.log('IRL DATA!!: ', data);
+            (async () => {
+
+                try {
+                    // console.log('IRL: ', await this.IRL.create_index_record(data));
+                    resolve(true);
+                    // resolve(await this.IRL.create_index_record(data));
+                } catch (error) {
+                    // LOGGER.module().error('ERROR: [/indexer/indexer_index_record_tasks (create_index_record)] unable to create index record ' + error.message);
+                    reject(false);
+                }
+
+            })();
+        });
+
+        return promise.then((data) => {
+            return data;
+        }).catch(() => {
+            return false;
+        });
+    }
+     */
 };
 
 module.exports = Indexer_display_record_tasks;
