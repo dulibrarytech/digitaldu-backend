@@ -361,7 +361,6 @@ const Stats_tasks = class {
                     resolve(result.data);
                 } catch (error) {
                     LOGGER.module().error('ERROR: [/stats/model module (get_stats/get_dip_storage_usage)] unable to get dip storage usage ' + error.message);
-                    console.log('DIP: ', error);
                     reject(0);
                 }
 

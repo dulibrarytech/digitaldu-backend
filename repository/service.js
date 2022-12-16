@@ -20,7 +20,7 @@
 
 const HTTP = require('axios');
 const {Client} = require("@elastic/elasticsearch");
-const ELASTICSEARCH_CONFIG = require('../config/elasticsearch_config')();
+const ES_CONFIG = require('../config/elasticsearch_config')();
 const ARCHIVESSPACE_CONFIG = require('../config/archivesspace_config')();
 const ARCHIVEMATICA_CONFIG = require('../config/archivematica_config')();
 const DURACLOUD_CONFIG = require('../config/duracloud_config')();
@@ -34,9 +34,9 @@ const CACHE = require('../libs/cache');
 const PING_TASKS = require('../repository/tasks/ping_tasks');
 const SEARCH_TASKS = require('../search/tasks/search_tasks');
 const LOGGER = require('../libs/log4');
-const CLIENT = new ES.Client({
-        host: ELASTICSEARCH_CONFIG.elasticsearch_host
-    });
+const CLIENT = new Client({
+    node: ES_CONFIG.elasticsearch_host
+});
 
 /**
  * Pings third-party services to determine availability
@@ -93,7 +93,7 @@ exports.get_records = function (is_member_of_collection, page, total_on_page, so
 
         try {
 
-            const TASK = new SEARCH_TASKS(CLIENT, ELASTICSEARCH_CONFIG);
+            const TASK = new SEARCH_TASKS(CLIENT, ES_CONFIG);
             let data = await TASK.get_records(is_member_of_collection, page, total_on_page, sort);
 
             if (data !== false) {
@@ -246,7 +246,7 @@ exports.get_suppressed_records = function (uuid, callback) {
 
         try {
 
-            const TASK = new SEARCH_TASKS(CLIENT, ELASTICSEARCH_CONFIG);
+            const TASK = new SEARCH_TASKS(CLIENT, ES_CONFIG);
             let data = await TASK.get_suppressed_records(uuid);
 
             if (data !== false) {

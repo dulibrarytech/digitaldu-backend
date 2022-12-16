@@ -62,9 +62,9 @@ module.exports = () => {
     require('../indexer/routes.js')(APP);
     require('../dashboard/routes.js')(APP);
     require('../stats/routes.js')(APP);
-    // require('../import/routes.js')(APP);
-    // require('../search/routes.js')(APP);
+    require('../search/routes.js')(APP);
     require('../utils/routes.js')(APP);
+    // require('../import/routes.js')(APP);
     // require('../api/routes.js')(APP);
     // require('../uploads/index.js')(APP);
     // require('../qa/routes.js')(APP);

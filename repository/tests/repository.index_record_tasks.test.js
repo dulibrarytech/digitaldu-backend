@@ -16,7 +16,7 @@
 
  */
 
-import {it, expect, beforeAll} from 'vitest';
+import {it, expect} from 'vitest';
 
 const INDEX_RECORD_TASKS = require('../tasks/index_record_tasks');
 const DB = require('../../test/db')();
@@ -25,7 +25,6 @@ const UUID = '7bfde7d5-25ce-42b2-8d35-4fe43c2adc1a';
 const RECORD_TASKS = new INDEX_RECORD_TASKS(UUID, DB, TABLE);
 
 it.concurrent('Repository index record update task (Integration Test)', async function () {
-    // console.log('UPDATE: ', await RECORD_TASKS.update());
     await expect(RECORD_TASKS.update()).resolves.toBeTruthy();
 }, 10000);
 

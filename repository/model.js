@@ -36,7 +36,7 @@ const ARCHIVESSPACE_CONFIG = require('../config/archivesspace_config')();
 const ARCHIVESSPACE = require('../libs/archivesspace');
 const LOGGER = require('../libs/log4');
 
-/** TODO: refactor
+/**
  * Gets metadata display record
  * @param uuid
  * @param callback

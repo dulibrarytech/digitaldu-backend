@@ -24,6 +24,7 @@ const DB =require('../config/db_config')(),
     REPOSITORY_ENDPOINTS = require('../repository/endpoints')(),
     USERS_ENDPOINTS = require('../users/endpoints')(),
     STATS_ENDPOINTS = require('../stats/endpoints')(),
+    SEARCH_ENDPOINTS = require('../search/endpoints')(),
     LOGGER = require('../libs/log4');
 
 /**
@@ -34,9 +35,16 @@ const DB =require('../config/db_config')(),
 exports.check_auth_user = function (username, callback) {
 
     (async () => {
-        const TASKS = new AUTH_TASKS(DB, TABLE);
-        const data = await TASKS.check_auth_user(username);
-        callback(data);
+
+        try {
+            const TASKS = new AUTH_TASKS(DB, TABLE);
+            const data = await TASKS.check_auth_user(username);
+            callback(data);
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/auth/model (check_auth_user)] unable to check user auth data ' + error.message);
+            callback(false);
+        }
+
     })();
 };
 
@@ -49,31 +57,40 @@ exports.get_auth_user_data = function (id, callback) {
 
     (async () => {
 
-        const TASKS = new AUTH_TASKS(DB, TABLE);
-        const data = await TASKS.get_auth_user_data(id);
-        let auth_data = {
-            user_data: data,
-            endpoints: {
-                repository: REPOSITORY_ENDPOINTS,
-                users: USERS_ENDPOINTS,
-                stats: STATS_ENDPOINTS
-            }
-        };
+        try {
 
-        let response = {
-            status: 200,
-            message: 'User data retrieved.',
-            data: auth_data
-        };
+            const TASKS = new AUTH_TASKS(DB, TABLE);
+            const data = await TASKS.get_auth_user_data(id);
+            let auth_data = {
+                user_data: data,
+                endpoints: {
+                    repository: REPOSITORY_ENDPOINTS,
+                    users: USERS_ENDPOINTS,
+                    stats: STATS_ENDPOINTS,
+                    search: SEARCH_ENDPOINTS
+                }
+            };
 
-        if (data === false) {
-            response = {
-                status: 500,
-                message: 'Unable to retrieve user data.',
-                data: []
+            let response = {
+                status: 200,
+                message: 'User data retrieved.',
+                data: auth_data
+            };
+
+            if (data === false) {
+                response = {
+                    status: 500,
+                    message: 'Unable to retrieve user data.',
+                    data: []
+                }
             }
+
+            callback(response);
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/auth/model (get_auth_user_data)] unable to get user auth data ' + error.message);
+            callback(false);
         }
 
-        callback(response);
     })();
 };

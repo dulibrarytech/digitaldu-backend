@@ -16,7 +16,7 @@
 
  */
 
-const DISPLAY_RECORD_TASKS = require('../../repository/tasks/display_record_tasks');
+const DISPLAY_RECORD_TASKS = require('../../repository/tasks/index_record_tasks');
 const HELPER = require('../../repository/helper');
 const LOGGER = require('../../libs/log4');
 

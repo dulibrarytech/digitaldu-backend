@@ -37,7 +37,7 @@ const configModule = (function () {
         return api;
     };
 
-    /**
+    /** TODO
      * Contains urls for default thumbnails
      * @returns {{duracloud: string, default: string, default_pdf: string, default_audio: string, default_video: string}}
      */
@@ -59,7 +59,7 @@ const configModule = (function () {
      * @returns {string}
      */
     obj.getRootPid = function() {
-        return 'codu:root';
+        return 'root';
     };
 
     /**

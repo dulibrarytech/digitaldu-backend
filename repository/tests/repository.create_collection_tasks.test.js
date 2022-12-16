@@ -16,7 +16,7 @@
 
  */
 
-import {it, expect, beforeAll} from 'vitest';
+import {it, expect} from 'vitest';
 const TEST_RECORDS = require('../../test/test_records')();
 const CREATE_COLLECTION_TASKS = require('../tasks/create_collection_tasks');
 const ARCHIVESSPACE_CONFIG = require('../../test/archivesspace_config')();
@@ -30,19 +30,6 @@ const TABLE = 'tbl_objects_test';
 const COLLECTION_TASKS = new CREATE_COLLECTION_TASKS(DB, TABLE, ARCHIVESSPACE_LIB, HANDLES_LIB);
 const TEST_RESOURCE_URI = '/repositories/2/resources/519';
 const TEST_SESSION_TOKEN = await ARCHIVESSPACE_LIB.get_session_token();
-
-// INTEGRATION
-/*
-require('dotenv').load();
-const EXPRESS = require('express');
-const REQUEST = require('supertest');
-const ENDPOINTS = require('../endpoints');
-const TOKEN_CONFIG = require('../../test/token_config')();
-const APP = EXPRESS();
-const API_KEY = TOKEN_CONFIG.api_key;
-process.env.NODE_ENV = process.env.NODE_ENV || 'development';
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
- */
 
 it.concurrent('Repository create collection check_uri task (Unit Test)', async function () {
     let uri = TEST_RECORDS.child_records[1].uri;
@@ -105,31 +92,3 @@ it.concurrent('Repository save_record task (Integration Test)', async function (
     }
 
 }, 10000);
-
-// TODO: cleanup
-
-/* TODO  - returning 404
-it('Repository API Endpoint (E2E) ' + ENDPOINTS().repository.repo_ping.endpoint, async function() {
-    let response = await REQUEST(APP)
-        .get(ENDPOINTS().repository.repo_ping.endpoint + '?api_key=' + API_KEY);
-    console.log('ping: ', response.status);
-    expect(response.status).toBe(200);
-}, 10000);
-*/
-
-/*
-it.concurrent('Repository API Endpoint ' + ENDPOINTS().repository.repo_record.endpoint + ' (E2E)', async function() {
-    let uuid = 'root'; // TEST_RECORDS.child_records[2].uuid;
-    let response = await REQUEST(APP)
-        .get(ENDPOINTS().repository.repo_record.endpoint + '?api_key=' + API_KEY + '&uuid=' + uuid);
-    expect(response.status).toBe(200);
-}, 10000);
-
-it.concurrent('Repository API Endpoint ' + ENDPOINTS().repository.repo_records.endpoint + ' (E2E)', async function() {
-    let uuid = TEST_RECORDS.child_records[2].uuid;
-    let response = await REQUEST(APP)
-        .get(ENDPOINTS().repository.repo_records.endpoint + '?api_key=' + API_KEY + '&uuid=' + uuid);
-    expect(response.status).toBe(200);
-}, 10000);
-
- */

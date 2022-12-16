@@ -17,14 +17,3 @@
  */
 
 import {it, expect} from 'vitest';
-const PUBLISH_RECORD_TASKS = require('../tasks/publish_record_tasks');
-const UUID = '';
-const DB = '';
-const TABLE = '';
-
-// TODO: publish_record - redundant?
-it.concurrent('Repository publish_collection_record task (Integration Test)', async function () {
-    const RECORD_TASK = new PUBLISH_RECORD_TASKS(UUID, DB, TABLE);
-    RECORD_TASK.publish_collection_record();
-    // await expect(RECORD_TASK.publish_collection_record).resolves.toBeTruthy();
-}, 10000);

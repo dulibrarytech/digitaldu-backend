@@ -16,7 +16,7 @@
 
  */
 
-import {it, expect, beforeAll} from 'vitest';
+import {it, expect} from 'vitest';
 
 const DB = require('../../test/db')();
 const TABLE = 'tbl_objects_test';

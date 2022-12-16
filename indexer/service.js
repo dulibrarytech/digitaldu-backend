@@ -22,10 +22,9 @@ const {Client} = require("@elastic/elasticsearch");
 const ES_CONFIG = require('../config/elasticsearch_config')();
 const INDEXER_UTILS_TASKS = require('./tasks/indexer_index_utils_tasks');
 const LOGGER = require('../libs/log4');
-const CLIENT = new ES.Client({
-        host: ES_CONFIG.elasticsearch_host,
-        requestTimeout: 60000*4
-    });
+const CLIENT = new Client({
+    node: ES_CONFIG.elasticsearch_host
+});
 
 /**
  * Create new index and mapping

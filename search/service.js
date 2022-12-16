@@ -18,12 +18,13 @@
 
 'use strict';
 
-const CONFIG = require('../config/elasticsearch_config')(),
-    SEARCH_TASKS = require('../search/tasks/search_tasks'),
-    ES = require('elasticsearch'),
-    CLIENT = new ES.Client({
-        host: CONFIG.elasticSearch
-    });
+const SEARCH_TASKS = require('../search/tasks/search_tasks');
+const {Client} = require("@elastic/elasticsearch");
+const LOGGER = require("../libs/log4");
+const ES_CONFIG = require('../config/elasticsearch_config')();
+const CLIENT = new Client({
+    node: ES_CONFIG.elasticsearch_host
+});
 
 /**
  * Full-text search
@@ -36,18 +37,23 @@ exports.search = function (q, page, total_on_page, callback) {
 
     (async () => {
 
-        const TASK = new SEARCH_TASKS(CLIENT, CONFIG);
-        const data = await TASK.search(q, page, total_on_page);
+        try {
 
-        if (data !== false) {
+            const TASK = new SEARCH_TASKS(CLIENT, ES_CONFIG);
+            const data = await TASK.search(q, page, total_on_page);
+
+            if (data !== false) {
+                callback({
+                    status: 200,
+                    message: 'Search record(s) retrieved.',
+                    data: data
+                });
+            }
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/search/service (search)] unable to search ' + error.message);
             callback({
-                status: 200,
-                message: 'Search record(s) retrieved.',
-                data: data
-            });
-        } else {
-            callback({
-                status: 500,
+                status: 204,
                 message: 'Unable to retrieve Search record(s).'
             });
         }

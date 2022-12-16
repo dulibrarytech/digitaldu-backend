@@ -24,7 +24,7 @@ const objectsModule = (function () {
     const endpoints = endpointsModule.get_repository_endpoints();
     let obj = {};
 
-    /**
+    /** TODO: rename
      * Gets repository objects
      */
     obj.getObjects = function () {
@@ -271,48 +271,6 @@ const objectsModule = (function () {
 
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to get unpublished records.');
-            }
-        };
-
-        httpModule.req(request, callback);
-    };
-
-    /**
-     * Constructs search request
-     */
-    obj.search = function () {
-
-        let q = helperModule.getParameterByName('q');
-        let token = authModule.getUserToken(),
-            page = helperModule.getParameterByName('page'),
-            total_on_page = helperModule.getParameterByName('total_on_page'),
-            sort = helperModule.getParameterByName('sort'),
-            url = api + endpoints.search + '?q=' + q;
-
-        if (page !== null && total_on_page !== null) {
-            url = api + endpoints.search + '?q=' + q + '&page=' + page + '&total_on_page=' + total_on_page;
-        }
-
-        let request = new Request(url, {
-                method: 'GET',
-                mode: 'cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-        const callback = function (response) {
-
-            if (response.status === 200) {
-
-                response.json().then(function (data) {
-                    domModule.html('#message', null);
-                    objectsModule.renderDisplayRecords(data);
-                });
-
-            } else {
-                helperModule.renderError('Error: (HTTP status ' + response.status + '. Unable to get incomplete records.');
             }
         };
 
@@ -863,8 +821,6 @@ const objectsModule = (function () {
 
         if (helperModule.getParameterByName('q') === null) {
             objectsModule.getObjects();
-        } else {
-            objectsModule.search();
         }
     };
 

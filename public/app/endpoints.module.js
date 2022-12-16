@@ -37,6 +37,11 @@ const endpointsModule = (function () {
         return JSON.parse(repo_endpoints_repository);
     };
 
+    obj.get_search_endpoints = () => {
+        const repo_endpoints_search = window.localStorage.getItem('repo_endpoints_search');
+        return JSON.parse(repo_endpoints_search);
+    };
+
     /**
      * Contains api endpoints
 

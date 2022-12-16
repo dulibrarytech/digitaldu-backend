@@ -62,8 +62,8 @@ const Search_tasks = class {
                 size: total_on_page,
                 index: this.CONFIG.elasticsearch_back_index,
                 q: q
-            }).then((body) => {
-                resolve(body.hits);
+            }).then((response) => {
+                resolve(response.body.hits);
             }, (error) => {
                 LOGGER.module().error('ERROR: [/search/tasks (search)] unable to search index ' + error.message);
                 reject(false);
@@ -124,8 +124,8 @@ const Search_tasks = class {
                 index: this.CONFIG.elasticsearch_back_index,
                 sort: sort,
                 body: query
-            }).then((body) => {
-                resolve(body.hits);
+            }).then((response) => {
+                resolve(response.body.hits);
             }, (error) => {
                 LOGGER.module().error('ERROR: [/repository/service module (get_records)] Request to Elasticsearch failed: ' + error.message);
                 reject(false);

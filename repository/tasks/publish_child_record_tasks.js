@@ -109,7 +109,7 @@ const Publish_child_record_tasks = class {
                 return null;
             })
             .catch(function (error) {
-                LOGGER.module().fatal('FATAL: [/repository/task (update_child_display_records)] unable to remove published record from index ' + error.message);
+                LOGGER.module().error('ERROR: [/repository/task (update_child_display_records)] unable to remove published record from index ' + error.message);
             });
     }
 

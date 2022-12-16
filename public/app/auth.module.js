@@ -21,7 +21,7 @@ const authModule = (function () {
     'use strict';
 
     const api = configModule.getApi();
-    const init_endpoints = endpointsModule.init(); // TODO:
+    const init_endpoints = endpointsModule.init();
     let obj = {};
 
     /**
@@ -126,7 +126,7 @@ const authModule = (function () {
      * @param data
      */
     obj.saveUserAuthData = function (data) {
-
+        console.log(data);
         let user = {
             uid: DOMPurify.sanitize(data.user_data.data[0].id),
             name: DOMPurify.sanitize(data.user_data.data[0].first_name) + ' ' + DOMPurify.sanitize(data.user_data.data[0].last_name)
@@ -135,6 +135,7 @@ const authModule = (function () {
         window.localStorage.setItem('repo_endpoints_users', JSON.stringify(data.endpoints.users));
         window.localStorage.setItem('repo_endpoints_stats', JSON.stringify(data.endpoints.stats));
         window.localStorage.setItem('repo_endpoints_repository', JSON.stringify(data.endpoints.repository));
+        window.localStorage.setItem('repo_endpoints_search', JSON.stringify(data.endpoints.search));
         window.sessionStorage.setItem('repo_user', JSON.stringify(user));
     };
 
