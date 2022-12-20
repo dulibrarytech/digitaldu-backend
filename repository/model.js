@@ -45,8 +45,8 @@ exports.get_display_record = (uuid, callback) => {
 
     (async () => {
 
-        const DRL = new INDEX_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
-        const data = await DRL.get_db_display_record_data();
+        const INDEX_RECORD_TASK = new INDEX_RECORD_TASKS(uuid, DB, REPO_OBJECTS);
+        const data = await INDEX_RECORD_TASK.get_index_record_data();
 
         callback({
             status: 200,
@@ -96,7 +96,7 @@ exports.create_collection_record = (uri, is_member_of_collection, callback) => {
             obj.handle = 'https://test-handle.net/' + obj.uuid; // await TASKS.create_handle(obj.uuid);
             obj.display_record = await JSON.stringify(TASKS.create_index_record(obj));
             is_saved = await TASKS.save_record(obj);
-
+            console.log('IS_SAVED: ', is_saved);
             if (is_saved === true) {
                 // await TASKS.index_record(obj.uuid);
             } else {

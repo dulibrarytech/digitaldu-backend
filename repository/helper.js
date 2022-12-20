@@ -26,7 +26,7 @@ const HTTP = require('../libs/http'),
  * Moves records from admin to public index (publishes record)
  * @param match_phrase
  * @param callback
- */
+
 exports.publish_record = (match_phrase, callback) => {
 
     (async () => {
@@ -61,12 +61,13 @@ exports.publish_record = (match_phrase, callback) => {
 
     })();
 };
+ */
 
 /** TODO: Deprecate
  * Indexes record
  * @param uuid
  * @param callback
- */
+
 exports.index = (uuid, callback) => {
 
     (async () => {
@@ -93,6 +94,7 @@ exports.index = (uuid, callback) => {
 
     })();
 };
+ */
 
 /**
  * Removes record from index

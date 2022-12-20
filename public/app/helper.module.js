@@ -168,17 +168,17 @@ const helperModule = (function () {
 
     /**
      * creates pagination
-     * @param pid
+     * @param uuid
      * @param total_records
      * @returns {string}
      */
-    obj.pagination = function (pid, total_records) {
+    obj.pagination = function (uuid, total_records) {
 
         let path = window.location.pathname,
             q = helperModule.getParameterByName('q')
 
-        if (pid === null && q === null) {
-            pid = 'codu:root';
+        if (uuid === null && q === null) {
+            uuid = 'root';
         }
 
         let current_page = helperModule.getParameterByName('page'),
@@ -188,10 +188,10 @@ const helperModule = (function () {
             query_string,
             html = '';
 
-        if (pid === null && q !== null) {
+        if (uuid === null && q !== null) {
             query_string = '?q=' + q;
         } else {
-            query_string = '?pid=' + pid;
+            query_string = '?uuid=' + uuid;
         }
 
         // don't render pagination

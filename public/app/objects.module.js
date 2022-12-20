@@ -24,7 +24,7 @@ const objectsModule = (function () {
     const endpoints = endpointsModule.get_repository_endpoints();
     let obj = {};
 
-    /** TODO: rename
+    /**
      * Gets repository objects
      */
     obj.getObjects = function () {
@@ -34,8 +34,8 @@ const objectsModule = (function () {
             total_on_page = helperModule.getParameterByName('total_on_page'),
             sort = helperModule.getParameterByName('sort');
 
-        if (uuid === null || uuid === configModule.getRootPid()) {
-            uuid = configModule.getRootPid();
+        if (uuid === null || uuid === configModule.getRootUUID()) {
+            uuid = configModule.getRootUUID();
         } else {
             collectionsModule.getCollectionName(uuid);
         }
@@ -348,10 +348,10 @@ const objectsModule = (function () {
             html = '',
             add_collection_link;
 
-        if (q === null && is_member_of_collection === null || is_member_of_collection === configModule.getRootPid()) {
-            add_collection_link = '<a href="/dashboard/collections/add?is_member_of_collection=' + configModule.getRootPid() + '"><i class="fa fa-plus"></i>&nbsp;Add top-level collection</a>';
+        if (q === null && is_member_of_collection === null || is_member_of_collection === configModule.getRootUUID()) {
+            add_collection_link = '<a href="/dashboard/collections/add?is_member_of_collection=' + configModule.getRootUUID() + '"><i class="fa fa-plus"></i>&nbsp;Add top-level collection</a>';
             domModule.html('#total-records', '<p>Total Collections: ' + total_records + '</p>');
-        } else if (q === null && is_member_of_collection !== null && is_member_of_collection !== configModule.getRootPid()) {
+        } else if (q === null && is_member_of_collection !== null && is_member_of_collection !== configModule.getRootUUID()) {
             add_collection_link = '<a href="/dashboard/collections/add?is_member_of_collection=' + is_member_of_collection + '"><i class="fa fa-plus"></i>&nbsp;Add sub-collection</a>';
             if (total_records.length !== 0) {
                 domModule.html('#total-records', '<p>Total Objects: ' + total_records + '</p>');

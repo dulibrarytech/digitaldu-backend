@@ -45,7 +45,7 @@ it('Search Tasks search (Unit)', async function () {
 }, 10000);
 
 it('Search Tasks get_records (Unit)', async function () {
-    let is_member_of_collection = 'codu:root';
+    let is_member_of_collection = 'root';
     let page = 1;
     let total_on_page;
     let sort;
@@ -53,6 +53,6 @@ it('Search Tasks get_records (Unit)', async function () {
 }, 10000);
 
 it('Search Tasks get_suppressed_records (Unit)', async function () {
-    let uuid = 'codu:root';
+    let uuid = 'root';
     await expect(LIB.get_suppressed_records(uuid)).resolves.toBeDefined();
 }, 10000);

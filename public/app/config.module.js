@@ -58,7 +58,7 @@ const configModule = (function () {
      * Returns root pid
      * @returns {string}
      */
-    obj.getRootPid = function() {
+    obj.getRootUUID = function() {
         return 'root';
     };
 

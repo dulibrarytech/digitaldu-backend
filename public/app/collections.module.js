@@ -45,7 +45,8 @@ const collectionsModule = (function () {
         } else if (helperModule.getParameterByName('is_member_of_collection') !== null && helperModule.getParameterByName('is_member_of_collection') !== configModule.getRootPid()) {
             domModule.html('#collection-type', 'Add sub-level collection');
         }
-
+        // TODO: failing - not getting collection record.  it's trying to pull
+        console.log('ENDPOINT: ', api + endpoints.repository.repo_record.endpoint + '?uuid=' + uuid);
         let token = authModule.getUserToken();
         let url = api + endpoints.repository.repo_record.endpoint + '?uuid=' + uuid,
             request = new Request(url, {
@@ -66,8 +67,8 @@ const collectionsModule = (function () {
                     if (data.length === 0) {
                         return domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-info-circle"></i> Collection name not found.</div>');
                     }
-                    // console.log(JSON.parse(data[0].display_record));
-                    let record = JSON.parse(data[0].display_record);
+
+                    let record = JSON.parse(data.index_record);
                     let title = 'No title.';
 
                     if (record.title !== undefined) {

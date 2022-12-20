@@ -89,17 +89,17 @@ const metadataModule = (function () {
             if (record.mime_type === 'image/tiff') {
                 let thumbnail = record.thumbnail;
                 let thumbnailPath = api + endpoints.repository.repo_thumbnail_duracloud.endpoint + '?tn=' + thumbnail + '&t=' + token;
-                tnDisplay += '<a href="/dashboard/viewer' + '?uuid=' + DOMPurify.sanitize(record.pid) + '&t=' + token + '" target="_blank">';
-                tnDisplay += '<img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + thumbnailPath + '" alt="' + record.pid + '" />';
+                tnDisplay += '<a href="/dashboard/viewer' + '?uuid=' + DOMPurify.sanitize(record.uuid) + '&t=' + token + '" target="_blank">';
+                tnDisplay += '<img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + thumbnailPath + '" alt="' + record.uuid + '" />';
                 tnDisplay += '</a>';
             } else {
-                tnDisplay += '<a href="' + api + endpoints.repository.repo_viewer.endpoint + '?uuid=' + DOMPurify.sanitize(record.pid) + '&t=' + token + '" target="_blank">';
-                tnDisplay += '<img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + api + endpoints.repository.repo_thumbnail_service.endpoint + '?uuid=' + DOMPurify.sanitize(record.pid) + '&t=' + token + '" alt="' + record.pid + '" />';
+                tnDisplay += '<a href="' + api + endpoints.repository.repo_viewer.endpoint + '?uuid=' + DOMPurify.sanitize(record.uuid) + '&t=' + token + '" target="_blank">';
+                tnDisplay += '<img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + api + endpoints.repository.repo_thumbnail_service.endpoint + '?uuid=' + DOMPurify.sanitize(record.uuid) + '&t=' + token + '" alt="' + record.uuid + '" />';
                 tnDisplay += '</a>';
             }
 
         } else {
-            tnDisplay += '<img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + tn + '" alt="' + record.pid + '" />';
+            tnDisplay += '<img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + tn + '" alt="' + record.uuid + '" />';
         }
 
         return tnDisplay;
@@ -193,7 +193,7 @@ const metadataModule = (function () {
         let title = '';
 
         if (record.display_record.title !== undefined && record.object_type === 'collection') {
-            title += '<h4><a href="' + api + '/dashboard/objects/?uuid=' + DOMPurify.sanitize(record.pid) + '">' + DOMPurify.sanitize(record.display_record.title) + '</a></h4>';
+            title += '<h4><a href="' + api + '/dashboard/objects?uuid=' + DOMPurify.sanitize(record.uuid) + '">' + DOMPurify.sanitize(record.display_record.title) + '</a></h4>';
         } else if (record.object_type === 'object') {
             title += '<h4>' + DOMPurify.sanitize(record.display_record.title) + '</h4>';
         } else {
