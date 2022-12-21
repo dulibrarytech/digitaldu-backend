@@ -34,7 +34,7 @@ const metadataModule = (function () {
         let display = '';
         display += createTitle(record);
         display += createHandle(record);
-        display += createPid(record);
+        display += createUUID(record);
         display += createUri(record);
         display += createDates(record);
         display += createExtents(record);
@@ -211,35 +211,50 @@ const metadataModule = (function () {
     function createHandle(record) {
 
         let handle = '';
+        handle += '<ul>';
+        handle += '<li><strong>Handle:</strong></li>';
 
-        if (record.display_record.handle !== undefined) {
-            handle += '<ul><li><strong>Handle:</strong>&nbsp;' + DOMPurify.sanitize(record.display_record.handle) + '</li></ul>';
-        } else if (record.handle !== undefined) { // collection
-            handle += '<ul><li><strong>Handle:</strong>&nbsp;' + DOMPurify.sanitize(record.handle) + '</li></ul>';
+        if (record.is_published === 1) {
+
+            if (record.display_record.handle !== undefined) {
+                handle += `<ul style="font-size: 12px"><li><a href=${DOMPurify.sanitize(record.display_record.handle)}>${DOMPurify.sanitize(record.display_record.handle)}</a></li></ul>`;
+            } else if (record.handle !== undefined) { // collection
+                handle += `<ul style="font-size: 12px"><li><a href=${DOMPurify.sanitize(record.handle)}>${DOMPurify.sanitize(record.handle)}</a></li></ul>`;
+            }
+
+        } else if (record.is_published === 0) {
+
+            if (record.display_record.handle !== undefined) {
+                handle += '<ul style="font-size: 12px"><li><strong>Handle:</strong>&nbsp;' + DOMPurify.sanitize(record.display_record.handle) + '</li></ul>';
+            } else if (record.handle !== undefined) { // collection
+                handle += '<ul style="font-size: 12px"><li><strong>Handle:</strong>&nbsp;' + DOMPurify.sanitize(record.handle) + '</li></ul>';
+            }
         }
 
+        handle += '</ul>';
         return handle;
     }
 
     /**
-     * Creates pid fragment
+     * Creates uuid fragment
      * @param record
      * @returns {string}
      */
-    function createPid(record) {
+    function createUUID(record) {
 
-        let pid = '';
-        pid += '<ul>';
+        let uuid = '';
+        uuid += '<ul>';
+        uuid += '<li><strong>UUID:</strong></li>';
 
         if (record.is_published === 0) {
-            pid += '<li><strong>UUID:</strong>&nbsp;' + DOMPurify.sanitize(record.pid) + '&nbsp;&nbsp;<i class="fa fa-external-link"></i></li>';
+            uuid += '<ul style="font-size: 12px"><li>' + DOMPurify.sanitize(record.uuid) + '&nbsp;&nbsp;<i class="fa fa-external-link"></i></li></ul>';
         } else {
-            pid += '<li><strong>UUID:</strong>&nbsp;<a target="_blank" href="' + DOMPurify.sanitize(record.handle) + '">' + DOMPurify.sanitize(record.pid) + '</a>&nbsp;&nbsp;<i class="fa fa-external-link"></i></li>';
+            uuid += '<ul style="font-size: 12px"><li><a target="_blank" href="' + DOMPurify.sanitize(record.handle) + '">' + DOMPurify.sanitize(record.uuid) + '</a>&nbsp;&nbsp;<i class="fa fa-external-link"></i></li></ul>';
         }
 
-        pid += '</ul>';
+        uuid += '</ul>';
 
-        return pid;
+        return uuid;
     }
 
     /**
@@ -250,12 +265,16 @@ const metadataModule = (function () {
     function createUri(record) {
 
         let uri = '';
+        uri += '<ul>';
+        uri += '<li><strong>URI:</strong></li>'
 
         if (record.display_record.uri !== undefined) { // object
-            uri += '<ul><li><strong>Uri:</strong>&nbsp;<a href="' + configModule.getASpace() + DOMPurify.sanitize(record.display_record.uri) + '" target="_blank">' + DOMPurify.sanitize(record.display_record.uri) + '</a>&nbsp;&nbsp;<i class="fa fa-external-link"></i></li></ul>';
+            uri += '<ul style="font-size: 12px"><li><a href="' + configModule.getASpace() + DOMPurify.sanitize(record.display_record.uri) + '" target="_blank">' + DOMPurify.sanitize(record.display_record.uri) + '</a>&nbsp;&nbsp;<i class="fa fa-external-link"></i></li></ul>';
         } else if (record.uri !== undefined) { // collection
-            uri += '<ul><li><strong>Uri:</strong>&nbsp;<a href="' + configModule.getASpace() + DOMPurify.sanitize(record.uri) + '" target="_blank">' + DOMPurify.sanitize(record.uri) + '</a>&nbsp;&nbsp;<i class="fa fa-external-link"></i></li></ul>';
+            uri += '<ul style="font-size: 12px"><li><a href="' + configModule.getASpace() + DOMPurify.sanitize(record.uri) + '" target="_blank">' + DOMPurify.sanitize(record.uri) + '</a>&nbsp;&nbsp;<i class="fa fa-external-link"></i></li></ul>';
         }
+
+        uri += '</ul>';
 
         return uri;
     }
@@ -424,7 +443,7 @@ const metadataModule = (function () {
 
         let parts = '';
 
-        if (record.display_record.parts !== undefined && record.display_record.parts.length !== 1) {
+        if (record.display_record.parts !== undefined && record.display_record.parts.length > 0) {
 
             parts += '<ul>';
             parts += '<li><strong>Parts:</strong></li>';
