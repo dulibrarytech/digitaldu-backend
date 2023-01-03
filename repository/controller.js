@@ -52,7 +52,7 @@ exports.get_records = (req, res) => {
     }
 
     let cache = CACHE.get_cache(req);
-
+    console.log(req.query);
     if (cache) {
         res.send(cache);
     } else {

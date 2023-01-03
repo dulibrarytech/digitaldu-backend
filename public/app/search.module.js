@@ -19,7 +19,7 @@
 const searchModule = (function () {
 
     'use strict';
-    console.log('TEST');
+
     const api = configModule.getApi();
     const endpoints = endpointsModule.get_search_endpoints();
     let obj = {};
@@ -28,7 +28,7 @@ const searchModule = (function () {
      * Constructs search request
      */
     obj.search = function () {
-        console.log('ENDPOINTS: ', endpoints);
+
         let q = helperModule.getParameterByName('q');
         let endpoint = endpoints.search.endpoint;
         let token = authModule.getUserToken(),

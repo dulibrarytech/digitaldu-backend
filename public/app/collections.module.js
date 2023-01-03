@@ -39,14 +39,13 @@ const collectionsModule = (function () {
         }
 
         // used by add collection form
-        if (helperModule.getParameterByName('is_member_of_collection') !== null && helperModule.getParameterByName('is_member_of_collection') === configModule.getRootPid()) {
+        if (helperModule.getParameterByName('is_member_of_collection') !== null && helperModule.getParameterByName('is_member_of_collection') === configModule.getRootUUID()) {
             domModule.html('#collection-type', 'Add top-level collection');
             return false;
-        } else if (helperModule.getParameterByName('is_member_of_collection') !== null && helperModule.getParameterByName('is_member_of_collection') !== configModule.getRootPid()) {
+        } else if (helperModule.getParameterByName('is_member_of_collection') !== null && helperModule.getParameterByName('is_member_of_collection') !== configModule.getRootUUID()) {
             domModule.html('#collection-type', 'Add sub-level collection');
         }
-        // TODO: failing - not getting collection record.  it's trying to pull
-        console.log('ENDPOINT: ', api + endpoints.repository.repo_record.endpoint + '?uuid=' + uuid);
+
         let token = authModule.getUserToken();
         let url = api + endpoints.repository.repo_record.endpoint + '?uuid=' + uuid,
             request = new Request(url, {
@@ -231,7 +230,7 @@ const collectionsModule = (function () {
         }
 
         let token = authModule.getUserToken();
-        let url = api + endpoints.repository.repo_records,  // endpoints.repo_object
+        let url = api + endpoints.repository.repo_records.endpoint,
             request = new Request(url, {
                 method: 'POST',
                 headers: {

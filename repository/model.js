@@ -92,22 +92,41 @@ exports.create_collection_record = (uri, is_member_of_collection, callback) => {
             obj.uri = URI;
             token = await TASKS.get_session_token();
             obj.metadata = await TASKS.get_resource_record(URI, token);
-            obj.uuid = await TASKS.create_uuid();
-            obj.handle = 'https://test-handle.net/' + obj.uuid; // await TASKS.create_handle(obj.uuid);
-            obj.display_record = await JSON.stringify(TASKS.create_index_record(obj));
-            is_saved = await TASKS.save_record(obj);
-            console.log('IS_SAVED: ', is_saved);
-            if (is_saved === true) {
-                // await TASKS.index_record(obj.uuid);
+
+            if (obj.metadata === 'false') {
+                // TODO: log
+                callback({
+                    status: 200,
+                    message: 'Unable to get metadata',
+                });
+
+                return false;
+
             } else {
-                // LOG
+
+                obj.uuid = await TASKS.create_uuid();
+                obj.handle = 'https://test-handle.net/' + obj.uuid; // await TASKS.create_handle(obj.uuid);
+                obj.display_record = await JSON.stringify(TASKS.create_index_record(obj));
+                is_saved = await TASKS.save_record(obj);
+
+                console.log('IS_SAVED: ', is_saved);
+
+                if (is_saved === true) {
+                    // await TASKS.index_record(obj.uuid);
+                } else {
+                    // LOG
+                }
+
+                callback({
+                    status: 201,
+                    message: 'Collection record created',
+                    data: {uuid: obj.uuid}
+                });
             }
 
-            callback({
-                status: 201,
-                message: 'Collection record created',
-                data: {uuid: obj.uuid}
-            });
+            // TODO:
+            console.log(obj);
+            return false;
 
         } catch (error) {
 
