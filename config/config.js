@@ -93,5 +93,8 @@ module.exports = {
     convertService: process.env.CONVERT_SERVICE,
     convertServiceApiKey: process.env.CONVERT_SERVICE_API_KEY,
     transcriptService: process.env.TRANSCRIPT_SERVICE,
-    transcriptServiceApiKey: process.env.TRANSCRIPT_SERVICE_API_KEY
+    transcriptServiceApiKey: process.env.TRANSCRIPT_SERVICE_API_KEY,
+    handleServiceHost: process.env.HANDLE_SERVICE_HOST,
+    handleServiceEndpoint: process.env.HANDLE_SERVICE_ENDPOINT,
+    handleServiceApiKey: process.env.HANDLE_SERVICE_API_KEY
 };

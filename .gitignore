@@ -17,6 +17,7 @@ lib-cov
 # env variables
 .env
 .env_new
+.env_2.0
 
 # shell scripts
 # *.sh

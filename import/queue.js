@@ -1411,6 +1411,21 @@ exports.create_repo_record = function (req, callback) {
 
         LOGGER.module().info('INFO: [/import/queue module (create_repo_record/async.waterfall)] record imported');
 
+        (async() => {
+
+            let endpoint = CONFIG.handleServiceHost + CONFIG.handleServiceEndpoint + '?api_key=' + CONFIG.handleServiceApiKey + '&object_id=' + results.mods_id;
+            let response = await HTTP_EXT.get(endpoint, {
+                timeout: 15000
+            });
+
+            if (response.data !== 'OK') {
+                LOGGER.module().error('ERROR: [/import/queue module (update_aspace_handle)] Unable to update ArchivesSpace handle');
+            } else if (response.data === 'OK') {
+                LOGGER.module().info('INFO: [/import/queue module (update_aspace_handle)] ArchivesSpace handle updated');
+            }
+
+        })();
+
         let collection = results.is_member_of_collection.replace(':', '_');
 
         // start next transfer
