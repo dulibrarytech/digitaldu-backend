@@ -64,6 +64,7 @@ https://github.com/ColorlibHQ/gentelella
 ## Releases
 * v1.0.0-beta [release]() [notes]()
 * v1.1.0 [release]() [notes]()
+* v2.0.0 [release]() [notes]()
 
 
 ## Contact
