@@ -32,6 +32,7 @@ const homeModule = (function () {
 
         history.replaceState({}, '', '/dashboard/home');
         history.pushState({}, '', '/dashboard/home');
+
         setTimeout(function() {
             statsModule.getStats();
         }, 250);

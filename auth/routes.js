@@ -18,17 +18,21 @@
 
 'use strict';
 
-const CONTROLLER = require('../auth/controller'),
-    ENDPOINTS = require('../auth/endpoints'),
-    TOKENS = require('../libs/tokens'),
-    FIELDS = require('../auth/validate');
+const CONTROLLER = require('../auth/controller');
+const ENDPOINTS = require('../auth/endpoints');
+const TOKENS = require('../libs/tokens');
 
 module.exports = function (app) {
 
     app.route('/login')
-        .get(CONTROLLER.login_form);
+        .get(TOKENS.verify);
+
+    app.route('/sso')
+        .post(CONTROLLER.sso);
+
+    app.route('/logout')
+    .get(CONTROLLER.logout);
 
     app.route(ENDPOINTS().auth.authentication.endpoint)
-        .post(FIELDS.validate_auth, CONTROLLER.login)
         .get(TOKENS.verify, CONTROLLER.get_auth_user_data);
 };

@@ -20,6 +20,10 @@
 
 const WEBSERVICES_CONFIG = {
     ldap_service: process.env.LDAP_SERVICE,
+    ssoHost: process.env.SSO_HOST,
+    ssoUrl: process.env.SSO_URL,
+    ssoResponseUrl: process.env.SSO_RESPONSE_URL,
+    ssoLogoutUrl: process.env.SSO_LOGOUT_URL,
     tn_service: process.env.TN_SERVICE,
     tn_service_api_key: process.env.TN_SERVICE_API_KEY,
     convert_service: process.env.CONVERT_SERVICE,

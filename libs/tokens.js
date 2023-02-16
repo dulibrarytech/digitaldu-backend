@@ -18,10 +18,11 @@
 
 'use strict';
 
-const CONFIG = require('../config/token_config')(),
-    JWT = require('jsonwebtoken'),
-    LOGGER = require('../libs/log4'),
-    VALIDATOR = require('validator');
+const TOKEN_CONFIG = require('../config/token_config')();
+const WEBSERVICES_CONFIG = require('../config/webservices_config')();
+const JWT = require('jsonwebtoken');
+const LOGGER = require('../libs/log4');
+const VALIDATOR = require('validator');
 
 /**
  * Creates session token
@@ -32,12 +33,12 @@ exports.create = function (username) {
 
     let tokenData = {
         sub: username,
-        iss: CONFIG.token_issuer
+        iss: TOKEN_CONFIG.token_issuer
     };
 
-    return JWT.sign(tokenData, CONFIG.token_secret, {
-        algorithm: CONFIG.token_algo,
-        expiresIn: CONFIG.token_expires
+    return JWT.sign(tokenData, TOKEN_CONFIG.token_secret, {
+        algorithm: TOKEN_CONFIG.token_algo,
+        expiresIn: TOKEN_CONFIG.token_expires
     });
 };
 
@@ -47,23 +48,18 @@ exports.create = function (username) {
  * @param res
  * @param next
  */
-exports.verify = function (req, res, next) {
+exports.verify = (req, res, next) => {
 
-    let token = req.headers['x-access-token'] || req.query.t;
-    let key = req.query.api_key;
+    const TOKEN = req.headers['x-access-token'] || req.query.t;
+    const key = req.query.api_key;
 
-    if (token !== undefined && VALIDATOR.isJWT(token)) {
+    if (TOKEN !== undefined && VALIDATOR.isJWT(TOKEN)) {
 
-        JWT.verify(token, CONFIG.token_secret, function (error, decoded) {
+        JWT.verify(TOKEN, TOKEN_CONFIG.token_secret, function (error, decoded) {
 
             if (error) {
-
                 LOGGER.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify token ' + error);
-
-                res.status(401).send({
-                    message: 'Unauthorized request ' + error
-                });
-
+                res.redirect(WEBSERVICES_CONFIG.ssoUrl + '?app_url=' + WEBSERVICES_CONFIG.ssoResponseUrl);
                 return false;
             }
 
@@ -71,7 +67,7 @@ exports.verify = function (req, res, next) {
             next();
         });
 
-    } else if (key !== undefined && key === CONFIG.api_key)  {
+    } else if (key !== undefined && key === TOKEN_CONFIG.api_key)  {
 
         let api_key = key;
 
@@ -80,10 +76,7 @@ exports.verify = function (req, res, next) {
         }
 
         if (!VALIDATOR.isAlphanumeric(api_key)) {
-            res.status(401).send({
-                message: 'Unauthorized request'
-            });
-
+            res.redirect(WEBSERVICES_CONFIG.ssoUrl + '?app_url=' + WEBSERVICES_CONFIG.ssoResponseUrl);
             return false;
         }
 
@@ -91,11 +84,7 @@ exports.verify = function (req, res, next) {
         next();
 
     } else {
-
         LOGGER.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify api key');
-
-        res.status(401).send({
-            message: 'Unauthorized request'
-        });
+        res.redirect(WEBSERVICES_CONFIG.ssoUrl + '?app_url=' + WEBSERVICES_CONFIG.ssoResponseUrl);
     }
 };
