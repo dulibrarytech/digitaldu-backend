@@ -139,11 +139,11 @@ const statsModule = (function () {
     };
 
     obj.init = function () {
-        obj.getStats();
+        // obj.getStats();
     };
 
     return obj;
 
 }());
 
-statsModule.init();
+// statsModule.init();

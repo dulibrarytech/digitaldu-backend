@@ -531,13 +531,13 @@ const userModule = (function () {
      */
     obj.getAuthUserData = function () {
 
-        let uid = helperModule.getParameterByName('uid');
+        let id = helperModule.getParameterByName('id');
         userModule.saveToken();
 
-        if (uid !== null) {
+        if (id !== null) {
 
             let token = userModule.getUserToken();
-            let url = api + endpoints.users + '?id=' + uid,
+            let url = api + endpoints.users + '?id=' + id,
                 request = new Request(url, {
                     method: 'GET',
                     mode: 'cors',

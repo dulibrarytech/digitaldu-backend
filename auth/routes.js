@@ -19,13 +19,16 @@
 'use strict';
 
 const AUTH = require('../auth/controller'),
-    FIELDS = require('../libs/validate');
+    TOKENS = require('../libs/tokens');
 
 module.exports = function (app) {
 
     app.route('/login')
-        .get(AUTH.login_form);
+    .get(TOKENS.verify);
 
-    app.route('/api/authenticate')
-        .post(FIELDS.validate_auth, AUTH.login);
+    app.route('/sso')
+    .post(AUTH.sso);
+
+    app.route('/logout')
+    .get(AUTH.logout);
 };

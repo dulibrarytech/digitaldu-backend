@@ -24,7 +24,7 @@ const homeModule = (function () {
 
     obj.init = function () {
 
-        if (!userModule.checkUserData()) {
+        if (userModule.checkUserData() === false) {
             userModule.getAuthUserData();
         } else {
             userModule.renderUserName();
@@ -32,6 +32,10 @@ const homeModule = (function () {
 
         history.replaceState({}, '', '/dashboard/home');
         history.pushState({}, '', '/dashboard/home');
+
+        setTimeout(function() {
+            statsModule.getStats();
+        }, 250);
     };
 
     return obj;

@@ -1,0 +1,38 @@
+<%- include('partials/header.ejs') %>
+<body class="login">
+<div class="login_wrapper">
+    <div class="animate form login_form">
+        <section class="login_content">
+            <div id="message">Please close all browser tabs and windows to terminate all other sessions.</div>
+            <form>
+                <div class="clearfix"></div>
+                <div>
+                    <div class="clearfix"></div>
+                    <br/>
+                    <div>
+                        <h1><i class="fa fa-archive"></i> Digital DU</h1>
+                        <p>©<span id="cdate"></span> University of Denver <br>University Libraries</p>
+                    </div>
+                </div>
+            </form>
+        </section>
+    </div>
+</div>
+<script>
+
+    window.sessionStorage.clear();
+    window.localStorage.clear();
+    window.location.reload();
+
+    for (let i=0;i<25;i++) {
+        history.replaceState({}, '', '/logout');
+        history.pushState({}, '', '/logout');
+    }
+
+    setTimeout(function() {
+        window.location.replace('<%-redirect%>');
+    }, 50);
+
+</script>
+</body>
+</html>

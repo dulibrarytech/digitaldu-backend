@@ -20,54 +20,42 @@
 
 const CONFIG = require('../config/config'),
     TOKEN = require('../libs/tokens'),
-    SERVICE = require('../auth/service'),
-    USER = require('../users/model');
+    // SERVICE = require('../auth/service'),
+    USER = require('../users/model'),
+    CACHE = require('../libs/cache');
 
-exports.login = function (req, res) {
+exports.sso = (req, res) => {
 
-    let username = req.body.username;
-    let password = req.body.password;
+    const SSO_HOST = req.body.HTTP_HOST;
+    const USERNAME = req.body.employeeID;
 
-    SERVICE.authenticate(username, password, function (isAuth) {
+    if (SSO_HOST === CONFIG.ssoHost && USERNAME !== undefined) {
 
-        if (isAuth.auth === true) {
+        let token = TOKEN.create(USERNAME);
+        token = encodeURIComponent(token);
 
-            let token = TOKEN.create(username);
-            token = encodeURIComponent(token);
+        USER.check_auth_user(USERNAME, (result) => {
 
-            /* check if user has access to repo */
-            USER.check_auth_user(username, function (result) {
+            if (result.auth === true) {
+                res.redirect('/dashboard/home?t=' + token + '&id=' + result.data);
+            } else {
 
-                if (result.auth === true) {
-
-                    res.status(200).send({
-                        message: 'Authenticated',
-                        redirect: '/dashboard/home?t=' + token + '&uid=' + result.data
-                    });
-
-                } else {
-
-                    res.status(401).send({
-                        message: 'Authenticate failed.'
-                    });
-                }
-            });
-
-        } else if (isAuth.auth === false) {
-
-            res.status(401).send({
-                message: 'Authenticate failed.'
-            });
-        }
-    });
-
+                // TODO: add template to provide user feedback
+                res.status(401).send({
+                    message: 'Authenticate failed.'
+                });
+            }
+        });
+    }
 };
 
-exports.login_form = function (req, res) {
-
-    res.renderStatic('login', {
+exports.logout = (req, res) => {
+    CACHE.clear_cache();
+    res.render('logout', {
         host: CONFIG.host,
-        message: '',
-        username: ''
+        appname: CONFIG.appName,
+        appversion: CONFIG.appVersion,
+        organization: CONFIG.organization,
+        redirect: CONFIG.ssoLogoutUrl
     });
 };
