@@ -21,6 +21,7 @@
 module.exports = {
     host: process.env.HOST,
     appName: process.env.APP_NAME,
+    appHost: process.env.APP_HOST,
     appVersion: process.env.APP_VERSION,
     organization: process.env.ORGANIZATION,
     ldap: process.env.LDAP_URL,

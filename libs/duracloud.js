@@ -92,46 +92,50 @@ exports.get_mets = function (data, callback) {
     let mets = 'METS.' + data.sip_uuid + '.xml',
         endpoint = 'https://' + CONFIG.duraCloudUser + ':' + CONFIG.duraCloudPwd + '@' + CONFIG.duraCloudApi + 'dip-store/' + data.dip_path + '/' + mets;
 
-    (async () => {
+    setTimeout(function() {
 
-        try {
+        (async () => {
 
-            let response = await HTTP.get(endpoint, {
-                timeout: TIMEOUT,
-                headers: HEADER
-            });
+            try {
 
-            if (response.status !== 200) {
+                let response = await HTTP.get(endpoint, {
+                    timeout: TIMEOUT,
+                    headers: HEADER
+                });
 
-                LOGGER.module().error('ERROR: [/libs/duracloud lib (get_mets)] Unable to get METS.');
+                if (response.status !== 200) {
+
+                    LOGGER.module().error('ERROR: [/libs/duracloud lib (get_mets)] Unable to get METS.');
+
+                    callback({
+                        error: true,
+                        error_message: 'ERROR: [/libs/duracloud lib (get_mets)] Unable to get METS.'
+                    });
+
+                } else if (response.status === 200) {
+
+                    callback({
+                        error: false,
+                        mets: response.data,
+                        sip_uuid: data.sip_uuid
+                    });
+                }
+
+                return false;
+
+            } catch (error) {
+
+                LOGGER.module().error('ERROR: [/libs/duracloud lib (get_mets)] Unable to get METS ' + error);
 
                 callback({
                     error: true,
-                    error_message: 'ERROR: [/libs/duracloud lib (get_mets)] Unable to get METS.'
-                });
-
-            } else if (response.status === 200) {
-
-                callback({
-                    error: false,
-                    mets: response.data,
-                    sip_uuid: data.sip_uuid
+                    error_message: error
                 });
             }
 
-            return false;
+        })();
 
-        } catch (error) {
-
-            LOGGER.module().error('ERROR: [/libs/duracloud lib (get_mets)] Unable to get METS ' + error);
-
-            callback({
-                error: true,
-                error_message: error
-            });
-        }
-
-    })();
+    }, 15000);
 };
 
 /**

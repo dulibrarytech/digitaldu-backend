@@ -22,11 +22,14 @@ const IMPORT = require('../import/queue'),
     MODEL = require('../import/model'),
     SERVICE = require('../import/service');
 
+/*
 exports.list = function (req, res) {
     IMPORT.list(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
+
+ */
 
 exports.queue_objects = function (req, res) {
     IMPORT.queue_objects(req, function (data) {

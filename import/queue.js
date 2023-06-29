@@ -42,13 +42,16 @@ const CONFIG = require('../config/config'),
     TRANSFER_QUEUE = 'tbl_archivematica_queue',
     IMPORT_QUEUE = 'tbl_duracloud_queue',
     FAIL_QUEUE = 'tbl_fail_queue';
+const WEB_SERVICES_CONFIG = require('../qa/config/webservices_config')();
+const QA_SERVICE_TASKS = require("../qa/tasks/service_tasks");
+const QA_TASK = new QA_SERVICE_TASKS(WEB_SERVICES_CONFIG);
 
 /**
  * Gets list of folders from Archivematica sftp server
  * @param req (query.collection)
  * @param callback
- */
-exports.list = function (req, callback) {
+
+ exports.list = function (req, callback) {
 
     DBQ(TRANSFER_QUEUE)
         .count('id as count')
@@ -96,6 +99,7 @@ exports.list = function (req, callback) {
             throw 'FATAL: [/import/queue module (list)] queue progress check failed ' + error;
         });
 };
+ */
 
 /**
  * Saves import data to queue and initiates import process
@@ -176,7 +180,7 @@ exports.queue_objects = function (req, callback) {
             /*
              Send request to start transfer
              */
-            (async() => {
+            (async () => {
 
                 let data = {
                     'collection': transfer_data.collection
@@ -264,7 +268,7 @@ exports.start_transfer = function (req, callback) {
          Initiates file transfer on Archivematica service
          */
         ARCHIVEMATICA.start_transfer(object, function (response) {
-
+            console.log(response);
             if (response.error !== undefined && response.error === true) {
 
                 LOGGER.module().fatal('FATAL: [/import/queue module (start_transfer/TRANSFER_INGEST.start_transfer/archivematica.start_transfer)] transfer error ' + response);
@@ -298,7 +302,7 @@ exports.start_transfer = function (req, callback) {
                 /*
                  Send request to approve transfer
                  */
-                (async() => {
+                (async () => {
 
                     let data = {
                         'collection': collection
@@ -1025,7 +1029,7 @@ exports.create_repo_record = function (req, callback) {
          */
         function new_token() {
 
-            (async() => {
+            (async () => {
 
                 let response = await HTTP.get({
                     endpoint: '/api/admin/v1/import/metadata/session'
@@ -1093,7 +1097,7 @@ exports.create_repo_record = function (req, callback) {
             return false;
         }
 
-        SERVICE.get_mods(obj, function(data) {
+        SERVICE.get_mods(obj, function (data) {
 
             if (data.error === true) {
                 obj.mods = null;
@@ -1247,12 +1251,12 @@ exports.create_repo_record = function (req, callback) {
 
             let dataArr = [];
 
-            setTimeout(function() {
+            setTimeout(function () {
 
                 TRANSFER_INGEST.save_compound_parts(obj.sip_uuid, parts);
             }, 3000);
 
-            for (let i=0;i<parts.length;i++) {
+            for (let i = 0; i < parts.length; i++) {
 
                 let dataObj = {};
                 let tmp = parts[i].object.split('/');
@@ -1272,7 +1276,7 @@ exports.create_repo_record = function (req, callback) {
                 dataArr.push(dataObj);
             }
 
-            let timer = setInterval(function() {
+            let timer = setInterval(function () {
 
                 if (dataArr.length === 0) {
                     clearInterval(timer);
@@ -1323,9 +1327,9 @@ exports.create_repo_record = function (req, callback) {
         /*
             Send request to index repository record
         */
-        setTimeout(function() {
+        setTimeout(function () {
 
-            (async() => {
+            (async () => {
 
                 let data = {
                     'sip_uuid': obj.sip_uuid
@@ -1411,17 +1415,21 @@ exports.create_repo_record = function (req, callback) {
 
         LOGGER.module().info('INFO: [/import/queue module (create_repo_record/async.waterfall)] record imported');
 
-        (async() => {
+        (async () => {
 
-            let endpoint = CONFIG.handleServiceHost + CONFIG.handleServiceEndpoint + '?api_key=' + CONFIG.handleServiceApiKey + '&object_id=' + results.mods_id;
-            let response = await HTTP_EXT.get(endpoint, {
-                timeout: 15000
-            });
+            // TODO: ignore handle update when localhost
+            if (CONFIG.appHost !== 'localhost') {
 
-            if (response.data !== 'OK') {
-                LOGGER.module().error('ERROR: [/import/queue module (update_aspace_handle)] Unable to update ArchivesSpace handle');
-            } else if (response.data === 'OK') {
-                LOGGER.module().info('INFO: [/import/queue module (update_aspace_handle)] ArchivesSpace handle updated');
+                let endpoint = CONFIG.handleServiceHost + CONFIG.handleServiceEndpoint + '?api_key=' + CONFIG.handleServiceApiKey + '&object_id=' + results.mods_id;
+                let response = await HTTP_EXT.get(endpoint, {
+                    timeout: 15000
+                });
+
+                if (response.data !== 'OK') {
+                    LOGGER.module().error('ERROR: [/import/queue module (update_aspace_handle)] Unable to update ArchivesSpace handle');
+                } else if (response.data === 'OK') {
+                    LOGGER.module().info('INFO: [/import/queue module (update_aspace_handle)] ArchivesSpace handle updated');
+                }
             }
 
         })();
@@ -1435,8 +1443,21 @@ exports.create_repo_record = function (req, callback) {
             if (result.status === 0) {
                 // ingest complete
                 // Move packages to ingested folder and wasabi s3 backup
-                (async() => {
+                (async () => {
 
+                    try {
+
+                        let result = await QA_TASK.move_to_ingested(collection);
+                        console.log('moved to ingested result: ', result);
+                        if (result.errors.length > 0) {
+                            LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/async.waterfall/TRANSFER_INGEST.check_queue)] move to ingested folder resulted in errors.');
+                        }
+
+                    } catch (error) {
+                        LOGGER.module().error('ERROR: [/import/queue module (create_repo_record/async.waterfall/TRANSFER_INGEST.check_queue)] unable to move packages to ingested folder.');
+                    }
+
+                    /*
                     let endpoint = CONFIG.qaUrl + '/api/v1/qa/move-to-ingested?pid=' + collection + '&folder=collection&api_key=' + CONFIG.qaApiKey;
                     let response = await HTTP_EXT.get(endpoint, {
                         timeout: 60000*15
@@ -1450,6 +1471,8 @@ exports.create_repo_record = function (req, callback) {
                         return false;
                     }
 
+                     */
+
                 })();
 
                 return false;
@@ -1458,7 +1481,7 @@ exports.create_repo_record = function (req, callback) {
             /*
              Send request to begin next transfer
              */
-            (async() => {
+            (async () => {
 
                 let data = {
                     'collection': collection
@@ -1495,17 +1518,17 @@ exports.create_repo_record = function (req, callback) {
 exports.poll_ingest_status = function (req, callback) {
 
     DBQ(TRANSFER_QUEUE)
-        .count('id as count')
-        .then(function (data) {
-            callback({
-                status: 200,
-                data: data
-            });
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/import/queue module (check_ingest_status) transfer queue database error' + error);
-            throw 'FATAL: [/import/queue module (check_ingest_status) transfer queue database error' + error;
+    .count('id as count')
+    .then(function (data) {
+        callback({
+            status: 200,
+            data: data
         });
+    })
+    .catch(function (error) {
+        LOGGER.module().fatal('FATAL: [/import/queue module (check_ingest_status) transfer queue database error' + error);
+        throw 'FATAL: [/import/queue module (check_ingest_status) transfer queue database error' + error;
+    });
 };
 
 /**
@@ -1516,21 +1539,21 @@ exports.poll_ingest_status = function (req, callback) {
 exports.poll_transfer_status = function (req, callback) {
 
     DBQ(TRANSFER_QUEUE)
-        .select('*')
-        .where({
-            transfer_status: 1
-        })
-        .orderBy('created', 'asc')
-        .then(function (data) {
-            callback({
-                status: 200,
-                data: data
-            });
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/import/queue module (check_transfer_status) transfer queue database error ' + error);
-            throw 'FATAL: [/import/queue module (check_transfer_status) transfer queue database error ' + error;
+    .select('*')
+    .where({
+        transfer_status: 1
+    })
+    .orderBy('created', 'asc')
+    .then(function (data) {
+        callback({
+            status: 200,
+            data: data
         });
+    })
+    .catch(function (error) {
+        LOGGER.module().fatal('FATAL: [/import/queue module (check_transfer_status) transfer queue database error ' + error);
+        throw 'FATAL: [/import/queue module (check_transfer_status) transfer queue database error ' + error;
+    });
 };
 
 /**
@@ -1541,19 +1564,19 @@ exports.poll_transfer_status = function (req, callback) {
 exports.poll_import_status = function (req, callback) {
 
     DBQ(IMPORT_QUEUE)
-        .select('sip_uuid', 'uuid', 'file', 'file_id', 'type', 'type', 'dip_path', 'mime_type', 'message', 'status', 'created')
-        .whereRaw('DATE(created) = CURRENT_DATE')
-        .orderBy('created', 'desc')
-        .then(function (data) {
-            callback({
-                status: 200,
-                data: data
-            });
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/import/queue module (import status broadcasts)] import queue database error ' + error);
-            throw 'FATAL: [/import/queue module (import status broadcasts)] import queue database error ' + error;
+    .select('sip_uuid', 'uuid', 'file', 'file_id', 'type', 'type', 'dip_path', 'mime_type', 'message', 'status', 'created')
+    .whereRaw('DATE(created) = CURRENT_DATE')
+    .orderBy('created', 'desc')
+    .then(function (data) {
+        callback({
+            status: 200,
+            data: data
         });
+    })
+    .catch(function (error) {
+        LOGGER.module().fatal('FATAL: [/import/queue module (import status broadcasts)] import queue database error ' + error);
+        throw 'FATAL: [/import/queue module (import status broadcasts)] import queue database error ' + error;
+    });
 };
 
 /**
@@ -1564,16 +1587,16 @@ exports.poll_import_status = function (req, callback) {
 exports.poll_fail_queue = function (req, callback) {
 
     DBQ(FAIL_QUEUE)
-        .select('*')
-        .orderBy('created', 'desc')
-        .then(function (data) {
-            callback({
-                status: 200,
-                data: data
-            });
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/import/queue module (import failure broadcasts)] fail queue database error ' + error);
-            throw 'FATAL: [/import/queue module (import failure broadcasts)] fail queue database error ' + error;
+    .select('*')
+    .orderBy('created', 'desc')
+    .then(function (data) {
+        callback({
+            status: 200,
+            data: data
         });
+    })
+    .catch(function (error) {
+        LOGGER.module().fatal('FATAL: [/import/queue module (import failure broadcasts)] fail queue database error ' + error);
+        throw 'FATAL: [/import/queue module (import failure broadcasts)] fail queue database error ' + error;
+    });
 };

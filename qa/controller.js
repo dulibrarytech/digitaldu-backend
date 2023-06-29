@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2023 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,47 +18,52 @@
 
 'use strict';
 
-const SERVICE = require('../qa/service'),
-    MODEL = require('../qa/model');
+const SERVICE = require('../qa/service');
 
-exports.get_list_ready = function (req, res) {
-    SERVICE.get_list_ready(req, function (data) {
+exports.get_folder_list = (req, res) => {
+    SERVICE.get_folder_list((data) => {
         res.status(data.status).send(data.data);
     });
 };
 
-exports.run_qa = function (req, res) {
-    SERVICE.run_qa(req, function (data) {
+exports.run_qa = (req, res) => {
+
+    let folder = req.query.folder;
+
+    SERVICE.run_qa(folder, (data) => {
         res.status(data.status).send(data.data);
     });
 };
 
-exports.check_metadata = function (req, res) {
-    SERVICE.check_metadata(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.check_collection = function (req, res) {
-    MODEL.check_collection(req, function (data) {
+exports.qa_status = (req, res) => {
+    SERVICE.qa_status((data) => {
         res.status(data.status).send(data.data);
     });
 };
 
 exports.move_to_ingest = function (req, res) {
-    SERVICE.move_to_ingest(req, function (data) {
+
+    let uuid = req.query.uuid;
+    let folder = req.query.folder;
+
+    SERVICE.move_to_ingest(uuid, folder, function (data) {
         res.status(data.status).send(data.data);
     });
 };
 
-exports.move_to_sftp = function (req, res) {
-    SERVICE.move_to_sftp(req, function (data) {
+exports.move_to_sftp = (req, res) => {
+
+    let uuid = req.query.uuid;
+    let folder = req.query.folder;
+
+    SERVICE.move_to_sftp(uuid, folder, (data) => {
         res.status(data.status).send(data.data);
     });
 };
 
-exports.upload_status = function (req, res) {
-    SERVICE.upload_status(req, function (data) {
+exports.sftp_upload_status = (req, res) => {
+    // TODO: req here
+    SERVICE.sftp_upload_status(req, (data) => {
         res.status(data.status).send(data.data);
     });
 };

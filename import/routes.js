@@ -23,8 +23,10 @@ const IMPORT = require('../import/controller'),
 
 module.exports = function (app) {
 
+    /*
     app.route('/api/admin/v1/import/list')
         .get(IMPORT.list);
+    */
 
     app.route('/api/admin/v1/import/queue_objects')
         .post(TOKEN.verify, IMPORT.queue_objects);

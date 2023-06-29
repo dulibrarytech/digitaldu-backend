@@ -65,11 +65,71 @@ exports.save_transfer_records = function (transfer_data, callback) {
 
     'use strict';
 
+    /*
     let collection = transfer_data.collection,
-        objects = transfer_data.objects.split(','),
+        objects = decodeURI(transfer_data.objects).split(','),
         user = transfer_data.user;
+     */
+
+    DBQ('tbl_qa_queue')
+    .select('packages')
+    .where({
+        collection_uuid: transfer_data.collection,
+    })
+    .limit(1)
+    .then(function (data) {
+
+        let objects = data[0].packages.split(',');
+        let user = transfer_data.user;
+        // Create array of objects. Each object contains the collection PID and object filename
+        let importObjects = objects.map(function (object) {
+
+            return {
+                is_member_of_collection: transfer_data.collection,
+                object: object,
+                transfer_uuid: '---',
+                message: 'WAITING_FOR_TRANSFER',
+                microservice: 'Waiting for transfer microservice',
+                user: user
+            };
+
+        });
+
+        // Save import objects to transfer queue
+        let chunkSize = importObjects.length;
+        DBQ.batchInsert(QUEUE, importObjects, chunkSize)
+        .then(function (data) {
+
+            let obj = {};
+            obj.message = 'Data saved.';
+            obj.recordCount = chunkSize;
+
+            if (data.length === 0) {
+                obj.message = 'Data not saved.';
+                LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (save_transfer_records)] unable to save queue data');
+                throw 'FATAL: [/libs/transfer-ingest lib (save_transfer_records)] unable to save queue data';
+                // TODO: clear queue and log to fail queue
+            }
+
+            callback(obj);
+            return null;
+        })
+        .catch(function (error) {
+            LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (save_transfer_records)] unable to save queue data');
+            throw 'FATAL: [/libs/transfer-ingest lib (save_transfer_records)] unable to save queue data' + error;
+        });
+
+        return null;
+    })
+    .catch(function (error) {
+        console.log('DB! error: ', error);
+        LOGGER.module().error('ERROR: [/libs/transfer-ingest lib (save_transfer_records)] database transfer queue error' + error.message);
+    });
+
+    return false;
 
     // Create array of objects. Each object contains the collection PID and object filename
+    /*
     let importObjects = objects.map(function (object) {
 
         return {
@@ -106,6 +166,8 @@ exports.save_transfer_records = function (transfer_data, callback) {
             LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (save_transfer_records)] unable to save queue data');
             throw 'FATAL: [/libs/transfer-ingest lib (save_transfer_records)] unable to save queue data' + error;
         });
+
+     */
 };
 
 /**

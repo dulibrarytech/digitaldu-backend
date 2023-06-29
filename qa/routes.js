@@ -18,29 +18,30 @@
 
 'use strict';
 
-const QA = require('../qa/controller'),
-    TOKEN = require('../libs/tokens');
+const CONTROLLER = require('../qa/controller');
+const TOKEN = require('../libs/tokens');
+const ENDPOINTS = require('../qa/endpoints');
 
-module.exports = function (app) {
+module.exports = (app) => {
 
-    app.route('/api/v1/qa/list-ready')
-        .get(TOKEN.verify, QA.get_list_ready);
+    app.route(ENDPOINTS().qa_service.qa_list_ready_folders.endpoint)
+        .get(TOKEN.verify, CONTROLLER.get_folder_list);
 
-    app.route('/api/v1/qa/run-qa')
-        .get(TOKEN.verify, QA.run_qa);
+    app.route(ENDPOINTS().qa_service.qa_run_qa.endpoint)
+        .get(TOKEN.verify, CONTROLLER.run_qa);
 
-    app.route('/api/v1/qa/check-metadata')
-        .get(TOKEN.verify, QA.check_metadata);
+    app.route(ENDPOINTS().qa_service.qa_status.endpoint)
+        .get(TOKEN.verify, CONTROLLER.qa_status);
 
-    app.route('/api/v1/qa/check-collection')
-        .get(TOKEN.verify, QA.check_collection);
+    /*
+    app.route(ENDPOINTS().qa_service.qa_move_to_ingest.endpoint)
+        .get(TOKEN.verify, CONTROLLER.move_to_ingest);
 
-    app.route('/api/v1/qa/move-to-ingest')
-        .get(TOKEN.verify, QA.move_to_ingest);
+     */
 
-    app.route('/api/v1/qa/move-to-sftp')
-        .get(TOKEN.verify, QA.move_to_sftp);
+    app.route(ENDPOINTS().qa_service.qa_move_to_sftp.endpoint)
+        .get(TOKEN.verify, CONTROLLER.move_to_sftp);
 
-    app.route('/api/v1/qa/upload-status')
-        .get(TOKEN.verify, QA.upload_status);
+    app.route(ENDPOINTS().qa_service.qa_upload_status.endpoint)
+        .get(TOKEN.verify, CONTROLLER.sftp_upload_status);
 };

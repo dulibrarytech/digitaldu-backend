@@ -17,7 +17,7 @@
  */
 
 const CONFIG = require('../config/config'),
-    CLIENT = require('ssh2-sftp-client'),
+    // CLIENT = require('ssh2-sftp-client'),
     HTTP = require('axios'),
     QS = require('querystring'),
     TIMEMOUT = CONFIG.archivematicaTransferTimeout,
@@ -249,7 +249,7 @@ exports.get_aip_storage_usage = function (callback) {
  * List the files and folders on the FTP server
  * @param folder
  * @param callback
- */
+
 exports.list = function (folder, callback) {
 
     'use strict';
@@ -282,6 +282,7 @@ exports.list = function (folder, callback) {
         throw 'FATAL: [/libs/archivematica lib (list)] unable to list sftp folders ' + error;
     });
 };
+ */
 
 /**
  * Starts transfer process

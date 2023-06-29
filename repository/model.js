@@ -437,7 +437,7 @@ exports.create_collection_object = function (req, callback) {
 
         DB(REPO_OBJECTS)
             .count('uri as uri')
-            .where('uri', data.uri)
+            .where('uri', VALIDATOR.unescape(data.uri))
             .then(function (result) {
 
                 if (result[0].uri === 1) {
