@@ -91,13 +91,13 @@ const authModule = (function () {
         }
     };
 
-
-    /** TODO: reference in logout ejs template
+    /**
      * Destroys session data and redirects user to login
      */
     obj.sessionExpired = function () {
-        obj.reset();
         window.sessionStorage.removeItem('repo_user');
+        obj.reset();
+
         setTimeout(function () {
             window.location.replace('/login');
         }, 500);
@@ -108,6 +108,7 @@ const authModule = (function () {
      * @returns {boolean}
      */
     obj.checkUserAuthData = function () {
+
         let data = window.sessionStorage.getItem('repo_user');
 
         if (data !== null) {
@@ -154,10 +155,10 @@ const authModule = (function () {
      */
     obj.reset = function () {
         window.sessionStorage.clear();
+        window.localStorage.clear();
     };
 
-    obj.init = function () {
-    };
+    obj.init = function () {};
 
     return obj;
 

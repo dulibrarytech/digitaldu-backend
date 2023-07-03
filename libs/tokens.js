@@ -21,7 +21,7 @@
 const CONFIG = require('../config/config'),
     JWT = require('jsonwebtoken'),
     LOGGER = require('../libs/log4'),
-    VALIDATOR = require("validator");
+    VALIDATOR = require('validator');
 
 /**
  * Creates session token
@@ -57,7 +57,7 @@ exports.verify = function (req, res, next) {
         JWT.verify(token, CONFIG.tokenSecret, function (error, decoded) {
 
             if (error) {
-                LOGGER.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify token ' + error);
+                LOGGER.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify token ' + error.message);
                 res.redirect(CONFIG.ssoUrl + '?app_url=' + CONFIG.ssoResponseUrl);
                 return false;
             }
@@ -90,12 +90,5 @@ exports.verify = function (req, res, next) {
 
         LOGGER.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify api key');
         res.redirect(CONFIG.ssoUrl + '?app_url=' + CONFIG.ssoResponseUrl);
-
-        /*
-        res.status(401).send({
-            message: 'Unauthorized request'
-        });
-
-         */
     }
 };

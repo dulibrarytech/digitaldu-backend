@@ -44,20 +44,19 @@ const qaModule = (function() {
                     }
                 });
 
-                if (response.status === 200) {
+                if (response !== undefined && response.status === 200) {
                     domModule.html('#message', null);
                     qaModule.renderReadyFolders(response.data);
-                } else if (response.status === 401) {
+                }
+                /* // TODO: move to error block
+                else if (response.status === 401) {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Permission denied.');
                 }
-                else if (response.status === 500) {
-                    helperModule.renderError('Error: (HTTP status ' + response.status + '). QA Service is unavailable.');
-                } else {
-                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to get ready folders.');
-                }
+                 */
 
             } catch(error) {
-                console.log(error);
+                console.log(error.message);
+                authModule.sessionExpired();
             }
 
         })();
