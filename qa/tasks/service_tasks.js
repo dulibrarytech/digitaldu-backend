@@ -868,6 +868,39 @@ const Service_tasks = class {
     };
 
     /**
+     * Deletes queue records after QA process completes
+     * @param DBQ
+     * @param TABLE
+     * @param uuid
+     * @return {Promise<unknown>}
+     */
+    clear_qa_queue(DBQ, TABLE, uuid) {
+
+        let promise = new Promise((resolve, reject) => {
+
+            DBQ(TABLE)
+            .where({
+                collection_uuid: uuid
+            })
+            .delete()
+            .then((data) => {
+                console.log(data);
+                console.log('QA queue cleared.');
+            })
+            .catch((error) => {
+                LOGGER.module().error('ERROR: [/qa/tasks (clear_qa_queue)] unable to delete QA record ' + error.message);
+                reject(false);
+            });
+        });
+
+        return promise.then((result) => {
+            return result;
+        }).catch((error) => {
+            return error;
+        });
+    }
+
+    /**
      * Starts ingest process
      * @param url
      * @param data
@@ -888,10 +921,8 @@ const Service_tasks = class {
                     });
 
                     if (response.status === 200) {
-
-                        resolve({
-                            data: response.data
-                        });
+                        console.log(response.data);
+                        resolve(true);
 
                     } else {
                         reject(false);

@@ -176,7 +176,6 @@ const check_batch_size = async (uuid, collection_folder) => {
         let total_batch_size_results = await QA_TASK.get_total_batch_size(collection_folder);
         let batch_size_results = HELPER.format_bytes(total_batch_size_results.total_batch_size.result);
         queue_record.total_batch_size_results = JSON.stringify(batch_size_results);
-        // queue_record.total_batch_size = parseInt(total_batch_size_results.total_batch_size.result);
 
         if (batch_size_results.size_type === 'GB' && batch_size_results.batch_size > 200) {
             LOGGER.module().error('ERROR: [/qa/service module (run_qa)] QA Halted - Batch size is too large');
@@ -431,7 +430,7 @@ const move_to_ingest = async (qa_uuid, uuid, folder) => {
         if (moved.result !== undefined && moved.errors.length > 0) {
             LOGGER.module().error('ERROR: [/qa/service module (move_to_ingest)] Unable to move package(s) to ingest folder ');
             queue_record.is_complete = 1;
-            queue_record.is_error = 1;
+            // queue_record.is_error = 1;
             queue_record.moved_to_ingest_results = JSON.stringify(moved);
             await QA_TASK.save_to_qa_queue(DB_QUEUE, TABLE, qa_uuid, queue_record);
             return false;
@@ -466,22 +465,10 @@ const move_to_sftp = async (qa_uuid, uuid, folder, total_files) => {
 
         let queue_record = {};
         await sftp_upload_status(qa_uuid, uuid, total_files.file_count_results.result);
-        await QA_TASK.move_to_sftp(uuid, folder); // let result =
+        await QA_TASK.move_to_sftp(uuid, folder);
         queue_record.moved_to_sftp_results = 'moving_packages_to_archivematica_sftp'; //result.response.message;
         await QA_TASK.save_to_qa_queue(DB_QUEUE, TABLE, qa_uuid, queue_record);
         return true;
-
-        /*
-        if (result.is_moved === false) {
-            LOGGER.module().error('ERROR: [/qa/service module (move_to_sftp)] move to sftp failed.');
-            queue_record.is_error = 1;
-            queue_record.is_complete = 1;
-            await QA_TASK.save_to_qa_queue(DB_QUEUE, TABLE, qa_uuid, queue_record);
-            return false;
-        } else if (result.is_moved === true) {
-            return true;
-        }
-         */
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/qa/service module (move_to_sftp)] move to sftp failed - ' + error.message);
@@ -506,8 +493,9 @@ const sftp_upload_status = async (qa_uuid, uuid, total_batch_file_count) => {
             await QA_TASK.save_to_qa_queue(DB_QUEUE, TABLE, qa_uuid, queue_record);
 
             if (response === false) {
-                queue_record.is_error = 1;
-                queue_record.is_complete = 1;
+                // TODO: test
+                // queue_record.is_error = 1;
+                // queue_record.is_complete = 1;
                 await QA_TASK.save_to_qa_queue(DB_QUEUE, TABLE, qa_uuid, queue_record);
                 return false;
             }
@@ -577,6 +565,9 @@ const start_ingest = (collection_uuid) => {
 
             let response = await QA_TASK.start_ingest(URL, data);
             console.log('start ingest response: ', response);
+            if (response === true) {
+                await QA_TASK.clear_qa_queue(DB_QUEUE, TABLE, collection_uuid);
+            }
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/qa/service task (start_ingest)] ingest start failed - ' + error.message);
