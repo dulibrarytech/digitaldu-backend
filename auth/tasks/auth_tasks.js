@@ -1,6 +1,6 @@
 /**
 
- Copyright 2022 University of Denver
+ Copyright 2023 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -35,83 +35,66 @@ const Auth_tasks = class {
      * Checks user access
      * @param username
      */
-    check_auth_user = (username) => {
+    async check_auth_user(username) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE)
-                .select('id')
-                .where({
-                    du_id: username,
-                    is_active: 1
-                })
-                .then((data) => {
+            const data = await this.DB(this.TABLE)
+            .select('id')
+            .where({
+                du_id: username,
+                is_active: 1
+            });
 
-                    if (data.length === 1) {
+            if (data.length === 1) {
 
-                        resolve({
-                            auth: true,
-                            data: data[0].id
-                        });
+                return {
+                    auth: true,
+                    data: data[0].id
+                };
 
-                    } else {
+            } else {
 
-                        resolve({
-                            auth: false,
-                            data: []
-                        });
-                    }
-                })
-                .catch((error) => {
-                    LOGGER.module().error('FATAL: [/users/tasks (check_auth_user)] unable to check auth ' + error.message);
-                    reject(false);
-                });
-        });
+                return {
+                    auth: false,
+                    data: []
+                };
+            }
 
-        return promise.then((result) => {
-            return result;
-        }).catch((error) => {
-            return error;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/users/tasks (check_auth_user)] unable to check user data ' + error.message);
+        }
+
     };
 
     /**
      * Gets user data
      * @param id
      */
-    get_auth_user_data = (id) => {
+    async get_auth_user_data(id) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE)
-                .select('id', 'du_id', 'email', 'first_name', 'last_name')
-                .where({
-                    id: id,
-                    is_active: 1
-                })
-                .then((data) => {
+            const data = await this.DB(this.TABLE)
+            .select('id', 'du_id', 'email', 'first_name', 'last_name')
+            .where({
+                id: id,
+                is_active: 1
+            });
 
-                    if (data.length === 1) {
+            if (data.length === 1) {
 
-                        resolve({
-                            data: data
-                        });
+                return {
+                    data: data
+                };
 
-                    } else {
-                        resolve(false);
-                    }
-                })
-                .catch((error) => {
-                    LOGGER.module().fatal('FATAL: [/users/tasks (get_auth_user_data)] unable to get user data ' + error.message);
-                    reject(false);
-                });
-        });
+            } else {
+                return false;
+            }
 
-        return promise.then((result) => {
-            return result;
-        }).catch((error) => {
-            return error;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/users/tasks (get_auth_user_data)] unable to get user data ' + error.message);
+        }
     };
 };
 

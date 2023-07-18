@@ -1,6 +1,6 @@
 /**
 
- Copyright 2022 University of Denver
+ Copyright 2023 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 
 'use strict';
 
+const HELPER = require('../libs/helper');
 const APP_CONFIG = {
     host: process.env.HOST,
     app_name: process.env.APP_NAME,
@@ -29,6 +30,7 @@ const APP_CONFIG = {
     tn_upload_path: process.env.TN_UPLOAD_PATH
 };
 
-module.exports = function() {
-    return APP_CONFIG;
+module.exports = function () {
+    const HELPER_TASK = new HELPER();
+    return HELPER_TASK.check_config(APP_CONFIG);
 };

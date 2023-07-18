@@ -20,7 +20,8 @@ const statsModule = (function () {
 
     'use strict';
 
-    const api = configModule.getApi();;
+    const api = configModule.getApi();
+    let endpoints = endpointsModule.get_stat_endpoints();
     let obj = {};
 
     /**
@@ -35,7 +36,7 @@ const statsModule = (function () {
         let labels = [];
         let totals = [];
 
-        for (let i=0;i<line_chart_data.length;i++) {
+        for (let i = 0; i < line_chart_data.length; i++) {
             labels.push(line_chart_data[i].year);
             totals.push(line_chart_data[i].total);
         }
@@ -94,32 +95,29 @@ const statsModule = (function () {
     /**
      * Gets stats from repository
      */
-    obj.getStats = function () {
+    obj.getStats = () => {
 
-        let endpoints = endpointsModule.get_stat_endpoints();
-        let token = authModule.getUserToken();
-        let url = api + endpoints.stats.endpoint,
-            request = new Request(url, {
+        (async () => {
+
+            let token = authModule.getUserToken();
+            let url = api + endpoints.stats.endpoint;
+            let response = await httpModule.req({
                 method: 'GET',
-                mode: 'cors',
+                url: url,
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
                 }
             });
 
-        const callback = function (response) {
-
             if (response.status === 200) {
 
-                response.json().then(function (data) {
+                if (response.data.length === 0) {
+                    domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No records found.</div>');
+                } else {
+                    renderStats(response.data);
+                }
 
-                    if (data.length === 0) {
-                        domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No records found.</div>');
-                    } else {
-                        renderStats(data);
-                    }
-                });
 
             } else if (response.status === 401) {
 
@@ -132,24 +130,12 @@ const statsModule = (function () {
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to retrieve repository statistics.');
             }
-        };
 
-        httpModule.req(request, callback);
+        })();
     };
 
-    obj.init = function () {
-        // obj.getStats();
-        /*
-        setTimeout(function() {
-            obj.getStats();
-            console.log('init');
-        }, 50);
-
-         */
-    };
+    obj.init = function () {};
 
     return obj;
 
 }());
-
-statsModule.init();

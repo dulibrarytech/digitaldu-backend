@@ -20,9 +20,9 @@
 </div>
 <script>
 
-    window.location.reload();
     window.sessionStorage.clear();
     window.localStorage.clear();
+    window.location.reload();
 
     for (let i=0;i<25;i++) {
         history.replaceState({}, '', '/logout');

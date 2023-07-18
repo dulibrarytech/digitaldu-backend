@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2023 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -64,10 +64,10 @@ module.exports = () => {
     require('../stats/routes.js')(APP);
     require('../search/routes.js')(APP);
     require('../utils/routes.js')(APP);
+    require('../qa/routes.js')(APP);
     // require('../import/routes.js')(APP);
     // require('../api/routes.js')(APP);
     // require('../uploads/index.js')(APP);
-    // require('../qa/routes.js')(APP);
 
     CACHE.clear_cache();
     DIRS.check_directories();

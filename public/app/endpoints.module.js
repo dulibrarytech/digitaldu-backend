@@ -1,6 +1,6 @@
 /**
 
- Copyright 2022 University of Denver
+ Copyright 2023 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -22,6 +22,14 @@ const endpointsModule = (function () {
 
     let obj = {};
 
+    obj.save_repo_endpoints = (data) => {
+        window.localStorage.setItem('repo_endpoints_users', JSON.stringify(data.endpoints.users));
+        window.localStorage.setItem('repo_endpoints_stats', JSON.stringify(data.endpoints.stats));
+        window.localStorage.setItem('repo_endpoints_repository', JSON.stringify(data.endpoints.repository));
+        window.localStorage.setItem('repo_endpoints_search', JSON.stringify(data.endpoints.search));
+        window.localStorage.setItem('repo_endpoints_qa', JSON.stringify(data.endpoints.qa));
+    };
+
     obj.get_stat_endpoints = () => {
         const repo_endpoints_stats = window.localStorage.getItem('repo_endpoints_stats');
         return JSON.parse(repo_endpoints_stats);
@@ -40,6 +48,11 @@ const endpointsModule = (function () {
     obj.get_search_endpoints = () => {
         const repo_endpoints_search = window.localStorage.getItem('repo_endpoints_search');
         return JSON.parse(repo_endpoints_search);
+    };
+
+    obj.get_qa_endpoints = () => {
+        const repo_endpoints_qa = window.localStorage.getItem('repo_endpoints_qa');
+        return JSON.parse(repo_endpoints_qa);
     };
 
     /**

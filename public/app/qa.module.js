@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2023 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -16,54 +16,47 @@
 
  */
 
-const qaModule = (function () {
+const qaModule = (function() {
 
     'use strict';
 
     const api = configModule.getApi();
-    const endpoints = endpointsModule.endpoints();
+    const endpoints = endpointsModule.get_qa_endpoints();
     let obj = {};
     let total_batch_file_count;
 
     /**
      * Gets ready folders
      */
-    obj.getReadyFolders = function () {
+    obj.getReadyFolders = () => {
 
-        let url = api + endpoints.qa_list;
-        let token = userModule.getUserToken();
-        let request = new Request(url, {
-            method: 'GET',
-            mode: 'cors',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-access-token': token
-            }
-        });
+        (async () => {
 
-        const callback = function (response) {
+            let url = api + endpoints.qa_service.qa_list_ready_folders.endpoint;
+            let token = authModule.getUserToken();
+
+            let response = await httpModule.req({
+                method: 'GET',
+                url: url,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
 
             if (response.status === 200) {
-
-                response.json().then(function (data) {
-                    domModule.html('#message', null);
-                    qaModule.renderReadyFolders(data);
-                });
-
+                domModule.html('#message', null);
+                qaModule.renderReadyFolders(response.data);
             } else if (response.status === 401) {
-
-                response.json().then(function (response) {
-                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Permission denied.');
-                });
-
-            } else if (response.status === 500) {
+                helperModule.renderError('Error: (HTTP status ' + response.status + '). Permission denied.');
+            }
+            else if (response.status === 500) {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). QA Service is unavailable.');
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to get ready folders.');
             }
-        };
 
-        httpModule.req(request, callback);
+        })();
     };
 
     /**
@@ -71,7 +64,7 @@ const qaModule = (function () {
      * @param data
      * @returns {boolean}
      */
-    obj.renderReadyFolders = function (data) {
+    obj.renderReadyFolders = (data) => {
 
         let html = '';
 
@@ -98,13 +91,13 @@ const qaModule = (function () {
             html += '<p id="upload-status-' + prop + '"></p>';
             html += '</td>';
             // Action button column
-            html += '<td style="text-align: center;vertical-align: middle; width: 15%"><a href="#" type="button" class="btn btn-sm btn-default run-qa" onclick="qaModule.runQAonReady(\'' + prop + '\')"><i class="fa fa-cogs"></i> <span>Start</span></a></td>';
+            html += '<td style="text-align: center;vertical-align: middle; width: 15%"><a href="#" type="button" class="btn btn-sm btn-default run-qa" onclick="qaModule.runQAonReady(\'' + prop + '\'); return false;"><i class="fa fa-cogs"></i> <span>Start</span></a></td>';
             html += '</tr>';
         }
 
         domModule.html('#qa-folders', html);
 
-        setTimeout(function () {
+        setTimeout(() => {
             $('#qa-folders-tbl').DataTable({
                 'order': [[0, 'asc']],
                 'lengthMenu': [[10, 25, 50, -1], [10, 25, 50, 'All']]
@@ -117,251 +110,177 @@ const qaModule = (function () {
      * @param folder
      * @returns {boolean}
      */
-    obj.runQAonReady = function (folder) {
+    obj.runQAonReady = (folder) => {
 
         domModule.hide('.run-qa');
         domModule.html('#' + folder, '<strong><em>Running QA process on archival packages...</em></strong>');
 
-        // send folder name in request
-        let url = api + endpoints.qa_run + '?folder=' + folder;
-        let token = userModule.getUserToken();
-        let request = new Request(url, {
-            method: 'GET',
-            mode: 'cors',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-access-token': token
-            }
-        });
+        (async () => {
 
-        const callback = function (response) {
+            try {
 
-            if (response.status === 200) {
-
-                response.json().then(function (data) {
-
-                    domModule.html('#message', null);
-
-                    if (data.length === 0) {
-                        domModule.html('#qa-on-ready', null);
-                        domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No packages found in "' + folder + '".</div>');
-                    } else {
-
-                        let uris = data.get_uri_results.result;
-
-                        check_package_metadata(uris, folder, function(errors) {
-
-                            if (errors.length > 0) {
-                                data.metadata_results = {
-                                    result: 'Metadata checked.',
-                                    errors: errors
-                                };
-                            }
-
-                            renderQAresults(data, folder);
-                        });
-                    }
-                });
-
-            } else if (response.status === 401) {
-
-                response.json().then(function (response) {
-                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Permission denied.');
-                });
-
-            } else {
-                helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to get ready folders.');
-            }
-        };
-
-        httpModule.req(request, callback);
-    };
-
-    /**
-     * Displays QA errors found in archival packages
-     * @param data
-     * @return error_object
-     */
-    function display_qa_errors(data) {
-
-        let error_messages = '<p><strong>The following errors were encountered:</strong></p>';
-        let errors = [];
-
-        if (data.folder_name_results.errors.length > 0) {
-
-            errors.push(-1);
-
-            for (let i = 0; i < data.folder_name_results.errors.length; i++) {
-                error_messages += '<p><i class="fa fa-exclamation-circle" style="color: red"></i> ' + data.folder_name_results.errors[i] + '</p>';
-            }
-        }
-
-        // TODO: rethink array name... array contains issues with objects as well.
-        if (data.file_count_results.errors.length > 0) {
-
-            errors.push(-1);
-
-            for (let i = 0; i < data.file_count_results.errors.length; i++) {
-                error_messages += '<p><i class="fa fa-exclamation-circle" style="color: red"></i> ' + data.file_count_results.errors[i] + '</p>';
-            }
-        }
-
-        if (data.package_name_results.errors.length > 0) {
-
-            errors.push(-1);
-
-            for (let i = 0; i < data.package_name_results.errors.length; i++) {
-                error_messages += '<p><i class="fa fa-exclamation-circle" style="color: red"></i> ' + data.package_name_results.errors[i] + '</p>';
-            }
-        }
-
-        if (data.total_batch_size.errors.length > 0) {
-            errors.push(-1);
-            error_messages += '<p><i class="fa fa-exclamation-circle" style="color: red"></i> Unable to get total batch size.</p>';
-        }
-
-        if (data.uri_results.errors.length > 0) {
-
-            errors.push(-1);
-
-            for (let i = 0; i < data.uri_results.errors.length; i++) {
-                error_messages += '<p><i class="fa fa-exclamation-circle" style="color: red"></i> ' + data.uri_results.errors[i] + '</p>';
-            }
-        }
-
-        if (data.metadata_results !== undefined && data.metadata_results.errors.length > 0) {
-
-            errors.push(-1);
-
-            for (let i = 0; i < data.metadata_results.errors.length; i++) {
-                error_messages += '<p><i class="fa fa-exclamation-circle" style="color: red"></i> ' + data.metadata_results.errors[i].error + ' for record ' + data.metadata_results.errors[i].uri + '</p>';
-            }
-        }
-
-        return {
-            errors: errors,
-            error_messages: error_messages
-        };
-    }
-
-    /**
-     * Checks record metadata
-     * @param uris
-     * @param folder
-     * @param cb
-     */
-    const check_package_metadata = function (uris, folder, cb) {
-
-        let errors = [];
-
-        let timer = setInterval(function() {
-
-            if (uris.length === 0) {
-                clearInterval(timer);
-                domModule.html('#' + folder, '<strong><em>Running QA process on archival packages. <br>Metadata checks complete.</em></strong>');
-
-                setTimeout(function() {
-                    cb(errors);
-                }, 4000);
-
-                return false;
-            }
-
-            let uri = uris.pop();
-            let token = userModule.getUserToken();
-
-            domModule.html('#' + folder, '<strong><em>Running QA process on archival packages. <br>Checking metadata record... ' + uri + '</em></strong>');
-
-            let url = api + endpoints.qa_check_metadata + '?uri=' + uri,
-                request = new Request(url, {
+                let url = api + endpoints.qa_service.qa_run_qa.endpoint + '?folder=' + folder;
+                let token = authModule.getUserToken();
+                let response = await httpModule.req({
                     method: 'GET',
+                    url: url,
                     headers: {
                         'Content-Type': 'application/json',
                         'x-access-token': token
-                    },
-                    mode: 'cors'
+                    }
                 });
 
-            const callback = function (response) {
-
                 if (response.status === 200) {
-
-                    response.json().then(function (data) {
-
-                        if (data.length > 0) {
-                            errors.push(data[0]);
-                        }
-                    });
-
-                    return false;
-
-                } else if (response.status === 401) {
-
-                    response.json().then(function (response) {
-
-                        helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
-
-                        setTimeout(function () {
-                            window.location.replace('/login');
-                        }, 4000);
-                    });
-
-                } else {
-                    helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to check metadata.');
+                    poll_qa_queue();
                 }
-            };
 
-            httpModule.req(request, callback);
+            } catch (error) {
+                console.log(error);
+                // LOGGER.module().error('ERROR: [/qa/service module (get_total_batch_size)] Unable to get total batch size - ' + error.message);
+            }
 
-        }, 3000);
+        })();
     };
 
     /**
-     * Renders QA results
-     * @param data
-     * @param folder
-     * @returns {boolean}
+     * Polls queue to check QA status
      */
-    const renderQAresults = function (data, folder) {
+    const poll_qa_queue = () => {
 
-        let total_batch_size = data.total_batch_size.result;
-        let error_obj = display_qa_errors(data);
-        total_batch_file_count = data.file_count_results.result;
+        let timer = setInterval(async () => {
 
-        domModule.html('#' + folder, '<strong>QA Complete...</strong>');
+            let url = api + endpoints.qa_service.qa_status.endpoint;
+            let token = authModule.getUserToken();
+            let data;
+            let response = await httpModule.req({
+                method: 'GET',
+                url: url,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
 
-        // display QA errors if found
-        if (error_obj.errors.length > 0) {
-            setTimeout(function() {
-                domModule.html('#' + folder, error_obj.error_messages);
+            data = response.data;
+            let is_complete = data.is_complete;
+            display_qa_status(data);
+
+            if (is_complete === 1) {
+                clearInterval(timer);
                 domModule.show('.run-qa');
-            }, 4000);
+                console.log('Polling stopped.');
+                return false;
+            }
 
-            return false;
+        }, 5000);
+    };
+
+    /**
+     * Displays QA status
+     * @param data
+    */
+    const display_qa_status = (data) => {
+
+        console.log('TEST: ', data);
+        let uuid = data.uuid;
+        let collection_folder = data.collection_folder;
+        let collection_folder_results = JSON.parse(data.collection_folder_name_results);
+        let package_names_results = JSON.parse(data.package_names_results);
+        let file_results = JSON.parse(data.file_names_results);
+        let uri_txt_results = JSON.parse(data.uri_txt_results);
+        let metadata_check = data.metadata_check;
+        let total_batch_size = JSON.parse(data.total_batch_size_results);
+        let collection_results = data.collection_results;
+        let qa_complete = data.is_complete;
+        let status = '';
+
+        if (qa_complete === 1) {
+            status += '<p><strong>QA process complete.</strong></p>';
+        } else {
+            status += '<p><strong><em>Running QA process on archival packages...</em></strong></p>';
         }
 
-        setTimeout(function() {
+        status += `<p><strong>QA UUID: ${uuid}</strong></p>`;
 
-            // render QA results
-            domModule.html('#ready', '<h2>' + folder + '</h2>');
-            domModule.html('#qa-package-size-' + folder, '(' + helperModule.format_package_size(total_batch_size) + ' - ' + total_batch_file_count + ' files.)<br>');
+        if (total_batch_size == null) {
+            status += '<p><i class="fa fa-info" style="color: dodgerblue"></i> <em>Calculating total batch size...</em></p>';
+        } else if (total_batch_size.errors > 0) {
+            console.log('display errors');
+        } else {
+            status += `<p><i class="fa fa-check" style="color: darkgreen"></i> <strong>Total Batch Size is ${total_batch_size.batch_size}${total_batch_size.size_type}</strong></p>`;
+        }
 
-            window.onbeforeunload = function () {
-                return '';
-            };
+        if (collection_folder_results.folder_name_results.errors !== undefined && collection_folder_results.folder_name_results.errors.length > 0) {
+            console.log('display errors');
+            console.log(collection_folder_results.folder_name_results.errors);
+        } else {
+            status += '<p><i class="fa fa-check" style="color: darkgreen"></i> <strong>Collection folder name passed.</strong></p>';
+        }
 
-            let parts = folder.split('-');
-            let uri_part = parts.pop().replace('_', '/');
-            checkCollection(uri_part, folder);
+        if (package_names_results.package_name_results.errors !== undefined && package_names_results.package_name_results.errors.length > 0) {
+            console.log('display errors');
+            console.log(package_names_results.package_name_results.errors);
+        } else {
+            status += '<p><i class="fa fa-check" style="color: darkgreen"></i> <strong>Package names passed.</strong></p>';
+        }
 
-        }, 4000);
-    };
+        if (uri_txt_results === null) {
+            status += '<p><i class="fa fa-info" style="color: dodgerblue"></i> <em>Checking package uri.txt files...</em></p>';
+        } else if (uri_txt_results.get_uri_results.errors > 0) {
+            console.log('display errors');
+        } else {
+            status += '<p><i class="fa fa-check" style="color: darkgreen"></i> <strong>Package uri.txt files passed.</strong></p>';
+        }
+
+        if (metadata_check.length > 0 && metadata_check !== 'COMPLETE') {
+            status += '<p><i class="fa fa-info" style="color: dodgerblue"></i> <em>' + metadata_check + '</em></p>';
+        } else if (metadata_check.errors > 0) {
+            console.log('display errors');
+        } else if (metadata_check === 'COMPLETE') {
+            status += '<p><i class="fa fa-check" style="color: darkgreen"></i> <strong>Metadata passed.</strong></p>';
+        } else {
+            status += '<p><i class="fa fa-info" style="color: dodgerblue"></i> <em>Metadata checks pending...</em></p>';
+        }
+
+        if (file_results === null) {
+            status += '<p><i class="fa fa-info" style="color: dodgerblue"></i> <em>Checking package files...</em></p>';
+        } else if (file_results.file_count_results.errors.length > 0) {
+
+            status += `<p><i class="fa fa-exclamation" style="color: red"></i> ${file_results.file_count_results.errors.length} file errors found out of ${file_results.file_count_results.result} files:</p>`;
+            status += '<ul>';
+
+            for (let i=0;i<file_results.file_count_results.errors.length;i++) {
+                console.log(file_results.file_count_results.errors[i]);
+                status += `<li>${file_results.file_count_results.errors[i]}</li>`;
+            }
+
+            status += '</li></ul>';
+
+        } else if (file_results.file_count_results.errors.length === 0) {
+            status += `<p><i class="fa fa-check" style="color: darkgreen"></i> <strong>${file_results.file_count_results.result} package files checked.</strong></p>`;
+        }
+
+        if (collection_results === null) {
+            status += '<p><i class="fa fa-info" style="color: dodgerblue"></i> <em>Checking collection...</em></p>';
+        } else if (collection_results === 0) {
+            status += '<p><i class="fa fa-info" style="color: dodgerblue"></i> <em>Creating collection...</em></p>';
+        } else if (collection_results === 1) {
+            status += `<p><i class="fa fa-check" style="color: darkgreen"></i> <strong>Collection checked.</strong></p>`;
+        }
+
+        domModule.html('#ready', '<h2>' + collection_folder + '</h2>');
+        domModule.html('#' + collection_folder, status);
+
+        window.onbeforeunload = () => {
+            return '';
+        };
+    }
 
     /**
      * Checks if collection exists
      * @param uri
      * @param folder
-     */
+
     const checkCollection = function (uri, folder) {
 
         domModule.html('#' + folder, '<strong><em>Checking collection...</em></strong>');
@@ -460,6 +379,7 @@ const qaModule = (function () {
 
         httpModule.req(request, callback);
     };
+     */
 
     /**
      * Initiates QA to move ready folder to ingest folder
@@ -486,7 +406,7 @@ const qaModule = (function () {
             if (response.status === 200) {
 
                 response.json().then(function (data) {
-                    setTimeout(function() {
+                    setTimeout(function () {
                         domModule.html('#' + folder, '<strong>Packages moved to ingest folder.</strong>');
                         // move archival packages to Archivematica SFTP server
                         moveToSftp(pid, folder);
@@ -654,3 +574,45 @@ const qaModule = (function () {
 
     return obj;
 }());
+
+/** DEPRECATE
+ * Renders QA results
+ * @param data
+ * @param folder
+ * @returns {boolean}
+
+ const renderQAresults = function (data, folder) {
+
+        let total_batch_size = data.total_batch_size.result;
+        let error_obj = display_qa_errors(data);
+        total_batch_file_count = data.file_count_results.result;
+
+        domModule.html('#' + folder, '<strong>QA Complete...</strong>');
+
+        // display QA errors if found
+        if (error_obj.errors.length > 0) {
+            setTimeout(function () {
+                domModule.html('#' + folder, error_obj.error_messages);
+                domModule.show('.run-qa');
+            }, 4000);
+
+            return false;
+        }
+
+        setTimeout(function () {
+
+            // render QA results
+            domModule.html('#ready', '<h2>' + folder + '</h2>');
+            domModule.html('#qa-package-size-' + folder, '(' + helperModule.format_package_size(total_batch_size) + ' - ' + total_batch_file_count + ' files.)<br>');
+
+            window.onbeforeunload = function () {
+                return '';
+            };
+
+            let parts = folder.split('-');
+            let uri_part = parts.pop().replace('_', '/');
+            checkCollection(uri_part, folder);
+
+        }, 4000);
+    };
+ */

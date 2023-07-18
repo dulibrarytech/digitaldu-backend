@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2023 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,51 +18,35 @@
 
 'use strict';
 
-const VALIDATOR = require('validator'),
-    DB = require('../config/db')(),
-    DR = require('../libs/display-record'),
-    LOGGER = require('../libs/log4'),
-    REPO_OBJECTS = 'tbl_objects';
+const DB = require('../config/db_config')();
+const DB_TABLES = require('../config/db_tables_config')();
+const TABLE = DB_TABLES.repo.repo_objects;
+const QA_TASKS = require('../qa/tasks/check_collection_tasks');
+const LOGGER = require('../libs/log4');
 
 /**
  * Checks if collection exists
- * @param req
+ * @param uri
  * @param callback
- */
-exports.check_collection = function(req, callback) {
 
-    let uri = VALIDATOR.unescape(req.query.uri);
+exports.check_collection = (uri, callback) => {
 
-    DB(REPO_OBJECTS)
-        .select('pid')
-        .where({
-            uri: uri,
-            object_type: 'collection',
-            is_active: 1
-        })
-        .then(function (data) {
-            // if collection doesn't exist
-            if (data.length === 0) {
+    (async () => {
 
-                callback({
-                    status: 200,
-                    data: []
-                });
+        try {
 
-            } else {
+            const QA_TASK = new QA_TASKS(DB, TABLE);
+            const RECORD = await QA_TASK.check_collection(uri);
 
-                DR.get_db_display_record_data(data[0].pid, function(result) {
+            callback({
+                status: 200,
+                data: RECORD
+            });
 
-                    callback({
-                        status: 200,
-                        data: result[0].display_record
-                    });
-                });
-            }
+        } catch(error) {
+            LOGGER.module().error('ERROR: [/qa/model module (check_collection)] Unable to get collection record ' + error);
+        }
 
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/qa/model module (check_collection)] Unable to check collection ' + error);
-            throw 'FATAL: [/qa/model module (check_collection)] Unable to check collection ' + error;
-        });
+    })();
 };
+ */

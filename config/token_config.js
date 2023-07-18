@@ -18,6 +18,7 @@
 
 'use strict';
 
+const HELPER = require('../libs/helper');
 const TOKEN_CONFIG = {
     api_key: process.env.API_KEY,
     token_secret: process.env.TOKEN_SECRET,
@@ -27,5 +28,6 @@ const TOKEN_CONFIG = {
 };
 
 module.exports = function () {
-    return TOKEN_CONFIG;
+    const HELPER_TASK = new HELPER();
+    return HELPER_TASK.check_config(TOKEN_CONFIG);
 };

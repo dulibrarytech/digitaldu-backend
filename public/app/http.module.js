@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2023 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -16,18 +16,30 @@
 
  */
 
-const httpModule = (function () {
+const httpModule = (() => {
 
     'use strict';
 
+    const HTTP = axios;
     let obj = {};
+    obj.req = async (request) => {
 
-    obj.req = function (request, callback) {
-        fetch(request).then(callback).catch(function (error) {
-            helperModule.renderError('Error: (Request/Response error has occurred. ' + DOMPurify.sanitize(error));
+        try {
+            return await HTTP(request);
+        } catch(error) {
+            helperModule.renderError('Error: (HTTP Request/Response error has occurred. ' + DOMPurify.sanitize(error));
+        }
+    };
+
+    /*
+    obj.req = (request, callback) => {
+        fetch(request).then(callback).catch((error) => {
+            helperModule.renderError('Error: (HTTP Request/Response error has occurred. ' + DOMPurify.sanitize(error));
         });
     };
 
+     */
+
     return obj;
 
-}());
+})();

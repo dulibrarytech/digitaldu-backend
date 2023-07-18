@@ -1,6 +1,6 @@
 /**
 
- Copyright 2022 University of Denver
+ Copyright 2023 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 
 'use strict';
 
+const HELPER = require('../libs/helper');
 const ARCHIVESSPACE_CONFIG = {
     archivesspace_host: process.env.ARCHIVESPACE_HOST,
     archivesspace_user: process.env.ARCHIVESPACE_USER,
@@ -25,6 +26,7 @@ const ARCHIVESSPACE_CONFIG = {
     archivesspace_repository_id: process.env.ARCHIVESPACE_REPOSITORY_ID
 };
 
-module.exports = function() {
-    return ARCHIVESSPACE_CONFIG;
+module.exports = function () {
+    const HELPER_TASK = new HELPER();
+    return HELPER_TASK.check_config(ARCHIVESSPACE_CONFIG);
 };

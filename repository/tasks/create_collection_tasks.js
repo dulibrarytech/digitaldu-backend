@@ -133,7 +133,7 @@ const Create_collection_tasks = class {
         });
     }
 
-    /**
+    /** TODO: PLACE IN COMMON HELPER
      * Generates uuid
      * @returns Promise string
      */

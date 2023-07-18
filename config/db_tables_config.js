@@ -1,6 +1,6 @@
 /**
 
- Copyright 2022 University of Denver
+ Copyright 2023 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,17 +18,24 @@
 
 'use strict';
 
+const HELPER = require("../libs/helper");
+const HELPER_TASK = new HELPER();
+const REPO = {
+    repo_db: process.env.DB_NAME,
+    repo_objects: process.env.REPO_OBJECTS,
+    repo_users: process.env.REPO_USERS
+};
+const REPO_QUEUE = {
+    repo_queue_db: process.env.DB_QUEUE_NAME,
+    repo_archivematica_queue: process.env.REPO_ARCHIVEMATICA_QUEUE,
+    repo_duracloud_queue: process.env.REPO_DURACLOUD_QUEUE,
+    repo_qa_queue: process.env.REPO_QA_QUEUE
+};
+const REPO_TABLES = HELPER_TASK.check_config(REPO);
+const REPO_QUEUE_TABLES = HELPER_TASK.check_config(REPO_QUEUE);
 const DB_TABLES_CONFIG = {
-    repo: {
-        repo_db: process.env.DB_NAME,
-        repo_objects: process.env.REPO_OBJECTS,
-        repo_users: process.env.REPO_USERS,
-    },
-    repo_queue: {
-        repo_queue_db: '',
-        repo_archivematica_queue: process.env.REPO_ARCHIVEMATICA_QUEUE,
-        repo_duracloud_queue: process.env.REPO_DURACLOUD_QUEUE
-    }
+    repo: REPO_TABLES,
+    repo_queue: REPO_QUEUE_TABLES
 };
 
 module.exports = function () {

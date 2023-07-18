@@ -134,8 +134,38 @@ const userModule = (function () {
      */
     obj.getUsers = function () {
 
-        // const endpoints = endpointsModule.get_users_endpoints();
-        let token = authModule.getUserToken();
+        (async () => {
+
+            let token = authModule.getUserToken();
+            let url = api + endpoints.users.endpoint;
+            let response = await httpModule.req({
+                method: 'GET',
+                url: url,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            console.log('user: ', response);
+
+            if (response.status === 200) {
+                renderUsers(response.data);
+            } else if (response.status === 401) {
+
+                helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
+
+                setTimeout(function () {
+                    window.location.replace('/login');
+                }, 4000);
+
+            } else {
+                helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to retrieve users.');
+            }
+
+        })();
+
+        /*
         let url = api + endpoints.users.endpoint,
             request = new Request(url, {
                 method: 'GET',
@@ -170,6 +200,8 @@ const userModule = (function () {
         httpModule.req(request, callback);
 
         return false;
+
+         */
     };
 
     /**
@@ -177,8 +209,39 @@ const userModule = (function () {
      */
     obj.getUserDetails = function () {
 
-        let id = helperModule.getParameterByName('id');
-        let token = authModule.getUserToken();
+        (async () => {
+
+            let id = helperModule.getParameterByName('id');
+            let token = authModule.getUserToken();
+            let url = api + endpoints.users.endpoint + '?id=' + id;
+            let response = await httpModule.req({
+                method: 'GET',
+                url: url,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            console.log('user details: ', response);
+
+            if (response.status === 200) {
+                renderUsers(response.data);
+            } else if (response.status === 401) {
+
+                helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
+
+                setTimeout(function () {
+                    window.location.replace('/login');
+                }, 4000);
+
+            } else {
+                helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to retrieve users.');
+            }
+
+        })();
+
+        /*
         let url = api + endpoints.users.endpoint + '?id=' + id,
             request = new Request(url, {
                 method: 'GET',
@@ -213,6 +276,8 @@ const userModule = (function () {
         httpModule.req(request, callback);
 
         return false;
+
+         */
     };
 
     /**
@@ -246,11 +311,11 @@ const userModule = (function () {
 
             } else if (data === null && domModule.html('.username')) {
 
-                 helperModule.renderError('Unable to get user profile data.');
+                helperModule.renderError('Unable to get user profile data.');
 
-                 setTimeout(function () {
+                setTimeout(function () {
                     window.location.replace('/login');
-                 }, 5000);
+                }, 5000);
             }
 
         }, 500);
@@ -306,7 +371,7 @@ const userModule = (function () {
         domModule.hide('#user-form');
         domModule.html('#message', '<div class="alert alert-info">Saving User...</div>');
 
-        for (let i=0;i<arr.length;i++) {
+        for (let i = 0; i < arr.length; i++) {
             let propsVal = decodeURIComponent(arr[i]).split('=');
             obj[propsVal[0]] = propsVal[1];
         }
@@ -483,7 +548,7 @@ const userModule = (function () {
      * Applies user form validation when adding new user
      */
     obj.userFormValidation = function () {
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             $('#user-form').validate({
                 submitHandler: function () {
                     addUser();
@@ -496,7 +561,7 @@ const userModule = (function () {
      * Applies user form validation when updating a user
      */
     obj.userUpdateFormValidation = function () {
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             $('#user-update-form').validate({
                 submitHandler: function () {
                     updateUser();

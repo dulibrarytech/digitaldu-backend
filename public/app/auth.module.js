@@ -55,26 +55,22 @@ const authModule = (function () {
 
         if (id !== null) {
 
-            let token = authModule.getUserToken();
-            let url = api + init_endpoints.authenticate + '?id=' + id,
-                request = new Request(url, {
+            (async () => {
+
+                let token = authModule.getUserToken();
+                let url = api + init_endpoints.authenticate + '?id=' + id;
+                let response = await httpModule.req({
                     method: 'GET',
-                    mode: 'cors',
+                    url: url,
                     headers: {
                         'Content-Type': 'application/json',
                         'x-access-token': token
                     }
                 });
 
-            const callback = function (response) {
-
                 if (response.status === 200) {
-
-                    response.json().then(function (data) {
-                        authModule.saveUserAuthData(data);
-                        userModule.renderUserName();
-                    });
-
+                    authModule.saveUserAuthData(response.data);
+                    userModule.renderUserName();
                 } else if (response.status === 401) {
 
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
@@ -87,9 +83,8 @@ const authModule = (function () {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to retrieve user profile.');
                     window.location.replace('/login');
                 }
-            };
 
-            httpModule.req(request, callback);
+            })();
 
         } else {
             userModule.renderUserName();
@@ -97,10 +92,11 @@ const authModule = (function () {
     };
 
 
-    /**
+    /** TODO: reference in logout ejs template
      * Destroys session data and redirects user to login
      */
     obj.sessionExpired = function () {
+        obj.reset();
         window.sessionStorage.removeItem('repo_user');
         setTimeout(function () {
             window.location.replace('/login');
@@ -132,10 +128,7 @@ const authModule = (function () {
             name: DOMPurify.sanitize(data.user_data.data[0].first_name) + ' ' + DOMPurify.sanitize(data.user_data.data[0].last_name)
         };
 
-        window.localStorage.setItem('repo_endpoints_users', JSON.stringify(data.endpoints.users));
-        window.localStorage.setItem('repo_endpoints_stats', JSON.stringify(data.endpoints.stats));
-        window.localStorage.setItem('repo_endpoints_repository', JSON.stringify(data.endpoints.repository));
-        window.localStorage.setItem('repo_endpoints_search', JSON.stringify(data.endpoints.search));
+        endpointsModule.save_repo_endpoints(data);
         window.sessionStorage.setItem('repo_user', JSON.stringify(user));
     };
 
@@ -163,79 +156,8 @@ const authModule = (function () {
         window.sessionStorage.clear();
     };
 
-    /**
-     * Creates request used to authenticates users
-     */
-    const authenticate = function () {
-
-        document.querySelector('#login-button').disabled = true;
-
-        let user = {
-            username: domModule.val('#username', null),
-            password: domModule.val('#password', null)
-        };
-
-        let url = api + init_endpoints.authenticate, // endpoints.authenticate
-            request = new Request(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(user),
-                mode: 'cors'
-            });
-
-        const callback = function (response) {
-
-            if (response.status === 200) {
-
-                response.json().then(function (response) {
-
-                    domModule.html('#message', '<div class="alert alert-success"><i class="fa fa-check-circle"></i> ' + DOMPurify.sanitize(response.message) + '</div>');
-
-                    setTimeout(function () {
-                        window.location.replace(response.redirect);
-                    }, 500);
-
-                });
-
-            } else if (response.status === 401) {
-
-                response.json().then(function (response) {
-
-                    if (response.errors !== undefined && Array.isArray(response.errors)) {
-                        helperModule.renderError(DOMPurify.sanitize(response.errors[0].message));
-                        document.querySelector('#login-button').disabled = false;
-                    } else {
-                        document.querySelector('#login-button').disabled = false;
-                        helperModule.renderError(DOMPurify.sanitize(response.message));
-                    }
-                });
-
-            } else {
-                document.querySelector('#login-button').disabled = false;
-                helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to authenticate user.');
-            }
-        };
-
-        httpModule.req(request, callback);
+    obj.init = function () {
     };
-
-    /**
-     * Enable validation on login form
-     */
-    obj.loginFormValidation = function () {
-
-        document.addEventListener('DOMContentLoaded', function() {
-            $('#login-form').validate({
-                submitHandler: function () {
-                    authenticate();
-                }
-            });
-        });
-    };
-
-    obj.init = function () {};
 
     return obj;
 

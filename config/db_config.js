@@ -18,17 +18,19 @@
 
 'use strict';
 
-const CONFIG = require('../config/config'),
-    DB = require('knex')({
-        client: 'mysql2',
-        connection: {
-            host: CONFIG.dbHost,
-            user: CONFIG.dbUser,
-            password: CONFIG.dbPassword,
-            database: CONFIG.dbName
-        }
+const HELPER = require('../libs/helper');
+const HELPER_TASK = new HELPER();
+const CONNECTION_CONFIG = {
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
+};
+const DB = require('knex')({
+    client: 'mysql2',
+    connection: HELPER_TASK.check_config(CONNECTION_CONFIG)
 });
 
-module.exports = () => {
-  return DB;
+module.exports = function () {
+    return DB;
 };

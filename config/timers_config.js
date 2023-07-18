@@ -18,6 +18,7 @@ limitations under the License.
 
 'use strict';
 
+const HELPER = require('../libs/helper');
 const TIMERS_CONFIG = {
     transfer_timer: process.env.TRANSFER_TIMER,
     transfer_approval_timer: process.env.TRANSFER_APPROVAL_TIMER,
@@ -30,6 +31,7 @@ const TIMERS_CONFIG = {
 };
 
 module.exports = function () {
-    return TIMERS_CONFIG;
+    const HELPER_TASK = new HELPER();
+    return HELPER_TASK.check_config(TIMERS_CONFIG);
 };
 

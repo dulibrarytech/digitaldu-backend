@@ -33,6 +33,8 @@ exports.get_endpoints = function (req, res) {
     endpoints.stats_endpoints = require('../stats/endpoints')();
     endpoints.repository_endpoints = require('../repository/endpoints')();
     endpoints.users_endpoints = require('../users/endpoints')();
+    endpoints.qa_endpoints = require('../qa/endpoints')();
+    console.log(endpoints);
     res.status(200).send(endpoints);
 };
 

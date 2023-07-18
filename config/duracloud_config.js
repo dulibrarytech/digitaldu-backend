@@ -1,6 +1,6 @@
 /**
 
- Copyright 2022 University of Denver
+ Copyright 2023 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 
 'use strict';
 
+const HELPER = require('../libs/helper');
 const DURACLOUD_CONFIG = {
     duracloud_api: process.env.DURACLOUD_API,
     duracloud_user: process.env.DURACLOUD_USER,
@@ -25,5 +26,6 @@ const DURACLOUD_CONFIG = {
 };
 
 module.exports = function () {
-    return DURACLOUD_CONFIG;
+    const HELPER_TASK = new HELPER();
+    return HELPER_TASK.check_config(DURACLOUD_CONFIG);
 };

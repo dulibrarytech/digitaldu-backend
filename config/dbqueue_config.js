@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2023 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,15 +18,17 @@
 
 'use strict';
 
-const CONFIG = require('../config/config'),
-    DBQUEUE = require('knex')({
+const HELPER = require('../libs/helper');
+const HELPER_TASK = new HELPER();
+const CONNECTION_CONFIG = {
+    host: process.env.DB_QUEUE_HOST,
+    user: process.env.DB_QUEUE_USER,
+    password: process.env.DB_QUEUE_PASSWORD,
+    database: process.env.DB_QUEUE_NAME
+};
+const DBQUEUE = require('knex')({
         client: 'mysql2',
-        connection: {
-            host: CONFIG.dbQueueHost,
-            user: CONFIG.dbQueueUser,
-            password: CONFIG.dbQueuePassword,
-            database: CONFIG.dbQueueName
-        }
+        connection: HELPER_TASK.check_config(CONNECTION_CONFIG)
     });
 
 module.exports = function () {

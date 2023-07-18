@@ -1,6 +1,6 @@
 /**
 
- Copyright 2022 University of Denver
+ Copyright 2023 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 
 'use strict';
 
+const HELPER = require('../libs/helper');
 const HANDLE_CONFIG = {
     handle_host: process.env.HANDLE_HOST,
     handle_prefix: process.env.HANDLE_PREFIX,
@@ -28,5 +29,6 @@ const HANDLE_CONFIG = {
 };
 
 module.exports = function () {
-    return HANDLE_CONFIG;
+    const HELPER_TASK = new HELPER();
+    return HELPER_TASK.check_config(HANDLE_CONFIG);
 };

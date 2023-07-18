@@ -25,6 +25,7 @@ const DB =require('../config/db_config')(),
     USERS_ENDPOINTS = require('../users/endpoints')(),
     STATS_ENDPOINTS = require('../stats/endpoints')(),
     SEARCH_ENDPOINTS = require('../search/endpoints')(),
+    QA_ENDPOINTS = require('../qa/endpoints')(),
     LOGGER = require('../libs/log4');
 
 /**
@@ -60,14 +61,15 @@ exports.get_auth_user_data = function (id, callback) {
         try {
 
             const TASKS = new AUTH_TASKS(DB, TABLE);
-            const data = await TASKS.get_auth_user_data(id);
+            const DATA = await TASKS.get_auth_user_data(id);
             let auth_data = {
-                user_data: data,
+                user_data: DATA,
                 endpoints: {
                     repository: REPOSITORY_ENDPOINTS,
                     users: USERS_ENDPOINTS,
                     stats: STATS_ENDPOINTS,
-                    search: SEARCH_ENDPOINTS
+                    search: SEARCH_ENDPOINTS,
+                    qa: QA_ENDPOINTS
                 }
             };
 
@@ -77,7 +79,7 @@ exports.get_auth_user_data = function (id, callback) {
                 data: auth_data
             };
 
-            if (data === false) {
+            if (DATA === false) {
                 response = {
                     status: 500,
                     message: 'Unable to retrieve user data.',

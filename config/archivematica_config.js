@@ -1,6 +1,6 @@
 /**
 
- Copyright 2022 University of Denver
+ Copyright 2023 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,10 +18,10 @@
 
 'use strict';
 
+const HELPER = require('../libs/helper');
 const ARCHIVEMATICA_CONFIG = {
     archivematica_api: process.env.ARCHIVEMATICA_API,
     archivematica_username: process.env.ARCHIVEMATICA_USERNAME,
-    archivematica_password: process.env.ARCHIVEMATICA_PASSWORD,
     archivematica_api_key: process.env.ARCHIVEMATICA_API_KEY,
     archivematica_transfer_source: process.env.ARCHIVEMATICA_TRANSFER_SOURCE,
     archivematica_transfer_timeout: process.env.ARCHIVEMATICA_TRANSFER_TIMEOUT,
@@ -37,9 +37,10 @@ const ARCHIVEMATICA_CONFIG = {
     archivematica_sftp_port: process.env.SFTP_PORT,
     archivematica_sftp_user: process.env.SFTP_ID,
     archivematica_sftp_password: process.env.SFTP_PWD,
-    archivematica_sftp_remote_path: process.env.SFTP_REMOTE_PATH,
+    archivematica_sftp_remote_path: process.env.SFTP_REMOTE_PATH
 };
 
 module.exports = function () {
-    return ARCHIVEMATICA_CONFIG;
+    const HELPER_TASK = new HELPER();
+    return HELPER_TASK.check_config(ARCHIVEMATICA_CONFIG);
 };

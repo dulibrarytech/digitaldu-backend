@@ -18,8 +18,8 @@
 
 'use strict';
 
+const HELPER = require('../libs/helper');
 const WEBSERVICES_CONFIG = {
-    ldap_service: process.env.LDAP_SERVICE,
     ssoHost: process.env.SSO_HOST,
     ssoUrl: process.env.SSO_URL,
     ssoResponseUrl: process.env.SSO_RESPONSE_URL,
@@ -36,5 +36,6 @@ const WEBSERVICES_CONFIG = {
 };
 
 module.exports = function () {
-    return WEBSERVICES_CONFIG;
+    const HELPER_TASK = new HELPER();
+    return HELPER_TASK.check_config(WEBSERVICES_CONFIG);
 };
