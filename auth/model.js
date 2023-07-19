@@ -1,6 +1,6 @@
 /**
 
- Copyright 2022 University of Denver
+ Copyright 2023 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,52 +18,50 @@
 
 'use strict';
 
-const DB =require('../config/db_config')(),
-    TABLE = 'tbl_users_test',
-    AUTH_TASKS = require("../auth/tasks/auth_tasks"),
-    REPOSITORY_ENDPOINTS = require('../repository/endpoints')(),
-    USERS_ENDPOINTS = require('../users/endpoints')(),
-    STATS_ENDPOINTS = require('../stats/endpoints')(),
-    SEARCH_ENDPOINTS = require('../search/endpoints')(),
-    QA_ENDPOINTS = require('../qa/endpoints')(),
-    LOGGER = require('../libs/log4');
+const DB = require('../config/db_config')();
+const DB_TABLES = require('../config/db_tables_config')();
+const TABLE = DB_TABLES.repo.repo_users;
+const AUTH_TASKS = require('../auth/tasks/auth_tasks');
+const REPOSITORY_ENDPOINTS = require('../repository/endpoints')();
+const USERS_ENDPOINTS = require('../users/endpoints')();
+const STATS_ENDPOINTS = require('../stats/endpoints')();
+const SEARCH_ENDPOINTS = require('../search/endpoints')();
+const QA_ENDPOINTS = require('../qa/endpoints')();
+const LOGGER = require('../libs/log4');
 
 /**
- * Checks auth user
- * @param username
- * @param callback
+ * Auth Model
+ * @type {Auth_model}
  */
-exports.check_auth_user = function (username, callback) {
+const Auth_model = class {
 
-    (async () => {
+    constructor() {};
+
+    /**
+     * Checks user is registered to login to app
+     * @param username
+     */
+    async check_auth_user(username) {
 
         try {
             const TASKS = new AUTH_TASKS(DB, TABLE);
-            const data = await TASKS.check_auth_user(username);
-            callback(data);
+            return await TASKS.check_auth_user(username);
         } catch (error) {
             LOGGER.module().error('ERROR: [/auth/model (check_auth_user)] unable to check user auth data ' + error.message);
-            callback(false);
         }
+    }
 
-    })();
-};
-
-/**
- * Gets user auth data
- * @param id
- * @param callback
- */
-exports.get_auth_user_data = function (id, callback) {
-
-    (async () => {
+    /**
+     * Gets user profile data and repository app API endpoints
+     * @param id
+     */
+    async get_auth_user_data(id) {
 
         try {
-
             const TASKS = new AUTH_TASKS(DB, TABLE);
-            const DATA = await TASKS.get_auth_user_data(id);
+            const data = await TASKS.get_auth_user_data(id);
             let auth_data = {
-                user_data: DATA,
+                user_data: data,
                 endpoints: {
                     repository: REPOSITORY_ENDPOINTS,
                     users: USERS_ENDPOINTS,
@@ -79,7 +77,7 @@ exports.get_auth_user_data = function (id, callback) {
                 data: auth_data
             };
 
-            if (DATA === false) {
+            if (data === false) {
                 response = {
                     status: 500,
                     message: 'Unable to retrieve user data.',
@@ -87,12 +85,12 @@ exports.get_auth_user_data = function (id, callback) {
                 }
             }
 
-            callback(response);
+            return response;
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/auth/model (get_auth_user_data)] unable to get user auth data ' + error.message);
-            callback(false);
         }
+    };
+}
 
-    })();
-};
+module.exports = Auth_model;

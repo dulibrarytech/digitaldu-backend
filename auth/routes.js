@@ -21,18 +21,19 @@
 const CONTROLLER = require('../auth/controller');
 const ENDPOINTS = require('../auth/endpoints');
 const TOKENS = require('../libs/tokens');
+const AUTH = new CONTROLLER();
 
 module.exports = function (app) {
 
     app.route('/login')
-        .get(TOKENS.verify);
+    .get(TOKENS.verify);
 
     app.route('/sso')
-        .post(CONTROLLER.sso);
-
-    app.route('/logout')
-    .get(CONTROLLER.logout);
+    .post(AUTH.sso);
 
     app.route(ENDPOINTS().auth.authentication.endpoint)
-        .get(TOKENS.verify, CONTROLLER.get_auth_user_data);
+    .get(TOKENS.verify, AUTH.get_auth_user_data);
+
+    app.route('/logout')
+    .get(AUTH.logout);
 };
