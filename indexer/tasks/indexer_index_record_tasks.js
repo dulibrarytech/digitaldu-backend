@@ -1,6 +1,6 @@
 /**
 
- Copyright 2022 University of Denver
+ Copyright 2023 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -37,60 +37,14 @@ const Indexer_display_record_tasks = class {
      * Retrieves index display record data by uuid
      * @param uuid
      */
-    get_index_display_record_data = (uuid) => {
+    async get_index_display_record_data(uuid) {
 
-        let promise = new Promise((resolve, reject) => {
-
-            (async () => {
-
-                try {
-                    resolve(await this.IRL.get_index_record_data(uuid));
-                } catch (error) {
-                    LOGGER.module().error('ERROR: [/indexer/indexer_display_record_tasks (get_index_display_record_data)] unable to get index db record ' + error.message);
-                    reject(false);
-                }
-
-            })();
-
-        });
-
-        return promise.then((data) => {
-            return data;
-        }).catch(() => {
-            return false;
-        });
+        try {
+            await this.IRL.get_index_record_data(uuid);
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/indexer/indexer_display_record_tasks (get_index_display_record_data)] unable to get index db record ' + error.message);
+        }
     }
-
-    /**
-     * Creates index record
-     * @param data
-     * @return {Promise<unknown | boolean>}
-
-    create_index_record = (data) => {
-
-        let promise = new Promise((resolve, reject) => {
-            // console.log('IRL DATA!!: ', data);
-            (async () => {
-
-                try {
-                    // console.log('IRL: ', await this.IRL.create_index_record(data));
-                    resolve(true);
-                    // resolve(await this.IRL.create_index_record(data));
-                } catch (error) {
-                    // LOGGER.module().error('ERROR: [/indexer/indexer_index_record_tasks (create_index_record)] unable to create index record ' + error.message);
-                    reject(false);
-                }
-
-            })();
-        });
-
-        return promise.then((data) => {
-            return data;
-        }).catch(() => {
-            return false;
-        });
-    }
-     */
 };
 
 module.exports = Indexer_display_record_tasks;

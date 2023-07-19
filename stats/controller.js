@@ -21,7 +21,7 @@
 const MODEL = require('../stats/model');
 const CACHE = require('../libs/cache');
 
-exports.get_stats = (req, res) => {
+exports.get_stats = function (req, res) {
 
     let cache = CACHE.get_cache(req);
 

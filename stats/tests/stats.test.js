@@ -1,6 +1,6 @@
 /**
 
- Copyright 2022 University of Denver
+ Copyright 2023 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -19,23 +19,11 @@
 import {it, expect, beforeAll} from 'vitest';
 const ARCHIVEMATICA = require('../../libs/archivematica');
 const ARCHIVEMATICA_CONFIG = require('../../test/archivematica_config')();
+const ARCHIVEMATICALIB = new ARCHIVEMATICA(ARCHIVEMATICA_CONFIG);
 const DB = require('../../test/db')();
 const STATS_TASKS = require('../tasks/stats_tasks');
 const TABLE = 'tbl_objects_test';
 const LIB = new STATS_TASKS(DB, TABLE);
-
-// INTEGRATION
-require('dotenv').load();
-const EXPRESS = require('express');
-const REQUEST = require('supertest');
-const ENDPOINTS = require('../endpoints');
-const TEST_ENDPOINTS = require('../../users/endpoints');
-const TOKEN_CONFIG = require('../../test/token_config')();
-const APP = EXPRESS();
-const API_KEY = TOKEN_CONFIG.api_key;
-process.env.NODE_ENV = process.env.NODE_ENV || 'development';
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
-
 
 it.concurrent('Stats Tasks get_total_published_collections (Unit)', async function () {
     await expect(LIB.get_total_published_collections()).resolves.toBeDefined();
@@ -77,49 +65,10 @@ it.concurrent('Stats Tasks get_total_daily_ingests (Unit)', async function () {
     await expect(LIB.get_total_daily_ingests()).resolves.toBeDefined();
 }, 10000);
 
-// TODO: Test on server
 it.concurrent('Stats Tasks get_dip_storage_usage (Unit)', async function () {
-    let ARCHIVEMATICALIB = new ARCHIVEMATICA(ARCHIVEMATICA_CONFIG);
-    console.log(await LIB.get_dip_storage_usage(ARCHIVEMATICALIB));
-    // await expect(LIB.get_dip_storage_usage(ARCHIVEMATICALIB)).resolves.toBeDefined();
+    await expect(LIB.get_dip_storage_usage(ARCHIVEMATICALIB)).resolves.toBeDefined();
 }, 10000);
 
-// TODO: Test on server
-/*
-it.concurrent('Stats Tasks get_dip_storage_usage (Unit)', async function () {
-    let ARCHIVEMATICALIB = new ARCHIVEMATICA(ARCHIVEMATICA_CONFIG);
-    console.log(await LIB.get_dip_storage_usage(ARCHIVEMATICALIB));
-    // await expect(LIB.get_dip_storage_usage(ARCHIVEMATICALIB)).resolves.toBeDefined();
-}, 10000);
-*/
-
-/*
-// TODO: Test on server
 it.concurrent('Stats Tasks get_aip_storage_usage (Unit)', async function () {
-    let ARCHIVEMATICALIB = new ARCHIVEMATICA(ARCHIVEMATICA_CONFIG);
-    console.log(await LIB.get_aip_storage_usage(ARCHIVEMATICALIB));
-    // await expect(LIB.get_aip_storage_usage(ARCHIVEMATICALIB)).resolves.toBeDefined();
+    await expect(LIB.get_aip_storage_usage(ARCHIVEMATICALIB)).resolves.toBeDefined();
 }, 10000);
- */
-
-
-it('Stats API Endpoint get_user ' + ENDPOINTS().stats.endpoint + ' (E2E)', async function() {
-    let response = await REQUEST(APP)
-        .get(ENDPOINTS().stats.endpoint + '?api_key=' + API_KEY);  // ENDPOINTS().users.endpoint + '?id=' + id + '&api_key=' + API_KEY
-    expect(response.status).toBe(200);
-}, 10000);
-
-/*
-it.concurrent('Stats API Endpoint ' + ENDPOINTS().stats.endpoint + ' (E2E)', async function() {
-    console.log(ENDPOINTS().stats.endpoint + '?api_key=' + API_KEY);
-    // '/api/v2/stats?api_key=M7dHS21r47RsgyxSd7XJaEAgf7Miha01'
-    // '/api/v2/stats?api_key=M7dHS21r47RsgyxSd7XJaEAgf7Miha01'
-    let response = await REQUEST(APP)
-        .get(ENDPOINTS().stats.endpoint + '?api_key=' + API_KEY);
-    console.log('RESPOSNE: ', response.text);
-    expect(response.status).toBe(200);
-}, 10000);
-
- */
-
-

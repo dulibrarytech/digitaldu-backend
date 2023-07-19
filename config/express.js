@@ -18,15 +18,15 @@
 
 'use strict';
 
-const HTTP = require('http'),
-    EXPRESS = require('express'),
-    COMPRESS = require('compression'),
-    BODYPARSER = require('body-parser'),
-    METHODOVERRIDE = require('method-override'),
-    HELMET = require('helmet'),
-    XSS = require('../libs/dom'),
-    CACHE = require('../libs/cache'),
-    DIRS = require('../libs/directories');
+const HTTP = require('http');
+const EXPRESS = require('express');
+const COMPRESS = require('compression');
+const BODYPARSER = require('body-parser');
+const METHODOVERRIDE = require('method-override');
+const HELMET = require('helmet');
+const XSS = require('../libs/dom');
+const CACHE = require('../libs/cache');
+const DIRS = require('../libs/directories');
 
 module.exports = () => {
 

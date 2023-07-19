@@ -1,6 +1,6 @@
 /**
 
- Copyright 2022 University of Denver
+ Copyright 2023 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -39,158 +39,114 @@ const Indexer_index_tasks = class {
      * @param is_published
      * @param record
      */
-    index_record = (uuid, is_published, record) => {
+    async index_record(uuid, is_published, record) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            (async () => {
+            let index;
 
-                try {
+            if (is_published === true) {
+                index = this.CONFIG.elasticsearch_front_index;
+            } else {
+                index = this.CONFIG.elasticsearch_back_index;
+            }
 
-                    let index;
+            console.log('indexing ' + uuid + ' into ' + index);
 
-                    if (is_published === true) {
-                        index = this.CONFIG.elasticsearch_front_index;
-                    } else {
-                        index = this.CONFIG.elasticsearch_back_index;
-                    }
+            let response = await this.CLIENT.index({
+                index: index,
+                id: uuid,
+                body: JSON.parse(record.index_record),
+                refresh: true
+            });
 
-                    console.log('indexing ' + uuid + ' into ' + index);
+            if (response.statusCode === 201 || response.statusCode === 200) {
+                return response;
+            } else {
+                return false;
+            }
 
-                    let response = await this.CLIENT.index({
-                        index: index,
-                        id: uuid,
-                        body: JSON.parse(record.index_record),
-                        refresh: true
-                    });
-
-                    if (response.statusCode === 201 || response.statusCode === 200) {
-                        resolve(response);
-                    } else {
-                        resolve(false);
-                    }
-
-                } catch (error) {
-                    LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (index_record)] unable to index record ' + error.message);
-                    reject(false);
-                }
-
-            })();
-        });
-
-        return promise.then((response) => {
-            return response;
-        }).catch(() => {
-            return false;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (index_record)] unable to index record ' + error.message);
+        }
     }
 
     /**
      * Gets record uuid for indexing record
      * @param where_obj
-     * returns Promise string
      */
-    get_record_uuid = (where_obj) => {
+    async get_record_uuid(where_obj) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE)
-                .select('uuid')
-                .where(where_obj)
-                .whereNot({
-                    index_record: null
-                })
-                .limit(1)
-                .then((data) => {
+            const data = await this.DB(this.TABLE)
+            .select('uuid')
+            .where(where_obj)
+            .whereNot({
+                index_record: null
+            })
+            .limit(1);
 
-                    if (data === undefined || data.length === 0) {
-                        resolve(0);
-                    }
+            if (data === undefined || data.length === 0) {
+                return 0;
+            }
 
-                    resolve(data[0].uuid);
-                })
-                .catch((error) => {
-                    LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (get_record_uuid)] unable to get record ' + error.message);
-                    reject(false);
-                });
-        });
+            return data[0].uuid;
 
-        return promise.then((record) => {
-            return record;
-        }).catch(() => {
-            return false;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (get_record_uuid)] unable to get record ' + error.message);
+        }
     }
 
     /**
      * Updates is_indexed status flag after a successful record index
      * @param uuid
-     * @returns {Promise<unknown>}
      */
-    update_indexing_status = (uuid) => {
+    async update_indexing_status(uuid) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE)
-                .where({
-                    uuid: uuid
-                })
-                .update({
-                    is_indexed: 1
-                })
-                .then((data) => {
+            const data = await this.DB(this.TABLE)
+            .where({
+                uuid: uuid
+            })
+            .update({
+                is_indexed: 1
+            });
 
-                    if (data === 1) {
-                        resolve(true);
-                    } else {
-                        LOGGER.module().error('ERROR: [/indexer/model module (index_records)] more than one record was updated');
-                        reject(false);
-                    }
+            if (data === 1) {
+                return true;
+            } else {
+                LOGGER.module().error('ERROR: [/indexer/model module (index_records)] more than one record was updated');
+                return false;
+            }
 
-                })
-                .catch((error) => {
-                    LOGGER.module().error('ERROR: [/indexer/model module (index_records)] unable to update is_indexed field ' + error.message);
-                    reject(false);
-                });
-        });
-
-        return promise.then((result) => {
-            return result;
-        }).catch(() => {
-            return false;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/indexer/model module (index_records)] unable to update is_indexed field ' + error.message);
+        }
     }
 
     /**
      * Resets is_indexed DB flags
-     * returns Promise string
      */
-    reset_indexed_flags = () => {
+    async reset_indexed_flags() {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE)
-                .where({
-                    is_indexed: 1,
-                    is_active: 1
-                })
-                .update({
-                    is_indexed: 0
-                })
-                .then((data) => {
-                    resolve(true);
-                })
-                .catch((error) => {
-                    LOGGER.module().error('ERROR: [/indexer/model module (index_records)] unable to reset is_indexed fields ' + error.message);
-                    reject(false);
-                });
-        });
+            await this.DB(this.TABLE)
+            .where({
+                is_indexed: 1,
+                is_active: 1
+            })
+            .update({
+                is_indexed: 0
+            });
 
-        return promise.then((result) => {
-            return result;
-        }).catch(() => {
-            return false;
-        });
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/indexer/model module (index_records)] unable to reset is_indexed fields ' + error.message);
+        }
     }
 
     /**
@@ -199,6 +155,8 @@ const Indexer_index_tasks = class {
      */
     publish = (query) => {
         console.log(query);
+
+
         let promise = new Promise((resolve, reject) => {
 
             this.CLIENT.reindex({

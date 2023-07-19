@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2023 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@
 
 'use strict';
 
-const CONTROLLER = require('../stats/controller'),
-    ENDPOINTS = require('../stats/endpoints'),
-    TOKEN = require('../libs/tokens');
+const CONTROLLER = require('../stats/controller');
+const ENDPOINTS = require('../stats/endpoints');
+const TOKEN = require('../libs/tokens');
 
 module.exports = function (app) {
     app.route(ENDPOINTS().stats.endpoint)

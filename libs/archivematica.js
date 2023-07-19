@@ -1,6 +1,6 @@
 /**
 
- Copyright 2022 University of Denver
+ Copyright 2023 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -37,191 +37,121 @@ const Archivematica = class {
     /**
      * Pings archivematica api to check availability
      */
-    ping_api = () => {
+    async ping_api() {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            (async () => {
+            let endpoint = this.ARCHIVEMATICA.archivematica_api;
+            endpoint += 'administration/dips/atom/levels/?username=';
+            endpoint += this.ARCHIVEMATICA.archivematica_username;
+            endpoint += '&api_key=' + this.ARCHIVEMATICA.archivematica_api_key;
 
-                try {
-
-                    let endpoint = this.ARCHIVEMATICA.archivematica_api;
-                    endpoint += 'administration/dips/atom/levels/?username=';
-                    endpoint += this.ARCHIVEMATICA.archivematica_username;
-                    endpoint += '&api_key=' + this.ARCHIVEMATICA.archivematica_api_key;
-
-                    let response = await HTTP.get(endpoint, {
-                        timeout: this.ARCHIVEMATICA.archivematica_transfer_timeout,
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    });
-
-                    if (response.status === 200) {
-                        resolve(true);
-                    }
-
-                } catch (error) {
-                    LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_api)] unable to ping Archivematica. Request failed: ' + error);
-                    reject(false);
+            const response = await HTTP.get(endpoint, {
+                timeout: this.ARCHIVEMATICA.archivematica_transfer_timeout,
+                headers: {
+                    'Content-Type': 'application/json'
                 }
+            });
 
-                return false;
+            if (response.status === 200) {
+                return true;
+            }
 
-            })();
-        });
-
-        return promise.then((response) => {
-            return response;
-        }).catch((error) => {
-            return error;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_api)] unable to ping Archivematica. Request failed: ' + error.message);
+        }
     };
 
     /**
      * Pings archivematica storage api
      */
-    ping_storage_api = () => {
+    async ping_storage_api() {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            (async () => {
+            let endpoint = this.ARCHIVEMATICA.archivematica_storage_api;
+            endpoint += 'v2/file/?username=';
+            endpoint += this.ARCHIVEMATICA.archivematica_storage_username;
+            endpoint += '&api_key=';
+            endpoint += this.ARCHIVEMATICA.archivematica_storage_api_key;
 
-                try {
-
-                    let endpoint = this.ARCHIVEMATICA.archivematica_storage_api;
-                    endpoint += 'v2/file/?username=';
-                    endpoint += this.ARCHIVEMATICA.archivematica_storage_username;
-                    endpoint += '&api_key=';
-                    endpoint += this.ARCHIVEMATICA.archivematica_storage_api_key;
-
-                    let response = await HTTP.get(endpoint, {
-                        timeout: this.ARCHIVEMATICA.archivematica_transfer_timeout,
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    });
-
-                    if (response.status === 200) {
-                        resolve(true);
-                    }
-
-                    return false;
-
-                } catch (error) {
-                    LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_storage_api)] unable to ping archivematica storage api. Request failed: ' + error);
-                    reject(false);
+            const response = await HTTP.get(endpoint, {
+                timeout: this.ARCHIVEMATICA.archivematica_transfer_timeout,
+                headers: {
+                    'Content-Type': 'application/json'
                 }
+            });
 
-            })();
-        });
+            if (response.status === 200) {
+                return true;
+            }
 
-        return promise.then((response) => {
-            return response;
-        }).catch((error) => {
-            return error;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (ping_storage_api)] unable to ping archivematica storage api. Request failed: ' + error.message);
+        }
     };
 
     /**
      * Gets DIP storage usage
      */
-    get_dip_storage_usage = () => {
+    async get_dip_storage_usage() {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            (async () => {
+            let endpoint = this.ARCHIVEMATICA.archivematica_storage_api;
+            endpoint += 'v2/space/';
+            endpoint += this.ARCHIVEMATICA.archivematica_storage_dip_uuid;
 
-                try {
-
-                    let endpoint = this.ARCHIVEMATICA.archivematica_storage_api;
-                    endpoint += 'v2/space/';
-                    endpoint += this.ARCHIVEMATICA.archivematica_storage_dip_uuid;
-
-                    let response = await HTTP.get(endpoint, {
-                        timeout: this.ARCHIVEMATICA.archivematica_transfer_timeout,
-                        headers: {
-                            'Authorization': 'ApiKey ' + this.ARCHIVEMATICA.archivematica_storage_username + ':' + this.ARCHIVEMATICA.archivematica_storage_api_key
-                        }
-                    });
-
-                    if (response.status === 200) {
-
-                        resolve({
-                            message: 'Archivematica/DuraCloud DIP storage usage',
-                            data: response.data.used
-                        });
-                    }
-
-                    return false;
-
-                } catch (error) {
-                    console.log('DURACLOUD: ', error);
-                    LOGGER.module().error('ERROR: [/libs/archivematica lib (get_dip_storage_usage)] unable to get DIP storage usage. ' + error);
-                    reject(false);
+            const response = await HTTP.get(endpoint, {
+                timeout: this.ARCHIVEMATICA.archivematica_transfer_timeout,
+                headers: {
+                    'Authorization': 'ApiKey ' + this.ARCHIVEMATICA.archivematica_storage_username + ':' + this.ARCHIVEMATICA.archivematica_storage_api_key
                 }
+            });
 
-            })();
-        });
+            if (response.status === 200) {
+                return response.data.used;
+            }
 
-        return promise.then((response) => {
-            return response;
-        }).catch((error) => {
-            return error;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_dip_storage_usage)] unable to get DIP storage usage. ' + error.message);
+        }
     };
 
     /**
-     * List the files and folders on the FTP server
-     * @param folder
+     * Gets AIP storage usage
      */
-    list = (folder) => {
+    async get_aip_storage_usage() {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            let config = {
-                host: this.ARCHIVEMATICA.archivematica_sftp_host,
-                port: this.ARCHIVEMATICA.archivematica_sftp_port,
-                username: this.ARCHIVEMATICA.archivematica_sftp_user,
-                password: this.ARCHIVEMATICA.archivematica_sftp_password,
-                remote_path: this.ARCHIVEMATICA.archivematica_sftp_remote_path
-            };
+            let endpoint = this.ARCHIVEMATICA.archivematica_storage_api;
+            endpoint += 'v2/space/';
+            endpoint += this.ARCHIVEMATICA.archivematica_storage_aip_uuid;
 
-            const sftp = new CLIENT();
-
-            sftp.connect(config).then(function () {
-
-                let remotePath = config.remote_path;
-
-                if (folder !== 'null') {
-                    let path = folder.replace(/,/g, '/');
-                    remotePath = config.remote_path + '/' + path;
+            const response = await HTTP.get(endpoint, {
+                timeout: this.ARCHIVEMATICA.archivematica_transfer_timeout,
+                headers: {
+                    'Authorization': 'ApiKey ' + this.ARCHIVEMATICA.archivematica_storage_username + ':' + this.ARCHIVEMATICA.archivematica_storage_api_key
                 }
-
-                return sftp.list(remotePath);
-
-            }).then(function (data) {
-                resolve(data);
-            }).catch(function (error) {
-                LOGGER.module().error('ERROR: [/libs/archivematica lib (list)] unable to list sftp folders ' + error);
-                reject(error);
             });
-        });
 
-        return promise.then((response) => {
-            return response;
-        }).catch((error) => {
-            return error;
-        });
+            if (response.status === 200) {
+                return response.data.used
+            }
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_aip_storage_usage)] unable to get AIP storage usage. ' + error.message);
+        }
     };
 
     /**
      * Starts transfer process
      * @param transfer_obj
      */
-    start_transfer = (transfer_obj) => {
+    async start_transfer(transfer_obj) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
             let transfer_source = this.ARCHIVEMATICA.archivematica_transfer_source;
             let sftp_path = this.ARCHIVEMATICA.archivematica_sftp_remote_path;
@@ -234,55 +164,38 @@ const Archivematica = class {
             endpoint += '&api_key=';
             endpoint += this.ARCHIVEMATICA.archivematica_api_key;
 
-            (async () => {
+            const data = {
+                'name': transfer_obj.is_member_of_collection + '_' + transfer_obj.object + '_transfer',
+                'type': 'standard',
+                'accession': '',
+                'paths[]': encoded_location,
+                'rows_ids[]': '[""]'
+            };
 
-                try {
-
-                    let data = {
-                        'name': transfer_obj.is_member_of_collection + '_' + transfer_obj.object + '_transfer',
-                        'type': 'standard',
-                        'accession': '',
-                        'paths[]': encoded_location,
-                        'rows_ids[]': '[""]'
-                    };
-
-                    // TODO: Remove QS usage
-                    let response = await HTTP.post(endpoint, QS.stringify(data), {
-                        timeout: this.ARCHIVEMATICA.archivematica_transfer_timeout,
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        }
-                    });
-
-                    if (response.status === 200) {
-                        resolve(JSON.stringify(response.data));
-                    }
-
-                    return false;
-
-                } catch (error) {
-
-                    LOGGER.module().fatal('FATAL: [/libs/archivematica lib (start_transfer)] unable to start transfer. Request failed: ' + error);
-                    reject(error);
+            // TODO: Remove QS usage
+            const response = await HTTP.post(endpoint, QS.stringify(data), {
+                timeout: this.ARCHIVEMATICA.archivematica_transfer_timeout,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
                 }
+            });
 
-            })();
-        });
+            if (response.status === 200) {
+                return JSON.stringify(response.data);
+            }
 
-        return promise.then((response) => {
-            return response;
-        }).catch((error) => {
-            return error;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (start_transfer)] unable to start transfer. Request failed: ' + error.message);
+        }
     };
 
     /**
      * Approves transfer
      * @param transfer_folder
      */
-    approve_transfer = (transfer_folder) => {
+    async approve_transfer(transfer_folder) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
             let endpoint = this.ARCHIVEMATICA.archivematica_api;
             endpoint += 'transfer/approve?username=';
@@ -290,51 +203,35 @@ const Archivematica = class {
             endpoint += '&api_key=';
             endpoint += this.ARCHIVEMATICA.archivematica_api_key;
 
-            (async () => {
+            const data = {
+                'type': 'standard',
+                'directory': transfer_folder
+            };
 
-                try {
-
-                    let data = {
-                        'type': 'standard',
-                        'directory': transfer_folder
-                    };
-
-                    // TODO: remove QS
-                    let response = await HTTP.post(endpoint, QS.stringify(data), {
-                        timeout: this.ARCHIVEMATICA.archivematica_transfer_timeout,
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        }
-                    });
-
-                    if (response.status === 200) {
-                        resolve(JSON.stringify(response.data));
-                    }
-
-                    return false;
-
-                } catch (error) {
-                    LOGGER.module().error('ERROR: [/libs/archivematica lib (approve_transfer)] unable to approve transfer. Request failed: ' + error);
-                    reject(error);
+            // TODO: remove QS
+            const response = await HTTP.post(endpoint, QS.stringify(data), {
+                timeout: this.ARCHIVEMATICA.archivematica_transfer_timeout,
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
                 }
+            });
 
-            })();
-        });
+            if (response.status === 200) {
+                return JSON.stringify(response.data);
+            }
 
-        return promise.then((response) => {
-            return response;
-        }).catch((error) => {
-            return error;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (approve_transfer)] unable to approve transfer. Request failed: ' + error.error);
+        }
     };
 
     /**
      * Checks transfer status
      * @param uuid
      */
-    get_transfer_status = (uuid) => {
+    async get_transfer_status(uuid) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
             let endpoint = this.ARCHIVEMATICA.archivematica_api;
             endpoint += 'transfer/status/';
@@ -344,312 +241,220 @@ const Archivematica = class {
             endpoint += '&api_key=';
             endpoint += this.ARCHIVEMATICA.archivematica_api_key;
 
-            (async () => {
-
-                try {
-
-                    let response = await HTTP.get(endpoint, {
-                        timeout: this.ARCHIVEMATICA.archivematica_transfer_timeout,
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    });
-
-                    if (response.status === 200) {
-                        resolve(JSON.stringify(response.data));
-                    }
-
-                    return false;
-
-                } catch (error) {
-
-                    LOGGER.module().error('ERROR: [/libs/archivematica lib (get_transfer_status)] unable to get transfer status. Request failed:  ' + error);
-                    reject(error);
+            const response = await HTTP.get(endpoint, {
+                timeout: this.ARCHIVEMATICA.archivematica_transfer_timeout,
+                headers: {
+                    'Content-Type': 'application/json'
                 }
+            });
 
-            })();
-        });
+            if (response.status === 200) {
+                return JSON.stringify(response.data);
+            }
 
-        return promise.then((response) => {
-            return response;
-        }).catch((error) => {
-            return error;
-        });
+            return false;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_transfer_status)] unable to get transfer status. Request failed:  ' + error.message);
+        }
     };
 
     /**
      * Check ingest status
      * @param uuid
      */
-    get_ingest_status = (uuid) => {
+    async get_ingest_status(uuid) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
             let endpoint = this.ARCHIVEMATICA.archivematica_api;
-                endpoint += 'ingest/status/';
-                endpoint += uuid;
-                endpoint += '/?username=';
-                endpoint += this.ARCHIVEMATICA.archivematica_username;
-                endpoint += '&api_key=';
-                endpoint += this.ARCHIVEMATICA.archivematica_api_key;
+            endpoint += 'ingest/status/';
+            endpoint += uuid;
+            endpoint += '/?username=';
+            endpoint += this.ARCHIVEMATICA.archivematica_username;
+            endpoint += '&api_key=';
+            endpoint += this.ARCHIVEMATICA.archivematica_api_key;
 
-            (async () => {
-
-                try {
-
-                    let response = await HTTP.get(endpoint, {
-                        timeout: this.ARCHIVEMATICA.archivematica_transfer_timeout,
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    });
-
-                    if (response.status === 200) {
-                        resolve(JSON.stringify(response.data));
-                    }
-
-                    return false;
-
-                } catch (error) {
-                    LOGGER.module().error('ERROR: [/libs/archivematica lib (get_ingest_status)] unable to get ingest status. Request failed: ' + error);
-                    reject(error);
+            const response = await HTTP.get(endpoint, {
+                timeout: this.ARCHIVEMATICA.archivematica_transfer_timeout,
+                headers: {
+                    'Content-Type': 'application/json'
                 }
+            });
 
-            })();
-        });
+            if (response.status === 200) {
+                return JSON.stringify(response.data);
+            }
 
-        return promise.then((response) => {
-            return response;
-        }).catch((error) => {
-            return error;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_ingest_status)] unable to get ingest status. Request failed: ' + error.message);
+        }
     };
 
     /**
      * Constructs path to dip store in DuraCloud
      * @param uuid
      */
-    get_dip_path = (uuid) => {
+    async get_dip_path(uuid) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            (async () => {
+            let endpoint = this.ARCHIVEMATICA.archivematica_storage_api;
+            endpoint += 'v2/file/';
+            endpoint += uuid;
+            endpoint += '/?username=';
+            endpoint += this.ARCHIVEMATICA.archivematica_storage_username;
+            endpoint += '&api_key=';
+            endpoint += this.ARCHIVEMATICA.archivematica_storage_api_key;
 
-                try {
-
-                    let endpoint = this.ARCHIVEMATICA.archivematica_storage_api;
-                    endpoint += 'v2/file/';
-                    endpoint += uuid;
-                    endpoint += '/?username=';
-                    endpoint += this.ARCHIVEMATICA.archivematica_storage_username;
-                    endpoint += '&api_key=';
-                    endpoint += this.ARCHIVEMATICA.archivematica_storage_api_key;
-
-                    let response = await HTTP.get(endpoint, {
-                        timeout: this.ARCHIVEMATICA.archivematica_transfer_timeout,
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    });
-
-                    if (response.status === 200) {
-
-                        let json = response.data,
-                            dipuuidArr = json.related_packages[0].split('/');
-
-                        let uuid = dipuuidArr.filter(function (result) {
-                            return result;
-                        });
-
-                        let dipuuid = uuid[uuid.length - 1],
-                            tmp = dipuuid.replace(/-/g, ''),
-                            tmpuuid = tmp.match(/.{1,4}/g),
-                            path = tmpuuid.join('/');
-
-                        let folderArr = json.current_path.split('/'),
-                            folderTmp = folderArr[folderArr.length - 1],
-                            folder = folderTmp.replace('.7z', ''),
-                            dipPath = path + '/' + folder;
-
-                        resolve(dipPath);
-                    }
-
-                    return false;
-
-                } catch (error) {
-                    LOGGER.module().error('ERROR: [/libs/archivematica lib (get_dip_path)] unable to get dip path. Request failed: ' + error.message);
-                    reject(false);
+            const response = await HTTP.get(endpoint, {
+                timeout: this.ARCHIVEMATICA.archivematica_transfer_timeout,
+                headers: {
+                    'Content-Type': 'application/json'
                 }
+            });
 
-            })();
-        });
+            if (response.status === 200) {
 
-        return promise.then((response) => {
-            return response;
-        }).catch((error) => {
-            return error;
-        });
+                let json = response.data,
+                    dipuuidArr = json.related_packages[0].split('/');
+
+                let uuid = dipuuidArr.filter(function (result) {
+                    return result;
+                });
+
+                let dipuuid = uuid[uuid.length - 1],
+                    tmp = dipuuid.replace(/-/g, ''),
+                    tmpuuid = tmp.match(/.{1,4}/g),
+                    path = tmpuuid.join('/');
+
+                let folderArr = json.current_path.split('/'),
+                    folderTmp = folderArr[folderArr.length - 1],
+                    folder = folderTmp.replace('.7z', ''),
+                    dipPath = path + '/' + folder;
+
+                return dipPath;
+            }
+
+            return false;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (get_dip_path)] unable to get dip path. Request failed: ' + error.message);
+        }
     };
 
     /**
      * Clears archivematica transfer queue
      * @param uuid
      */
-    clear_transfer = (uuid) => {
+    async clear_transfer(uuid) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            (async () => {
+            let endpoint = this.ARCHIVEMATICA.archivematica_api;
+            endpoint += 'transfer/';
+            endpoint += uuid;
+            endpoint += '/delete/?username=';
+            endpoint += this.ARCHIVEMATICA.archivematica_username;
+            endpoint += '&api_key=';
+            endpoint += this.ARCHIVEMATICA.archivematica_api_key;
 
-                try {
+            const response = await HTTP.delete(endpoint);
 
-                    let endpoint = this.ARCHIVEMATICA.archivematica_api;
-                    endpoint += 'transfer/';
-                    endpoint += uuid;
-                    endpoint += '/delete/?username=';
-                    endpoint += this.ARCHIVEMATICA.archivematica_username;
-                    endpoint += '&api_key=';
-                    endpoint += this.ARCHIVEMATICA.archivematica_api_key;
+            if (response.status === 200) {
+                LOGGER.module().info('INFO: [/libs/archivematica lib (clear_transfer)] transfer ' + uuid + ' has been cleared.');
+            }
 
-                    let response = await HTTP.delete(endpoint);
-
-                    if (response.status === 200) {
-                        LOGGER.module().info('INFO: [/libs/archivematica lib (clear_transfer)] transfer ' + uuid + ' has been cleared.');
-                    }
-
-                    return false;
-
-                } catch (error) {
-                    LOGGER.module().error('ERROR: [/libs/archivematica lib (clear_transfer)] unable to clear transfer queue ' + error);
-                    reject(error);
-                }
-
-            })();
-        });
-
-        return promise.then((response) => {
-            return response;
-        }).catch((error) => {
-            return error;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (clear_transfer)] unable to clear transfer queue ' + error);
+        }
     };
 
     /**
      * Clears archivematica ingest queue
      * @param uuid
      */
-    clear_ingest = (uuid) => {
+    async clear_ingest(uuid) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            (async () => {
+            let endpoint = this.ARCHIVEMATICA.archivematica_api;
+            endpoint += 'ingest/';
+            endpoint += uuid;
+            endpoint += '/delete/?username=';
+            endpoint += this.ARCHIVEMATICA.archivematica_username;
+            endpoint += '&api_key=';
+            endpoint += this.ARCHIVEMATICA.archivematica_api_key;
 
-                try {
+            const response = await HTTP.delete(endpoint);
 
-                    let endpoint = this.ARCHIVEMATICA.archivematica_api;
-                    endpoint += 'ingest/';
-                    endpoint += uuid;
-                    endpoint += '/delete/?username=';
-                    endpoint += this.ARCHIVEMATICA.archivematica_username;
-                    endpoint += '&api_key=';
-                    endpoint += this.ARCHIVEMATICA.archivematica_api_key;
+            if (response.status === 200) {
+                LOGGER.module().info('INFO: [/libs/archivematica lib (clear_ingest)] ingest ' + uuid + ' has been cleared.');
+            }
 
-                    let response = await HTTP.delete(endpoint);
-
-                    if (response.status === 200) {
-                        LOGGER.module().info('INFO: [/libs/archivematica lib (clear_ingest)] ingest ' + uuid + ' has been cleared.');
-                    }
-
-                    return false;
-
-                } catch (error) {
-                    LOGGER.module().error('ERROR: [/libs/archivematica lib (clear_ingest)] unable to clear ingest ' + error);
-                    reject(error);
-                }
-
-            })();
-        });
-
-        return promise.then((response) => {
-            return response;
-        }).catch((error) => {
-            return error;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (clear_ingest)] unable to clear ingest ' + error.message);
+        }
     };
 
-    /** TODO:
+    /**
      * Generates a delete request
      * @param obj
      */
-    delete_aip_request = (obj) => {
+    async delete_aip_request(obj) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            let endpoint = CONFIG.archivematicaStorageApi;
-                endpoint += 'v2/file/';
-                endpoint += obj.uuid;
-                endpoint += '/delete_aip/?username=';
-                endpoint += CONFIG.archivematicaStorageUsername;
-                endpoint += '&api_key=';
-                endpoint += CONFIG.archivematicaStorageApiKey;
+            let endpoint = this.ARCHIVEMATICA.archivematica_storage_api;
+            endpoint += 'v2/file/';
+            endpoint += obj.uuid;
+            endpoint += '/delete_aip/?username=';
+            endpoint += this.ARCHIVEMATICA.archivematica_storage_username;
+            endpoint += '&api_key=';
+            endpoint += this.ARCHIVEMATICA.archivematica_storage_api_key;
 
-            (async () => {
+            const data = {
+                'event_reason': obj.delete_reason,
+                'pipeline': this.ARCHIVEMATICA.archivematica_pipeline,
+                'user_id': this.ARCHIVEMATICA.archivematica_user_id,
+                'user_email': this.ARCHIVEMATICA.archivematica_user_email
+            };
 
-                try {
+            const response = await HTTP.post(endpoint, data, {
+                timeout: this.ARCHIVEMATICA.archivematica_transfer_timeout,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
 
-                    let data = {
-                        'event_reason': obj.delete_reason,
-                        'pipeline': this.ARCHIVEMATICA.archivematica_pipeline,
-                        'user_id': this.ARCHIVEMATICA.archivematica_user_id,
-                        'user_email': this.ARCHIVEMATICA.archivematica_user_email
+            if (response.status === 200) {
+
+                LOGGER.module().info('INFO: [/libs/archivematica lib (delete_aip)] A deletion request already exists for this AIP (' + obj.uuid + ').');
+
+                if (response.data.message === 'A deletion request already exists for this AIP.') {
+                    return {
+                        message: response.data.message,
+                        data: {
+                            id: 0
+                        }
                     };
-
-                    let response = await HTTP.post(endpoint, data, {
-                        timeout: this.ARCHIVEMATICA.archivematica_transfer_timeout,
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    });
-
-                    if (response.status === 200) {
-
-                        LOGGER.module().info('INFO: [/libs/archivematica lib (delete_aip)] A deletion request already exists for this AIP (' + obj.pid + ').');
-
-                        if (response.data.message === 'A deletion request already exists for this AIP.') {
-                            resolve({
-                                message: response.data.message,
-                                data: {
-                                    id: 0
-                                }
-                            });
-                        }
-
-                    } else if (response.status === 202) {
-
-                        LOGGER.module().info('INFO: [/libs/archivematica lib (delete_aip)] delete aip (' + obj.pid + ') request succeeded.');
-
-                        resolve({
-                            message: 'INFO: [/libs/archivematica lib (delete_aip)] delete aip (' + obj.pid + ') request succeeded.',
-                            data: JSON.stringify(response.data)
-                        });
-                    }
-
-                    return false;
-
-                } catch (error) {
-                    LOGGER.module().error('ERROR: [/libs/archivematica lib (delete_aip)] unable to delete aip. Request failed: ' + error);
-                    reject(error);
                 }
 
-            })();
-        });
+            } else if (response.status === 202) {
 
-        return promise.then((response) => {
-            return response;
-        }).catch((error) => {
-            return error;
-        });
+                LOGGER.module().info('INFO: [/libs/archivematica lib (delete_aip)] delete aip (' + obj.uuid + ') request succeeded.');
+
+                return {
+                    message: 'INFO: [/libs/archivematica lib (delete_aip)] delete aip (' + obj.uuid + ') request succeeded.',
+                    data: JSON.stringify(response.data)
+                };
+            }
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/libs/archivematica lib (delete_aip)] unable to delete aip. Request failed: ' + error.message);
+        }
     };
-};
+
+}
 
 module.exports = Archivematica;

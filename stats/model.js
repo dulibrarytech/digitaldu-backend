@@ -19,6 +19,8 @@
 'use strict';
 
 const STATS_TASKS = require('../stats/tasks/stats_tasks');
+const ARCHIVEMATICA_CONFIG = require('../config/archivematica_config')();
+const ARCHIVEMATICA_LIB = require('../libs/archivematica');
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
 const REPO_OBJECTS = DB_TABLES.repo.repo_objects;
@@ -32,6 +34,7 @@ exports.get_stats = (callback) => {
 
             let data = {};
             const TASKS = new STATS_TASKS(DB, REPO_OBJECTS);
+            const ARCHIVEMATICA = new ARCHIVEMATICA_LIB(ARCHIVEMATICA_CONFIG);
             data.total_published_collections = await TASKS.get_total_published_collections();
             data.total_published_objects = await TASKS.get_total_published_objects();
             data.total_collections = await TASKS.get_total_collections();
@@ -42,8 +45,8 @@ exports.get_stats = (callback) => {
             data.total_video = await TASKS.get_total_video();
             data.total_yearly_ingests = await TASKS.get_total_yearly_ingests();
             data.total_daily_ingests = await TASKS.get_total_daily_ingests();
-            data.dip_storage_usage = await TASKS.get_dip_storage_usage();
-            data.aip_storage_usage = await TASKS.get_aip_storage_usage();
+            data.dip_storage_usage = await TASKS.get_dip_storage_usage(ARCHIVEMATICA);
+            data.aip_storage_usage = await TASKS.get_aip_storage_usage(ARCHIVEMATICA);
 
             callback({
                 status: 200,
