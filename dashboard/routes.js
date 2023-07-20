@@ -23,59 +23,59 @@ const DASHBOARD = require('../dashboard/controller');
 module.exports = function (app) {
 
     app.route('/dashboard/home')
-        .get(DASHBOARD.get_dashboard_home);
+    .get(DASHBOARD.get_dashboard_home);
 
     app.route('/dashboard/collections/add')
-        .get(DASHBOARD.get_dashboard_collection_add_form);
+    .get(DASHBOARD.get_dashboard_collection_add_form);
 
     app.route('/dashboard/objects')
-        .get(DASHBOARD.get_dashboard_objects);
+    .get(DASHBOARD.get_dashboard_objects);
 
     app.route('/dashboard/objects/unpublished')
-        .get(DASHBOARD.get_dashboard_unpublished_objects);
+    .get(DASHBOARD.get_dashboard_unpublished_objects);
 
     app.route('/dashboard/objects/search')
-        .get(DASHBOARD.get_dashboard_search);
+    .get(DASHBOARD.get_dashboard_search);
 
     app.route('/dashboard/object/thumbnail')
-        .get(DASHBOARD.update_dashboard_thumbnail);
+    .get(DASHBOARD.update_dashboard_thumbnail);
 
     app.route('/dashboard/object/thumbnail/upload')
-        .get(DASHBOARD.get_dashboard_upload);
+    .get(DASHBOARD.get_dashboard_upload);
 
     app.route('/dashboard/object/delete')
-        .get(DASHBOARD.delete_dashboard_object);
+    .get(DASHBOARD.delete_dashboard_object);
 
     app.route('/dashboard/import')
-        .get(DASHBOARD.get_dashboard_import);
+    .get(DASHBOARD.get_dashboard_import);
 
     app.route('/dashboard/import/files')
-        .get(DASHBOARD.get_dashboard_import_files);
+    .get(DASHBOARD.get_dashboard_import_files);
 
     app.route('/dashboard/import/status')
-        .get(DASHBOARD.get_dashboard_import_status);
+    .get(DASHBOARD.get_dashboard_import_status);
 
     app.route('/dashboard/import/complete')
-        .get(DASHBOARD.get_dashboard_import_complete);
+    .get(DASHBOARD.get_dashboard_import_complete);
 
     app.route('/dashboard/users')
-        .get(DASHBOARD.get_dashboard_users);
+    .get(DASHBOARD.get_dashboard_users);
 
     app.route('/dashboard/users/edit')
-        .get(DASHBOARD.get_dashboard_user_edit_form);
+    .get(DASHBOARD.get_dashboard_user_edit_form);
 
     app.route('/dashboard/users/add')
-        .get(DASHBOARD.get_dashboard_user_add_form);
+    .get(DASHBOARD.get_dashboard_user_add_form);
 
     app.route('/dashboard/users/delete')
-        .get(DASHBOARD.get_dashboard_user_delete_form);
+    .get(DASHBOARD.get_dashboard_user_delete_form);
 
     app.route('/dashboard/qa')
-        .get(DASHBOARD.get_dashboard_qa);
+    .get(DASHBOARD.get_dashboard_qa);
 
     app.route('/dashboard/transcript')
-        .get(DASHBOARD.get_dashboard_transcript);
+    .get(DASHBOARD.get_dashboard_transcript);
 
     app.route('/dashboard/viewer')
-        .get(DASHBOARD.get_dashboard_viewer);
+    .get(DASHBOARD.get_dashboard_viewer);
 };

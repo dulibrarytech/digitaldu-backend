@@ -18,14 +18,22 @@
 
 'use strict';
 
-const IMPORT = require('../import/controller'),
-    TOKEN = require('../libs/tokens');
+const CONTROLLER = require('../import/controller');
+const TOKEN = require('../libs/tokens');
+const QUEUE = new CONTROLLER();
 
 module.exports = function (app) {
 
+    // TODO: Deprecate
+    /*
     app.route('/api/admin/v1/import/list')
         .get(IMPORT.list);
+    */
+    // TODO: import endpoints
+    app.route('/api/admin/v1/import') // <-- start here
+    .post(TOKEN.verify, QUEUE.import);
 
+    // TODO:
     app.route('/api/admin/v1/import/queue_objects')
         .post(TOKEN.verify, IMPORT.queue_objects);
 

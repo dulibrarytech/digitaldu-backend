@@ -25,6 +25,10 @@ const MODEL = require('../auth/model'); // TODO: create object
 const CACHE = require('../libs/cache');
 const AUTH = new MODEL();
 
+/**
+ * Auth Controller
+ * @type {Auth_controller}
+ */
 const Auth_controller = class {
 
     constructor() {};

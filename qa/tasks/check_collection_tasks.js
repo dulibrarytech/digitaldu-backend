@@ -38,39 +38,34 @@ const Check_collection_tasks = class {
      * @param uri
      * @returns boolean
      */
-    check_collection = (uri) => {
-        console.log('URI ', uri)
-        let promise = new Promise((resolve, reject) => {
+    async check_collection(uri) {
 
-            this.DB(this.TABLE)
-            .select('is_member_of_collection', 'uuid')
+        try {
+
+            const data = await this.DB(this.TABLE)
+            .select('is_member_of_collection', 'pid')
             .where({
                 uri: uri,
                 object_type: 'collection',
                 is_active: 1
-            })
-            .then((data) => {
-                console.log('collection UUID: ', data);
-                if (data.length === 0) {
-                    reject(false);
-                } else if (data.length === 1) {
-                    resolve(true);
-                } else {
-                    reject(false);
-                }
-            })
-            .catch((error) => {
-                LOGGER.module().error('ERROR: [/qa/model tasks (check_collection)] Unable to check collection ' + error.message);
-                reject(false);
             });
-        });
 
-        return promise.then((result) => {
-            return result;
-        }).catch((error) => {
-            return error;
-        });
+            if (data.length === 1) {
+                return {
+                    uuid: data[0].pid,
+                    exists: true
+                };
+            } else {
+                return {
+                    exists: false
+                };
+            }
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/qa/tasks (check_collection)] Unable to check collection ' + error.message);
+        }
     }
 };
 
 module.exports = Check_collection_tasks;
+

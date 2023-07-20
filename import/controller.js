@@ -18,15 +18,52 @@
 
 'use strict';
 
-const IMPORT = require('../import/queue'),
-    MODEL = require('../import/model'),
-    SERVICE = require('../import/service');
+const IMPORT_QUEUE = require('../import/queue');
+const MODEL = require('../import/model');
+const SERVICE = require('../import/service');
+// const IMPORT = new MODEL();
 
+/**
+ * Import Controller
+ * @type {Import_controller}
+ */
+const Import_controller = class {
+
+    constructor() {}
+
+    async import(req, res) {
+
+        // TODO: extract payload from req here
+        res.status(data.status).send(data.data);
+        IMPORT.queue_objects(req, function (data) {
+            res.status(data.status).send(data.data);
+        });
+    };
+
+    // TODO: deprecate
+    async queue_objects(req, res) {
+
+        // TODO:
+        res.status(data.status).send(data.data);
+        IMPORT.queue_objects(req, function (data) {
+            res.status(data.status).send(data.data);
+        });
+    };
+
+
+}
+
+module.exports = Import_controller;
+
+// TODO: Deprecate
+/*
 exports.list = function (req, res) {
     IMPORT.list(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
+
+ */
 
 exports.queue_objects = function (req, res) {
     IMPORT.queue_objects(req, function (data) {

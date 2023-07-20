@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2023 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -43,59 +43,21 @@ const CONFIG = require('../config/config'),
     IMPORT_QUEUE = 'tbl_duracloud_queue',
     FAIL_QUEUE = 'tbl_fail_queue';
 
-/**
- * Gets list of folders from Archivematica sftp server
- * @param req (query.collection)
- * @param callback
- */
-exports.list = function (req, callback) {
+const Queue = class {
 
-    DBQ(TRANSFER_QUEUE)
-        .count('id as count')
-        .then(function (data) {
+    constructor() {}
+    // TODO: queue object without sending over the wire? - move to QA?
+    queue_objects() {
 
-            if (data[0].count === 0) {
+        // TOOD: call check_collection() here
+        // TODO: import tasks
+    }
 
-                let query = req.query.collection;
+    check_collection() {
+        // TODO import tasks
+    }
 
-                ARCHIVEMATICA.list(query, function (results) {
-
-                    if (results.error !== undefined && results.error === true) {
-
-                        LOGGER.module().fatal('FATAL: [/import/queue module (list)] unable to get files from Archivematica SFTP server');
-
-                        callback({
-                            status: 400,
-                            message: results.message
-                        });
-
-                        return false;
-                    }
-
-                    callback({
-                        status: 200,
-                        message: 'list',
-                        data: {list: results}
-                    });
-                });
-
-                return false;
-
-            } else {
-
-                callback({
-                    status: 200,
-                    message: 'import in progress',
-                    data: {list: []}
-                });
-
-            }
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/import/queue module (list)] queue progress check failed ' + error);
-            throw 'FATAL: [/import/queue module (list)] queue progress check failed ' + error;
-        });
-};
+}
 
 /**
  * Saves import data to queue and initiates import process
@@ -1561,4 +1523,58 @@ exports.poll_fail_queue = function (req, callback) {
             LOGGER.module().fatal('FATAL: [/import/queue module (import failure broadcasts)] fail queue database error ' + error);
             throw 'FATAL: [/import/queue module (import failure broadcasts)] fail queue database error ' + error;
         });
+};
+
+/** TODO: DEPRECATE
+ * Gets list of folders from Archivematica sftp server
+ * @param req (query.collection)
+ * @param callback
+ */
+exports.list = function (req, callback) {
+
+    DBQ(TRANSFER_QUEUE)
+    .count('id as count')
+    .then(function (data) {
+
+        if (data[0].count === 0) {
+
+            let query = req.query.collection;
+
+            ARCHIVEMATICA.list(query, function (results) {
+
+                if (results.error !== undefined && results.error === true) {
+
+                    LOGGER.module().fatal('FATAL: [/import/queue module (list)] unable to get files from Archivematica SFTP server');
+
+                    callback({
+                        status: 400,
+                        message: results.message
+                    });
+
+                    return false;
+                }
+
+                callback({
+                    status: 200,
+                    message: 'list',
+                    data: {list: results}
+                });
+            });
+
+            return false;
+
+        } else {
+
+            callback({
+                status: 200,
+                message: 'import in progress',
+                data: {list: []}
+            });
+
+        }
+    })
+    .catch(function (error) {
+        LOGGER.module().fatal('FATAL: [/import/queue module (list)] queue progress check failed ' + error);
+        throw 'FATAL: [/import/queue module (list)] queue progress check failed ' + error;
+    });
 };

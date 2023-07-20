@@ -18,9 +18,10 @@
 
 'use strict';
 
-const CONFIG = require('../config/config'),
-    TEMPLATE_CACHE = require('express-template-cache');
+const CONFIG = require('../config/config');
+// TEMPLATE_CACHE = require('express-template-cache');
 
+// TODO: dashboard class
 exports.get_dashboard_home = function (req, res) {
 
     res.render('dashboard-home', {
