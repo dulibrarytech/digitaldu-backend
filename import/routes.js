@@ -33,10 +33,13 @@ module.exports = function (app) {
     app.route('/api/admin/v1/import') // <-- start here
     .post(TOKEN.verify, QUEUE.import);
 
+    /*
     // TODO:
     app.route('/api/admin/v1/import/queue_objects')
         .post(TOKEN.verify, IMPORT.queue_objects);
+    */
 
+    /*
     app.route('/api/admin/v1/import/start_transfer')
         .post(TOKEN.verify, IMPORT.start_transfer);
 
@@ -92,4 +95,6 @@ module.exports = function (app) {
 
     app.route('/api/admin/v1/import/poll/fail_queue')
         .get(TOKEN.verify, IMPORT.poll_fail_queue);
+
+     */
 };

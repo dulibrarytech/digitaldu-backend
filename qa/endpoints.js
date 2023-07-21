@@ -47,6 +47,7 @@ const ENDPOINTS = {
                 params: 'api_key'
             }
         },
+        /*
         qa_check_metadata: {
             endpoint: `${PREFIX}${VERSION}${ENDPOINT}check-metadata`,
             description: 'Checks each metadata record in the batch to confirm that a record exists and there is minimum record',
@@ -55,6 +56,9 @@ const ENDPOINTS = {
                 params: 'api_key'
             }
         },
+
+         */
+        /*
         qa_check_collection: {
             endpoint: `${PREFIX}${VERSION}${ENDPOINT}check-collection`,
             description: '',
@@ -63,6 +67,9 @@ const ENDPOINTS = {
                 params: 'api_key'
             }
         },
+
+         */
+        /*
         qa_move_to_ingest: {
             endpoint: `${PREFIX}${VERSION}${ENDPOINT}move-to-ingest`,
             description: '',
@@ -71,6 +78,17 @@ const ENDPOINTS = {
                 params: 'api_key'
             }
         },
+
+         */
+        qa_move_to_ingested: {
+            endpoint: `${PREFIX}${VERSION}${ENDPOINT}move-to-ingested`,
+            description: '',
+            get: {
+                description: 'Moves batch folder to ingested folder on local SFTP',
+                params: 'api_key'
+            }
+        },
+        /*
         qa_move_to_sftp: {
             endpoint: `${PREFIX}${VERSION}${ENDPOINT}move-to-sftp`,
             description: '',
@@ -87,6 +105,8 @@ const ENDPOINTS = {
                 params: 'api_key'
             }
         }
+
+         */
     }
 };
 

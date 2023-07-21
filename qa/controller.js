@@ -18,66 +18,34 @@
 
 'use strict';
 
-const VALIDATOR = require('validator');
 const SERVICE = require('../qa/service');
-const MODEL = require('../qa/model');
+const QA_SERVICE = new SERVICE();
 
-exports.get_folder_list = (req, res) => {
-    SERVICE.get_folder_list((data) => {
+const QA_controller = class {
+
+    constructor() {
+    }
+
+    async get_folder_list(req, res) {
+        const data = await QA_SERVICE.get_folder_list();
         res.status(data.status).send(data.data);
-    });
-};
+    }
 
-exports.run_qa = (req, res) => {
-
-    let folder = req.query.folder;
-
-    SERVICE.run_qa(folder, (data) => {
+    async run_qa(req, res) {
+        const folder_name = req.query.folder;
+        const data = await QA_SERVICE.run_qa(folder_name);
         res.status(data.status).send(data.data);
-    });
-};
+    }
 
-exports.qa_status = (req, res) => {
-    SERVICE.qa_status((data) => {
+    async qa_status(req, res) {
+        const data = await QA_SERVICE.qa_status();
         res.status(data.status).send(data.data);
-    });
-};
+    }
 
-/*
-exports.check_collection = (req, res) => {
-
-    let uri = VALIDATOR.unescape(req.query.uri);
-
-    MODEL.check_collection(uri, (data) => {
+    async move_to_ingested(req, res) {
+        const data = await QA_SERVICE.move_to_ingested();
         res.status(data.status).send(data.data);
-    });
-};
+    }
+}
 
- */
-
-exports.move_to_ingest = function (req, res) {
-
-    let uuid = req.query.uuid;
-    let folder = req.query.folder;
-
-    SERVICE.move_to_ingest(uuid, folder, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.move_to_sftp = (req, res) => {
-
-    let uuid = req.query.uuid;
-    let folder = req.query.folder;
-
-    SERVICE.move_to_sftp(uuid, folder, (data) => {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.sftp_upload_status = (req, res) => {
-    // TODO: req here
-    SERVICE.sftp_upload_status(req, (data) => {
-        res.status(data.status).send(data.data);
-    });
-};
+module.exports = QA_controller;

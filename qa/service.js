@@ -18,302 +18,203 @@
 
 'use strict';
 
-// const HTTP = require('axios');
-const HTTP = require('../libs/http');
-const REPOSITORY_ENDPOINTS = require('../repository/endpoints');
 const CONFIG = require('../config/webservices_config')();
 const APP_CONFIG = require('../config/app_config')();
 const TOKEN_CONFIG = require('../config/token_config')();
-const QA_SERVICE_TASKS = require('../qa/tasks/service_tasks');
-const COLLECTION_TASKS = require('../qa/tasks/check_collection_tasks');
+const HELPER = require('../qa/helper');
 const HELPER_TASKS = require('../libs/helper');
-const ARCHIVESSPACE_CONFIG = require('../config/archivesspace_config')();
-const ARCHIVESSPACE = require('../libs/archivesspace');
-const DB = require('../config/db_config')();
+const QA_SERVICE_TASKS = require('../qa/tasks/qa_service_tasks');
 const DB_QUEUE = require('../config/dbqueue_config')();
 const DB_TABLES = require('../config/db_tables_config')();
 const TABLE = DB_TABLES.repo_queue.repo_qa_queue;
-const REPO = DB_TABLES.repo.repo_objects;
 const QA_TASK = new QA_SERVICE_TASKS(CONFIG);
-const COLLECTION_TASK = new COLLECTION_TASKS(DB, REPO);
-const HELPER = new HELPER_TASKS();
-const ARCHIVESSPACE_LIB = new ARCHIVESSPACE(ARCHIVESSPACE_CONFIG);
-const TIMEOUT = 60000 * 15;
+const HELPER_LIB = new HELPER_TASKS();
 const LOGGER = require('../libs/log4');
+const SERVICE_HELPER = new HELPER();
 
 /**
- * Gets list of ready folders
- * @param callback
+ * Runs qa processes
+ * @type {QA_service}
  */
-exports.get_folder_list = (callback) => {
+const QA_service = class {
 
-    (async () => {
+    constructor() {
+    }
+
+    /**
+     * Gets list of ready folders
+     */
+    async get_folder_list() {
 
         try {
 
-            let qa_response = await QA_TASK.get_folder_list();
+            const qa_response = await QA_TASK.get_folder_list();
 
             if (qa_response !== false) {
-                callback({
+                return {
                     status: 200,
                     data: qa_response
-                });
+                };
             }
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/qa/service module (get_list_ready)] request to QA server failed - ' + error.message);
-            callback({
-                status: 500
-            });
+            LOGGER.module().error('ERROR: [/qa/service (get_list_ready)] request to QA server failed - ' + error.message);
         }
+    }
 
-    })();
-};
-
-/**
- * Executes QA processes on designated folder
- * @param folder
- * @param callback
- */
-exports.run_qa = (folder, callback) => {
-
-    (async () => {
+    /**
+     * Moves packages to ingested folder
+     * @param uuid
+     */
+    async move_to_ingested(uuid) {
 
         try {
 
-            const QA_UUID = HELPER.create_uuid();
-            let result = await QA_TASK.set_folder_name(folder);
-            let queue_record = {};
-            let is_queue_record_created;
-            let folder_name_check_results;
-            let is_package_name_checked;
-            let is_file_name_checked;
-            let is_uri_txt_checked;
-            let uri_txt;
-            let total_batch_size_results;
-            let batch_size_results;
-            let uris;
-            let is_metadata_checked;
-            let collection_exists;
+            await QA_TASK.move_to_ingested(uuid)
 
-            if (result.is_set === false) {
-                // stop process
-                // log
-                // update log - INGEST_STOPPED
-                return false;
-            }
-
-            let tmp = folder.split('-');
-            let collection_uri = tmp[tmp.length - 1];
-            queue_record.uuid = QA_UUID;
-            queue_record.collection_folder = folder;
-            is_queue_record_created = await QA_TASK.create_qa_queue_record(DB_QUEUE, TABLE, queue_record);
-
-            if (is_queue_record_created === false || is_queue_record_created === undefined) {
-                // // stop process
-                // // log
-                // // attempt to update log - INGEST_STOPPED
-                return false;
-            }
-
-            folder_name_check_results = await QA_TASK.check_folder_name(folder);
-            queue_record.collection_folder_name_results = JSON.stringify(folder_name_check_results);
-            await QA_TASK.save_to_qa_queue(DB_QUEUE, TABLE, QA_UUID, queue_record);
-
-            total_batch_size_results = await QA_TASK.get_total_batch_size(folder);
-            batch_size_results = HELPER.format_bytes(total_batch_size_results.total_batch_size.result);
-            queue_record.total_batch_size_results = JSON.stringify(batch_size_results);
-
-            if (batch_size_results.size_type === 'GB' && batch_size_results.batch_size > 200) {
-                queue_record.errors = 'This batch is too large.  Batch size cannot exceed 200GB';
-                return false;
-            }
-
-            await QA_TASK.save_to_qa_queue(DB_QUEUE, TABLE, QA_UUID, queue_record);
-
-            is_package_name_checked = await QA_TASK.check_package_names(folder);
-            queue_record.package_names_results = JSON.stringify(is_package_name_checked);
-            await QA_TASK.save_to_qa_queue(DB_QUEUE, TABLE, QA_UUID, queue_record);
-
-            is_file_name_checked = await QA_TASK.check_file_names(folder);
-            queue_record.file_names_results = JSON.stringify(is_file_name_checked);
-            await QA_TASK.save_to_qa_queue(DB_QUEUE, TABLE, QA_UUID, queue_record);
-
-            is_uri_txt_checked = await QA_TASK.check_uri_txt(folder);
-            queue_record.uri_txt_results = JSON.stringify(is_uri_txt_checked);
-            await QA_TASK.save_to_qa_queue(DB_QUEUE, TABLE, QA_UUID, queue_record);
-
-            uri_txt = await QA_TASK.get_uri_txt(folder);
-            queue_record.uri_txt_results = JSON.stringify(uri_txt);
-            await QA_TASK.save_to_qa_queue(DB_QUEUE, TABLE, QA_UUID, queue_record);
-
-            uris = await QA_TASK.get_metadata_uris(DB_QUEUE, TABLE, QA_UUID);
-            is_metadata_checked = await QA_TASK.check_metadata(DB_QUEUE, TABLE, QA_UUID, ARCHIVESSPACE_LIB, JSON.parse(uris.uri_txt_results));
-
-            if (is_metadata_checked === false) {
-                // TODO:
-                return false;
-            }
-
-            collection_exists = await COLLECTION_TASK.check_collection('/repositories/2/' + collection_uri.replace('_', '/'));
-            console.log('collection exists: ', collection_exists);
-
-            if (collection_exists === false) {
-                // TODO: save status to queue
-                // TODO: log
-                queue_record.collection_results = collection_exists;
-                await QA_TASK.save_to_qa_queue(DB_QUEUE, TABLE, QA_UUID, queue_record);
-
-                try {
-
-                    let endpoint = REPOSITORY_ENDPOINTS().repository.repo_records.endpoint;
-                    let url = `${APP_CONFIG.api_url}${endpoint}?api_key=${TOKEN_CONFIG.api_key}`;
-                    let response = await HTTP.request({
-                        method: 'POST',
-                        url: url,
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        data: {
-                            uri: '/repositories/2/' + collection_uri.replace('_', '/'),
-                            is_member_of_collection: 'root'
-                        }
-                    });
-
-                    console.log(response.status);
-                    console.log(response.data);
-
-                    if (response.status === 201) {
-                        console.log('201');
-                    }
-                } catch(error) {
-                    console.log(error);
-                }
-
-            } else {
-                // TODO: update qa status
-            }
-
-            queue_record.collection_results = collection_exists.status;
-            queue_record.is_complete = 1;
-            await QA_TASK.save_to_qa_queue(DB_QUEUE, TABLE, QA_UUID, queue_record);
-            console.log('QA Complete');
+            return {
+                status: 200,
+                data: []
+            };
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/qa/service module (run_qa)] request to QA server failed - ' + error.message);
+            LOGGER.module().error('ERROR: [/qa/service (get_list_ready)] request to QA server failed - ' + error.message);
         }
+    }
 
-    })();
+    /**
+     * Executes QA processes on designated collection folder
+     * @param folder_name
+     */
+    async run_qa(folder_name) {
 
-    callback({
-        status: 200,
-        message: 'QA running on ingest folder ' + folder
-    });
-};
+            try {
 
-/**
- * Checks QA status
- */
-exports.qa_status = async (callback) => {
-    callback({
-        status: 200,
-        data: await QA_TASK.qa_status(DB_QUEUE, TABLE)
-    });
+                const QA_UUID = HELPER_LIB.create_uuid();
+                const COLLECTION_FOLDER = folder_name;
+                let result;
+                let total_files;
+                let queue_record = {};
+
+                if (await SERVICE_HELPER.set_collection_folder(COLLECTION_FOLDER) === false) {
+                    return false;
+                }
+
+                if (await SERVICE_HELPER.create_qa_record(QA_UUID, COLLECTION_FOLDER) === false) {
+                    return false;
+                }
+
+                if (await SERVICE_HELPER.check_folder_name(QA_UUID, COLLECTION_FOLDER) === false) {
+                    return false;
+                }
+
+                if (await SERVICE_HELPER.check_batch_size(QA_UUID, COLLECTION_FOLDER) === false) {
+                    return false;
+                }
+
+                if (await SERVICE_HELPER.check_package_names(QA_UUID, COLLECTION_FOLDER) === false) {
+                    return false;
+                }
+
+                if (await SERVICE_HELPER.check_uri_txt_files(QA_UUID, COLLECTION_FOLDER) === false) {
+                    return false;
+                }
+
+                if (await SERVICE_HELPER.check_file_names(QA_UUID, COLLECTION_FOLDER) === false) {
+                    return false;
+                }
+
+                if (await SERVICE_HELPER.get_uri_txt(QA_UUID, COLLECTION_FOLDER) === false) {
+                    return false;
+                }
+
+                if (await SERVICE_HELPER.check_metadata(QA_UUID) === false) {
+                    return false;
+                }
+
+                if (await SERVICE_HELPER.check_collection(QA_UUID, COLLECTION_FOLDER) === false) {
+                    return false;
+                }
+
+                result = await QA_TASK.qa_status(DB_QUEUE, TABLE);
+
+                if (await SERVICE_HELPER.move_to_ingest(QA_UUID, result.collection_uuid, COLLECTION_FOLDER) === false) {
+                    return false;
+                }
+
+                total_files = JSON.parse(result.file_names_results);
+
+                if (await SERVICE_HELPER.move_to_sftp(QA_UUID, result.collection_uuid, COLLECTION_FOLDER, total_files) === false) {
+                    return false;
+                }
+
+                let timer = setInterval(async () => {
+
+                    let result = await QA_TASK.qa_status(DB_QUEUE, TABLE);
+
+                    if (result.is_error === 1) {
+                        LOGGER.module().info('INFO: [/qa/service module (run_qa)] QA Error encountered');
+                        clearInterval(timer);
+                        return false;
+                    }
+
+                    if (result.packages !== null) {
+                        LOGGER.module().info('INFO: [/qa/service module (run_qa)] SFTP upload complete');
+                        clearInterval(timer);
+                        queue_record.is_complete = 1;
+                        await QA_TASK.save_to_qa_queue(DB_QUEUE, TABLE, QA_UUID, queue_record);
+                        LOGGER.module().info('INFO: [/qa/service module (run_qa)] QA Complete');
+
+                        // TODO: queue objects here
+
+                        setTimeout(async () => {
+
+                            LOGGER.module().info('INFO: [/qa/service module (run_qa)] Starting package ingest');
+
+                            try {
+
+                                let data = {
+                                    collection: result.collection_uuid,
+                                    user: 'import_user'
+                                };
+
+                                const URL = `${APP_CONFIG.api_url}/api/admin/v1/import/queue_objects?api_key=${TOKEN_CONFIG.api_key}`;
+
+                                let response = await QA_TASK.start_ingest(URL, data);
+                                console.log('start ingest response: ', response);
+                                if (response === true) {
+                                    await QA_TASK.clear_qa_queue(DB_QUEUE, TABLE, collection_uuid);
+                                }
+
+                            } catch (error) {
+                                LOGGER.module().error('ERROR: [/qa/service task (start_ingest)] ingest start failed - ' + error.message);
+                                reject(false);
+                            }
+
+                        }, 5000);
+                    }
+
+                }, 5000);
+
+            } catch (error) {
+                LOGGER.module().error('ERROR: [/qa/service module (run_qa)] request to QA server failed [catch error] - ' + error.message);
+            }
+
+        return {
+            status: 200,
+            message: 'QA running on ingest folder ' + folder_name
+        };
+    }
+
+    /**
+     * Checks QA status
+     */
+    async qa_status() {
+        return {
+            status: 200,
+            data: await QA_TASK.qa_status(DB_QUEUE, TABLE)
+        };
+    };
 }
 
-/**
- * moves folder from ready to ingest folder
- * @param uuid
- * @param folder
- * @param callback
- */
-exports.move_to_ingest = (uuid, folder, callback) => {
-
-    (async () => {
-
-        try {
-
-            let is_moved = QA_TASK.move_to_ingest(uuid, folder);
-            console.log('move to ingest: ', is_moved);
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/qa/service module (run_qa)] request to QA server failed - ' + error);
-            callback({
-                status: 500
-            });
-        }
-
-    })();
-};
-
-/**
- * moves packages to Archivematica sftp server
- * @param uuid
- * @param folder
- * @param callback
- */
-exports.move_to_sftp = function (uuid, folder, callback) {
-
-    (async () => {
-
-        try {
-
-            let is_moved = QA_TASK.move_to_sftp(uuid, folder);
-            console.log('move to sftp: ', is_moved);
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/qa/service module (move_to_sftp)] move to sftp failed - ' + error);
-            callback({
-                status: 500
-            });
-        }
-
-    })();
-
-    callback({
-        status: 200,
-        message: 'Uploading packages to sftp.',
-        data: []
-    });
-};
-
-/** TODO: move to task
- * Checks sftp upload status
- * @param req
- * @param callback
- */
-exports.sftp_upload_status = function (req, callback) {
-
-    let pid = req.query.pid;
-    let total_batch_file_count = req.query.total_batch_file_count;
-    let qaUrl = CONFIG.qaUrl + '/api/v1/qa/upload-status?pid=' + pid + '&total_batch_file_count=' + total_batch_file_count + '&api_key=' + CONFIG.qaApiKey;
-
-    (async () => {
-
-        try {
-
-            let response = await HTTP.get(qaUrl, {
-                timeout: TIMEOUT,
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.status === 200) {
-
-                callback({
-                    status: 200,
-                    message: 'Checking sftp upload status.',
-                    data: response.data
-                });
-
-                return false;
-            }
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/qa/service module (upload_status)] request to QA server failed - ' + error);
-            return false;
-        }
-
-    })();
-};
+module.exports = QA_service;

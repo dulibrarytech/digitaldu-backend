@@ -21,29 +21,19 @@
 const CONTROLLER = require('../qa/controller');
 const ENDPOINTS = require('../qa/endpoints');
 const TOKEN = require('../libs/tokens');
+const QA_CONTROLLER = new CONTROLLER();
 
 module.exports = (app) => {
 
     app.route(ENDPOINTS().qa_service.qa_list_ready_folders.endpoint)
-        .get(TOKEN.verify, CONTROLLER.get_folder_list);
+    .get(TOKEN.verify, QA_CONTROLLER.get_folder_list);
 
     app.route(ENDPOINTS().qa_service.qa_run_qa.endpoint)
-        .get(TOKEN.verify, CONTROLLER.run_qa);
-
-    /*
-    app.route(ENDPOINTS().qa_service.qa_check_collection.endpoint)
-        .get(TOKEN.verify, CONTROLLER.check_collection);
-    */
-
-    app.route(ENDPOINTS().qa_service.qa_move_to_ingest.endpoint)
-        .get(TOKEN.verify, CONTROLLER.move_to_ingest);
-
-    app.route(ENDPOINTS().qa_service.qa_move_to_sftp.endpoint)
-        .get(TOKEN.verify, CONTROLLER.move_to_sftp);
-
-    app.route(ENDPOINTS().qa_service.qa_upload_status.endpoint)
-        .get(TOKEN.verify, CONTROLLER.sftp_upload_status);
+    .get(TOKEN.verify, QA_CONTROLLER.run_qa);
 
     app.route(ENDPOINTS().qa_service.qa_status.endpoint)
-    .get(TOKEN.verify, CONTROLLER.qa_status);
+    .get(TOKEN.verify, QA_CONTROLLER.qa_status);
+
+    app.route(ENDPOINTS().qa_service.qa_move_to_ingested.endpoint)
+    .get(TOKEN.verify, QA_CONTROLLER.move_to_ingested);
 };

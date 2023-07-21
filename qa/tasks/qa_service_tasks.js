@@ -37,7 +37,6 @@ const Qa_service_tasks = class {
 
     /**
      * Gets list of ready folders
-     * @returns Object/Boolean
      */
     async get_folder_list() {
 
@@ -63,11 +62,11 @@ const Qa_service_tasks = class {
     /**
      * Sets folder name in QA service
      */
-    async set_folder_name(folder) {
+    async set_folder_name(folder_name) {
 
         try {
 
-            const QA_URL = this.CONFIG.qa_service + QA_ENDPOINT_PATH + 'set-collection-folder?folder=' + folder + '&api_key=' + this.CONFIG.qa_service_api_key;
+            const QA_URL = this.CONFIG.qa_service + QA_ENDPOINT_PATH + 'set-collection-folder?folder=' + folder_name + '&api_key=' + this.CONFIG.qa_service_api_key;
             const response = await HTTP.get(QA_URL, {
                 timeout: TIMEOUT,
                 headers: {
@@ -482,7 +481,7 @@ const Qa_service_tasks = class {
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/qa/tasks (move_to_ingest)] Unable to move packages to ingest folder - ' + error.message);
+            LOGGER.module().error('ERROR: [/qa/tasks (move_to_ingest)] Unable to move packages to ingested folder - ' + error.message);
         }
     }
 
