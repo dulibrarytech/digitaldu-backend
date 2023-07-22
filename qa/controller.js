@@ -31,10 +31,9 @@ const QA_controller = class {
         res.status(data.status).send(data.data);
     }
 
-    async run_qa(req, res) {
-        const folder_name = req.query.folder;
-        const data = await QA_SERVICE.run_qa(folder_name);
-        res.status(data.status).send(data.data);
+    async run_qa(req) {
+        const folder_name = req.query.folder_name;
+        await QA_SERVICE.run_qa(folder_name);
     }
 
     async qa_status(req, res) {

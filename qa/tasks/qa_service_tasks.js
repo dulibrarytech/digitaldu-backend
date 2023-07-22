@@ -259,14 +259,12 @@ const Qa_service_tasks = class {
 
                         queue_record.metadata_check = 'COMPLETE';
                         await this.save_to_qa_queue(DBQ, TABLE, UUID, queue_record);
-                        resolve(true);
+                        return true;
 
                     } catch (error) {
                         LOGGER.module().error('ERROR: [/qa/service_tasks (check_metadata)] Unable to check metadata - ' + error.message);
-                        reject(false);
+                        return false;
                     }
-
-                    return false;
                 }
 
                 let uri = uri_arr.pop();
@@ -400,11 +398,7 @@ const Qa_service_tasks = class {
 
         try {
 
-            const QA_URL = `${this.CONFIG.qa_service}
-                ${QA_ENDPOINT_PATH}
-                get-total-batch-size?folder=${folder_name}
-                &api_key=${this.CONFIG.qa_service_api_key}`;
-
+            const QA_URL = `${this.CONFIG.qa_service}${QA_ENDPOINT_PATH}get-total-batch-size?folder=${folder_name}&api_key=${this.CONFIG.qa_service_api_key}`;
             const response = await HTTP.get(QA_URL, {
                 timeout: TIMEOUT,
                 headers: {
@@ -430,18 +424,16 @@ const Qa_service_tasks = class {
 
         try {
 
-            const QA_URL = `${this.CONFIG.qa_service}
-                ${QA_ENDPOINT_PATH}
-                move-to-ingest?uuid=${uuid}
-                &folder=${folder_name}
-                &api_key=${this.CONFIG.qa_service_api_key}`;
-
-            const response = await HTTP.get(QA_URL, {
-                httpAgent: new KA.Agent({
+            /*
+            httpAgent: new KA.Agent({
                     keepAlive: true,
                     maxSockets: 1,
                     keepAliveMsecs: 3000
                 }),
+             */
+
+            const QA_URL = `${this.CONFIG.qa_service}${QA_ENDPOINT_PATH}move-to-ingest?uuid=${uuid}&folder=${folder_name}&api_key=${this.CONFIG.qa_service_api_key}`;
+            const response = await HTTP.get(QA_URL, {
                 timeout: TIMEOUT,
                 headers: {
                     'Content-Type': 'application/json'
@@ -465,12 +457,7 @@ const Qa_service_tasks = class {
 
         try {
 
-            const QA_URL = `${this.CONFIG.qa_service}
-                ${QA_ENDPOINT_PATH}
-                move-to-ingested?uuid=${uuid}
-                &folder=collection
-                &api_key=${this.CONFIG.qa_service_api_key}`;
-
+            const QA_URL = `${this.CONFIG.qa_service}${QA_ENDPOINT_PATH}move-to-ingested?uuid=${uuid}&folder=collection&api_key=${this.CONFIG.qa_service_api_key}`;
             await HTTP.get(QA_URL, {
                 timeout: TIMEOUT,
                 headers: {
@@ -494,12 +481,7 @@ const Qa_service_tasks = class {
 
         try {
 
-            const QA_URL = `${this.CONFIG.qa_service}
-                ${QA_ENDPOINT_PATH}
-                move-to-sftp?uuid=${uuid}
-                &folder=${folder_name}
-                &api_key=${this.CONFIG.qa_service_api_key}`;
-
+            const QA_URL = `${this.CONFIG.qa_service}${QA_ENDPOINT_PATH}move-to-sftp?uuid=${uuid}&folder=${folder_name}&api_key=${this.CONFIG.qa_service_api_key}`;
             await HTTP.get(QA_URL, {
                 timeout: TIMEOUT,
                 headers: {
@@ -523,12 +505,7 @@ const Qa_service_tasks = class {
 
         try {
 
-            const QA_URL = `${this.CONFIG.qa_service}
-                ${QA_ENDPOINT_PATH}
-                upload-status?uuid=${uuid}
-                &total_batch_file_count=${total_batch_file_count}
-                &api_key=${this.CONFIG.qa_service_api_key}`;
-
+            const QA_URL = `${this.CONFIG.qa_service}${QA_ENDPOINT_PATH}upload-status?uuid=${uuid}&total_batch_file_count=${total_batch_file_count}&api_key=${this.CONFIG.qa_service_api_key}`;
             const response = await HTTP.get(QA_URL, {
                 timeout: TIMEOUT,
                 headers: {
@@ -614,7 +591,7 @@ const Qa_service_tasks = class {
             if (data.length === 1) {
 
                 return{
-                    data: resolve(data[0])
+                    data: data[0]
                 };
             }
 

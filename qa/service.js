@@ -19,8 +19,8 @@
 'use strict';
 
 const CONFIG = require('../config/webservices_config')();
-const APP_CONFIG = require('../config/app_config')();
-const TOKEN_CONFIG = require('../config/token_config')();
+// const APP_CONFIG = require('../config/app_config')();
+// const TOKEN_CONFIG = require('../config/token_config')();
 const HELPER = require('../qa/helper');
 const HELPER_TASKS = require('../libs/helper');
 const QA_SERVICE_TASKS = require('../qa/tasks/qa_service_tasks');
@@ -63,26 +63,6 @@ const QA_service = class {
     }
 
     /**
-     * Moves packages to ingested folder
-     * @param uuid
-     */
-    async move_to_ingested(uuid) {
-
-        try {
-
-            await QA_TASK.move_to_ingested(uuid)
-
-            return {
-                status: 200,
-                data: []
-            };
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/qa/service (get_list_ready)] request to QA server failed - ' + error.message);
-        }
-    }
-
-    /**
      * Executes QA processes on designated collection folder
      * @param folder_name
      */
@@ -95,6 +75,8 @@ const QA_service = class {
                 let result;
                 let total_files;
                 let queue_record = {};
+
+                // TODO: check if queue is active?
 
                 if (await SERVICE_HELPER.set_collection_folder(COLLECTION_FOLDER) === false) {
                     return false;
@@ -165,8 +147,11 @@ const QA_service = class {
                         await QA_TASK.save_to_qa_queue(DB_QUEUE, TABLE, QA_UUID, queue_record);
                         LOGGER.module().info('INFO: [/qa/service module (run_qa)] QA Complete');
 
-                        // TODO: queue objects here
+                        // TODO:
+                        console.log('Queue packages here');
 
+                        // TODO: clear qa queue
+                        /*
                         setTimeout(async () => {
 
                             LOGGER.module().info('INFO: [/qa/service module (run_qa)] Starting package ingest');
@@ -192,6 +177,8 @@ const QA_service = class {
                             }
 
                         }, 5000);
+
+                         */
                     }
 
                 }, 5000);
@@ -199,11 +186,26 @@ const QA_service = class {
             } catch (error) {
                 LOGGER.module().error('ERROR: [/qa/service module (run_qa)] request to QA server failed [catch error] - ' + error.message);
             }
+    }
 
-        return {
-            status: 200,
-            message: 'QA running on ingest folder ' + folder_name
-        };
+    /**
+     * Moves packages to ingested folder
+     * @param uuid
+     */
+    async move_to_ingested(uuid) {
+
+        try {
+
+            await QA_TASK.move_to_ingested(uuid)
+
+            return {
+                status: 200,
+                data: []
+            };
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/qa/service (get_list_ready)] request to QA server failed - ' + error.message);
+        }
     }
 
     /**

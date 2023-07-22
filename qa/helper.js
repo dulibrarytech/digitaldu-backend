@@ -123,6 +123,7 @@ const Service_helper = class {
 
             if (folder_name_check_results.folder_name_results.errors.length > 0) {
                 LOGGER.module().error('ERROR: [/qa/service module (run_qa)] QA Halted - Package name errors');
+                console.log(folder_name_check_results);
                 queue_record.is_error = 1;
                 queue_record.is_complete = 1;
                 await QA_TASK.save_to_qa_queue(DB_QUEUE, TABLE, uuid, queue_record);
@@ -149,6 +150,12 @@ const Service_helper = class {
 
             let queue_record = {};
             let total_batch_size_results = await QA_TASK.get_total_batch_size(collection_folder);
+
+            if (total_batch_size_results === undefined) {
+                LOGGER.module().error('ERROR: [/qa/service module (run_qa)] QA Halted - Unable to read collection folder packages to get batch size');
+                return false;
+            }
+
             let batch_size_results = HELPER.format_bytes(total_batch_size_results.total_batch_size.result);
             queue_record.total_batch_size_results = JSON.stringify(batch_size_results);
 

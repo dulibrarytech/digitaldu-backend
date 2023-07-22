@@ -43,7 +43,7 @@ const Check_collection_tasks = class {
         try {
 
             const data = await this.DB(this.TABLE)
-            .select('is_member_of_collection', 'pid')
+            .select('is_member_of_collection', 'uuid')
             .where({
                 uri: uri,
                 object_type: 'collection',
@@ -52,7 +52,7 @@ const Check_collection_tasks = class {
 
             if (data.length === 1) {
                 return {
-                    uuid: data[0].pid,
+                    uuid: data[0].uuid,
                     exists: true
                 };
             } else {

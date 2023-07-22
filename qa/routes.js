@@ -18,6 +18,7 @@
 
 'use strict';
 
+const QA_INIT = require('../qa/run_qa_init');
 const CONTROLLER = require('../qa/controller');
 const ENDPOINTS = require('../qa/endpoints');
 const TOKEN = require('../libs/tokens');
@@ -29,7 +30,7 @@ module.exports = (app) => {
     .get(TOKEN.verify, QA_CONTROLLER.get_folder_list);
 
     app.route(ENDPOINTS().qa_service.qa_run_qa.endpoint)
-    .get(TOKEN.verify, QA_CONTROLLER.run_qa);
+    .get(TOKEN.verify, QA_INIT.run_qa);
 
     app.route(ENDPOINTS().qa_service.qa_status.endpoint)
     .get(TOKEN.verify, QA_CONTROLLER.qa_status);
