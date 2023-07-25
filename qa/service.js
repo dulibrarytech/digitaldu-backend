@@ -566,7 +566,7 @@ const start_ingest = (collection_uuid) => {
             let response = await QA_TASK.start_ingest(URL, data);
             console.log('start ingest response: ', response);
             if (response === true) {
-                await QA_TASK.clear_qa_queue(DB_QUEUE, TABLE, collection_uuid);
+                // await QA_TASK.clear_qa_queue(DB_QUEUE, TABLE, collection_uuid);
             }
 
         } catch (error) {
@@ -666,6 +666,10 @@ exports.run_qa = (folder, callback) => {
                     setTimeout(() => {
                         LOGGER.module().info('INFO: [/qa/service module (run_qa)] Starting package ingest');
                         start_ingest(result.collection_uuid);
+                        setTimeout(async () => {
+                            await QA_TASK.clear_qa_queue(DB_QUEUE, TABLE, result.collection_uuid);
+                        }, 10000);
+
                     }, 5000);
                 }
 
