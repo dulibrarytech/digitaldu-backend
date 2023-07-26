@@ -505,7 +505,6 @@ const sftp_upload_status = async (qa_uuid, uuid, total_batch_file_count) => {
 
             if (response.data.message !== undefined && response.data.message === 'upload_complete') {
                 clearInterval(timer);
-
                 setTimeout(async () => {
                     let packages = get_package_names(response.data);
                     queue_record.packages = packages.toString();
@@ -557,13 +556,6 @@ const start_ingest = (collection_uuid) => {
 
         try {
 
-            /*
-            let data = {
-                collection: collection_uuid,
-                user: 'import_user'
-            };
-             */
-
             // queue packages here for ingest
             const data = {
                 collection: collection_uuid,
@@ -571,7 +563,7 @@ const start_ingest = (collection_uuid) => {
             };
 
             LIB.save_transfer_records(data, (result) => {
-                console.log('save_transfer_records: ', result);
+                LOGGER.module().info('INFO: [/qa/service (start_ingest)] Packages have been queued for ingest ' + result.recordCount);
                 return true;
             });
 
@@ -581,15 +573,14 @@ const start_ingest = (collection_uuid) => {
                     collection: collection_uuid
                 };
 
-                // const URL = `${APP_CONFIG.api_url}/api/admin/v1/import/queue_objects?api_key=${TOKEN_CONFIG.api_key}`;
                 const URL = `${APP_CONFIG.api_url}/api/admin/v1/import/start_transfer?api_key=${TOKEN_CONFIG.api_key}`;
-
                 let response = await QA_TASK.start_ingest(URL, data);
-                console.log('start ingest response: ', response);
+
                 if (response === true) {
-                    // await QA_TASK.clear_qa_queue(DB_QUEUE, TABLE, collection_uuid);
+                    LOGGER.module().info('INFO: [/qa/service (start_ingest)] Ingest started');
                 }
-            }, 7000);
+
+            }, 5000);
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/qa/service task (start_ingest)] ingest start failed - ' + error.message);
@@ -597,7 +588,6 @@ const start_ingest = (collection_uuid) => {
         }
 
     })();
-
 }
 
 /**
