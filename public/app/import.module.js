@@ -157,12 +157,25 @@ const importModule = (function () {
         domModule.html('.loading', null);
     };
 
-    /**
+    /** TODO: redirect - no api call
      * Starts the Archivematica transfer/ingest process
      * @param objects
      * @returns {boolean}
      */
     obj.queueTransferObjects = function (objects) {
+
+        domModule.hide('.import-button');
+        domModule.html('#message', '<p>Import process starting...</p>');
+
+        setTimeout(function () {
+            domModule.html('#message', null);
+            window.location.replace('/dashboard/import/status?import=true');
+        }, 5000);
+
+    }
+
+    /*
+    obj.queueTransferObjects_ = function (objects) {
 
         let collection = helperModule.getParameterByName('collection');
 
@@ -216,6 +229,8 @@ const importModule = (function () {
 
         httpModule.req(request, callback);
     };
+
+     */
 
     /**
      * Gets directory listings from archivematica sftp server

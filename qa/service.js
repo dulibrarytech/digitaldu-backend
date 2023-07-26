@@ -36,6 +36,7 @@ const QA_TASK = new QA_SERVICE_TASKS(CONFIG);
 const COLLECTION_TASK = new COLLECTION_TASKS(DB, REPO);
 const HELPER = new HELPER_TASKS();
 const ARCHIVESSPACE_LIB = new ARCHIVESSPACE(ARCHIVESSPACE_CONFIG);
+const LIB = require('../libs/transfer-ingest');
 const TIMEOUT = 60000 * 15;
 const LOGGER = require('../libs/log4');
 
@@ -504,11 +505,27 @@ const sftp_upload_status = async (qa_uuid, uuid, total_batch_file_count) => {
 
             if (response.data.message !== undefined && response.data.message === 'upload_complete') {
                 clearInterval(timer);
+
                 setTimeout(async () => {
                     let packages = get_package_names(response.data);
                     queue_record.packages = packages.toString();
                     await QA_TASK.save_to_qa_queue(DB_QUEUE, TABLE, qa_uuid, queue_record);
-                    return true;
+
+                    // queue packages here for ingest
+                    setTimeout(() => {
+
+                        const data = {
+                            collection: uuid,
+                            user: 'import_user'
+                        };
+
+                        LIB.save_transfer_records(data, (result) => {
+                            console.log('save_transfer_records: ', result);
+                            return true;
+                        });
+
+                    }, 2000);
+
                 }, 5000);
             }
 
@@ -556,12 +573,19 @@ const start_ingest = (collection_uuid) => {
 
         try {
 
+            /*
             let data = {
                 collection: collection_uuid,
                 user: 'import_user'
             };
+             */
 
-            const URL = `${APP_CONFIG.api_url}/api/admin/v1/import/queue_objects?api_key=${TOKEN_CONFIG.api_key}`;
+            let data = {
+                collection: collection_uuid
+            };
+
+            // const URL = `${APP_CONFIG.api_url}/api/admin/v1/import/queue_objects?api_key=${TOKEN_CONFIG.api_key}`;
+            const URL = `${APP_CONFIG.api_url}/api/admin/v1/import/start_transfer?api_key=${TOKEN_CONFIG.api_key}`;
 
             let response = await QA_TASK.start_ingest(URL, data);
             console.log('start ingest response: ', response);
@@ -650,6 +674,8 @@ exports.run_qa = (folder, callback) => {
             let timer = setInterval(async () => {
 
                 let result = await QA_TASK.qa_status(DB_QUEUE, TABLE);
+
+                LOGGER.module().info('INFO: [/qa/service module (run_qa)] Checking for packages...');
 
                 if (result.is_error === 1) {
                     LOGGER.module().info('INFO: [/qa/service module (run_qa)] QA Error encountered');

@@ -110,6 +110,8 @@ const QA_TASK = new QA_SERVICE_TASKS(WEB_SERVICES_CONFIG);
  */
 exports.queue_objects = function (req, callback) {
 
+    console.log('queue_objects: ', req);
+
     if (req.body === undefined) {
 
         LOGGER.module().error('ERROR: [/import/queue module (queue_objects)] missing payload body. unable to start ingest process');
@@ -128,7 +130,7 @@ exports.queue_objects = function (req, callback) {
     /*
      Checks if collection exists
      function called by async
-     */
+    */
     const check_collection = function (callback) {
 
         TRANSFER_INGEST.check_collection(transfer_data.collection, function (result) {
@@ -146,7 +148,8 @@ exports.queue_objects = function (req, callback) {
         });
     };
 
-    /*
+
+    /* TODO: bypass because objects are queued immediately after QA completes
      Saves import data to queue
      function called by async
      */
