@@ -459,21 +459,28 @@ const move_to_ingest = async (qa_uuid, uuid, folder) => {
  * @param uuid
  * @param folder
  * @param total_files
+ * @param callback
  */
-const move_to_sftp = async (qa_uuid, uuid, folder, total_files) => {
+const move_to_sftp = function (qa_uuid, uuid, folder, total_files, callback) {
 
-    try {
+    (async () => {
 
-        let queue_record = {};
-        await sftp_upload_status(qa_uuid, uuid, total_files.file_count_results.result);
-        await QA_TASK.move_to_sftp(uuid, folder);
-        queue_record.moved_to_sftp_results = 'moving_packages_to_archivematica_sftp'; //result.response.message;
-        await QA_TASK.save_to_qa_queue(DB_QUEUE, TABLE, qa_uuid, queue_record);
-        return true;
+        try {
 
-    } catch (error) {
-        LOGGER.module().error('ERROR: [/qa/service module (move_to_sftp)] move to sftp failed - ' + error.message);
-    }
+            let queue_record = {};
+            await sftp_upload_status(qa_uuid, uuid, total_files.file_count_results.result);
+            await QA_TASK.move_to_sftp(uuid, folder);
+            queue_record.moved_to_sftp_results = 'moving_packages_to_archivematica_sftp';
+            await QA_TASK.save_to_qa_queue(DB_QUEUE, TABLE, qa_uuid, queue_record);
+            LOGGER.module().info('INFO: [/qa/service module (sftp_upload_status)]  Move to SFTP started...');
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/qa/service module (move_to_sftp)] move to sftp failed - ' + error.message);
+        }
+
+    })();
+
+    callback(true);
 };
 
 /**
@@ -510,7 +517,8 @@ const sftp_upload_status = async (qa_uuid, uuid, total_batch_file_count) => {
                     let packages = get_package_names(response.data);
                     queue_record.packages = packages.toString();
                     await QA_TASK.save_to_qa_queue(DB_QUEUE, TABLE, qa_uuid, queue_record);
-                }, 5000);
+                    return true;
+                }, 1000);
             } else {
                 LOGGER.module().info('INFO: [/qa/service module (sftp_upload_status)]  - ' + response.data.message);
             }
@@ -658,15 +666,23 @@ exports.run_qa = (folder, callback) => {
 
             total_files = JSON.parse(result.file_names_results);
 
+            /*
             if (await move_to_sftp(QA_UUID, result.collection_uuid, COLLECTION_FOLDER, total_files) === false) {
                 return false;
             }
+             */
+
+            move_to_sftp(QA_UUID, result.collection_uuid, COLLECTION_FOLDER, total_files, (result) => {
+                console.log('move_to_sftp: ', result);
+                LOGGER.module().info('INFO: [/qa/service module (run_qa)] Moving to SFTP...');
+            });
 
             let timer = setInterval(async () => {
 
                 let result = await QA_TASK.qa_status(DB_QUEUE, TABLE);
 
                 LOGGER.module().info('INFO: [/qa/service module (run_qa)] Checking for packages...');
+                console.log(result);
 
                 if (result.is_error === 1) {
                     LOGGER.module().info('INFO: [/qa/service module (run_qa)] QA Error encountered');
@@ -674,7 +690,7 @@ exports.run_qa = (folder, callback) => {
                     return false;
                 }
 
-                if (result.packages !== null) {
+                if (result.packages !== null) { // TODO: add sftp status check to confirm complete
                     LOGGER.module().info('INFO: [/qa/service module (run_qa)] SFTP upload complete');
                     clearInterval(timer);
                     queue_record.is_complete = 1;

@@ -279,7 +279,7 @@ const qaModule = (function() {
 
             let file_names = sftp_upload_status.data.file_names;
 
-            if (file_names === undefined) {
+            if (file_names.length === 0) {
                 return false;
             }
 
