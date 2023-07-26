@@ -510,26 +510,10 @@ const sftp_upload_status = async (qa_uuid, uuid, total_batch_file_count) => {
                     let packages = get_package_names(response.data);
                     queue_record.packages = packages.toString();
                     await QA_TASK.save_to_qa_queue(DB_QUEUE, TABLE, qa_uuid, queue_record);
-
-                    // queue packages here for ingest
-                    setTimeout(() => {
-
-                        const data = {
-                            collection: uuid,
-                            user: 'import_user'
-                        };
-
-                        LIB.save_transfer_records(data, (result) => {
-                            console.log('save_transfer_records: ', result);
-                            return true;
-                        });
-
-                    }, 2000);
-
                 }, 5000);
             }
 
-        } catch(error) {
+        } catch (error) {
             LOGGER.module().error('ERROR: [/qa/service module (sftp_upload_status)] unable to get sftp upload status - ' + error.message);
         }
 
@@ -547,7 +531,7 @@ const get_package_names = (sftp_upload_data) => {
         let packages = [];
         let paths = sftp_upload_data.data[0];
 
-        for (let i=0;i<paths.length;i++) {
+        for (let i = 0; i < paths.length; i++) {
 
             let tmp = paths[i].split('/');
 
@@ -558,7 +542,7 @@ const get_package_names = (sftp_upload_data) => {
 
         return packages
 
-    } catch(error) {
+    } catch (error) {
         LOGGER.module().error('ERROR: [/qa/service module (get_package_names)] unable to get package names' + error.message);
     }
 };
@@ -580,18 +564,32 @@ const start_ingest = (collection_uuid) => {
             };
              */
 
-            let data = {
-                collection: collection_uuid
+            // queue packages here for ingest
+            const data = {
+                collection: collection_uuid,
+                user: 'import_user'
             };
 
-            // const URL = `${APP_CONFIG.api_url}/api/admin/v1/import/queue_objects?api_key=${TOKEN_CONFIG.api_key}`;
-            const URL = `${APP_CONFIG.api_url}/api/admin/v1/import/start_transfer?api_key=${TOKEN_CONFIG.api_key}`;
+            LIB.save_transfer_records(data, (result) => {
+                console.log('save_transfer_records: ', result);
+                return true;
+            });
 
-            let response = await QA_TASK.start_ingest(URL, data);
-            console.log('start ingest response: ', response);
-            if (response === true) {
-                // await QA_TASK.clear_qa_queue(DB_QUEUE, TABLE, collection_uuid);
-            }
+            setTimeout(async () => {
+
+                let data = {
+                    collection: collection_uuid
+                };
+
+                // const URL = `${APP_CONFIG.api_url}/api/admin/v1/import/queue_objects?api_key=${TOKEN_CONFIG.api_key}`;
+                const URL = `${APP_CONFIG.api_url}/api/admin/v1/import/start_transfer?api_key=${TOKEN_CONFIG.api_key}`;
+
+                let response = await QA_TASK.start_ingest(URL, data);
+                console.log('start ingest response: ', response);
+                if (response === true) {
+                    // await QA_TASK.clear_qa_queue(DB_QUEUE, TABLE, collection_uuid);
+                }
+            }, 7000);
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/qa/service task (start_ingest)] ingest start failed - ' + error.message);
@@ -694,7 +692,7 @@ exports.run_qa = (folder, callback) => {
                         start_ingest(result.collection_uuid);
                         setTimeout(async () => {
                             await QA_TASK.clear_qa_queue(DB_QUEUE, TABLE, result.collection_uuid);
-                        }, 10000);
+                        }, 15000);
 
                     }, 5000);
                 }

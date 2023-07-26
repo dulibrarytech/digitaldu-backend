@@ -202,7 +202,7 @@ const qaModule = (function() {
 
         if (qa_complete === 1 && qa_errors === 0) {
 
-            status += '<h5><strong><i class="fa fa-check" style="color: darkgreen"></i> QA process complete.</strong></h5>';
+            status += '<h5><strong><i class="fa fa-check" style="color: darkgreen"></i> QA process complete</strong></h5>';
             status += `<p><i class="fa fa-info" style="color: dodgerblue"></i> <strong><em>Preparing to ingest package(s)...<em></strong></p>`;
             domModule.html('#' + collection_folder, status);
 
@@ -222,10 +222,6 @@ const qaModule = (function() {
         }
 
         status += `<p><strong>QA UUID: ${uuid}</strong></p>`;
-
-        /** TODO:
-         * {"data":{"message":"upload_complete","data":[["/home/denversftp/66266aca-3403-49b5-bae6-ac30dc3fe5eb/M123.03.0084.0003.00003/M123.03.0084.0003.00003.tif","/home/denversftp/66266aca-3403-49b5-bae6-ac30dc3fe5eb/M123.03.0084.0003.00003/uri.txt","/home/denversftp/66266aca-3403-49b5-bae6-ac30dc3fe5eb/M123.03.0084.0003.00004/M123.03.0084.0003.00004.tif","/home/denversftp/66266aca-3403-49b5-bae6-ac30dc3fe5eb/M123.03.0084.0003.00004/uri.txt","/home/denversftp/66266aca-3403-49b5-bae6-ac30dc3fe5eb/M123.03.0084.0003.00005/M123.03.0084.0003.00005.tif","/home/denversftp/66266aca-3403-49b5-bae6-ac30dc3fe5eb/M123.03.0084.0003.00005/uri.txt"],6]}}
-         */
 
         if (total_batch_size === null) {
             status += '<p><i class="fa fa-info" style="color: dodgerblue"></i> <em>Calculating total batch size...</em></p>';
@@ -277,6 +273,7 @@ const qaModule = (function() {
 
         if (sftp_upload_status !== null && sftp_upload_status.data.message === 'upload_complete') {
             status += '<p><i class="fa fa-check" style="color: darkgreen"></i> <strong>Package(s) moved to Archivematica SFTP.</strong></p>';
+            status += '<p><i class="fa fa-info" style="color: dodgerblue"></i> <strong>Queueing packages for ingest...</strong></p>';
         } else if (sftp_upload_status !== null && sftp_upload_status.data.message !== 'upload_complete') {
             status += '<p><i class="fa fa-info" style="color: dodgerblue"></i> <em>Uploading package(s) to Archivematica SFTP...</em></p>';
 
