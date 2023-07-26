@@ -279,6 +279,10 @@ const qaModule = (function() {
 
             let file_names = sftp_upload_status.data.file_names;
 
+            if (file_names === undefined) {
+                return false;
+            }
+
             status += '<p>' + sftp_upload_status.data.remote_file_count + ' out of ' + sftp_upload_status.data.local_file_count + ' files (' + sftp_upload_status.data.remote_package_size + ')</p>';
             status += '<ul>';
 

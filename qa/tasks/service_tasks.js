@@ -648,8 +648,6 @@ const Service_tasks = class {
         });
     }
 
-    // TODO: clear qa queue
-
     /**
      * Moves packages to Archivematica SFTP in QA service
      * @param uuid
@@ -666,7 +664,7 @@ const Service_tasks = class {
 
                 try {
 
-                    let response = await HTTP.get(QA_URL, {
+                    await HTTP.get(QA_URL, {
                         timeout: TIMEOUT,
                         headers: {
                             'Content-Type': 'application/json'
@@ -675,18 +673,8 @@ const Service_tasks = class {
 
                     resolve(true);
 
-                    /* TODO:
-                    if (response.status === 200) {
-                        resolve({
-                            response: response.data,
-                            is_moved: true
-                        });
-                    }
-                     */
-
                 } catch (error) {
                     LOGGER.module().error('ERROR: [/qa/service task (move_to_sftp)] move to sftp error occurred - ' + error.message);
-                    // reject(false);
                 }
 
             })();

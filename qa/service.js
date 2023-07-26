@@ -493,11 +493,10 @@ const sftp_upload_status = async (qa_uuid, uuid, total_batch_file_count) => {
             queue_record.sftp_upload_status = JSON.stringify(response);
             await QA_TASK.save_to_qa_queue(DB_QUEUE, TABLE, qa_uuid, queue_record);
 
+            console.log('sftp_upload_status_response: ', response);
+
             if (response === false) {
-                // TODO: test
-                // queue_record.is_error = 1;
-                // queue_record.is_complete = 1;
-                await QA_TASK.save_to_qa_queue(DB_QUEUE, TABLE, qa_uuid, queue_record);
+                LOGGER.module().info('INFO: [/qa/service module (sftp_upload_status)]  SFTP response error - ' + response);
                 return false;
             }
 
@@ -506,10 +505,14 @@ const sftp_upload_status = async (qa_uuid, uuid, total_batch_file_count) => {
             if (response.data.message !== undefined && response.data.message === 'upload_complete') {
                 clearInterval(timer);
                 setTimeout(async () => {
+                    LOGGER.module().info('INFO: [/qa/service module (sftp_upload_status)]  - ' + response.data.message);
+                    LOGGER.module().info('INFO: [/qa/service module (sftp_upload_status)]  Getting packages... ');
                     let packages = get_package_names(response.data);
                     queue_record.packages = packages.toString();
                     await QA_TASK.save_to_qa_queue(DB_QUEUE, TABLE, qa_uuid, queue_record);
                 }, 5000);
+            } else {
+                LOGGER.module().info('INFO: [/qa/service module (sftp_upload_status)]  - ' + response.data.message);
             }
 
         } catch (error) {
