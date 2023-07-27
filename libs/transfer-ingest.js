@@ -127,47 +127,6 @@ exports.save_transfer_records = function (transfer_data, callback) {
     });
 
     return false;
-
-    // Create array of objects. Each object contains the collection PID and object filename
-    /*
-    let importObjects = objects.map(function (object) {
-
-        return {
-            is_member_of_collection: collection,
-            object: object,
-            transfer_uuid: '---',
-            message: 'WAITING_FOR_TRANSFER',
-            microservice: 'Waiting for transfer microservice',
-            user: user
-        };
-
-    });
-
-    // Save import objects to transfer queue
-    let chunkSize = importObjects.length;
-    DBQ.batchInsert(QUEUE, importObjects, chunkSize)
-        .then(function (data) {
-
-            let obj = {};
-            obj.message = 'Data saved.';
-            obj.recordCount = chunkSize;
-
-            if (data.length === 0) {
-                obj.message = 'Data not saved.';
-                LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (save_transfer_records)] unable to save queue data');
-                throw 'FATAL: [/libs/transfer-ingest lib (save_transfer_records)] unable to save queue data';
-                // TODO: clear queue and log to fail queue
-            }
-
-            callback(obj);
-            return null;
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/libs/transfer-ingest lib (save_transfer_records)] unable to save queue data');
-            throw 'FATAL: [/libs/transfer-ingest lib (save_transfer_records)] unable to save queue data' + error;
-        });
-
-     */
 };
 
 /**

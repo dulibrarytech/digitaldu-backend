@@ -665,7 +665,7 @@ const Service_tasks = class {
                 try {
 
                     await HTTP.get(QA_URL, {
-                        timeout: TIMEOUT,
+                        // timeout: TIMEOUT,
                         headers: {
                             'Content-Type': 'application/json'
                         }

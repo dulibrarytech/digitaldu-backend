@@ -174,64 +174,6 @@ const importModule = (function () {
 
     }
 
-    /*
-    obj.queueTransferObjects_ = function (objects) {
-
-        let collection = helperModule.getParameterByName('collection');
-
-        if (collection === null) {
-            domModule.html('#message', '<div class="alert alert-danger">Unable to start transfer. Collection PID not found.</div>');
-            return false;
-        }
-
-        let data = {
-            collection: collection,
-            objects: objects,
-            user: userModule.getUserFullName()
-        };
-
-        let url = api + endpoints.import_queue_objects,
-            token = userModule.getUserToken(),
-            request = new Request(url, {
-                method: 'POST',
-                body: JSON.stringify(data),
-                mode: 'cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-        const callback = function (response) {
-
-            if (response.status === 200) {
-
-                domModule.hide('.import-button');
-                domModule.html('#message', '<p>Import process starting...</p>');
-
-                setTimeout(function () {
-                    domModule.html('#message', null);
-                    window.location.replace('/dashboard/import/status?import=true');
-                }, 4000);
-
-            } else if (response.status === 401) {
-
-                helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
-
-                setTimeout(function () {
-                    window.location.replace('/login');
-                }, 4000);
-
-            } else {
-                helperModule.renderError('Error: (HTTP status ' + response.status + '. Unable to transfer objects.');
-            }
-        };
-
-        httpModule.req(request, callback);
-    };
-
-     */
-
     /**
      * Gets directory listings from archivematica sftp server
      */
