@@ -701,7 +701,7 @@ exports.run_qa = (folder, callback) => {
                     }, 3000);
                 }
 
-            }, 5000);
+            }, 10000);
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/qa/service module (run_qa)] request to QA server failed [catch error] - ' + error.message);
