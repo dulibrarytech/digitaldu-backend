@@ -81,6 +81,12 @@ exports.create_repo_record = function (req, res) {
     });
 };
 
+exports.get_completed_imports = function (req, res) {
+    MODEL.get_completed_imports(function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
 exports.get_import_complete = function (req, res) {
     MODEL.get_import_complete(req, function (data) {
         res.status(data.status).send(data.data);

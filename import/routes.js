@@ -52,7 +52,7 @@ module.exports = function (app) {
         .get(TOKEN.verify, IMPORT.create_repo_record);
 
     app.route('/api/admin/v1/import/complete')
-        .get(TOKEN.verify, IMPORT.get_import_complete);
+        .get(TOKEN.verify, IMPORT.get_completed_imports);  // get_import_complete
 
     // gets archivesspace session token
     app.route('/api/admin/v1/import/metadata/session')

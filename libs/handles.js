@@ -55,12 +55,17 @@ exports.create_handle = function (pid, callback) {
             let handleUrl = HANDLE_HOST + '/' + HANDLE_PREFIX + '/' + encodeURIComponent(pid) + '?target=' + HANDLE_TARGET + encodeURIComponent(pid),
                 auth = Buffer.from(HANDLE_USER + ':' + HANDLE_PASSWORD).toString('base64');
 
+            console.log(handleUrl);
+            console.log(auth);
+
             let response = await HTTP.post(handleUrl, '', {
                 timeout: TIMEOUT,
                 headers: {
                     'Authorization': 'Basic ' + auth
                 }
             });
+
+            console.log(response);
 
             if (response.status === 201) {
 
@@ -128,7 +133,7 @@ exports.update_handle = function (pid, callback) {
 
         try {
 
-            let handleUrl = HANDLE_HOST + '/' + HANDLE_PREFIX + '/' + encodeURIComponent(pid) + '?target=' + HANDLE_TARGET + encodeURIComponent(pid),
+            let handleUrl = HANDLE_HOST + '/' + HANDLE_PREFIX + '/' + encodeURIComponent(pid) + '?urlappend=' + HANDLE_TARGET + encodeURIComponent(pid),
                 auth = Buffer.from(HANDLE_USER + ':' + HANDLE_PASSWORD).toString('base64');
 
             let response = await HTTP.put(handleUrl, '', {

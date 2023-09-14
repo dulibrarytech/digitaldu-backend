@@ -1002,7 +1002,75 @@ const update_db_mods = function (sip_uuid, mods, callback) {
         });
 };
 
-/**
+// TODO:
+exports.get_completed_imports = function (callback) {
+    // fiscal year
+    // SELECT count(id) FROM tbl_objects WHERE object_type = 'object' AND is_active = 1 AND created BETWEEN '2021-07-01' AND LAST_DAY('2022-06-30');
+    //.whereRaw('DATE(created) BETWEEN NOW() - INTERVAL 30 DAY AND NOW()')
+    // .whereRaw('created BETWEEN \'2022-07-01\' AND LAST_DAY(\'2023-06-30\')')
+
+    DB(REPO_OBJECTS)
+    .select('id', 'sip_uuid', 'is_member_of_collection', 'pid', 'handle', 'mods_id', 'mods', 'display_record', 'thumbnail', 'file_name', 'mime_type', 'is_published', 'created')
+    .where({
+        is_active: 1,
+        is_complete: 1,
+        object_type: 'object'
+    })
+    .limit(1000)
+    .orderBy('id', 'desc')  // created
+    .then(function (data) {
+        // console.log('imports', data[0].is_member_of_collection);
+        callback({
+            status: 200,
+            message: 'Complete records.',
+            data: data
+        });
+
+        return false;
+        let response = [];
+
+        // Get collection names
+        let timer = setInterval(function () {
+
+            if (data.length === 0) {
+                clearInterval(timer);
+
+                callback({
+                    status: 200,
+                    message: 'Complete records.',
+                    data: response
+                });
+
+                return false;
+            }
+
+            let record = data.pop();
+
+            DB(REPO_OBJECTS)
+            .select('mods')
+            .where({
+                pid: record.is_member_of_collection,
+                object_type: 'collection'
+            })
+            .then(function (collection_obj) {
+                let mods = JSON.parse(collection_obj[0].mods);
+                record.collection_title = mods.title;
+                response.push(record);
+            })
+            .catch(function (error) {
+                LOGGER.module().error('ERROR: [/import/model module (get_import_complete)] unable to get completed import records ' + error);
+            });
+
+        }, 5);
+
+        return null;
+    })
+    .catch(function (error) {
+        LOGGER.module().fatal('ERROR: [/import/model module (get_import_complete)] unable to get imported records ' + error);
+    });
+};
+
+/** TODO: refactor to show imports for fiscal year?
  * Gets completed imports for the past 30 days
  * @param req
  * @param callback

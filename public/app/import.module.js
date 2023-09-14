@@ -124,7 +124,7 @@ const importModule = (function () {
             let display_record = JSON.parse(data[i].display_record);
             let token = userModule.getUserToken();
 
-            html += '<td width="25%" ' + alignTd + '><a href="/dashboard/objects/unpublished?pid=' + data[i].is_member_of_collection + '&unpublished">' + DOMPurify.sanitize(data[i].collection_title) + '</a></td>';
+            // html += '<td width="25%" ' + alignTd + '><a href="/dashboard/objects/unpublished?pid=' + data[i].is_member_of_collection + '&unpublished">' + DOMPurify.sanitize(data[i].is_member_of_collection) + '</a></td>'; // data[i].collection_title
 
             if (data[i].sip_uuid !== null) {
 
@@ -144,9 +144,9 @@ const importModule = (function () {
             html += '<td width="15%" ' + alignTd + '>' + DOMPurify.sanitize(moment(data[i].created).tz('America/Denver').format('MM-DD-YYYY, h:mm:ss a')) + '</td>';
 
             if (data[i].is_published === 0) {
-                html += '<td id="publish-import-' + data[i].pid + '" width="5%" ' + alignTd + '><a href="#" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(data[i].sip_uuid) + '\', \'object\'); return false;" title="Publish record"><i class="fa fa-cloud-upload"></i></a></td>';
+                html += '<td id="publish-import-' + data[i].pid + '" width="5%" ' + alignTd + '><a href="#" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(data[i].sip_uuid) + '\', \'object\'); return false;" title="Publish record"><i class="fa fa-cloud-upload"></i><br><small>Unpublished</small></a></td>';
             } else if (data[i].is_published === 1) {
-                html += '<td id="publish-import-' + data[i].pid + '" width="5%" ' + alignTd + ' title="Published"><i class="fa fa-cloud"></i></td>';
+                html += '<td id="publish-import-' + data[i].pid + '" width="5%" ' + alignTd + ' title="Published"><i class="fa fa-cloud"></i><br><small>Published</small></td>';
             }
 
             html += '</tr>';
@@ -155,6 +155,12 @@ const importModule = (function () {
         domModule.html('#complete-records', html);
         domModule.html('#message', null);
         domModule.html('.loading', null);
+        $('#completed-imports-table').DataTable({
+            'pageLength': 25,
+            'order': [[ 2, 'desc' ]]
+        });
+
+        document.querySelector('#completed-imports-table-th-head').style.visibility = 'visible';
     };
 
     /** TODO: redirect - no api call
