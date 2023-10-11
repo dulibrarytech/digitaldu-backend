@@ -77,7 +77,7 @@ module.exports = function (app) {
     app.route('/api/admin/v1/import/metadata/batch')
         .post(TOKEN.verify, IMPORT.batch_update_metadata);
 
-    // transfer/import status checks
+    // transfer/import status checks - TODO: generating expired token errors
     app.route('/api/admin/v1/import/poll/transfer_status')
         .get(TOKEN.verify, IMPORT.poll_transfer_status);
 

@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2023 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -16,33 +16,31 @@
 
  */
 
-const CONFIG = require('../config/config'),
-    LOGGER = require('../libs/log4'),
-    HTTP = require('axios'),
-    HANDLE_HOST = CONFIG.handleHost,
-    HANDLE_PREFIX = CONFIG.handlePrefix,
-    HANDLE_USER = CONFIG.handleUsername,
-    HANDLE_PASSWORD = CONFIG.handlePwd,
-    HANDLE_TARGET = CONFIG.handleTarget,
-    HANDLE_SERVER = CONFIG.handleServer,
-    TIMEOUT = 35000;
+const CONFIG = require('../config/config');
+const LOGGER = require('../libs/log4');
+const HTTP = require('axios');
+const HANDLE_SERVICE = CONFIG.handleService;
+const HANDLE_SERVER = CONFIG.handleServer;
+const HANDLE_PREFIX = CONFIG.handlePrefix;
+const HANDLE_API_KEY = CONFIG.handleApiKey;
+const TIMEOUT = 45000;
 
 /**
  * Creates handle
- * @param pid
+ * @param uuid
  * @param callback
  */
-exports.create_handle = function (pid, callback) {
+exports.create_handle = function (uuid, callback) {
 
     'use strict';
 
-    if (pid === undefined) {
+    if (uuid === undefined) {
 
-        LOGGER.module().error('ERROR: Unable to create handle. (pid is undefined)');
+        LOGGER.module().error('ERROR: Unable to create handle. (uuid is undefined)');
 
         callback({
             error: true,
-            message: 'Unable to create handle. (pid is undefined)'
+            message: 'Unable to create handle. (uuid is undefined)'
         });
 
         return false;
@@ -52,36 +50,17 @@ exports.create_handle = function (pid, callback) {
 
         try {
 
-            let handleUrl = HANDLE_HOST + '/' + HANDLE_PREFIX + '/' + encodeURIComponent(pid) + '?target=' + HANDLE_TARGET + encodeURIComponent(pid),
-                auth = Buffer.from(HANDLE_USER + ':' + HANDLE_PASSWORD).toString('base64');
-
-            console.log(handleUrl);
-            console.log(auth);
-
-            let response = await HTTP.post(handleUrl, '', {
-                timeout: TIMEOUT,
-                headers: {
-                    'Authorization': 'Basic ' + auth
-                }
+            let handle_url = `${HANDLE_SERVICE}?uuid=${uuid}&api_key=${HANDLE_API_KEY}`;
+            let response = await HTTP.post(handle_url, '', {
+                timeout: TIMEOUT
             });
-
-            console.log(response);
 
             if (response.status === 201) {
 
-                LOGGER.module().info('INFO: [/libs/handles lib (create_handle)] Handle for object: ' + pid + ' had been created.');
+                LOGGER.module().info('INFO: [/libs/handles lib (create_handle)] Handle for object: ' + uuid + ' had been created.');
 
-                let handle = HANDLE_SERVER + HANDLE_PREFIX + '/' + pid;
+                let handle = HANDLE_SERVER + HANDLE_PREFIX + '/' + uuid;
                 callback(handle);
-
-            } else if (response.status === 409) {
-
-                LOGGER.module().error('ERROR: [/libs/handles lib (create_handle)] Handle already exists (conflict)');
-
-                callback({
-                    error: true,
-                    message: 'Error: [/libs/handles lib (create_handle)] Handle already exists (conflict)'
-                });
 
             } else {
 
@@ -110,20 +89,20 @@ exports.create_handle = function (pid, callback) {
 
 /**
  * Updates handle
- * @param pid
+ * @param uuid
  * @param callback
  */
-exports.update_handle = function (pid, callback) {
+exports.update_handle = function (uuid, callback) {
 
     'use strict';
 
-    if (pid === undefined) {
+    if (uuid === undefined) {
 
-        LOGGER.module().error('ERROR: [/libs/handles lib (update_handle)] Unable to create handle. (pid is undefined)');
+        LOGGER.module().error('ERROR: [/libs/handles lib (update_handle)] Unable to create handle. (uuid is undefined)');
 
         callback({
             error: true,
-            message: 'ERROR: [/libs/handles lib (update_handle)] Unable to update handle. (pid is undefined)'
+            message: 'ERROR: [/libs/handles lib (update_handle)] Unable to update handle. (uuid is undefined)'
         });
 
         return false;
@@ -133,21 +112,16 @@ exports.update_handle = function (pid, callback) {
 
         try {
 
-            let handleUrl = HANDLE_HOST + '/' + HANDLE_PREFIX + '/' + encodeURIComponent(pid) + '?urlappend=' + HANDLE_TARGET + encodeURIComponent(pid),
-                auth = Buffer.from(HANDLE_USER + ':' + HANDLE_PASSWORD).toString('base64');
-
-            let response = await HTTP.put(handleUrl, '', {
-                timeout: TIMEOUT,
-                headers: {
-                    'Authorization': 'Basic ' + auth
-                }
+            let handle_url = `${HANDLE_SERVICE}?uuid=${uuid}&api_key=${HANDLE_API_KEY}`;
+            let response = await HTTP.put(handle_url, '', {
+                timeout: TIMEOUT
             });
 
-            if (response.status === 204) {
+            if (response.status === 201) {
 
-                LOGGER.module().info('INFO: [/libs/handles lib (update_handle)] Handle for object: ' + pid + ' had been updated.');
+                LOGGER.module().info('INFO: [/libs/handles lib (update_handle)] Handle for object: ' + uuid + ' had been updated.');
 
-                let handle = HANDLE_SERVER + HANDLE_PREFIX + '/' + pid;
+                let handle = HANDLE_SERVER + HANDLE_PREFIX + '/' + uuid;
                 callback(handle);
 
             } else {
