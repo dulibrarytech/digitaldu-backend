@@ -144,9 +144,11 @@ const importModule = (function () {
             html += '<td width="15%" ' + alignTd + '>' + DOMPurify.sanitize(moment(data[i].created).tz('America/Denver').format('MM-DD-YYYY, h:mm:ss a')) + '</td>';
 
             if (data[i].is_published === 0) {
-                html += '<td id="publish-import-' + data[i].pid + '" width="5%" ' + alignTd + '><a href="#" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(data[i].sip_uuid) + '\', \'object\'); return false;" title="Publish record"><i class="fa fa-cloud-upload"></i><br><small>Unpublished</small></a></td>';
+                html += '<td id="publish-import-' + data[i].pid + '" width="15%" ' + alignTd + '><a href="#" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(data[i].sip_uuid) + '\', \'object\'); return false;" title="Publish record"><i class="fa fa-cloud-upload"></i><br><small>Unpublished</small></a></td>';
+                html += '<td width="15%"' + alignTd + '><a href="/dashboard/object/delete?pid=' +  DOMPurify.sanitize(data[i].pid) + '"><i class="fa fa-trash"></i><br>Delete</a></td>';
             } else if (data[i].is_published === 1) {
                 html += '<td id="publish-import-' + data[i].pid + '" width="5%" ' + alignTd + ' title="Published"><i class="fa fa-cloud"></i><br><small>Published</small></td>';
+                html += '<td width="15%"' + alignTd + '><i class="fa fa-trash"></i><br><em>Delete</em></td>';
             }
 
             html += '</tr>';
