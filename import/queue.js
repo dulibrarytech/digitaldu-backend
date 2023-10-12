@@ -433,7 +433,7 @@ exports.get_transfer_status = function (req, callback) {
 
     /*
         ** Axios is duplicating the values in the query string (creates an array)
-        * This is a workaround or that issue...
+        * This is a workaround for that issue...
      */
     var is_member_of_collection,
         transfer_uuid;

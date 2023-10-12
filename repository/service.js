@@ -80,13 +80,13 @@ exports.ping_services = function (req, callback) {
 
             try {
 
-                let endpoint = CONFIG.handleHost.replace('handle-service-0.6', '');
+                let endpoint = CONFIG.handleService.replace('/api/v1/handles', '');
                 let response = await HTTP.get(endpoint, {
                     timeout: 25000
                 });
 
                 if (response.status !== 200) {
-                    LOGGER.module().error('ERROR: [/repository/service module (ping_handle_server)] Unable to ping handle server.');
+                    LOGGER.module().error('ERROR: [/repository/service module (ping_handle_server)] Unable to ping handle service.');
                     obj.handle_server = 'down';
                 } else if (response.status === 200) {
                     obj.handle_server = 'up';
