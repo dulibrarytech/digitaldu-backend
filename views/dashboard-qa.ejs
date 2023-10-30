@@ -18,7 +18,7 @@
         <div class="right_col" role="main">
             <div class="page-title">
                 <div class="title_left">
-                    <h3> Automated QA</h3>
+                    <h3> Ingests</h3>
                 </div>
             </div>
             <div class="clearfix"></div>
@@ -67,7 +67,6 @@
 <script src="../../app/dom.module.js"></script>
 <script src="../../app/config.module.js"></script>
 <script src="../../app/api.module.js"></script>
-<!--<script src="../../app/endpoints.module.js"></script>-->
 <script src="../../app/http.module.qa.js"></script>
 <script src="../../app/helper.module.js"></script>
 <script src="../../app/user.module.js"></script>
@@ -77,6 +76,9 @@
 <script>
     qaModule.init();
     helperModule.onLoadVisibility('.x_panel', 250);
+    setTimeout(() => {
+        qaModule.check_ingest();
+    }, 250);
 </script>
 </body>
 </html>

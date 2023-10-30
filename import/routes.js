@@ -89,4 +89,7 @@ module.exports = function (app) {
 
     app.route('/api/admin/v1/import/poll/fail_queue')
         .get(TOKEN.verify, IMPORT.poll_fail_queue);
+
+    app.route('/api/admin/v1/import/check')
+    .get(IMPORT.check_ingest);  // TOKEN.verify,
 };

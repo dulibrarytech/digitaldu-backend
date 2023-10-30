@@ -16,7 +16,7 @@
 
  */
 
-const qaModule = (function() {
+const qaModule = (function () {
 
     'use strict';
 
@@ -54,7 +54,7 @@ const qaModule = (function() {
                 }
                  */
 
-            } catch(error) {
+            } catch (error) {
                 console.log(error.message);
                 authModule.sessionExpired();
             }
@@ -181,7 +181,7 @@ const qaModule = (function() {
      * Displays QA status
      * @param folder
      * @param data
-    */
+     */
     const display_qa_status = (folder, data) => {
         console.log('display_qa_status: ', data);
         let uuid = data.uuid;
@@ -366,7 +366,7 @@ const qaModule = (function() {
                 status += `<p><i class="fa fa-exclamation" style="color: red"></i> ${file_results.file_count_results.errors.length} file error(s) found out of ${file_results.file_count_results.result} files:</p>`;
                 status += '<ul>';
 
-                for (let i=0;i<file_results.file_count_results.errors.length;i++) {
+                for (let i = 0; i < file_results.file_count_results.errors.length; i++) {
                     status += `<li>${file_results.file_count_results.errors[i]}</li>`;
                 }
 
@@ -378,7 +378,7 @@ const qaModule = (function() {
                 status += `<p><i class="fa fa-exclamation" style="color: red"></i> ${metadata_check_results.length} file error(s) found:</p>`;
                 status += '<ul>';
 
-                for (let i=0;i<metadata_check_results.length;i++) {
+                for (let i = 0; i < metadata_check_results.length; i++) {
                     status += `<li>${metadata_check_results[i].uuid_error} - ${metadata_check_results[i].field_error}</li>`;
                 }
 
@@ -401,6 +401,30 @@ const qaModule = (function() {
 
         } catch (error) {
             console.log('ERROR: ', error);
+        }
+    };
+
+    /**
+     * Check if an ingest is in progress
+     */
+    obj.check_ingest = async function () {
+
+        let message = '';
+        let url = '/api/admin/v1/import/check';
+        let token = authModule.getUserToken();
+        let response = await httpQAModule.req({
+            method: 'GET',
+            url: url,
+            headers: {
+                'Content-Type': 'application/json',
+                'x-access-token': token
+            }
+        });
+
+        if (response.data.result > 0) {
+            message = '<div class="alert alert-info"><i class="fa fa-exclamation"></i> There is an ingest in progress</div>';
+            document.querySelector('#message').innerHTML = message;
+            document.querySelector('#qa-folders').style.visibility = 'hidden';
         }
     };
 

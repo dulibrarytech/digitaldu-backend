@@ -1002,7 +1002,6 @@ const update_db_mods = function (sip_uuid, mods, callback) {
         });
 };
 
-// TODO:
 exports.get_completed_imports = function (callback) {
     // fiscal year
     // SELECT count(id) FROM tbl_objects WHERE object_type = 'object' AND is_active = 1 AND created BETWEEN '2021-07-01' AND LAST_DAY('2022-06-30');

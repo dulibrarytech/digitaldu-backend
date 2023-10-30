@@ -1514,6 +1514,42 @@ exports.create_repo_record = function (req, callback) {
 };
 
 /**
+ * Checks if there is an ingest in progress
+ */
+exports.check_ingest = async function () {
+
+    try {
+
+        let result = 0;
+        const AQC = await DBQ('tbl_archivematica_queue')
+        .count('id as count');
+
+        const DQC = await DBQ('tbl_duracloud_queue')
+        .count('id as count');
+
+        const QAQC = await DBQ('tbl_qa_queue')
+        .count('id as count');
+
+        if (parseInt(QAQC[0].count) > 0) {
+            result = 1;
+        }
+
+        if (parseInt(AQC[0].count) > 0) {
+            result = 1;
+        }
+
+        if (parseInt(DQC[0].count) > 0) {
+            result = 1;
+        }
+
+        return result;
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/import/queue module (check_ingest) Unable to check ingest ' + error);
+    }
+};
+
+/**
  * Gets import record count
  * @param req
  * @param callback

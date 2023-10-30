@@ -677,7 +677,7 @@ exports.run_qa = (folder, callback) => {
                 let result = await QA_TASK.qa_status(DB_QUEUE, TABLE);
 
                 LOGGER.module().info('INFO: [/qa/service module (run_qa)] Checking for packages...');
-
+                console.log(result);
                 if (result.is_error === 1) {
                     clearInterval(run_qa_timer);
                     LOGGER.module().info('INFO: [/qa/service module (run_qa)] QA Error encountered');

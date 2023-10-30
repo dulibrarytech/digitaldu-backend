@@ -31,6 +31,15 @@ exports.list = function (req, res) {
 
  */
 
+exports.check_ingest = async function (req, res) {
+
+    let result = await IMPORT.check_ingest();
+
+    res.status(200).send({
+        result: result
+    });
+};
+
 exports.queue_objects = function (req, res) {
     IMPORT.queue_objects(req, function (data) {
         res.status(data.status).send(data.data);
