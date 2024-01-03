@@ -38,6 +38,7 @@ module.exports = {
     dbQueueUser: process.env.DB_QUEUE_USER,
     dbQueuePassword: process.env.DB_QUEUE_PASSWORD,
     dbQueueName: process.env.DB_QUEUE_NAME,
+    ingestServiceHost: process.env.INGEST_SERVICE_HOST,
     elasticSearch: process.env.ELASTIC_SEARCH,
     elasticSearchFrontIndex: process.env.ELASTIC_SEARCH_FRONT_INDEX,
     elasticSearchBackIndex: process.env.ELASTIC_SEARCH_BACK_INDEX,

@@ -422,7 +422,7 @@ const qaModule = (function () {
         });
 
         if (response.data.result > 0) {
-            message = '<div class="alert alert-info"><i class="fa fa-exclamation"></i> There is an ingest in progress</div>';
+            message = '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> There is an ingest currently being processed. Got to \'import status\' to view its progress.</div>';
             document.querySelector('#message').innerHTML = message;
             document.querySelector('#qa-folders').style.visibility = 'hidden';
         }

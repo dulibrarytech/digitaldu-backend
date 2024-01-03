@@ -48,7 +48,7 @@ exports.get_records = function (req, callback) {
     let type = req.query.type;
     let where = {};
 
-    where.is_active = 1;
+    // where.is_active = 1;
     where.object_type = 'object';
 
     if (type === 'collection') {
@@ -58,7 +58,7 @@ exports.get_records = function (req, callback) {
     }
 
     DB(REPO_OBJECTS)
-        .select('sip_uuid', 'handle', 'uri', 'object_type', 'display_record')
+        .select('sip_uuid', 'handle', 'uri', 'object_type', 'mods', 'display_record')
         .where(where)
         .then(function (data) {
 

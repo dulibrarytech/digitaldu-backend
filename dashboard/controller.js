@@ -76,30 +76,11 @@ exports.update_dashboard_thumbnail = function (req, res) {
 };
 
 exports.get_dashboard_import = function (req, res) {
-    res.render('dashboard-import', {
-        host: CONFIG.host,
-        appname: CONFIG.appName,
-        appversion: CONFIG.appVersion,
-        organization: CONFIG.organization
-    });
-};
-
-exports.get_dashboard_import_files = function (req, res) {
-    res.render('dashboard-import-files', {
-        host: CONFIG.host,
-        appname: CONFIG.appName,
-        appversion: CONFIG.appVersion,
-        organization: CONFIG.organization
-    });
+    res.redirect(CONFIG.ingestServiceHost + '/dashboard/ingest' + '?api_key=' + CONFIG.apiKey);
 };
 
 exports.get_dashboard_import_status = function (req, res) {
-    res.render('dashboard-import-status', {
-        host: CONFIG.host,
-        appname: CONFIG.appName,
-        appversion: CONFIG.appVersion,
-        organization: CONFIG.organization
-    });
+    res.redirect(CONFIG.ingestServiceHost + '/dashboard/ingest/status' + '?api_key=' + CONFIG.apiKey);
 };
 
 exports.get_dashboard_import_complete = function (req, res) {
