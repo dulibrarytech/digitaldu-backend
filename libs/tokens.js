@@ -57,8 +57,10 @@ exports.verify = function (req, res, next) {
         JWT.verify(token, CONFIG.tokenSecret, function (error, decoded) {
 
             if (error) {
+                console.log('SSO test');
                 LOGGER.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify token ' + error.message);
                 res.redirect(CONFIG.ssoUrl + '?app_url=' + CONFIG.ssoResponseUrl);
+                // res.redirect(CONFIG.host + 'login');
                 return false;
             }
 

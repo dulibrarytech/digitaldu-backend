@@ -49,11 +49,6 @@ module.exports = function (app) {
     app.route('/dashboard/ingest')
         .get(DASHBOARD.get_dashboard_import);
 
-    /*
-    app.route('/dashboard/import/files')
-        .get(DASHBOARD.get_dashboard_import_files);
-    */
-
     app.route('/dashboard/ingest/status')
         .get(DASHBOARD.get_dashboard_import_status);
 
