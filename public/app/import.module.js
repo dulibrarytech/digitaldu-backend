@@ -118,13 +118,14 @@ const importModule = (function () {
                 continue;
             }
 
+            let id = data[i].id;
             let mods = JSON.parse(data[i].mods);
             let title = mods.title;
             let identifier = mods.identifiers[0].identifier;
             let display_record = JSON.parse(data[i].display_record);
             let token = userModule.getUserToken();
 
-            // html += '<td width="25%" ' + alignTd + '><a href="/dashboard/objects/unpublished?pid=' + data[i].is_member_of_collection + '&unpublished">' + DOMPurify.sanitize(data[i].is_member_of_collection) + '</a></td>'; // data[i].collection_title
+            html += '<td width="10%" ' + alignTd + '>' + id + '</td>';
 
             if (data[i].sip_uuid !== null) {
 
@@ -157,9 +158,10 @@ const importModule = (function () {
         domModule.html('#complete-records', html);
         domModule.html('#message', null);
         domModule.html('.loading', null);
+
         $('#completed-imports-table').DataTable({
             'pageLength': 25,
-            'order': [[ 2, 'desc' ]]
+            'order': [[ 0, 'desc' ]]
         });
 
         document.querySelector('#completed-imports-table-th-head').style.visibility = 'visible';
