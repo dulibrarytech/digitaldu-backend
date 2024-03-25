@@ -30,6 +30,7 @@ exports.get_admin_objects = function (req, res) {
     if (cache) {
         res.send(cache);
     } else {
+
         SERVICE.get_admin_objects(req, function (data) {
             CACHE.cache_request(req, data.data);
             res.status(data.status).send(data.data);

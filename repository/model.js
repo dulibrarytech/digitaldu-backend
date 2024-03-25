@@ -18,19 +18,19 @@
 
 'use strict';
 
-const CONFIG = require('../config/config'),
-    HTTP = require('../libs/http'),
-    ASYNC = require('async'),
-    UUID = require('node-uuid'),
-    VALIDATOR = require('validator'),
-    HANDLES = require('../libs/handles'),
-    MODS = require('../libs/display-record'),
-    ARCHIVEMATICA = require('../libs/archivematica'),
-    SERVICE = require('.//service'),
-    LOGGER = require('../libs/log4'),
-    CACHE = require('../libs/cache'),
-    DB = require('../config/db')(),
-    REPO_OBJECTS = 'tbl_objects';
+const CONFIG = require('../config/config');
+const HTTP = require('../libs/http');
+const ASYNC = require('async');
+const UUID = require('node-uuid');
+const VALIDATOR = require('validator');
+const HANDLES = require('../libs/handles');
+const MODS = require('../libs/display-record');
+const ARCHIVEMATICA = require('../libs/archivematica');
+const SERVICE = require('.//service');
+const LOGGER = require('../libs/log4');
+const CACHE = require('../libs/cache');
+const DB = require('../config/db')();
+const REPO_OBJECTS = 'tbl_objects';
 
 /**
  * Moves records from admin to public index

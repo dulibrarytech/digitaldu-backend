@@ -18,20 +18,22 @@
 
 'use strict';
 
-const HTTP = require('http'),
-    EXPRESS = require('express'),
-    COMPRESS = require('compression'),
-    BODYPARSER = require('body-parser'),
-    METHODOVERRIDE = require('method-override'),
-    HELMET = require('helmet'),
-    XSS = require('../libs/dom'),
-    CACHE = require('../libs/cache'),
-    DIRS = require('../libs/directories');
+const HTTP = require('http');
+const EXPRESS = require('express');
+const COMPRESS = require('compression');
+const BODYPARSER = require('body-parser');
+const METHODOVERRIDE = require('method-override');
+const HELMET = require('helmet');
+const XSS = require('../libs/dom');
+const CACHE = require('../libs/cache');
+const DIRS = require('../libs/directories');
+const CORS = require('cors');
+const CONFIG = require('../config/config');
 
 module.exports = function() {
 
-    const APP = EXPRESS(),
-        SERVER = HTTP.createServer(APP);
+    const APP = EXPRESS();
+    const SERVER = HTTP.createServer(APP);
 
     let view_cache = true;
 
@@ -57,6 +59,22 @@ module.exports = function() {
     APP.set('view engine', 'ejs');
     APP.set('view cache', view_cache);
 
+    const CORS_OPTIONS = function (req, callback) {
+
+        const ALLOW = ['https://' + CONFIG.host, 'http://localhost'];
+        let cors_options;
+
+        if (ALLOW.indexOf(req.header('Origin')) !== -1) {
+            cors_options = {origin: true};
+        } else {
+            cors_options = {origin: false};
+        }
+
+        callback(null, cors_options);
+    };
+
+    APP.use(CORS(CORS_OPTIONS));
+
     require('../auth/routes.js')(APP);
     require('../users/routes.js')(APP);
     require('../repository/routes.js')(APP);
@@ -72,6 +90,10 @@ module.exports = function() {
 
     CACHE.clear_cache();
     DIRS.check_directories();
+
+    APP.get('*', function(req, res){
+        res.status(404).send('Resource Not Found');
+    });
 
     SERVER.listen(process.env.APP_PORT);
 

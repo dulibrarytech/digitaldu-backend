@@ -18,17 +18,17 @@
 
 'use strict';
 
-const CONFIG = require('../config/config'),
-    ARCHIVEMATICA = require('../libs/archivematica'),
-    ARCHIVESSPACE = require('../libs/archivespace'),
-    DURACLOUD = require('../libs/duracloud'),
-    HTTP = require('axios'),
-    LOGGER = require('../libs/log4'),
-    CACHE = require('../libs/cache'),
-    ASYNC = require('async'),
-    VALIDATOR = require('validator'),
-    ES = require('elasticsearch'),
-    CLIENT = new ES.Client({
+const CONFIG = require('../config/config');
+const ARCHIVEMATICA = require('../libs/archivematica');
+const ARCHIVESSPACE = require('../libs/archivespace');
+const DURACLOUD = require('../libs/duracloud');
+const HTTP = require('axios');
+const LOGGER = require('../libs/log4');
+const CACHE = require('../libs/cache');
+const ASYNC = require('async');
+const VALIDATOR = require('validator');
+const ES = require('elasticsearch');
+const CLIENT = new ES.Client({
         host: CONFIG.elasticSearch
     });
 const {file} = require("elasticsearch/src/lib/loggers");

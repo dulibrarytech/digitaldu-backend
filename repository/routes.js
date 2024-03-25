@@ -18,8 +18,8 @@
 
 'use strict';
 
-const REPO = require('.//controller'),
-    TOKEN = require('../libs/tokens');
+const REPO = require('.//controller');
+const TOKEN = require('../libs/tokens');
 
 module.exports = function (app) {
 
