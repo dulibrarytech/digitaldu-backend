@@ -113,14 +113,14 @@ const get_user = function (req, callback) {
 exports.check_auth_user = function (username, callback) {
 
     DB(USERS)
-        .select('id')
+        .select('id', 'du_id')
         .where({
             du_id: username,
             is_active: 1
         })
         .then(function (data) {
 
-            if (data.length === 1) {
+            if (data.length === 1 && data[0].du_id === username) {
                 callback({
                     auth: true,
                     data: data[0].id
