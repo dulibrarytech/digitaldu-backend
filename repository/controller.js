@@ -18,8 +18,8 @@
 
 'use strict';
 
-const REPO = require('../repository/model'),
-    SERVICE = require('../repository/service'),
+const REPO = require('.//model'),
+    SERVICE = require('.//service'),
     CACHE = require('../libs/cache'),
     PATH = require('path');
 

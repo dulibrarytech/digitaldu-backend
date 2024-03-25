@@ -31,6 +31,12 @@ module.exports = function (app) {
         res.send('User-agent: *\nDisallow: /');
     });
 
+    app.route('/api/v1/utils/convert')
+        .get(UTILS.convert);
+
+    app.route('/api/v1/utils/clear_image_cache')
+        .get(UTILS.remove_cached_image);
+
     app.route('/api/admin/v1/utils/reindex')
         .post(TOKEN.verify, UTILS.reindex);
 

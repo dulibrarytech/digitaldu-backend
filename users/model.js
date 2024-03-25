@@ -18,9 +18,9 @@
 
 'use strict';
 
-const LOGGER = require('../libs/log4'),
-    DB =require('../config/db')(),
-    USERS = 'tbl_users';
+const LOGGER = require('../libs/log4');
+const DB =require('../config/db')();
+const USERS = 'tbl_users';
 
 /**
  * Gets all users
@@ -57,8 +57,7 @@ exports.get_users = function (req, callback) {
             });
         })
         .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/users/model module (get_users)] unable to get users ' + error);
-            throw 'FATAL: [/users/model module (get_users)] unable to get users ' + error;
+            LOGGER.module().error('ERROR: [/users/model module (get_users)] unable to get users ' + error.message);
         });
 };
 
@@ -86,15 +85,23 @@ const get_user = function (req, callback) {
         })
         .then(function (data) {
 
-            callback({
-                status: 200,
-                data: data,
-                message: 'User retrieved.'
-            });
+            if (data.length === 1 && data[0].id === parseInt(id)) {
+                callback({
+                    status: 200,
+                    data: data,
+                    message: 'User retrieved.'
+                });
+            } else {
+                callback({
+                    status: 200,
+                    data: data,
+                    message: 'User retrieved.'
+                });
+            }
+
         })
         .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/users/model module (get_user)] unable to get user ' + error);
-            throw 'FATAL: [/users/model module (get_user)] unable to get user ' + error;
+            LOGGER.module().error('ERROR: [/users/model module (get_user)] unable to get user ' + error.message);
         });
 };
 

@@ -156,11 +156,37 @@ exports.index_records = function (req, callback) {
                                 })
                                 .catch(function (error) {
                                     LOGGER.module().fatal('FATAL: [/indexer/model module (index_records)] unable to update is_indexed field ' + error);
-                                    throw 'FATAL: [/indexer/model module (index_records)] unable to update is_indexed field ' + error;
+                                    // throw 'FATAL: [/indexer/model module (index_records)] unable to update is_indexed field ' + error;
                                 });
 
                         } else {
                             LOGGER.module().error('ERROR: [/indexer/model module (index_records)] unable to index record');
+
+                            DB(REPO_OBJECTS)
+                            .where({
+                                pid: record.pid
+                            })
+                            .update({
+                                is_indexed: 2
+                            })
+                            .then(function (data) {
+
+                                if (data === 1) {
+
+                                    setTimeout(function () {
+                                        // index next record
+                                        index(index_name);
+                                    }, INDEX_TIMER);
+
+                                } else {
+                                    LOGGER.module().error('ERROR: [/indexer/model module (index_records)] more than one record was updated');
+                                }
+
+                            })
+                            .catch(function (error) {
+                                LOGGER.module().fatal('FATAL: [/indexer/model module (index_records)] unable to update is_indexed field ' + error);
+                                throw 'FATAL: [/indexer/model module (index_records)] unable to update is_indexed field ' + error;
+                            });
                         }
                     });
                 });

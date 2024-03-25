@@ -18,12 +18,25 @@
 
 'use strict';
 
-const UTILS = require('../utils/model'),
-    CACHE = require('../libs/cache');
+const UTILS = require('../utils/model');
+const CONVERT = require('../utils/convert');
+const CACHE = require('../libs/cache');
 
 exports.default = function (req, res) {
     res.status(403).send({
         info: 'University of Denver Libraries - Digital Object Repository'
+    });
+};
+
+exports.convert = function (req, res) {
+    CONVERT.convert(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+exports.remove_cached_image = function (req, res) {
+    CONVERT.remove_cached_image(req, function (data) {
+        res.status(data.status).send(data.data);
     });
 };
 

@@ -18,18 +18,35 @@
 
 'use strict';
 
-const CONFIG = require('../config/config'),
-    TOKEN = require('../libs/tokens'),
-    // SERVICE = require('../auth/service'),
-    USER = require('../users/model'),
-    CACHE = require('../libs/cache');
+const CONFIG = require('../config/config');
+const TOKEN = require('../libs/tokens');
+const USER = require('../users/model');
+const CACHE = require('../libs/cache');
+const VALIDATOR = require('validator');
 
 exports.sso = (req, res) => {
 
     const SSO_HOST = req.body.HTTP_HOST;
     const USERNAME = req.body.employeeID;
+    delete req.body;
 
-    if (SSO_HOST === CONFIG.ssoHost && USERNAME !== undefined) {
+    if (USERNAME === undefined || SSO_HOST === undefined) {
+        res.status(403).send({
+            message: 'You do not have access to this resource.'
+        });
+        return false;
+    }
+
+    if (!VALIDATOR.isNumeric(USERNAME) || !VALIDATOR.isFQDN(SSO_HOST)) {
+
+        res.status(403).send({
+            message: 'You do not have access to this resource.'
+        });
+
+        return false;
+    }
+
+    if (SSO_HOST === CONFIG.ssoHost) {
 
         let token = TOKEN.create(USERNAME);
         token = encodeURIComponent(token);

@@ -18,6 +18,7 @@ lib-cov
 .env
 .env_new
 .env_2.0
+.env_bkup
 
 # shell scripts
 # *.sh

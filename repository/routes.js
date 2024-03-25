@@ -18,7 +18,7 @@
 
 'use strict';
 
-const REPO = require('../repository/controller'),
+const REPO = require('.//controller'),
     TOKEN = require('../libs/tokens');
 
 module.exports = function (app) {
