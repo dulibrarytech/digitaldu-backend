@@ -18,10 +18,41 @@
 
 'use strict';
 
-const SEARCH = require('../search/service');
+const SERVICE = require('../search/service');
 
 exports.get_search_results = function (req, res) {
-    SEARCH.get_search_results(req, function (data) {
+
+    if (req.query.q === undefined) {
+
+        res.status(400).send({
+            status: 400,
+            message: 'Bad request.'
+        });
+
+        return false;
+    }
+
+    let search = {};
+    let total_on_page = 10;
+
+    if (req.query.total_on_page !== undefined) {
+        total_on_page = req.query.total_on_page;
+    }
+
+    search.q = req.query.q;
+    search.from = req.query.page;
+    search.size = total_on_page;
+
+    SERVICE.get_search_results(search, function (data) {
         res.status(data.status).send(data.data);
     });
 };
+
+/*
+exports.get_search_results = function (req, res) {
+    SERVICE.get_search_results(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+ */

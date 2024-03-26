@@ -18,11 +18,43 @@
 
 'use strict';
 
-const REPO = require('.//model'),
-    SERVICE = require('.//service'),
-    CACHE = require('../libs/cache'),
-    PATH = require('path');
+const MODEL = require('../repository/model');
+const SERVICE = require('../repository/service');
+const CACHE = require('../libs/cache');
+const PATH = require('path');
 
+exports.get_records = function (req, res, callback) {
+
+    let cache = CACHE.get_cache(req);
+
+    if (cache) {
+        res.send(cache);
+    } else {
+
+        if (req.query.pid === undefined || req.query.pid.length === 0) {
+
+            res.status(400).send({
+                status: 400,
+                message: 'Bad request.'
+            });
+
+            return false;
+        }
+
+        const pid = req.query.pid;
+        const total_on_page = 10;
+        let search = {};
+        search.from = req.query.page;
+        search.size = total_on_page;
+
+        SERVICE.get_records(pid, search, function (data) {
+            CACHE.cache_request(req, data.data);
+            res.status(data.status).send(data.data);
+        });
+    }
+};
+
+/*
 exports.get_admin_objects = function (req, res) {
 
     let cache = CACHE.get_cache(req);
@@ -37,15 +69,16 @@ exports.get_admin_objects = function (req, res) {
         });
     }
 };
+*/
 
 exports.get_display_record = function (req, res) {
-    REPO.get_display_record(req, function (data) {
+    MODEL.get_display_record(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
 
 exports.create_collection_object = function (req, res) {
-    REPO.create_collection_object(req, function (data) {
+    MODEL.create_collection_object(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
@@ -58,26 +91,26 @@ exports.update_thumbnail = function (req, res) {
 
 exports.publish_objects = function (req, res) {
     CACHE.clear_cache();
-    REPO.publish_objects(req, function (data) {
+    MODEL.publish_objects(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
 
 exports.unpublish_objects = function (req, res) {
     CACHE.clear_cache();
-    REPO.unpublish_objects(req, function (data) {
+    MODEL.unpublish_objects(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
 
 exports.reset_display_record = function (req, res) {
-    REPO.reset_display_record(req, function (data) {
+    MODEL.reset_display_record(req, function (data) {
         res.status(data.status).send(data);
     });
 };
 
 exports.delete_object = function (req, res) {
-    REPO.delete_object(req, function (data) {
+    MODEL.delete_object(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
@@ -113,7 +146,7 @@ exports.get_viewer = function (req, res) {
 };
 
 exports.save_transcript = function (req, res) {
-    REPO.save_transcript(req, function (data) {
+    MODEL.save_transcript(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };

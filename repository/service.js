@@ -27,11 +27,57 @@ const LOGGER = require('../libs/log4');
 const CACHE = require('../libs/cache');
 const ASYNC = require('async');
 const VALIDATOR = require('validator');
-const ES = require('elasticsearch');
-const CLIENT = new ES.Client({
-        host: CONFIG.elasticSearch
-    });
-const {file} = require("elasticsearch/src/lib/loggers");
+const ES_TASKS = require('../libs/elasticsearch');
+const SEARCH_TASKS = require('../search/tasks/search_tasks');
+
+/**
+ * Gets objects by collection
+ * @param pid
+ * @param search (q, page, total_on_page, sort, index, query)
+ * @param callback
+ */
+exports.get_records = function (pid, search, callback) {
+
+    const ES = new ES_TASKS();
+    const OBJ = ES.get_es();
+    const TASK = new SEARCH_TASKS(OBJ.es_client);
+    const is_member_of_collection = pid;
+
+    search.index = OBJ.es_config.elasticsearch_index_back;
+
+    if (search.sort === undefined) {
+        search.sort = 'title.keyword:asc';
+    }
+
+    if (search.from === undefined) {
+        search.from = 0;
+    } else {
+        search.from = (search.from - 1) * search.size;
+    }
+
+    search.body = {
+        'query': {
+            'bool': {
+                'must': {
+                    'match': {
+                        'is_member_of_collection.keyword': is_member_of_collection
+                    }
+                }
+            }
+        }
+    };
+
+    (async function() {
+
+        const SEARCH_RESULTS = await TASK.search_records(search);
+
+        callback({
+            status: 200,
+            data: SEARCH_RESULTS
+        });
+
+    })();
+};
 
 /**
  * Pings third-party services to determine availability
@@ -386,6 +432,7 @@ exports.get_viewer = function (req, callback) {
  * @param req
  * @param callback
  */
+/*
 exports.get_admin_objects = function (req, callback) {
 
     if (req.query.pid === undefined || req.query.pid.length === 0) {
@@ -451,6 +498,7 @@ exports.get_admin_objects = function (req, callback) {
         });
     });
 };
+*/
 
 /**
  * Gets unpublished objects by collection

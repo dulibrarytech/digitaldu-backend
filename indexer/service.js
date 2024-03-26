@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2024 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,16 +18,19 @@
 
 'use strict';
 
-const CONFIG = require('../config/config'),
-    LOGGER = require('../libs/log4'),
-    ASYNC = require('async'),
-    ES = require('elasticsearch'),
-    FS = require('fs'),
-    ES_MAPPINGS = './indexer/mappings.json',
+const CONFIG = require('../config/config');
+const LOGGER = require('../libs/log4');
+const ASYNC = require('async');
+const FS = require('fs');
+const ES_MAPPINGS = './indexer/mappings.json';
+const {Client} = require("@elastic/elasticsearch");
+const ES_CONFIG = require('../config/elasticsearch_config')();
+/*
     CLIENT = new ES.Client({
         host: CONFIG.elasticSearch,
         requestTimeout: 60000*4
     });
+*/
 
 /**
  * Create new index and mapping

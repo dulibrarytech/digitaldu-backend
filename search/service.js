@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2024 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,17 +18,50 @@
 
 'use strict';
 
-const CONFIG = require('../config/config'),
-    ES = require('elasticsearch'),
-    CLIENT = new ES.Client({
-        host: CONFIG.elasticSearch
-    });
+const ES_TASKS = require('../libs/elasticsearch');
+const SEARCH_TASKS = require('../search/tasks/search_tasks');
+
+/**
+ * Full-text search
+ * @param search
+ * @param callback
+ */
+exports.get_search_results = function (search, callback) {
+
+    const ES = new ES_TASKS();
+    const OBJ = ES.get_es();
+    const TASK = new SEARCH_TASKS(OBJ.es_client);
+
+    search.index = OBJ.es_config.elasticsearch_index_back;
+
+    if (search.q.length === 0) {
+        search.q = '*:*';
+    }
+
+    if (search.from === undefined) {
+        search.from = 0;
+    } else {
+        search.from = (search.from - 1) * search.size;
+    }
+
+    (async function() {
+
+        const SEARCH_RESULTS = await TASK.search_records(search);
+
+        callback({
+            status: 200,
+            data: SEARCH_RESULTS
+        });
+
+    })();
+};
 
 /**
  * Full-text search
  * @param req
  * @param callback
  */
+/*
 exports.get_search_results = function (req, callback) {
 
     if (req.query.q === undefined) {
@@ -75,3 +108,4 @@ exports.get_search_results = function (req, callback) {
         callback(error);
     });
 };
+*/

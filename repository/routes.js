@@ -18,49 +18,49 @@
 
 'use strict';
 
-const REPO = require('.//controller');
+const CONTROLLER = require('../repository/controller');
 const TOKEN = require('../libs/tokens');
 
 module.exports = function (app) {
 
-    app.route('/api/admin/v1/repo/objects')
-        .get(TOKEN.verify, REPO.get_admin_objects);
+    app.route('/api/v2/repo/records')
+    .get(TOKEN.verify, CONTROLLER.get_records);
 
     app.route('/api/admin/v1/repo/object')
-        .get(TOKEN.verify, REPO.get_display_record)
-        .post(TOKEN.verify, REPO.create_collection_object)
-        .delete(TOKEN.verify, REPO.delete_object);
+    .get(TOKEN.verify, CONTROLLER.get_display_record)
+    .post(TOKEN.verify, CONTROLLER.create_collection_object)
+    .delete(TOKEN.verify, CONTROLLER.delete_object);
 
     // gets thumbnails from duracloud
     app.route('/api/admin/v1/repo/object/thumbnail')
-        .get(TOKEN.verify, REPO.get_thumbnail)
-        .post(TOKEN.verify, REPO.update_thumbnail);
+    .get(TOKEN.verify, CONTROLLER.get_thumbnail)
+    .post(TOKEN.verify, CONTROLLER.update_thumbnail);
 
     // gets thumbnails from TN service
     app.route('/api/admin/v1/repo/object/tn')
-        .get(TOKEN.verify, REPO.get_tn);
+    .get(TOKEN.verify, CONTROLLER.get_tn);
 
     app.route('/api/admin/v1/repo/object/image')
-        .get(TOKEN.verify, REPO.get_image);
+    .get(TOKEN.verify, CONTROLLER.get_image);
 
     app.route('/api/admin/v1/repo/object/viewer')
-        .get(TOKEN.verify, REPO.get_viewer);
+    .get(TOKEN.verify, CONTROLLER.get_viewer);
 
     app.route('/api/admin/v1/repo/object/unpublished')
-        .get(TOKEN.verify, REPO.get_unpublished_admin_objects);
+    .get(TOKEN.verify, CONTROLLER.get_unpublished_admin_objects);
 
     app.route('/api/admin/v1/repo/object/transcript')
-        .put(TOKEN.verify, REPO.save_transcript);
+    .put(TOKEN.verify, CONTROLLER.save_transcript);
 
     app.route('/api/admin/v1/repo/publish')
-        .post(TOKEN.verify, REPO.publish_objects);
+    .post(TOKEN.verify, CONTROLLER.publish_objects);
 
     app.route('/api/admin/v1/repo/unpublish')
-        .post(TOKEN.verify, REPO.unpublish_objects);
+    .post(TOKEN.verify, CONTROLLER.unpublish_objects);
 
     app.route('/api/admin/v1/repo/metadata/reset')
-        .post(TOKEN.verify, REPO.reset_display_record);
+    .post(TOKEN.verify, CONTROLLER.reset_display_record);
 
     app.route('/api/admin/v1/repo/ping/services')
-        .get(TOKEN.verify, REPO.ping);
+    .get(TOKEN.verify, CONTROLLER.ping);
 };

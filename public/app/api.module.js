@@ -30,7 +30,7 @@ const apiModule = (function () {
             authenticate: '/api/authenticate',
             users: '/api/admin/v1/users',
             repo_object: '/api/admin/v1/repo/object',
-            repo_objects: '/api/admin/v1/repo/objects',
+            repo_objects: '/api/v2/repo/records', // /api/admin/v1/repo/objects
             repo_object_thumbnail: '/api/admin/v1/repo/object/thumbnail', // gets thumbnails from duracloud
             repo_object_tn: '/api/admin/v1/repo/object/tn', // gets thumbnails from local TN service
             repo_object_image: '/api/admin/v1/repo/object/image', // gets images from image server
@@ -40,7 +40,7 @@ const apiModule = (function () {
             repo_unpublish: '/api/admin/v1/repo/unpublish',
             repo_object_unpublished: '/api/admin/v1/repo/object/unpublished',
             repo_transcript: '/api/admin/v1/repo/object/transcript',
-            search: '/api/admin/v1/search',
+            search: '/api/v2/search', // /api/admin/v1/search
             import_metadata_collection: '/api/admin/v1/import/metadata/collection',
             import_metadata_object: '/api/admin/v1/import/metadata/single',  // /api/admin/v1/import/metadata/object
             import_queue_objects: '/api/admin/v1/import/queue_objects',

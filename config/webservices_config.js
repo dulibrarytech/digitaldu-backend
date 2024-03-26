@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2024 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,12 +18,18 @@
 
 'use strict';
 
-const CONTROLLER = require('../search/controller');
-const TOKEN = require('../libs/tokens');
+const HELPER = require("../libs/helper");
+const WEBSERVICES_CONFIG = {
+    // TODO
+    sso_host: process.env.SSO_HOST,
+    sso_url: process.env.SSO_URL,
+    sso_response_url: process.env.SSO_RESPONSE_URL,
+    sso_logout_url: process.env.SSO_LOGOUT_URL
+    // TODO: ingest service
+    // TODO: image convert service
+};
 
-module.exports = function (app) {
-
-    app.route('/api/v2/search')
-    .get(TOKEN.verify, CONTROLLER.get_search_results);
-
+module.exports = () => {
+    const HELPER_TASK = new HELPER();
+    return HELPER_TASK.check_config(WEBSERVICES_CONFIG);
 };
