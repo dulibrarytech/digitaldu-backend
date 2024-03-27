@@ -386,10 +386,10 @@ exports.convert_service = function(data) {
 
             LOGGER.module().error('ERROR: [/duracloud/lib (convert_service)] convert failed. Request failed: ' + error);
 
-            callback({
+            return {
                 error: true,
                 message: 'ERROR: [/duracloud/lib (convert_service)] convert failed. Request failed: ' + error
-            });
+            };
         }
 
     })();

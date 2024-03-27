@@ -86,17 +86,9 @@ const metadataModule = (function () {
 
         if (record.object_type === 'object') {
 
-            if (record.mime_type === 'image/tiff') {
-                let thumbnail = record.thumbnail;
-                let thumbnailPath = api + endpoints.repo_object_thumbnail + '?tn=' + thumbnail + '&t=' + token;
-                tnDisplay += '<a href="/dashboard/viewer' + '?pid=' + DOMPurify.sanitize(record.pid) + '&t=' + token + '" target="_blank">';
-                tnDisplay += '<img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + thumbnailPath + '" alt="' + record.pid + '" />';
-                tnDisplay += '</a>';
-            } else {
-                tnDisplay += '<a href="' + api + endpoints.repo_object_viewer + '?uuid=' + DOMPurify.sanitize(record.pid) + '&t=' + token + '" target="_blank">';
-                tnDisplay += '<img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + api + endpoints.repo_object_tn + '?uuid=' + DOMPurify.sanitize(record.pid) + '&t=' + token + '" alt="' + record.pid + '" />';
-                tnDisplay += '</a>';
-            }
+            tnDisplay += '<a href="' + api + endpoints.repo_object_viewer + '?uuid=' + DOMPurify.sanitize(record.pid) + '&t=' + token + '" target="_blank">';
+            tnDisplay += '<img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + api + endpoints.repo_object_tn + '?uuid=' + DOMPurify.sanitize(record.pid) + '&t=' + token + '" alt="' + record.pid + '" />';
+            tnDisplay += '</a>';
 
         } else {
             tnDisplay += '<img style="max-height: 200px; max-width: 200px;" display: block; padding: 5px;" src="' + tn + '" alt="' + record.pid + '" />';
