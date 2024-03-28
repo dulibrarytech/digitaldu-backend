@@ -36,8 +36,8 @@ const apiModule = (function () {
             repo_object_image: '/api/admin/v1/repo/object/image', // gets images from image server
             repo_ping_services: '/api/admin/v1/repo/ping/services',
             repo_object_viewer: '/api/admin/v1/repo/object/viewer',  // renders viewer non-images
-            repo_publish: '/api/admin/v1/repo/publish',
-            repo_unpublish: '/api/admin/v1/repo/unpublish',
+            repo_publish: '/api/v2/repo/publish', // /api/admin/v1/repo/publish
+            repo_unpublish: '/api/v2/repo/suppress', // /api/admin/v1/repo/unpublish
             repo_object_unpublished: '/api/admin/v1/repo/object/unpublished',
             repo_transcript: '/api/admin/v1/repo/object/transcript',
             search: '/api/v2/search', // /api/admin/v1/search

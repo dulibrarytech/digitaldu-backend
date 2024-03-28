@@ -23,7 +23,7 @@ const SERVICE = require('../repository/service');
 const CACHE = require('../libs/cache');
 const PATH = require('path');
 
-exports.get_records = function (req, res, callback) {
+exports.get_records = function (req, res) {
 
     let cache = CACHE.get_cache(req);
 
@@ -54,22 +54,69 @@ exports.get_records = function (req, res, callback) {
     }
 };
 
-/*
-exports.get_admin_objects = function (req, res) {
+/**
+ * publishes records
+ * @param req
+ * @param res
+ */
+exports.publish = function (req, res) {
 
-    let cache = CACHE.get_cache(req);
-
-    if (cache) {
-        res.send(cache);
-    } else {
-
-        SERVICE.get_admin_objects(req, function (data) {
-            CACHE.cache_request(req, data.data);
-            res.status(data.status).send(data.data);
+    if (req.body.pid === undefined || req.body.type === undefined) {
+        res.status(400).send({
+            message: 'Bad Request'
         });
+        return false;
     }
+
+    const uuid = req.body.pid;
+    const type = req.body.type;
+
+    MODEL.publish(uuid, type, function (data) {
+
+        CACHE.clear_cache();
+        let obj = {};
+
+        if (data === true) {
+            obj.status = 201;
+        } else {
+            obj.status = 200;
+        }
+
+        res.status(obj.status).send({});
+    });
 };
-*/
+
+/**
+ * Suppresses records
+ * @param req
+ * @param res
+ */
+exports.suppress = function (req, res) {
+
+    if (req.body.pid === undefined || req.body.type === undefined) {
+        res.status(400).send({
+            message: 'Bad Request'
+        });
+        return false;
+    }
+
+    const uuid = req.body.pid;
+    const type = req.body.type;
+
+    MODEL.suppress(uuid, type, function (data) {
+
+        CACHE.clear_cache();
+        let obj = {};
+
+        if (data === true) {
+            obj.status = 201;
+        } else {
+            obj.status = 200;
+        }
+
+        res.status(obj.status).send({});
+    });
+};
 
 exports.get_display_record = function (req, res) {
     MODEL.get_display_record(req, function (data) {
@@ -84,21 +131,7 @@ exports.create_collection_object = function (req, res) {
 };
 
 exports.update_thumbnail = function (req, res) {
-    REPO.update_thumbnail(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.publish_objects = function (req, res) {
-    CACHE.clear_cache();
-    MODEL.publish_objects(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.unpublish_objects = function (req, res) {
-    CACHE.clear_cache();
-    MODEL.unpublish_objects(req, function (data) {
+    MODEL.update_thumbnail(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };

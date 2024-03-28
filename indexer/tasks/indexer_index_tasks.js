@@ -45,12 +45,12 @@ const Indexer_index_tasks = class {
 
             let response = await this.CLIENT.index({
                 index: this.INDEX,
-                id: record.uuid,
+                id: record.pid,
                 body: record,
                 refresh: true
             });
 
-            if (response.statusCode === 201 || response.statusCode === 200) {
+            if (response.result === 'created' || response.result === 'updated') {
                 return true;
             }
 
@@ -73,8 +73,12 @@ const Indexer_index_tasks = class {
                 id: uuid,
             });
 
-            if (response.statusCode === 200) {
-                return response;
+            if (response.found === true) {
+                return response._source;
+            } else {
+                return {
+                    message: 'Record Not Found'
+                }
             }
 
         } catch (error) {
@@ -97,12 +101,14 @@ const Indexer_index_tasks = class {
                 refresh: true
             });
 
-            if (response.statusCode === 200) {
+            if (response.result === 'deleted') {
                 return true;
+            } else {
+                return false;
             }
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (delete_record)] unable to index record ' + error.message);
+            LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (delete_record)] unable to delete record ' + error.message);
             return false;
         }
     }
