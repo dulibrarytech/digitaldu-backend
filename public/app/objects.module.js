@@ -121,7 +121,7 @@ const objectsModule = (function () {
             });
 
         const callback = function (response) {
-            console.log('publish ', response);
+
             if (response.status === 201) {
 
                 setTimeout(function () {
@@ -176,6 +176,7 @@ const objectsModule = (function () {
     /**
      * Unpublishes admin objects
      * @param pid
+     * @param type
      */
     obj.unpublishObject = function (pid, type) {
 
@@ -199,7 +200,7 @@ const objectsModule = (function () {
             });
 
         const callback = function (response) {
-            console.log('suppress ', response);
+
             if (response.status === 201) {
 
                 setTimeout(function () {

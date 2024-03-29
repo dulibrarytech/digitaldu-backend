@@ -38,7 +38,196 @@ const ES_TASKS = require('../libs/elasticsearch');
 const INDEXER_TASKS = require('../indexer/tasks/indexer_index_tasks');
 
 /**
- * Suppresses records
+ * Suppresses single record
+ * @param SUPPRESS_PUBLIC_RECORD_TASK
+ * @param SUPPRESS_ADMIN_RECORD_TASK
+ * @param uuid
+ * @param type
+ */
+async function suppress_record (SUPPRESS_PUBLIC_RECORD_TASK, SUPPRESS_ADMIN_RECORD_TASK, uuid, type) {
+
+    try {
+
+        let is_suppressed = await SUPPRESS_PUBLIC_RECORD_TASK.delete_record(uuid);
+
+        if (is_suppressed === false) {
+            LOGGER.module().error('ERROR: [/repository/model module (suppress)] unable to suppress record.');
+            return false;
+        }
+
+        LOGGER.module().info('INFO: [/repository/model module (suppress)] record suppressed.');
+
+        let db_record = await DB(DB_TABLES.repo.repo_records)
+        .select('display_record')
+        .where({
+            pid: uuid,
+            object_type: type,
+            is_active: 1
+        });
+
+        let record = JSON.parse(db_record[0].display_record);
+        record.is_published = 0;
+
+        let result = await DB(DB_TABLES.repo.repo_records)
+        .where({
+            pid: uuid,
+            object_type: type,
+            is_active: 1
+        })
+        .update({
+            is_published: 0,
+            display_record: JSON.stringify(record)
+        });
+
+        if (result === 1) {
+
+            let indexed_admin_record = await SUPPRESS_ADMIN_RECORD_TASK.get_indexed_record(uuid);
+            indexed_admin_record.is_published = 0;
+            let is_indexed = await SUPPRESS_ADMIN_RECORD_TASK.index_record(indexed_admin_record);
+
+            if (is_indexed === true) {
+                LOGGER.module().info('INFO: [/repository/model module (suppress)] admin record indexed.');
+                return true;
+            } else {
+                LOGGER.module().error('ERROR: [/repository/model module (suppress)] unable to index admin record.');
+                return false;
+            }
+
+        } else {
+            LOGGER.module().error('ERROR: [/repository/model module (suppress)] unable to update db.');
+            return false;
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/repository/model module (suppress)] unable to suppress record. ' + error.message);
+    }
+}
+
+/**
+ * Suppress collection
+ * @param SUPPRESS_PUBLIC_RECORD_TASK
+ * @param SUPPRESS_ADMIN_RECORD_TASK
+ * @param uuid
+ * @param type
+ */
+async function suppress_records (SUPPRESS_PUBLIC_RECORD_TASK, SUPPRESS_ADMIN_RECORD_TASK, uuid, type) {
+
+    let is_suppressed = await SUPPRESS_PUBLIC_RECORD_TASK.delete_record(uuid);
+
+    if (is_suppressed === false) {
+        LOGGER.module().error('ERROR: [/repository/model module (suppress)] unable to suppress records.');
+        return false;
+    }
+
+    LOGGER.module().info('INFO: [/repository/model module (suppress)] collection record suppressed.');
+
+    let db_record = await DB(DB_TABLES.repo.repo_records)
+    .select('display_record')
+    .where({
+        pid: uuid,
+        object_type: type,
+        is_active: 1
+    });
+
+    let record = JSON.parse(db_record[0].display_record);
+    record.is_published = 0;
+
+    let result = await DB(DB_TABLES.repo.repo_records)
+    .where({
+        pid: uuid,
+        object_type: type,
+        is_active: 1
+    })
+    .update({
+        is_published: 0,
+        display_record: JSON.stringify(record)
+    });
+
+    if (result === 1) {
+
+        let indexed_admin_record = await SUPPRESS_ADMIN_RECORD_TASK.get_indexed_record(uuid);
+        indexed_admin_record.is_published = 0;
+        let is_indexed = await SUPPRESS_ADMIN_RECORD_TASK.index_record(indexed_admin_record);
+
+        if (is_indexed === true) {
+            LOGGER.module().info('INFO: [/repository/model module (suppress)] admin record indexed.');
+        } else {
+            LOGGER.module().error('ERROR: [/repository/model module (suppress)] unable to index admin record.');
+        }
+
+        // process child records
+        // set all child records to is_publish 0
+        let result = await DB(DB_TABLES.repo.repo_records)
+        .where({
+            is_member_of_collection: uuid,
+            is_active: 1
+        })
+        .update({
+            is_published: 0
+        });
+
+        LOGGER.module().info('INFO: [/repository/model module (suppress)] updated ' + result.length + ' records');
+
+        // get child records
+        let db_records = await DB(DB_TABLES.repo.repo_records)
+        .select('display_record')
+        .where({
+            is_member_of_collection: uuid,
+            is_active: 1
+        });
+
+        let index_timer = setInterval(async () => {
+
+            if (db_records.length === 0 ) {
+                LOGGER.module().info('INFO: [/repository/model module (suppress)] collection records suppressed.');
+                clearInterval(index_timer);
+                return false;
+            }
+
+            let record_obj = db_records.pop();
+            let record = JSON.parse(record_obj.display_record);
+
+            LOGGER.module().info('INFO: [/repository/model module (suppress)] suppressing record ' + record.pid);
+            is_suppressed = await SUPPRESS_PUBLIC_RECORD_TASK.delete_record(record.pid);
+            record.is_published = 0;
+
+            // update db
+            let result = await DB(DB_TABLES.repo.repo_records)
+            .where({
+                is_member_of_collection: uuid,
+                is_active: 1
+            })
+            .update({
+                is_published: 0,
+                display_record: JSON.stringify(record)
+            });
+
+            LOGGER.module().info('INFO: [/repository/model module (suppress)] updated ' + result.length + ' records');
+
+            let indexed_admin_record = await SUPPRESS_ADMIN_RECORD_TASK.get_indexed_record(record.pid);
+            indexed_admin_record.is_published = 0;
+            let is_indexed = await SUPPRESS_ADMIN_RECORD_TASK.index_record(indexed_admin_record);
+
+            if (is_indexed === true) {
+                LOGGER.module().info('INFO: [/repository/model module (suppress)] admin record indexed.');
+                return true;
+            } else {
+                LOGGER.module().error('ERROR: [/repository/model module (suppress)] unable to index admin record.');
+                return false;
+            }
+
+        }, 500);
+
+        return true;
+
+    } else {
+        LOGGER.module().error('ERROR: [/repository/model module (suppress)] db update update failed.');
+        return false;
+    }
+}
+
+/**
+ * Suppress records
  * @param uuid
  * @param type
  * @param callback
@@ -47,70 +236,35 @@ exports.suppress = function (uuid, type, callback) {
 
     try {
 
-        const ES = new ES_TASKS();
-        const OBJ = ES.get_es();
-        let is_suppressed = false;
+        (async function () {
 
-        if (type === 'object') {
+            const ES = new ES_TASKS();
+            const OBJ = ES.get_es();
+            const SUPPRESS_PUBLIC_RECORD_TASK = new INDEXER_TASKS(DB, DB_TABLES, OBJ.es_client, OBJ.es_config.elasticsearch_index_front);
+            const SUPPRESS_ADMIN_RECORD_TASK = new INDEXER_TASKS(DB, DB_TABLES, OBJ.es_client, OBJ.es_config.elasticsearch_index_back);
 
-            (async function () {
+            if (type === 'object') {
 
-                const SUPRESS_PUBLIC_OBJECT_TASK = new INDEXER_TASKS(DB, DB_TABLES, OBJ.es_client, OBJ.es_config.elasticsearch_index_front);
-                const SUPRESS_ADMIN_OBJECT_TASK = new INDEXER_TASKS(DB, DB_TABLES, OBJ.es_client, OBJ.es_config.elasticsearch_index_back);
-                is_suppressed = await SUPRESS_PUBLIC_OBJECT_TASK.delete_record(uuid);
+                let is_suppressed = await suppress_record(SUPPRESS_PUBLIC_RECORD_TASK, SUPPRESS_ADMIN_RECORD_TASK, uuid, type);
 
-                if (is_suppressed === false) {
-                    LOGGER.module().error('ERROR: [/repository/model module (suppress)] unable to suppress record.');
-                    callback(false);
-                }
-
-                LOGGER.module().info('INFO: [/repository/model module (suppress)] record suppressed.');
-
-                let db_record = await DB(DB_TABLES.repo.repo_records)
-                .select('display_record')
-                .where({
-                    pid: uuid,
-                    is_active: 1
-                });
-
-                let record = JSON.parse(db_record[0].display_record);
-                record.is_published = 0;
-
-                let result = await DB(DB_TABLES.repo.repo_records)
-                .where({
-                    pid: uuid,
-                    is_active: 1
-                })
-                .update({
-                    is_published: 0,
-                    display_record: JSON.stringify(record)
-                });
-
-                if (result === 1) {
-
-                    let indexed_admin_record = await SUPRESS_ADMIN_OBJECT_TASK.get_indexed_record(uuid);
-                    indexed_admin_record.is_published = 0;
-                    let is_indexed = await SUPRESS_ADMIN_OBJECT_TASK.index_record(indexed_admin_record);
-
-                    if (is_indexed === true) {
-                        LOGGER.module().info('INFO: [/repository/model module (suppress)] admin record indexed.');
-                        callback(true);
-                    } else {
-                        LOGGER.module().error('ERROR: [/repository/model module (suppress)] unable to index admin record.');
-                        callback(false);
-                    }
-
+                if (is_suppressed === true) {
+                    callback(true);
                 } else {
-                    LOGGER.module().error('ERROR: [/repository/model module (suppress)] unable to update db.');
                     callback(false);
                 }
 
-            })();
+            } else if (type === 'collection') {
 
-        } else if (type === 'collection') {
-            // TODO: suppress collection
-            // is_suppressed = TASK.delete_record(uuid);
-        }
+                let is_suppressed = await suppress_records(SUPPRESS_PUBLIC_RECORD_TASK, SUPPRESS_ADMIN_RECORD_TASK, uuid, type);
+
+                if (is_suppressed === true) {
+                    callback(true);
+                } else {
+                    callback(false);
+                }
+            }
+
+        })();
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/repository/model module (suppress)] suppress failed. ' + error.message);
@@ -127,16 +281,15 @@ exports.publish = function (uuid, type, callback) {
 
     try {
 
-        const ES = new ES_TASKS();
-        const OBJ = ES.get_es();
-        let is_published = false;
+        (async function () {
 
-        if (type === 'object') {
+            const ES = new ES_TASKS();
+            const OBJ = ES.get_es();
+            const PUBLISH_RECORD_TASK = new INDEXER_TASKS(DB, DB_TABLES, OBJ.es_client, OBJ.es_config.elasticsearch_index_front);
+            const ADMIN_RECORD_TASK = new INDEXER_TASKS(DB, DB_TABLES, OBJ.es_client, OBJ.es_config.elasticsearch_index_back);
+            let is_published = false;
 
-            (async function () {
-
-                const PUBLISH_RECORD_TASK = new INDEXER_TASKS(DB, DB_TABLES, OBJ.es_client, OBJ.es_config.elasticsearch_index_front);
-                const ADMIN_RECORD_TASK = new INDEXER_TASKS(DB, DB_TABLES, OBJ.es_client, OBJ.es_config.elasticsearch_index_back);
+            if (type === 'object') {
 
                 let db_record = await DB(DB_TABLES.repo.repo_records)
                 .select('display_record')
@@ -185,12 +338,15 @@ exports.publish = function (uuid, type, callback) {
                     callback(false);
                 }
 
-            })();
+            } else if (type === 'collection') {
+                // TODO: publish collection
+                console.log(type);
+                console.log(uuid); // is_member_of_collection
+                // TODO: publish parent record first
+                return false;
+            }
 
-        } else if (type === 'collection') {
-            // TODO: suppress collection
-            // is_suppressed = TASK.delete_record(uuid);
-        }
+        })();
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/repository/model module (publish)] publish failed. ' + error.message);
@@ -221,7 +377,7 @@ exports.get_display_record = function (req, callback) {
         pid = pid[0];
     }
 
-    MODS.get_db_display_record_data(pid, function(data) {
+    MODS.get_db_display_record_data(pid, function (data) {
 
         callback({
             status: 200,
@@ -255,102 +411,102 @@ exports.update_thumbnail = function (req, callback) {
     obj.thumbnail = thumbnail;
 
     DB(REPO_OBJECTS)
-        .where({
-            pid: obj.pid,
-            is_active: 1
-        })
-        .update({
-            thumbnail: obj.thumbnail
-        })
-        .then(function (data) {
+    .where({
+        pid: obj.pid,
+        is_active: 1
+    })
+    .update({
+        thumbnail: obj.thumbnail
+    })
+    .then(function (data) {
 
-            // Get existing record from repository
-            MODS.get_display_record_data(obj.pid, function (recordObj) {
+        // Get existing record from repository
+        MODS.get_display_record_data(obj.pid, function (recordObj) {
 
-                MODS.create_display_record(recordObj, function (result) {
+            MODS.create_display_record(recordObj, function (result) {
 
-                    let tmp = JSON.parse(result);
+                let tmp = JSON.parse(result);
 
-                    if (tmp.is_compound === 1 && tmp.object_type !== 'collection') {
+                if (tmp.is_compound === 1 && tmp.object_type !== 'collection') {
 
-                        let currentRecord = JSON.parse(data[0].display_record),
-                            currentCompoundParts = currentRecord.display_record.parts;
+                    let currentRecord = JSON.parse(data[0].display_record),
+                        currentCompoundParts = currentRecord.display_record.parts;
 
-                        delete tmp.display_record.parts;
-                        delete tmp.compound;
+                    delete tmp.display_record.parts;
+                    delete tmp.compound;
 
-                        if (currentCompoundParts !== undefined) {
-                            tmp.display_record.parts = currentCompoundParts;
-                            tmp.compound = currentCompoundParts;
-                        }
-
-                        obj.display_record = JSON.stringify(tmp);
-
-                    } else if (tmp.is_compound === 0 || tmp.object_type === 'collection') {
-                        obj.display_record = result;
+                    if (currentCompoundParts !== undefined) {
+                        tmp.display_record.parts = currentCompoundParts;
+                        tmp.compound = currentCompoundParts;
                     }
 
-                    let where_obj = {
-                        is_member_of_collection: recordObj.is_member_of_collection,
-                        pid: recordObj.pid,
-                        is_active: 1
-                    };
+                    obj.display_record = JSON.stringify(tmp);
 
-                    MODS.update_display_record(where_obj, obj.display_record, function (result) {
+                } else if (tmp.is_compound === 0 || tmp.object_type === 'collection') {
+                    obj.display_record = result;
+                }
 
-                        index(recordObj.sip_uuid, function (result) {
+                let where_obj = {
+                    is_member_of_collection: recordObj.is_member_of_collection,
+                    pid: recordObj.pid,
+                    is_active: 1
+                };
 
-                            if (result.error === true) {
-                                LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail.');
+                MODS.update_display_record(where_obj, obj.display_record, function (result) {
 
-                                callback({
-                                    error: true,
-                                    error_message: 'ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail.'
-                                });
+                    index(recordObj.sip_uuid, function (result) {
 
-                                return false;
-                            }
+                        if (result.error === true) {
+                            LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail.');
 
-                            if (recordObj.is_published === 1) {
-
-                                // wait to make sure updated admin record is ready
-                                setTimeout(function () {
-
-                                    let match_phrase = {
-                                        'pid': recordObj.sip_uuid
-                                    };
-
-                                    reindex(match_phrase, function (result) {
-
-                                        if (result.error === true) {
-                                            LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail ' + response.error);
-                                        }
-
-                                        return false;
-                                    });
-
-                                    CACHE.clear_cache();
-
-                                }, 7000);
-                            }
+                            callback({
+                                error: true,
+                                error_message: 'ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail.'
+                            });
 
                             return false;
-                        });
+                        }
+
+                        if (recordObj.is_published === 1) {
+
+                            // wait to make sure updated admin record is ready
+                            setTimeout(function () {
+
+                                let match_phrase = {
+                                    'pid': recordObj.sip_uuid
+                                };
+
+                                reindex(match_phrase, function (result) {
+
+                                    if (result.error === true) {
+                                        LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail ' + response.error);
+                                    }
+
+                                    return false;
+                                });
+
+                                CACHE.clear_cache();
+
+                            }, 7000);
+                        }
+
+                        return false;
                     });
                 });
             });
-
-            callback({
-                status: 201,
-                message: 'Thumbnail updated.'
-            });
-
-            return null;
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/repository/model module (update_thumbnail)] unable to update mods records ' + error);
-            throw 'FATAL: [/repository/model module (update_thumbnail)] unable to update mods records ' + error;
         });
+
+        callback({
+            status: 201,
+            message: 'Thumbnail updated.'
+        });
+
+        return null;
+    })
+    .catch(function (error) {
+        LOGGER.module().fatal('FATAL: [/repository/model module (update_thumbnail)] unable to update mods records ' + error);
+        throw 'FATAL: [/repository/model module (update_thumbnail)] unable to update mods records ' + error;
+    });
 };
 
 /**
@@ -378,22 +534,22 @@ exports.create_collection_object = function (req, callback) {
         let obj = {};
 
         DB(REPO_OBJECTS)
-            .count('uri as uri')
-            .where('uri', VALIDATOR.unescape(data.uri))
-            .then(function (result) {
+        .count('uri as uri')
+        .where('uri', VALIDATOR.unescape(data.uri))
+        .then(function (result) {
 
-                if (result[0].uri === 1) {
-                    obj.dupe = true;
-                    callback(null, obj);
-                    return false;
-                }
-
-                obj.dupe = false;
+            if (result[0].uri === 1) {
+                obj.dupe = true;
                 callback(null, obj);
-            })
-            .catch(function (error) {
-                LOGGER.module().fatal('FATAL: [/repository/model module (create_collection_object)] unable to check uri ' + error);
-            });
+                return false;
+            }
+
+            obj.dupe = false;
+            callback(null, obj);
+        })
+        .catch(function (error) {
+            LOGGER.module().fatal('FATAL: [/repository/model module (create_collection_object)] unable to check uri ' + error);
+        });
     }
 
     function get_session_token(obj, callback) {
@@ -530,15 +686,15 @@ exports.create_collection_object = function (req, callback) {
         record.display_record = obj.display_record;
 
         DB(REPO_OBJECTS)
-            .insert(record)
-            .then(function (data) {
-                callback(null, obj);
-            })
-            .catch(function (error) {
-                LOGGER.module().fatal('FATAL: [/repository/model module (create_collection_object/save_record)] unable to save collection record ' + error);
-                obj.error = 'FATAL: unable to save collection record ' + error;
-                callback(null, obj);
-            });
+        .insert(record)
+        .then(function (data) {
+            callback(null, obj);
+        })
+        .catch(function (error) {
+            LOGGER.module().fatal('FATAL: [/repository/model module (create_collection_object/save_record)] unable to save collection record ' + error);
+            obj.error = 'FATAL: unable to save collection record ' + error;
+            callback(null, obj);
+        });
     }
 
     function index_collection(obj, callback) {
@@ -616,7 +772,7 @@ exports.reset_display_record = function (req, callback) {
         let obj = {};
         let sip_uuid = req.body.pid;
 
-        MODS.get_display_record_data(sip_uuid, function(record) {
+        MODS.get_display_record_data(sip_uuid, function (record) {
 
             MODS.create_display_record(record, function (display_record) {
 
@@ -627,7 +783,7 @@ exports.reset_display_record = function (req, callback) {
                     is_active: 1
                 };
 
-                MODS.update_display_record(where_obj, display_record, function(result) {
+                MODS.update_display_record(where_obj, display_record, function (result) {
                     obj.sip_uuid = recordObj.pid;
                     obj.is_published = recordObj.is_published;
                     callback(null, obj);
@@ -715,26 +871,26 @@ exports.delete_object = function (req, callback) {
         obj.delete_reason = delete_reason;
 
         DB(REPO_OBJECTS)
-            .count('is_published as is_published')
-            .where({
-                pid: obj.pid,
-                is_active: 1,
-                is_published: 1
-            })
-            .then(function (data) {
-                // delete only if object is not published
-                if (data[0].is_published === 0) {
-                    obj.is_published = false;
-                } else {
-                    obj.is_published = true;
-                }
+        .count('is_published as is_published')
+        .where({
+            pid: obj.pid,
+            is_active: 1,
+            is_published: 1
+        })
+        .then(function (data) {
+            // delete only if object is not published
+            if (data[0].is_published === 0) {
+                obj.is_published = false;
+            } else {
+                obj.is_published = true;
+            }
 
-                callback(null, obj);
-            })
-            .catch(function (error) {
-                LOGGER.module().fatal('FATAL: [/repository/model module (delete_object/check_if_published)] Unable to delete record ' + error);
-                throw 'FATAL: [/repository/model module (delete_object/check_if_published)] Unable to delete record ' + error;
-            });
+            callback(null, obj);
+        })
+        .catch(function (error) {
+            LOGGER.module().fatal('FATAL: [/repository/model module (delete_object/check_if_published)] Unable to delete record ' + error);
+            throw 'FATAL: [/repository/model module (delete_object/check_if_published)] Unable to delete record ' + error;
+        });
     }
 
     function delete_record(obj, callback) {
@@ -745,22 +901,22 @@ exports.delete_object = function (req, callback) {
         }
 
         DB(REPO_OBJECTS)
-            .where({
-                pid: obj.pid
-            })
-            .update({
-                is_active: 0
-            })
-            .then(function (data) {
+        .where({
+            pid: obj.pid
+        })
+        .update({
+            is_active: 0
+        })
+        .then(function (data) {
 
-                if (data === 1) {
-                    callback(null, obj);
-                }
-            })
-            .catch(function (error) {
-                LOGGER.module().fatal('FATAL: [/repository/model module (delete_object)] unable to delete record ' + error);
-                throw 'FATAL: [/repository/model module (delete_object)] unable to delete record ' + error;
-            });
+            if (data === 1) {
+                callback(null, obj);
+            }
+        })
+        .catch(function (error) {
+            LOGGER.module().fatal('FATAL: [/repository/model module (delete_object)] unable to delete record ' + error);
+            throw 'FATAL: [/repository/model module (delete_object)] unable to delete record ' + error;
+        });
     }
 
     function unindex_record(obj, callback) {
@@ -798,23 +954,23 @@ exports.delete_object = function (req, callback) {
                 obj.delete_id = json.id;
 
                 DB(REPO_OBJECTS)
-                    .where({
-                        pid: obj.pid
-                    })
-                    .update({
-                        delete_id: obj.delete_id
-                    })
-                    .then(function (data) {
+                .where({
+                    pid: obj.pid
+                })
+                .update({
+                    delete_id: obj.delete_id
+                })
+                .then(function (data) {
 
-                        if (data === 1) {
-                            LOGGER.module().info('INFO: [/repository/model module (delete_object/delete_aip_request)] delete id ' + obj.delete_id + ' saved');
-                            callback(null, obj);
-                        }
-                    })
-                    .catch(function (error) {
-                        LOGGER.module().fatal('FATAL: [/repository/model module (delete_object)] unable to save delete id ' + error);
-                        throw 'FATAL: [/repository/model module (delete_object)] unable to save delete id ' + error;
-                    });
+                    if (data === 1) {
+                        LOGGER.module().info('INFO: [/repository/model module (delete_object/delete_aip_request)] delete id ' + obj.delete_id + ' saved');
+                        callback(null, obj);
+                    }
+                })
+                .catch(function (error) {
+                    LOGGER.module().fatal('FATAL: [/repository/model module (delete_object)] unable to save delete id ' + error);
+                    throw 'FATAL: [/repository/model module (delete_object)] unable to save delete id ' + error;
+                });
 
             } else {
                 LOGGER.module().error('ERROR: [/repository/model module (delete_object/delete_aip_request)] unable to create delete aip request');
@@ -869,95 +1025,95 @@ exports.save_transcript = function (req, callback) {
     }
 
     DB(REPO_OBJECTS)
-        .where({
-            pid: sip_uuid
-        })
-        .update({
-            transcript: transcript
-        })
-        .then(function (data) {
+    .where({
+        pid: sip_uuid
+    })
+    .update({
+        transcript: transcript
+    })
+    .then(function (data) {
 
-            if (data === 1) {
+        if (data === 1) {
 
-                LOGGER.module().info('INFO: [/repository/model module (add_transcript)] Transcript saved to DB');
+            LOGGER.module().info('INFO: [/repository/model module (add_transcript)] Transcript saved to DB');
 
-                MODS.get_db_display_record_data(sip_uuid, function(data) {
+            MODS.get_db_display_record_data(sip_uuid, function (data) {
 
-                    let record = JSON.parse(data[0].display_record);
-                    record.transcript = transcript;
+                let record = JSON.parse(data[0].display_record);
+                record.transcript = transcript;
 
-                    let where_obj = {
-                        sip_uuid: sip_uuid,
-                        is_active: 1
-                    };
+                let where_obj = {
+                    sip_uuid: sip_uuid,
+                    is_active: 1
+                };
 
-                    MODS.update_display_record(where_obj, JSON.stringify(record),function(result) {
+                MODS.update_display_record(where_obj, JSON.stringify(record), function (result) {
 
-                        (async () => {
+                    (async () => {
 
-                            let data = {
-                                'sip_uuid': sip_uuid,
-                                'fragment': {
-                                    doc: {
-                                        transcript: transcript
-                                    }
+                        let data = {
+                            'sip_uuid': sip_uuid,
+                            'fragment': {
+                                doc: {
+                                    transcript: transcript
                                 }
-                            };
+                            }
+                        };
 
-                            let response = await HTTP.put({
-                                endpoint: '/api/admin/v1/indexer/update_fragment',
-                                data: data
+                        let response = await HTTP.put({
+                            endpoint: '/api/admin/v1/indexer/update_fragment',
+                            data: data
+                        });
+
+                        let result = {};
+
+                        if (response.error === true) {
+                            LOGGER.module().error('ERROR: [/repository/model module (update_fragment)] unable to update transcript.');
+                            result.error = true;
+                        } else if (response.data.status === 201) {
+                            result.error = false;
+                        }
+
+                        if (result.error === false) {
+
+                            if (record.is_published === 1) {
+
+                                let match_phrase = {
+                                    'pid': sip_uuid
+                                };
+
+                                setTimeout(function () {
+
+                                    // moves updated record to public index if already published
+                                    reindex(match_phrase, function (result) {
+
+                                        if (result.error === true) {
+                                            LOGGER.module().error('ERROR: [/repository/model module (save_transcript)] unable to copy record to public index.');
+                                        }
+                                    });
+
+                                }, 3000);
+                            }
+
+                            callback({
+                                status: 201,
+                                message: 'Transcript Saved.'
                             });
 
-                            let result = {};
+                        } else if (result.error === true) {
+                            callback({
+                                status: 200,
+                                message: 'Transcript not Saved.'
+                            });
+                        }
 
-                            if (response.error === true) {
-                                LOGGER.module().error('ERROR: [/repository/model module (update_fragment)] unable to update transcript.');
-                                result.error = true;
-                            } else if (response.data.status === 201) {
-                                result.error = false;
-                            }
-
-                            if (result.error === false) {
-
-                                if (record.is_published === 1) {
-
-                                    let match_phrase = {
-                                        'pid': sip_uuid
-                                    };
-
-                                    setTimeout(function() {
-
-                                        // moves updated record to public index if already published
-                                        reindex(match_phrase, function (result) {
-
-                                            if (result.error === true) {
-                                                LOGGER.module().error('ERROR: [/repository/model module (save_transcript)] unable to copy record to public index.');
-                                            }
-                                        });
-
-                                    }, 3000);
-                                }
-
-                                callback({
-                                    status: 201,
-                                    message: 'Transcript Saved.'
-                                });
-
-                            } else if (result.error === true) {
-                                callback({
-                                    status: 200,
-                                    message: 'Transcript not Saved.'
-                                });
-                            }
-
-                        })();
-                    });
+                    })();
                 });
-            }
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/repository/model module (add_transcript)] Unable to save transcript ' + error);
-            throw 'FATAL: [/repository/model module (add_transcript)] Unable to save transcript ' + error;
-        });
+            });
+        }
+    })
+    .catch(function (error) {
+        LOGGER.module().fatal('FATAL: [/repository/model module (add_transcript)] Unable to save transcript ' + error);
+        throw 'FATAL: [/repository/model module (add_transcript)] Unable to save transcript ' + error;
+    });
 };

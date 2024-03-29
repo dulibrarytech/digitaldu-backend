@@ -133,8 +133,7 @@ exports.check_auth_user = function (username, callback) {
             }
         })
         .catch(function (error) {
-            LOGGER.module().error('FATAL: [/users/model module (check_auth_user)] unable to check auth ' + error);
-            throw 'FATAL: [/users/model module (check_auth_user)] unable to check auth ' + error;
+            LOGGER.module().error('ERROR: [/users/model module (check_auth_user)] unable to check auth ' + error.message);
         });
 };
 
@@ -179,7 +178,7 @@ exports.update_user = function (req, callback) {
     let User = req.body,
         id = User.id;
 
-    if (User === undefined || id.length === 0) {
+    if (id.length === 0) {
 
         callback({
             status: 400,

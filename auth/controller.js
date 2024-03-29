@@ -24,27 +24,27 @@ const USER = require('../users/model');
 const CACHE = require('../libs/cache');
 const VALIDATOR = require('validator');
 
-exports.sso = (req, res) => {
+exports.sso = function (req, res) {
 
-    const SSO_HOST = req.body.HTTP_HOST;
+    if (req.body.employeeID === undefined || req.body.HTTP_HOST === undefined) {
+        res.status(403).send({
+            message: 'You do not have access to this resource.'
+        });
+        return false;
+    }
+
+    if (!VALIDATOR.isNumeric(req.body.employeeID) || !VALIDATOR.isFQDN(req.body.HTTP_HOST)) {
+
+        res.status(403).send({
+            message: 'You do not have access to this resource.'
+        });
+
+        return false;
+    }
+
     const USERNAME = req.body.employeeID;
+    const SSO_HOST = req.body.HTTP_HOST;
     delete req.body;
-
-    if (USERNAME === undefined || SSO_HOST === undefined) {
-        res.status(403).send({
-            message: 'You do not have access to this resource.'
-        });
-        return false;
-    }
-
-    if (!VALIDATOR.isNumeric(USERNAME) || !VALIDATOR.isFQDN(SSO_HOST)) {
-
-        res.status(403).send({
-            message: 'You do not have access to this resource.'
-        });
-
-        return false;
-    }
 
     if (SSO_HOST === CONFIG.ssoHost) {
 

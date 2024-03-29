@@ -22,6 +22,7 @@ const MODEL = require('../repository/model');
 const SERVICE = require('../repository/service');
 const CACHE = require('../libs/cache');
 const PATH = require('path');
+const VALIDATOR = require('validator');
 
 exports.get_records = function (req, res) {
 
@@ -41,6 +42,7 @@ exports.get_records = function (req, res) {
             return false;
         }
 
+        // TODO validate
         const pid = req.query.pid;
         const total_on_page = 10;
         let search = {};
@@ -100,6 +102,7 @@ exports.suppress = function (req, res) {
         return false;
     }
 
+    // TODO: validate
     const uuid = req.body.pid;
     const type = req.body.type;
 
