@@ -367,20 +367,8 @@ async function publish_records (PUBLISH_RECORD_TASK, ADMIN_RECORD_TASK, uuid, ty
             // update and re-index admin collection record
             let indexed_admin_record = await ADMIN_RECORD_TASK.get_indexed_record(uuid);
             indexed_admin_record.is_published = 1;
-            let is_indexed = await ADMIN_RECORD_TASK.index_record(indexed_admin_record);
-            console.log('admin is indexed ', is_indexed);
-
-            /* // TODO: stops here. why?
-            if (is_indexed === true) {
-                LOGGER.module().info('INFO: [/repository/model module (publish)] admin record indexed.');
-            } else {
-                LOGGER.module().error('ERROR: [/repository/model module (publish)] unable to index admin record.');
-            }
-
-             */
-
+            await ADMIN_RECORD_TASK.index_record(indexed_admin_record);
             let is_published = await PUBLISH_RECORD_TASK.index_record(indexed_admin_record);
-            console.log('is published ', is_published);
 
             if (is_published === false) {
                 LOGGER.module().error('ERROR: [/repository/model module (publish)] unable to publish collection record.');
@@ -486,7 +474,14 @@ exports.publish = function (uuid, type, callback) {
 
             if (type === 'object') {
 
-                // TODO: check if collection is published
+                // check if collection is published
+                let indexed_admin_record = await ADMIN_RECORD_TASK.get_indexed_record(uuid);
+
+                if (indexed_admin_record.is_published === 0) {
+                    callback(false);
+                    return false;
+                }
+
                 let is_published = await publish_record(PUBLISH_RECORD_TASK, ADMIN_RECORD_TASK, uuid, type);
 
                 if (is_published === true) {
@@ -498,7 +493,7 @@ exports.publish = function (uuid, type, callback) {
             } else if (type === 'collection') {
 
                 let is_published = await publish_records(PUBLISH_RECORD_TASK, ADMIN_RECORD_TASK, uuid, type);
-                console.log('publish ', is_published);
+
                 if (is_published === true) {
                     callback(true);
                 } else {
