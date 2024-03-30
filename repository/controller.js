@@ -70,11 +70,12 @@ exports.publish = function (req, res) {
         return false;
     }
 
+    // TODO sanitize
     const uuid = req.body.pid;
     const type = req.body.type;
 
     MODEL.publish(uuid, type, function (data) {
-
+        console.log('response ', data);
         CACHE.clear_cache();
         let obj = {};
 

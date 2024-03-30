@@ -86,7 +86,7 @@ module.exports = function() {
     require('../utils/routes.js')(APP);
     require('../api/routes.js')(APP);
     require('../uploads/index.js')(APP);
-    require('../qa/routes.js')(APP);
+    // require('../qa/routes.js')(APP);
 
     CACHE.clear_cache();
     DIRS.check_directories();

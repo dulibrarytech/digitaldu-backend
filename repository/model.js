@@ -116,7 +116,7 @@ async function suppress_records (SUPPRESS_PUBLIC_RECORD_TASK, SUPPRESS_ADMIN_REC
 
     if (is_suppressed === false) {
         LOGGER.module().error('ERROR: [/repository/model module (suppress)] unable to suppress records.');
-        return false;
+        // return false;
     }
 
     LOGGER.module().info('INFO: [/repository/model module (suppress)] collection record suppressed.');
@@ -166,7 +166,7 @@ async function suppress_records (SUPPRESS_PUBLIC_RECORD_TASK, SUPPRESS_ADMIN_REC
             is_published: 0
         });
 
-        LOGGER.module().info('INFO: [/repository/model module (suppress)] updated ' + result.length + ' records');
+        LOGGER.module().info('INFO: [/repository/model module (suppress)] updated ' + result + ' records');
 
         // get child records
         let db_records = await DB(DB_TABLES.repo.repo_records)
@@ -195,6 +195,7 @@ async function suppress_records (SUPPRESS_PUBLIC_RECORD_TASK, SUPPRESS_ADMIN_REC
             let result = await DB(DB_TABLES.repo.repo_records)
             .where({
                 is_member_of_collection: uuid,
+                pid: record.pid,
                 is_active: 1
             })
             .update({
@@ -202,7 +203,7 @@ async function suppress_records (SUPPRESS_PUBLIC_RECORD_TASK, SUPPRESS_ADMIN_REC
                 display_record: JSON.stringify(record)
             });
 
-            LOGGER.module().info('INFO: [/repository/model module (suppress)] updated ' + result.length + ' records');
+            LOGGER.module().info('INFO: [/repository/model module (suppress)] updated ' + result + ' record');
 
             let indexed_admin_record = await SUPPRESS_ADMIN_RECORD_TASK.get_indexed_record(record.pid);
             indexed_admin_record.is_published = 0;
@@ -272,6 +273,201 @@ exports.suppress = function (uuid, type, callback) {
 };
 
 /**
+ *  Publishes single record
+ * @param PUBLISH_RECORD_TASK
+ * @param ADMIN_RECORD_TASK
+ * @param uuid
+ * @param type
+ */
+async function publish_record (PUBLISH_RECORD_TASK, ADMIN_RECORD_TASK, uuid, type) {
+
+    let db_record = await DB(DB_TABLES.repo.repo_records)
+    .select('display_record')
+    .where({
+        pid: uuid,
+        is_active: 1
+    });
+
+    let record = JSON.parse(db_record[0].display_record);
+    record.is_published = 1;
+
+    let result = await DB(DB_TABLES.repo.repo_records)
+    .where({
+        pid: uuid,
+        is_active: 1
+    })
+    .update({
+        is_published: 1,
+        display_record: JSON.stringify(record)
+    });
+
+    if (result === 1) {
+
+        let indexed_admin_record = await ADMIN_RECORD_TASK.get_indexed_record(uuid);
+        indexed_admin_record.is_published = 1;
+        let is_admin_indexed = await ADMIN_RECORD_TASK.index_record(indexed_admin_record);
+
+        if (is_admin_indexed === true) {
+            LOGGER.module().info('INFO: [/repository/model module (publish)] admin record indexed.');
+        } else {
+            LOGGER.module().error('ERROR: [/repository/model module (publish)] unable to index admin record.');
+        }
+
+        let is_published = await PUBLISH_RECORD_TASK.index_record(indexed_admin_record);
+
+        if (is_published === true) {
+            LOGGER.module().info('INFO: [/repository/model module (publish)] record published.');
+            return true;
+        } else {
+            LOGGER.module().error('ERROR: [/repository/model module (publish)] unable to publish record.');
+            return false;
+        }
+
+    } else {
+        LOGGER.module().error('ERROR: [/repository/model module (publish)] unable to update db.');
+        return false;
+    }
+}
+
+/**
+ * Publishes collections
+ * @param PUBLISH_RECORD_TASK
+ * @param ADMIN_RECORD_TASK
+ * @param uuid
+ * @param type
+ */
+async function publish_records (PUBLISH_RECORD_TASK, ADMIN_RECORD_TASK, uuid, type) {
+
+    try {
+
+        let db_record = await DB(DB_TABLES.repo.repo_records)
+        .select('display_record')
+        .where({
+            pid: uuid,
+            object_type: type,
+            is_active: 1
+        });
+
+        let record = JSON.parse(db_record[0].display_record);
+        record.is_published = 1;
+
+        let result = await DB(DB_TABLES.repo.repo_records)
+        .where({
+            pid: uuid,
+            object_type: type,
+            is_active: 1
+        })
+        .update({
+            is_published: 1,
+            display_record: JSON.stringify(record)
+        });
+
+        if (result === 1) {
+
+            // update and re-index admin collection record
+            let indexed_admin_record = await ADMIN_RECORD_TASK.get_indexed_record(uuid);
+            indexed_admin_record.is_published = 1;
+            let is_indexed = await ADMIN_RECORD_TASK.index_record(indexed_admin_record);
+            console.log('admin is indexed ', is_indexed);
+
+            /* // TODO: stops here. why?
+            if (is_indexed === true) {
+                LOGGER.module().info('INFO: [/repository/model module (publish)] admin record indexed.');
+            } else {
+                LOGGER.module().error('ERROR: [/repository/model module (publish)] unable to index admin record.');
+            }
+
+             */
+
+            let is_published = await PUBLISH_RECORD_TASK.index_record(indexed_admin_record);
+            console.log('is published ', is_published);
+
+            if (is_published === false) {
+                LOGGER.module().error('ERROR: [/repository/model module (publish)] unable to publish collection record.');
+            }
+
+            LOGGER.module().info('INFO: [/repository/model module (publish)] collection record published.');
+
+            // process child records
+            // set all child records to is_publish 1
+            let result = await DB(DB_TABLES.repo.repo_records)
+            .where({
+                is_member_of_collection: uuid,
+                is_active: 1
+            })
+            .update({
+                is_published: 1
+            });
+
+            LOGGER.module().info('INFO: [/repository/model module (publish)] updated ' + result + ' records');
+
+            // get child records
+            let db_records = await DB(DB_TABLES.repo.repo_records)
+            .select('display_record')
+            .where({
+                is_member_of_collection: uuid,
+                is_active: 1
+            });
+
+            let index_timer = setInterval(async () => {
+
+                if (db_records.length === 0) {
+                    LOGGER.module().info('INFO: [/repository/model module (publish)] collection child records published.');
+                    clearInterval(index_timer);
+                    return false;
+                }
+
+                let record_obj = db_records.pop();
+                let record = JSON.parse(record_obj.display_record);
+                record.is_published = 1;
+
+                LOGGER.module().info('INFO: [/repository/model module (publish)] publishing child record ' + record.pid);
+
+                // update db
+                let result = await DB(DB_TABLES.repo.repo_records)
+                .where({
+                    is_member_of_collection: uuid,
+                    pid: record.pid,
+                    is_active: 1
+                })
+                .update({
+                    is_published: 1,
+                    display_record: JSON.stringify(record)
+                });
+
+                if (result.length === 1) {
+                    LOGGER.module().info('INFO: [/repository/model module (publish)] updated ' + result + ' child record');
+                }
+
+                let indexed_admin_record = await ADMIN_RECORD_TASK.get_indexed_record(record.pid);
+                indexed_admin_record.is_published = 1;
+                let is_indexed = await ADMIN_RECORD_TASK.index_record(indexed_admin_record);
+
+                if (is_indexed === true) {
+                    LOGGER.module().info('INFO: [/repository/model module (publish)] admin record indexed.');
+                } else {
+                    LOGGER.module().error('ERROR: [/repository/model module (publish)] unable to index admin record.');
+                }
+
+                let is_published = await PUBLISH_RECORD_TASK.index_record(indexed_admin_record);
+
+                if (is_published === false) {
+                    LOGGER.module().error('ERROR: [/repository/model module (suppress)] unable to publish collection child record.');
+                } else {
+                    LOGGER.module().info('INFO: [/repository/model module (publish)] child record published ' + record.pid);
+                }
+
+            }, 500);
+
+            return true;
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/repository/model module (publish)] unable to publish collection record(s).');
+    }
+}
+
+/**
  * Publishes records
  * @param uuid
  * @param type
@@ -287,63 +483,27 @@ exports.publish = function (uuid, type, callback) {
             const OBJ = ES.get_es();
             const PUBLISH_RECORD_TASK = new INDEXER_TASKS(DB, DB_TABLES, OBJ.es_client, OBJ.es_config.elasticsearch_index_front);
             const ADMIN_RECORD_TASK = new INDEXER_TASKS(DB, DB_TABLES, OBJ.es_client, OBJ.es_config.elasticsearch_index_back);
-            let is_published = false;
 
             if (type === 'object') {
 
-                let db_record = await DB(DB_TABLES.repo.repo_records)
-                .select('display_record')
-                .where({
-                    pid: uuid,
-                    is_active: 1
-                });
+                // TODO: check if collection is published
+                let is_published = await publish_record(PUBLISH_RECORD_TASK, ADMIN_RECORD_TASK, uuid, type);
 
-                let record = JSON.parse(db_record[0].display_record);
-                record.is_published = 1;
-
-                let result = await DB(DB_TABLES.repo.repo_records)
-                .where({
-                    pid: uuid,
-                    is_active: 1
-                })
-                .update({
-                    is_published: 1,
-                    display_record: JSON.stringify(record)
-                });
-
-                if (result === 1) {
-
-                    let indexed_admin_record = await ADMIN_RECORD_TASK.get_indexed_record(uuid);
-                    indexed_admin_record.is_published = 1;
-                    let is_admin_indexed = await ADMIN_RECORD_TASK.index_record(indexed_admin_record);
-
-                    if (is_admin_indexed === true) {
-                        LOGGER.module().info('INFO: [/repository/model module (publish)] admin record indexed.');
-                    } else {
-                        LOGGER.module().error('ERROR: [/repository/model module (publish)] unable to index admin record.');
-                    }
-
-                    is_published = await PUBLISH_RECORD_TASK.index_record(indexed_admin_record);
-
-                    if (is_published === true) {
-                        LOGGER.module().info('INFO: [/repository/model module (publish)] record published.');
-                        callback(true);
-                    } else {
-                        LOGGER.module().error('ERROR: [/repository/model module (publish)] unable to publish record.');
-                        callback(false);
-                    }
-
+                if (is_published === true) {
+                    callback(true);
                 } else {
-                    LOGGER.module().error('ERROR: [/repository/model module (publish)] unable to update db.');
                     callback(false);
                 }
 
             } else if (type === 'collection') {
-                // TODO: publish collection
-                console.log(type);
-                console.log(uuid); // is_member_of_collection
-                // TODO: publish parent record first
-                return false;
+
+                let is_published = await publish_records(PUBLISH_RECORD_TASK, ADMIN_RECORD_TASK, uuid, type);
+                console.log('publish ', is_published);
+                if (is_published === true) {
+                    callback(true);
+                } else {
+                    callback(false);
+                }
             }
 
         })();
