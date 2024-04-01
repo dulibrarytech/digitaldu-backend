@@ -20,13 +20,14 @@
 
 const CONFIG = require('../config/config');
 const TOKEN = require('../libs/tokens');
-const USER = require('../users/model');
+const MODEL = require('../users/model');
 const CACHE = require('../libs/cache');
 const VALIDATOR = require('validator');
 
 exports.sso = function (req, res) {
 
     if (req.body.employeeID === undefined || req.body.HTTP_HOST === undefined) {
+
         res.status(403).send({
             message: 'You do not have access to this resource.'
         });
@@ -42,6 +43,16 @@ exports.sso = function (req, res) {
         return false;
     }
 
+    if (req.body.employeeID.length > 10) {
+
+        res.status(400).send({
+            message: 'Bad Request.'
+        });
+
+        return false;
+    }
+
+    const APP_PATH = ''; // TODO
     const USERNAME = req.body.employeeID;
     const SSO_HOST = req.body.HTTP_HOST;
     delete req.body;
@@ -51,17 +62,20 @@ exports.sso = function (req, res) {
         let token = TOKEN.create(USERNAME);
         token = encodeURIComponent(token);
 
-        USER.check_auth_user(USERNAME, (result) => {
+        MODEL.check_auth_user(USERNAME, (result) => {
 
             if (result.auth === true) {
-                res.redirect('/dashboard/home?t=' + token + '&id=' + result.data);
+                res.redirect(APP_PATH + '/dashboard/home?t=' + token + '&id=' + parseInt(result.data));
             } else {
-
-                // TODO: add template to provide user feedback
-                res.status(401).send({
-                    message: 'Authenticate failed.'
+                res.status(403).send({
+                    message: 'You do not have access to this resource.'
                 });
             }
+        });
+
+    } else {
+        res.status(401).send({
+            message: 'Authentication failed.'
         });
     }
 };

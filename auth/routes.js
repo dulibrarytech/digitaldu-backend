@@ -18,8 +18,8 @@
 
 'use strict';
 
-const AUTH = require('../auth/controller'),
-    TOKENS = require('../libs/tokens');
+const CONTROLLER = require('../auth/controller');
+const TOKENS = require('../libs/tokens');
 
 module.exports = function (app) {
 
@@ -27,8 +27,8 @@ module.exports = function (app) {
     .get(TOKENS.verify);
 
     app.route('/sso')
-    .post(AUTH.sso);
+    .post(CONTROLLER.sso);
 
     app.route('/logout')
-    .get(AUTH.logout);
+    .get(CONTROLLER.logout);
 };

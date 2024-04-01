@@ -49,12 +49,14 @@ exports.reindex = function (callback) {
                 await INDEXER_UTILS_BACKEND_TASK.delete_index();
                 await INDEXER_UTILS_BACKEND_TASK.create_index();
                 await INDEXER_UTILS_BACKEND_TASK.create_mappings();
+                LOGGER.module().info('INFO: [/indexer/model (reindex)] backend index created.');
             }
 
             if (is_frontend_exists === true) {
                 await INDEXER_UTILS_FRONTEND_TASK.delete_index();
                 await INDEXER_UTILS_FRONTEND_TASK.create_index();
                 await INDEXER_UTILS_FRONTEND_TASK.create_mappings();
+                LOGGER.module().info('INFO: [/indexer/model (reindex)] frontend index created.');
             }
 
             await REINDEX_BACKEND_TASK.reset_indexed_flags();
@@ -145,7 +147,7 @@ exports.reindex = function (callback) {
                     LOGGER.module().error('ERROR: [/indexer/model (reindex)] reindex HALTED.');
                 }
 
-            }, 700);
+            }, 500);
 
             callback({
                 status: 200,

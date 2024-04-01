@@ -143,7 +143,7 @@ const Indexer_index_utils_tasks = class {
                 LOGGER.module().info('INFO: [/indexer/service module (delete_index)] index ' + this.INDEX_NAME + ' deleted');
                 return true;
             } else {
-                LOGGER.module().error('ERROR: [/indexer/service module (delete_index)] unable to delete index ' + error.message );
+                LOGGER.module().error('ERROR: [/indexer/service module (delete_index)] unable to delete index');
                 return false
             }
 
