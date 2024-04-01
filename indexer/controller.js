@@ -19,7 +19,6 @@
 'use strict';
 
 const MODEL = require('../indexer/model');
-// const SERVICE = require('../indexer/service');
 
 exports.reindex = function (req, res) {
     MODEL.reindex(function (data) {

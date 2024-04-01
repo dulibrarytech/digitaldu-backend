@@ -18,9 +18,6 @@
 
 'use strict';
 
-const CONFIG = require('../config/config');
-const SERVICE = require('../indexer/service');
-const MODS = require('../libs/display-record');
 const CACHE = require('../libs/cache');
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
