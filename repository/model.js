@@ -30,7 +30,7 @@ const SERVICE = require('.//service');
 const LOGGER = require('../libs/log4');
 const CACHE = require('../libs/cache');
 // const DB = require('../config/db')();
-const REPO_OBJECTS = 'tbl_objects';
+// const REPO_OBJECTS = 'tbl_objects';
 //
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();

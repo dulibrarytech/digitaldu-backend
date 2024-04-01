@@ -22,16 +22,16 @@ const LOGGER = require('../../libs/log4');
 
 /**
  * Object contains tasks used to create ES index
- * @param DB
- * @param TABLE
+ * @param CLIENT
+ * @param CONFIG
+ * @param INDEX_NAME
  * @type {Indexer_index_utils_tasks}
  */
 const Indexer_index_utils_tasks = class {
 
-    constructor(INDEX_NAME, CLIENT, CONFIG) {
-        this.INDEX_NAME = INDEX_NAME;
+    constructor(CLIENT, INDEX_NAME) {
         this.CLIENT = CLIENT;
-        this.CONFIG = CONFIG;
+        this.INDEX_NAME = INDEX_NAME;
     }
 
     /**
@@ -45,11 +45,11 @@ const Indexer_index_utils_tasks = class {
                 index: this.INDEX_NAME
             });
 
-            if (response.statusCode === 200) {
-                LOGGER.module().info('INFO: [/indexer/tasks (check_index)] index exists');
+            if (response === true) {
+                LOGGER.module().info('INFO: [/indexer/tasks (check_index)] index ' + this.INDEX_NAME + ' exists');
                 return true;
             } else {
-                LOGGER.module().error('ERROR: [/indexer/tasks (check_index)] index does not exist');
+                LOGGER.module().error('ERROR: [/indexer/tasks (check_index)] index ' + this.INDEX_NAME + ' does not exist');
                 return false;
             }
 
@@ -70,14 +70,14 @@ const Indexer_index_utils_tasks = class {
                body: {
                    'settings': {
                        'index': {
-                           'number_of_shards': this.CONFIG.number_of_shards,
-                           'number_of_replicas': this.CONFIG.number_of_replicas
+                           'number_of_shards': 3,
+                           'number_of_replicas': 2
                        }
                    }
                }
            });
 
-           if (response.statusCode === 200) {
+           if (response.acknowledged === true) {
                LOGGER.module().info('INFO: [/indexer/tasks (create_index)] new index created');
                return true;
            } else {
@@ -107,16 +107,17 @@ const Indexer_index_utils_tasks = class {
                 body: body
             });
 
-            if (response.statusCode === 200) {
+            if (response.acknowledged === true) {
                 LOGGER.module().info('INFO: [/indexer/tasks (create_mappings)] mappings created');
                 return true;
             } else {
                 LOGGER.module().error('ERROR: [/indexer/tasks (create_mappings)] unable to create mappings');
-                return true;
+                return false;
             }
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/indexer/tasks (create_mappings)] unable to create mappings ' + error.message);
+            return false;
         }
     }
 
@@ -138,9 +139,12 @@ const Indexer_index_utils_tasks = class {
                 index: this.INDEX_NAME
             });
 
-            if (response.statusCode === 200) {
-                LOGGER.module().info('INFO: [/indexer/service module (delete_index)] index deleted');
+            if (response.acknowledged === true) {
+                LOGGER.module().info('INFO: [/indexer/service module (delete_index)] index ' + this.INDEX_NAME + ' deleted');
                 return true;
+            } else {
+                LOGGER.module().error('ERROR: [/indexer/service module (delete_index)] unable to delete index ' + error.message );
+                return false
             }
 
         } catch(error) {

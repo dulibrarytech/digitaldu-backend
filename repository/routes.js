@@ -23,8 +23,17 @@ const TOKEN = require('../libs/tokens');
 
 module.exports = function (app) {
 
+    app.route('/')
+    .post(TOKEN.verify, CONTROLLER.default);
+
     app.route('/api/v2/repo/records')
     .get(TOKEN.verify, CONTROLLER.get_records);
+
+    app.route('/api/v2/repo/publish')
+    .post(TOKEN.verify, CONTROLLER.publish);
+
+    app.route('/api/v2/repo/suppress')
+    .post(TOKEN.verify, CONTROLLER.suppress);
 
     app.route('/api/admin/v1/repo/object')
     .get(TOKEN.verify, CONTROLLER.get_display_record)
@@ -51,12 +60,6 @@ module.exports = function (app) {
 
     app.route('/api/admin/v1/repo/object/transcript')
     .put(TOKEN.verify, CONTROLLER.save_transcript);
-
-    app.route('/api/v2/repo/publish')
-    .post(TOKEN.verify, CONTROLLER.publish);
-
-    app.route('/api/v2/repo/suppress')
-    .post(TOKEN.verify, CONTROLLER.suppress);
 
     app.route('/api/admin/v1/repo/metadata/reset')
     .post(TOKEN.verify, CONTROLLER.reset_display_record);

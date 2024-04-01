@@ -24,6 +24,12 @@ const CACHE = require('../libs/cache');
 const PATH = require('path');
 const VALIDATOR = require('validator');
 
+exports.default = function (req, res) {
+    res.status(403).send({
+        info: 'University of Denver Libraries - Digital Object Repository'
+    });
+};
+
 exports.get_records = function (req, res) {
 
     let cache = CACHE.get_cache(req);
@@ -42,7 +48,6 @@ exports.get_records = function (req, res) {
             return false;
         }
 
-        // TODO validate
         const pid = req.query.pid;
         const total_on_page = 10;
         let search = {};
@@ -70,12 +75,18 @@ exports.publish = function (req, res) {
         return false;
     }
 
-    // TODO sanitize
+    if (!VALIDATOR.isAlpha(req.body.type) && req.body.type.length < 11) {
+        res.status(400).send({
+            message: 'Bad Request'
+        });
+        return false;
+    }
+
     const uuid = req.body.pid;
     const type = req.body.type;
 
     MODEL.publish(uuid, type, function (data) {
-        console.log('response ', data);
+
         CACHE.clear_cache();
         let obj = {};
 
@@ -103,7 +114,13 @@ exports.suppress = function (req, res) {
         return false;
     }
 
-    // TODO: validate
+    if (!VALIDATOR.isAlpha(req.body.type) && req.body.type.length < 11) {
+        res.status(400).send({
+            message: 'Bad Request'
+        });
+        return false;
+    }
+
     const uuid = req.body.pid;
     const type = req.body.type;
 

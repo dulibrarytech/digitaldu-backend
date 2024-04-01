@@ -18,9 +18,18 @@
 
 'use strict';
 
-const MODEL = require('../indexer/model'),
-    SERVICE = require('../indexer/service');
+const MODEL = require('../indexer/model');
+// const SERVICE = require('../indexer/service');
 
+exports.reindex = function (req, res) {
+    MODEL.reindex(function (data) {
+        console.log('controller ', data);
+
+        res.status(data.status).send(data);
+    });
+};
+
+/*
 exports.index_record = function (req, res) {
     MODEL.get_index_record(req, function (data) {
         res.status(data.status).send(data);
@@ -80,3 +89,5 @@ exports.delete_repo_index = function (req, res) {
         res.status(data.status).send(data);
     });
 };
+
+ */

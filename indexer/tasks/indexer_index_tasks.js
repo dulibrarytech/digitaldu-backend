@@ -115,28 +115,25 @@ const Indexer_index_tasks = class {
 
     /**
      * Gets DB record for full indexing
+     * @param DB_TABLES
      */
-    async get_record() {
+    async get_record(DB_TABLES) {
 
         try {
 
-            const data = await this.DB(this.TABLE)
-            .select('*')
+            return await this.DB(DB_TABLES.repo.repo_records)
+            .select('pid')
             .where({
-                is_published: 1,
-                is_deleted: 0,
-                is_indexed: 0
+                is_indexed: 0,
+                is_active: 1
+            })
+            .whereNot({
+                display_record: null
             })
             .limit(1);
 
-            if (data === undefined || data.length === 0) {
-                return 0;
-            }
-
-            return data[0];
-
         } catch (error) {
-            LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (get_record)] unable to get record ' + error.message);
+            LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (get_record)] unable to get record for indexing ' + error.message);
         }
     }
 
@@ -149,11 +146,10 @@ const Indexer_index_tasks = class {
         try {
 
             const data = await this.DB(this.TABLE)
-            .select('*')
+            .select('display_record')
             .where({
-                uuid: uuid,
-                is_published: 1,
-                is_deleted: 0
+                pid: uuid,
+                is_active: 1
             })
             .limit(1);
 
@@ -176,15 +172,19 @@ const Indexer_index_tasks = class {
 
         try {
 
-            await this.DB(this.TABLE)
+            let result = await this.DB(this.TABLE)
             .where({
-                uuid: uuid
+                pid: uuid
             })
             .update({
                 is_indexed: 1
             });
 
-            return true;
+            if (result === 1) {
+                return true;
+            } else {
+                return false;
+            }
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/indexer/model module (index_records)] unable to update is_indexed field ' + error.message);
@@ -202,7 +202,7 @@ const Indexer_index_tasks = class {
             await this.DB(this.TABLE)
             .where({
                 is_indexed: 1,
-                is_deleted: 0
+                is_active: 1
             })
             .update({
                 is_indexed: 0
@@ -211,7 +211,7 @@ const Indexer_index_tasks = class {
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/indexer/model module (index_records)] unable to reset is_indexed fields ' + error.message);
+            LOGGER.module().error('ERROR: [/indexer/tasks (reset_indexed_flags)] unable to reset is_indexed fields ' + error.message);
         }
     }
 };
