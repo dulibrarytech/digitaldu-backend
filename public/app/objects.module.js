@@ -132,7 +132,6 @@ const objectsModule = (function () {
                     if (elemId !== null) {
                         domModule.html('#publish-' + pid, null);
                         published += '<p><small style="background: green; padding: 3px; color: white">Published</small></p>';
-                        published += '<p><a id="unpublish-' + pid + '" href="#' + pid + '" onclick="objectsModule.unpublishObject(\'' + DOMPurify.sanitize(pid) + '\', \'object\'); return false;"><i class="fa fa-cloud-download"></i>&nbsp;Unpublish</a></p>';
                         domModule.html('#status-unpublished-' + pid, published);
                         domModule.id('status-unpublished-' + pid, 'status-published-' + pid);
                     } else {
@@ -207,7 +206,6 @@ const objectsModule = (function () {
                     domModule.html('#unpublish-' + pid, null);
                     let unpublished = '';
                     unpublished += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
-                    unpublished += '<p><a id="publish-' + pid + '" href="#' + pid + '" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(pid) + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
                     unpublished += '<p><a href="/dashboard/object/delete?pid=' +  DOMPurify.sanitize(pid) + '"><i class="fa fa-trash"></i>&nbsp;Delete</a></p>';
                     domModule.html('#status-published-' + pid, unpublished);
                     domModule.id('status-published-' + pid, 'status-unpublished-' + pid);

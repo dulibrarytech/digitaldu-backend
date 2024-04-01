@@ -474,13 +474,15 @@ exports.publish = function (uuid, type, callback) {
 
             if (type === 'object') {
 
-                // check if collection is published
+                // TODO: check if collection is published
+                /*
                 let indexed_admin_record = await ADMIN_RECORD_TASK.get_indexed_record(uuid);
-
+                console.log(indexed_admin_record.is);
                 if (indexed_admin_record.is_published === 0) {
                     callback(false);
                     return false;
                 }
+                 */
 
                 let is_published = await publish_record(PUBLISH_RECORD_TASK, ADMIN_RECORD_TASK, uuid, type);
 
