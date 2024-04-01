@@ -21,6 +21,7 @@
 const CONFIG = require('../config/config');
 const SERVICE = require('../indexer/service');
 const MODS = require('../libs/display-record');
+const CACHE = require('../libs/cache');
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
 const ES_TASKS = require('../libs/elasticsearch');
@@ -69,6 +70,7 @@ exports.reindex = function (callback) {
 
                 if (backend_records.length === 0) {
                     clearInterval(index_timer);
+                    CACHE.clear_cache();
                     LOGGER.module().info('INFO: [/indexer/model (reindex)] reindex complete.');
                     return false;
                 }
@@ -146,7 +148,7 @@ exports.reindex = function (callback) {
                     LOGGER.module().error('ERROR: [/indexer/model (reindex)] reindex HALTED.');
                 }
 
-            }, 500);
+            }, 700);
 
             callback({
                 status: 200,
@@ -158,263 +160,4 @@ exports.reindex = function (callback) {
     } catch (error) {
         LOGGER.module().error('ERROR: [/indexer/model (reindex)] reindex failed. ' + error.message);
     }
-};
-
-/**
- * Removes record from public index
- * @param req
- * @param callback
- */
-exports.unindex_record = function (req, callback) {
-
-    let pid = req.query.pid;
-
-    if (pid === undefined || pid.length === 0) {
-
-        callback({
-            status: 400,
-            message: 'Bad request.'
-        });
-
-        return false;
-    }
-
-    SERVICE.unindex_record({
-        index: CONFIG.elasticSearchFrontIndex,
-        id: pid
-    }, function (response) {
-
-        if (response.result === 'deleted') {
-
-            callback({
-                status: 204,
-                message: 'record unindexed'
-            });
-
-        } else {
-
-            callback({
-                status: 500,
-                data: 'unable to remove record from index'
-            });
-        }
-    });
-};
-
-/**
- * Removes record from admin index
- * @param req
- * @param callback
- */
-exports.unindex_admin_record = function (req, callback) {
-
-    let pid = req.query.pid;
-
-    if (pid === undefined || pid.length === 0) {
-
-        callback({
-            status: 400,
-            message: 'Bad request.'
-        });
-
-        return false;
-    }
-
-    SERVICE.unindex_record({
-        index: CONFIG.elasticSearchBackIndex,
-        id: pid
-    }, function (response) {
-
-        if (response.result === 'deleted') {
-
-            callback({
-                status: 204,
-                message: 'record admin unindexed'
-            });
-
-        } else {
-
-            callback({
-                status: 500,
-                data: 'unable to remove admin record from index'
-            });
-        }
-    });
-};
-
-/**
- * indexes all published records to public index after full reindex
- * @param req
- * @param callback
- * @returns {boolean}
- */
-exports.republish_record = function (req, callback) {
-
-    let pid = req.body.sip_uuid;
-
-    if (pid === undefined || pid.length === 0) {
-
-        callback({
-            status: 400,
-            message: 'Bad request.'
-        });
-
-        return false;
-    }
-
-    let index_name = CONFIG.elasticSearchFrontIndex;
-
-    function index(pid, index_name) {
-
-        DB(REPO_OBJECTS)
-        .select('*')
-        .where({
-            pid: pid,
-            is_published: 1,
-            is_indexed: 0,
-            is_active: 1
-        })
-        .whereNot({
-            display_record: null
-        })
-        .limit(1)
-        .then(function (data) {
-
-            if (data.length > 0) {
-
-                let record = JSON.parse(data[0].display_record);
-                // TODO: update to use display record lib
-                // collection record
-                if (record.display_record.jsonmodel_type !== undefined && record.display_record.jsonmodel_type === 'resource') {
-
-                    let collection_record = {};
-                    collection_record.pid = data[0].pid;
-                    collection_record.uri = data[0].uri;
-                    collection_record.is_member_of_collection = data[0].is_member_of_collection;
-                    collection_record.handle = data[0].handle;
-                    collection_record.object_type = data[0].object_type;
-                    collection_record.title = record.display_record.title;
-                    collection_record.thumbnail = data[0].thumbnail;
-                    collection_record.is_published = data[0].is_published;
-                    collection_record.date = data[0].created;
-
-                    // get collection abstract
-                    if (record.display_record.notes !== undefined) {
-
-                        for (let i = 0; i < record.display_record.notes.length; i++) {
-
-                            if (record.display_record.notes[i].type === 'abstract') {
-                                collection_record.abstract = record.display_record.notes[i].content.toString();
-                            }
-                        }
-                    }
-
-                    collection_record.display_record = {
-                        title: record.display_record.title,
-                        abstract: collection_record.abstract
-                    };
-
-                    record = collection_record;
-
-                } else {
-
-                    if (record.display_record.language !== undefined) {
-
-                        if (typeof record.display_record.language !== 'object') {
-
-                            let language = {
-                                language: record.display_record.language
-                            };
-
-                            record.display_record.t_language = language;
-                            delete record.display_record.language;
-
-                        } else {
-                            record.display_record.t_language = record.display_record.language;
-                            delete record.display_record.language;
-                        }
-                    }
-
-                    record.created = data[0].created;
-                }
-
-                // TODO: figure out why some records are getting their is_published value changed to 0 (unpublished)
-                // Everything getting funneled through here is published
-                if (record.is_published === 0) {
-                    record.is_published = 1;
-                }
-
-                SERVICE.index_record({
-                    index: index_name,
-                    id: record.pid,
-                    body: record
-                }, function (response) {
-
-                    if (response.result === 'created' || response.result === 'updated') {
-
-                        DB(REPO_OBJECTS)
-                        .where({
-                            pid: record.pid
-                        })
-                        .update({
-                            is_indexed: 1
-                        })
-                        .then(function (data) {
-
-                            if (data === 1) {
-
-                                setTimeout(function () {
-                                    // index next record
-                                    index(index_name);
-                                }, INDEX_TIMER);
-
-                            } else {
-                                LOGGER.module().error('ERROR: [/indexer/model module (republish_record)] more than one record was updated');
-                            }
-
-                        })
-                        .catch(function (error) {
-                            LOGGER.module().fatal('FATAL: [/indexer/model module (republish_record)] unable to update is_indexed field ' + error);
-                            throw 'FATAL: [/indexer/model module (republish_record)] unable to update is_indexed field ' + error;
-                        });
-
-                    } else {
-                        LOGGER.module().error('ERROR: [/indexer/model module (republish_record)] unable to index record');
-                    }
-                });
-
-            } else {
-                LOGGER.module().info('INFO: [/indexer/model module (republish_record)] indexing complete');
-            }
-        })
-        .catch(function (error) {
-            LOGGER.module().error('ERROR: [/indexer/model module (republish_record)] unable to get record ' + error);
-            throw error;
-        });
-    }
-
-    // reset is_indexed fields
-    DB(REPO_OBJECTS)
-    .where({
-        pid: pid,
-        is_indexed: 1,
-        is_active: 1,
-        is_published: 1
-    })
-    .update({
-        is_indexed: 0,
-        is_active: 1
-    })
-    .then(function (data) {
-        index(pid, index_name);
-    })
-    .catch(function (error) {
-        LOGGER.module().error('ERROR: [/indexer/model module (publish_records)] unable to reset is_indexed fields ' + error);
-        throw error;
-    });
-
-    callback({
-        status: 201,
-        message: 'reindexing (publishing) repository records...'
-    });
 };
