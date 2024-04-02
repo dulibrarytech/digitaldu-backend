@@ -18,8 +18,8 @@
 
 'use strict';
 
-const USERS = require('../users/model'),
-    CACHE = require('../libs/cache');
+const USERS = require('../users/model');
+const CACHE = require('../libs/cache');
 
 /**
  * Gets Users

@@ -40,8 +40,8 @@ exports.reindex = function (callback) {
             const OBJ = ES.get_es();
             const INDEXER_UTILS_BACKEND_TASK = new INDEXER_UTILS_TASKS(OBJ.es_client, OBJ.es_config.elasticsearch_index_front);
             const INDEXER_UTILS_FRONTEND_TASK = new INDEXER_UTILS_TASKS(OBJ.es_client, OBJ.es_config.elasticsearch_index_front);
-            const REINDEX_BACKEND_TASK = new INDEXER_TASKS(DB, DB_TABLES.repo.repo_records, OBJ.es_client, OBJ.es_config.elasticsearch_index_front);
-            const REINDEX_FRONTEND_TASK = new INDEXER_TASKS(DB, DB_TABLES.repo.repo_records, OBJ.es_client, OBJ.es_config.elasticsearch_index_back);
+            const REINDEX_BACKEND_TASK = new INDEXER_TASKS(DB, DB_TABLES.repo.repo_records, OBJ.es_client, OBJ.es_config.elasticsearch_index_back);
+            const REINDEX_FRONTEND_TASK = new INDEXER_TASKS(DB, DB_TABLES.repo.repo_records, OBJ.es_client, OBJ.es_config.elasticsearch_index_front);
             const is_backend_exists = await INDEXER_UTILS_BACKEND_TASK.check_index();
             const is_frontend_exists = await INDEXER_UTILS_FRONTEND_TASK.check_index();
 
@@ -111,7 +111,7 @@ exports.reindex = function (callback) {
                     let is_indexed = await REINDEX_BACKEND_TASK.index_record(collection_record);
 
                     if (is_indexed === true) {
-                        LOGGER.module().info('INFO: [/indexer/model (reindex)] ' + collection_record.object_type + ' record ' + collection_record.pid + ' indexed');
+                        LOGGER.module().info('INFO: [/indexer/model (reindex)] ' + collection_record.object_type + ' record ' + collection_record.pid + ' indexed (admin)');
                     }
 
                     if (collection_record.is_published === 1) {
@@ -128,7 +128,7 @@ exports.reindex = function (callback) {
                     let is_indexed = await REINDEX_BACKEND_TASK.index_record(backend_index_record);
 
                     if (is_indexed === true) {
-                        LOGGER.module().info('INFO: [/indexer/model (reindex)] ' + backend_index_record.object_type + ' record ' + backend_index_record.pid + ' indexed');
+                        LOGGER.module().info('INFO: [/indexer/model (reindex)] ' + backend_index_record.object_type + ' record ' + backend_index_record.pid + ' indexed (admin)');
                     }
 
                     if (backend_index_record.is_published === 1) {
@@ -147,7 +147,7 @@ exports.reindex = function (callback) {
                     LOGGER.module().error('ERROR: [/indexer/model (reindex)] reindex HALTED.');
                 }
 
-            }, 500);
+            }, 350);
 
             callback({
                 status: 200,
