@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2024 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,78 +18,19 @@
 
 'use strict';
 
-const IMPORT = require('../import/controller'),
-    TOKEN = require('../libs/tokens');
+const CONTROLLER = require('../import/controller');
+const TOKEN = require('../libs/tokens');
 
 module.exports = function (app) {
 
-    /*
-    app.route('/api/admin/v1/import/list')
-        .get(IMPORT.list);
-    */
-
-    app.route('/api/admin/v1/import/queue_objects')
-        .post(TOKEN.verify, IMPORT.queue_objects);
-
-    app.route('/api/admin/v1/import/start_transfer')
-        .post(TOKEN.verify, IMPORT.start_transfer);
-
-    app.route('/api/admin/v1/import/approve_transfer')
-        .post(TOKEN.verify, IMPORT.approve_transfer);
-
-    // initiates transfer status checks
-    app.route('/api/admin/v1/import/transfer_status')
-        .get(TOKEN.verify, IMPORT.get_transfer_status);
-
-    // initiates ingest status checks
-    app.route('/api/admin/v1/import/ingest_status')
-        .get(TOKEN.verify, IMPORT.get_ingest_status);
-
-    app.route('/api/admin/v1/import/import_dip')
-        .get(TOKEN.verify, IMPORT.import_dip);
-
-    app.route('/api/admin/v1/import/create_repo_record')
-        .get(TOKEN.verify, IMPORT.create_repo_record);
-
-    app.route('/api/admin/v1/import/complete')
-        .get(TOKEN.verify, IMPORT.get_completed_imports);  // get_import_complete
-
-    // gets archivesspace session token
-    app.route('/api/admin/v1/import/metadata/session')
-        .get(TOKEN.verify, IMPORT.get_session_token);
-
-    // destroys archivesspace session token
-    app.route('/api/admin/v1/import/metadata/session/destroy')
-        .post(TOKEN.verify, IMPORT.destroy_session_token);
-
-    // updates single collection metadata record
-    app.route('/api/admin/v1/import/metadata/collection')
-        .put(TOKEN.verify, IMPORT.update_collection_metadata_record);
-
     // updates single object metadata record
     app.route('/api/admin/v1/import/metadata/single')
-        .put(TOKEN.verify, IMPORT.update_single_metadata_record);
+        .put(TOKEN.verify, CONTROLLER.update_single_metadata_record);
 
     app.route('/api/admin/v1/import/metadata/object')
-        .put(TOKEN.verify, IMPORT.update_object_metadata_record);
+        .put(TOKEN.verify, CONTROLLER.update_object_metadata_record);
 
     // batch updates all metadata records (collections and objects)
     app.route('/api/admin/v1/import/metadata/batch')
-        .post(TOKEN.verify, IMPORT.batch_update_metadata);
-
-    // transfer/import status checks - TODO: generating expired token errors
-    app.route('/api/admin/v1/import/poll/transfer_status')
-        .get(TOKEN.verify, IMPORT.poll_transfer_status);
-
-    app.route('/api/admin/v1/import/poll/ingest_status')
-        .get(TOKEN.verify, IMPORT.poll_ingest_status);
-
-    app.route('/api/admin/v1/import/poll/import_status')
-        .get(TOKEN.verify, IMPORT.poll_import_status);
-
-    app.route('/api/admin/v1/import/poll/fail_queue')
-        .get(TOKEN.verify, IMPORT.poll_fail_queue);
-
-    app.route('/api/admin/v1/import/check')
-    .get(IMPORT.check_ingest);  // TOKEN.verify,
+        .post(TOKEN.verify, CONTROLLER.batch_update_metadata);
 };

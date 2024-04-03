@@ -18,89 +18,8 @@
 
 'use strict';
 
-const IMPORT = require('../import/queue'),
-    MODEL = require('../import/model'),
-    SERVICE = require('../import/service');
-
-/*
-exports.list = function (req, res) {
-    IMPORT.list(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
- */
-
-exports.check_ingest = async function (req, res) {
-
-    let result = await IMPORT.check_ingest();
-
-    res.status(200).send({
-        result: result
-    });
-};
-
-exports.queue_objects = function (req, res) {
-    IMPORT.queue_objects(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.start_transfer = function (req, res) {
-    IMPORT.start_transfer(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.approve_transfer = function (req, res) {
-    IMPORT.approve_transfer(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.get_transfer_status = function (req, res) {
-    IMPORT.get_transfer_status(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-/*
-exports.get_import_status = function (req, res) {
-    IMPORT.get_import_status(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-*/
-
-exports.get_ingest_status = function (req, res) {
-    IMPORT.get_ingest_status(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.import_dip = function (req, res) {
-    IMPORT.import_dip(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.create_repo_record = function (req, res) {
-    IMPORT.create_repo_record(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.get_completed_imports = function (req, res) {
-    MODEL.get_completed_imports(function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.get_import_complete = function (req, res) {
-    MODEL.get_import_complete(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
+const MODEL = require('../import/model');
+const SERVICE = require('../import/service');
 
 exports.get_session_token = function(req, res) {
     SERVICE.get_session_token(req, function(data) {
@@ -137,35 +56,3 @@ exports.batch_update_metadata = function(req, res) {
         res.status(data.status).send(data.data);
     });
 };
-
-exports.poll_transfer_status = function (req, res) {
-    IMPORT.poll_transfer_status(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.poll_ingest_status = function (req, res) {
-    IMPORT.poll_ingest_status(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.poll_import_status = function (req, res) {
-    IMPORT.poll_import_status(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.poll_fail_queue = function (req, res) {
-    IMPORT.poll_fail_queue(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-/*
-exports.get_metadata_updates = function (req, res) {
-    MODEL.get_metadata_updates(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-    */
