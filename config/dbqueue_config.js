@@ -18,17 +18,19 @@
 
 'use strict';
 
-const HELPER = require("../libs/helper");
+const HELPER = require('../libs/helper');
 const HELPER_TASK = new HELPER();
-const TABLES = {
-    repo_records: process.env.REPO_OBJECTS,
-    repo_user_records: process.env.REPO_USERS,
-    metadata_update_queue: process.env.METADATA_UPDATE_QUEUE
+const CONNECTION_CONFIG = {
+    host: process.env.DB_QUEUE_HOST,
+    user: process.env.DB_QUEUE_USER,
+    password: process.env.DB_QUEUE_PASSWORD,
+    database: process.env.DB_QUEUE_NAME
 };
-const DB_TABLES_CONFIG = {
-    repo: HELPER_TASK.check_config(TABLES)
-};
+const DBQUEUE = require('knex')({
+        client: 'mysql2',
+        connection: HELPER_TASK.check_config(CONNECTION_CONFIG)
+    });
 
 module.exports = function () {
-    return DB_TABLES_CONFIG;
+    return DBQUEUE;
 };

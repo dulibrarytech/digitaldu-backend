@@ -21,6 +21,24 @@
 const MODEL = require('../import/model');
 const SERVICE = require('../import/service');
 
+exports.update_collection = function(req, res) {
+
+    if (req.params.collection_uuid === undefined) {
+        res.status(400).send({
+            message: 'Bad Request.'
+        });
+
+        return false;
+    }
+
+    const uuid = req.params.collection_uuid;
+
+    MODEL.update_collection(uuid, function(data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+/*
 exports.get_session_token = function(req, res) {
     SERVICE.get_session_token(req, function(data) {
         res.status(data.status).send(data.data);
@@ -56,3 +74,5 @@ exports.batch_update_metadata = function(req, res) {
         res.status(data.status).send(data.data);
     });
 };
+
+ */

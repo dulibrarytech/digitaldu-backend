@@ -18,21 +18,327 @@
 
 'use strict';
 
-const MODS = require('../libs/display-record'),
-    SERVICE = require('../import/service'),
-    LOGGER = require('../libs/log4'),
-    ASYNC = require('async'),
-    HTTP = require('../libs/http'),
-    VALIDATOR = require('validator'),
-    DB = require('../config/db')(),
-    REPO_OBJECTS = 'tbl_objects',
-    CACHE = require('../libs/cache'),
-    REQUEST_TIME_INTERVAL = 15000;
+const LOGGER = require('../libs/log4');
+const VALIDATOR = require('validator');
+const DB = require('../config/db_config')();
+const DB_QUEUE = require('../config/dbqueue_config')();
+const DB_TABLES = require('../config/db_tables_config')();
+const CACHE = require('../libs/cache');
+const METADATA_TASKS = require('../import/tasks/metadata_tasks');
+const INDEXER_TASKS = require('../indexer/tasks/indexer_index_tasks');
+const ES_TASKS = require("../libs/elasticsearch");
+const REQUEST_TIME_INTERVAL = 15000;
+
+/**
+ * Updates collection - parent and child records
+ * @param uuid
+ * @param callback
+ */
+exports.update_collection = function (uuid, callback) {
+
+    (async () => {
+
+        try {
+
+            LOGGER.module().info('INFO: [/import/model (update_collection)] Updating Collection.');
+            const METADATA = new METADATA_TASKS(DB, DB_QUEUE, DB_TABLES);
+            const collection_record = await METADATA.get_db_record(uuid);
+            const uri = collection_record[0].uri;
+            const token = await METADATA.get_session_token();
+            const metadata = await METADATA.get_metadata(uri, token);
+            const record = JSON.stringify(metadata);
+            const ES = new ES_TASKS();
+            const OBJ = ES.get_es();
+            const REINDEX_BACKEND_TASK = new INDEXER_TASKS(DB, DB_TABLES.repo.repo_records, OBJ.es_client, OBJ.es_config.elasticsearch_index_back);
+            const REINDEX_FRONTEND_TASK = new INDEXER_TASKS(DB, DB_TABLES.repo.repo_records, OBJ.es_client, OBJ.es_config.elasticsearch_index_front);
+            let is_updated;
+
+            await METADATA.queue_metadata({
+                uri: uri,
+                uuid: uuid,
+                update_type: 'collection',
+                status: 'UPDATING_COLLECTION_RECORD',
+                error: 'NONE'
+            });
+
+            LOGGER.module().info('INFO: [/import/model (update_collection)] Updating collection DB records (mods).');
+
+            is_updated = await METADATA.update_db_record(uuid, {
+                mods: record
+            });
+
+            if (is_updated === false) {
+
+                await METADATA.update_metadata_queue({
+                    uri: uri
+                }, {
+                    status: 'HALTED',
+                    error: 'Unable to update db record'
+                });
+
+                callback({
+                    status: 200,
+                    message: 'Metadata update halted'
+                });
+            }
+
+            let display_record = JSON.parse(collection_record[0].display_record);
+            display_record.title = metadata.title;
+            display_record.display_record = metadata;
+
+            for (let i = 0; i < metadata.notes.length; i++) {
+                if (metadata.notes[i].type === 'abstract' && metadata.notes[i].content.length !== 0) {
+                    display_record.abstract = [metadata.notes[i].content];
+                }
+            }
+
+            LOGGER.module().info('INFO: [/import/model (update_collection)] Updating Collection display record.');
+
+            is_updated = await METADATA.update_db_record(uuid, {
+                display_record: JSON.stringify(display_record)
+            });
+
+            if (is_updated === false) {
+
+                await METADATA.update_metadata_queue({
+                    uri: uri
+                }, {
+                    status: 'HALTED',
+                    error: 'Unable to update db record'
+                });
+
+                callback({
+                    status: 200,
+                    message: 'Metadata update halted'
+                });
+            }
+
+            await METADATA.update_metadata_queue({
+                uri: uri
+            }, {
+                status: 'COLLECTION_DATABASE_RECORD_UPDATED',
+                is_updated: 1
+            });
+
+            LOGGER.module().info('INFO: [/import/model (update_collection)] Indexing collection record.');
+
+            await REINDEX_BACKEND_TASK.index_record(display_record);
+
+            if (display_record.is_published === 1) {
+                await REINDEX_FRONTEND_TASK.index_record(display_record);
+            }
+
+            await METADATA.update_metadata_queue({
+                uri: uri
+            }, {
+                status: 'COMPLETE',
+                is_indexed: 1,
+                is_complete: 1
+            });
+
+            LOGGER.module().info('INFO: [/import/model (update_collection)] Collection record update complete.');
+
+            const child_records = await METADATA.get_collection_child_records(uuid);
+            // TODO: batch import
+            let queue_timer = setInterval(async () => {
+
+                LOGGER.module().info('INFO: [/import/model (update_collection)] Queuing collection child records.');
+
+                if (child_records.length === 0) {
+                    clearInterval(queue_timer);
+                    console.log('Child records queued');
+                    update_child_records();
+                    return false;
+                }
+
+                let record = child_records.pop();
+
+                await METADATA.queue_metadata({
+                    uri: record.uri,
+                    uuid: record.pid,
+                    update_type: 'collection',
+                    status: 'UPDATING_COLLECTION_CHILD_RECORDS',
+                    error: 'NONE'
+                });
+
+            }, 150);
+
+            function update_child_records() {
+
+                let child_record_timer = setInterval(async () => {
+
+                    LOGGER.module().info('INFO: [/import/model (update_collection)] Processing collection child records.');
+
+                    try {
+
+                        let record = await METADATA.get_child_record();
+
+                        if (record === 0) {
+                            clearInterval(child_record_timer);
+                            CACHE.clear_cache();
+                            await METADATA.destroy_session_token(token);
+                            LOGGER.module().info('INFO: [/import/model (update_collection)] Collection child record updates complete.');
+                            return false;
+                        }
+
+                        const metadata = await METADATA.get_metadata(record.uri, token);
+
+                        if (metadata !== false) {
+
+                            LOGGER.module().info('INFO: [/import/model (update_collection)] Processing collection child record.');
+
+                            const child_record = JSON.stringify(metadata);
+
+                            is_updated = await METADATA.update_db_record(record.uuid, {
+                                mods: child_record
+                            });
+
+                            const collection_child_record = await METADATA.get_db_record(record.uuid);
+                            let display_record = JSON.parse(collection_child_record[0].display_record);
+
+                            if (display_record.is_compound === 0) {
+                                display_record.display_record = metadata;
+                            } else if (display_record.is_compound === 1) {
+                                // TODO: persist parts
+                            }
+
+                            is_updated = await METADATA.update_db_record(record.uuid, {
+                                display_record: JSON.stringify(display_record)
+                            });
+
+                            await METADATA.update_metadata_queue({
+                                uri: record.uri
+                            }, {
+                                status: 'RECORD_UPDATED',
+                                is_updated: 1
+                            });
+
+                            await REINDEX_BACKEND_TASK.index_record(display_record);
+
+                            if (display_record.is_published === 1) {
+                                await REINDEX_FRONTEND_TASK.index_record(display_record);
+                            }
+
+                            await METADATA.update_metadata_queue({
+                                uri: record.uri
+                            }, {
+                                status: 'COMPLETE',
+                                is_indexed: 1,
+                                is_complete: 1
+                            });
+
+                        } else {
+
+                            LOGGER.module().error('ERROR: [/import/model (update_collection)] (interval) Unable to get ArchivesSpace record and processes it.');
+
+                            await METADATA.update_metadata_queue({
+                                uri: record.uri
+                            }, {
+                                is_complete: 1,
+                                status: 'COMPLETE',
+                                error: 'Unable to get ArchivesSpace record'
+                            });
+                        }
+
+                    } catch (error) {
+                        LOGGER.module().error('ERROR: [/import/model (update_collection)] (interval) Unable to process collection child records. ' + error.message);
+                    }
+
+                }, 10000);
+            }
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/import/model module (update_collection)] Unable to update collection ' + error.message);
+        }
+
+    })();
+
+    callback({
+        status: 201,
+        message: 'Updating collection'
+    });
+};
+
+/** TODO
+ * Updates single metadata record
+ * @param uuid
+ * @param callback
+ */
+exports.update_record = function (uuid, callback) {
+
+    (async () => {
+
+        try {
+
+            const METADATA = new METADATA_TASKS(DB, DB_QUEUE, DB_TABLES);
+            const child_record = await METADATA.get_db_record(uuid);
+            const uri = child_record[0].uri;
+            const token = await METADATA.get_session_token();
+            const metadata = await METADATA.get_metadata(uri, token);
+            const record = JSON.stringify(metadata);
+            let is_updated = false;
+
+            is_updated = await METADATA.update_db_record(uuid, {
+                mods: record
+            });
+
+            if (is_updated === false) {
+
+                callback({
+                    status: 200,
+                    message: 'Metadata update halted'
+                });
+            }
+
+            let display_record = JSON.parse(record[0].display_record);
+            /*
+            display_record.title = metadata.title;
+            display_record.display_record = metadata;
+
+            for (let i = 0; i < metadata.notes.length; i++) {
+                if (metadata.notes[i].type === 'abstract' && metadata.notes[i].content.length !== 0) {
+                    display_record.abstract = [metadata.notes[i].content];
+                }
+            }
+
+             */
+
+            is_updated = await METADATA.update_db_record(uuid, {
+                display_record: JSON.stringify(display_record)
+            });
+
+            if (is_updated === false) {
+
+                callback({
+                    status: 200,
+                    message: 'Metadata update halted'
+                });
+            }
+
+            const ES = new ES_TASKS();
+            const OBJ = ES.get_es();
+            const REINDEX_BACKEND_TASK = new INDEXER_TASKS(DB, DB_TABLES.repo.repo_records, OBJ.es_client, OBJ.es_config.elasticsearch_index_back);
+            const REINDEX_FRONTEND_TASK = new INDEXER_TASKS(DB, DB_TABLES.repo.repo_records, OBJ.es_client, OBJ.es_config.elasticsearch_index_front);
+            await REINDEX_BACKEND_TASK.index_record(display_record);
+
+            if (display_record.is_published === 1) {
+                await REINDEX_FRONTEND_TASK.index_record(display_record);
+            }
+
+            await METADATA.destroy_session_token();
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/import/model module (update_collection)] Unable to update collection');
+        }
+
+    })();
+};
 
 
 /**
  * Batch updates all metadata records in the repository via ArchivesSpace
  */
+/*
 exports.batch_update_metadata = function (req, callback) {
 
     var session;
@@ -192,12 +498,14 @@ exports.batch_update_metadata = function (req, callback) {
 
     })();
 };
+*/
 
 /**
  * Temporary solution to update single metadata records
  * @param req
  * @param callback
  */
+/*
 exports.update_single_metadata_record = function (req, callback) {
 
     try {
@@ -279,12 +587,14 @@ exports.update_single_metadata_record = function (req, callback) {
         });
     }
 };
+*/
 
 /**
  * updates single metadata record
  * @param req
  * @param callback
  */
+/*
 exports.update_object_metadata_record = function (req, callback) {
 
     if (req.body.sip_uuid === undefined) {
@@ -309,7 +619,7 @@ exports.update_object_metadata_record = function (req, callback) {
             callback(null, obj);
             return false;
         }
-         */
+         *
 
         let obj = {};
         obj.sip_uuid = sip_uuid;
@@ -516,6 +826,7 @@ exports.update_object_metadata_record = function (req, callback) {
         })();
     }
 
+
     // 6.) // TODO: re-index is failing silently
     function update_public_index(obj, callback) {
 
@@ -593,6 +904,7 @@ exports.update_object_metadata_record = function (req, callback) {
         }
     });
 };
+*/
 
 /**
  * Updates collection metadata record
@@ -600,6 +912,7 @@ exports.update_object_metadata_record = function (req, callback) {
  * @param callback
  * @returns {boolean}
  */
+/*
 exports.update_collection_metadata_record = function (req, callback) {
 
     if (req.body.sip_uuid === undefined) {
@@ -969,6 +1282,7 @@ exports.update_collection_metadata_record = function (req, callback) {
         });
     });
 };
+ */
 
 /**
  * Updates mods
@@ -976,6 +1290,7 @@ exports.update_collection_metadata_record = function (req, callback) {
  * @param mods
  * @param callback
  */
+/*
 const update_db_mods = function (sip_uuid, mods, callback) {
 
     DB(REPO_OBJECTS)
@@ -1068,12 +1383,14 @@ exports.get_completed_imports = function (callback) {
         LOGGER.module().fatal('ERROR: [/import/model module (get_import_complete)] unable to get imported records ' + error);
     });
 };
+*/
 
 /** TODO: refactor to show imports for fiscal year?
  * Gets completed imports for the past 30 days
  * @param req
  * @param callback
  */
+/*
 exports.get_import_complete = function (req, callback) {
 
     DB(REPO_OBJECTS)
@@ -1130,6 +1447,7 @@ exports.get_import_complete = function (req, callback) {
             throw 'FATAL: [/import/model module (get_import_complete)] unable to get complete records ' + error;
         });
 };
+*/
 
 /**
  * Batch updates all metadata records in the repository via ArchivesSpace

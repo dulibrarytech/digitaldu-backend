@@ -23,14 +23,29 @@ const TOKEN = require('../libs/tokens');
 
 module.exports = function (app) {
 
+    // update collection and all child records
+    // /api/v2/import/metadata/:collection_uuid/
+    // update single record
+    // /api/v2/import/metadata/:collection_uuid/record/object_uuid
+    // global update
+    // /api/v2/import/metadata/
+    app.route('/api/v2/import/metadata/:collection_uuid')
+    .put(TOKEN.verify, CONTROLLER.update_collection);
+
+    /*
+    app.route('/api/v2/import/metadata/update')
+    .put(TOKEN.verify, CONTROLLER.update_single_metadata_record);
+
     // updates single object metadata record
     app.route('/api/admin/v1/import/metadata/single')
-        .put(TOKEN.verify, CONTROLLER.update_single_metadata_record);
+    .put(TOKEN.verify, CONTROLLER.update_single_metadata_record);
 
     app.route('/api/admin/v1/import/metadata/object')
-        .put(TOKEN.verify, CONTROLLER.update_object_metadata_record);
+    .put(TOKEN.verify, CONTROLLER.update_object_metadata_record);
 
     // batch updates all metadata records (collections and objects)
     app.route('/api/admin/v1/import/metadata/batch')
-        .post(TOKEN.verify, CONTROLLER.batch_update_metadata);
+    .post(TOKEN.verify, CONTROLLER.batch_update_metadata);
+
+     */
 };
