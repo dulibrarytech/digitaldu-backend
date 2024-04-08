@@ -41,7 +41,7 @@ const apiModule = (function () {
             repo_object_unpublished: '/api/admin/v1/repo/object/unpublished',
             repo_transcript: '/api/admin/v1/repo/object/transcript',
             search: '/api/v2/search', // /api/admin/v1/search
-            import_metadata_collection: '/api/admin/v1/import/metadata/collection',
+            import_metadata_collection: '/api/v2/import/metadata', //'/api/admin/v1/import/metadata/collection',
             import_metadata_object: '/api/admin/v1/import/metadata/single',  // /api/admin/v1/import/metadata/object
             import_queue_objects: '/api/admin/v1/import/queue_objects',
             import_list: '/api/admin/v1/import/list',

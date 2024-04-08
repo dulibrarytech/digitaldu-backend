@@ -169,80 +169,107 @@ exports.update_collection = function (uuid, callback) {
 
                     LOGGER.module().info('INFO: [/import/model (update_collection)] Processing collection child records.');
 
-                    try {
+                    // try {
 
-                        let record = await METADATA.get_child_record();
+                    let record = await METADATA.get_child_record();
 
-                        if (record === 0) {
-                            clearInterval(child_record_timer);
-                            CACHE.clear_cache();
-                            await METADATA.destroy_session_token(token);
-                            LOGGER.module().info('INFO: [/import/model (update_collection)] Collection child record updates complete.');
-                            return false;
-                        }
+                    if (record === 0) {
+                        clearInterval(child_record_timer);
+                        CACHE.clear_cache();
+                        await METADATA.destroy_session_token(token);
+                        LOGGER.module().info('INFO: [/import/model (update_collection)] Collection child record updates complete.');
+                        return false;
+                    }
 
-                        const metadata = await METADATA.get_metadata(record.uri, token);
+                    const metadata = await METADATA.get_metadata(record.uri, token);
 
-                        if (metadata !== false) {
+                    if (metadata !== false) {
 
-                            LOGGER.module().info('INFO: [/import/model (update_collection)] Processing collection child record.');
+                        LOGGER.module().info('INFO: [/import/model (update_collection)] Processing collection child record.');
 
-                            const child_record = JSON.stringify(metadata);
+                        const child_record = JSON.stringify(metadata);
 
-                            is_updated = await METADATA.update_db_record(record.uuid, {
-                                mods: child_record
+                        is_updated = await METADATA.update_db_record(record.uuid, {
+                            mods: child_record
+                        });
+
+                        const collection_child_record = await METADATA.get_db_record(record.uuid);
+                        let display_record = JSON.parse(collection_child_record[0].display_record);
+
+                        if (metadata.is_compound === false) {
+
+                            display_record.display_record = metadata;
+
+                            await DB(DB_TABLES.repo.repo_records)
+                            .where({
+                                pid: record.uuid
+                            })
+                            .update({
+                                compound_parts: '[]',
+                                is_compound: 0
                             });
-
-                            const collection_child_record = await METADATA.get_db_record(record.uuid);
-                            let display_record = JSON.parse(collection_child_record[0].display_record);
-
-                            if (display_record.is_compound === 0) {
-                                display_record.display_record = metadata;
-                            } else if (display_record.is_compound === 1) {
-                                // TODO: persist parts
-                            }
 
                             is_updated = await METADATA.update_db_record(record.uuid, {
                                 display_record: JSON.stringify(display_record)
                             });
 
-                            await METADATA.update_metadata_queue({
-                                uri: record.uri
-                            }, {
-                                status: 'RECORD_UPDATED',
-                                is_updated: 1
+                        } else if (metadata.is_compound === true) {
+
+                            const compound_parts = display_record.display_record.parts;
+                            metadata.parts = compound_parts;
+                            display_record.display_record = metadata;
+
+                            await DB(DB_TABLES.repo.repo_records)
+                            .where({
+                                pid: record.uuid
+                            })
+                            .update({
+                                compound_parts: JSON.stringify(compound_parts),
+                                is_compound: 1
                             });
 
-                            await REINDEX_BACKEND_TASK.index_record(display_record);
-
-                            if (display_record.is_published === 1) {
-                                await REINDEX_FRONTEND_TASK.index_record(display_record);
-                            }
-
-                            await METADATA.update_metadata_queue({
-                                uri: record.uri
-                            }, {
-                                status: 'COMPLETE',
-                                is_indexed: 1,
-                                is_complete: 1
-                            });
-
-                        } else {
-
-                            LOGGER.module().error('ERROR: [/import/model (update_collection)] (interval) Unable to get ArchivesSpace record and processes it.');
-
-                            await METADATA.update_metadata_queue({
-                                uri: record.uri
-                            }, {
-                                is_complete: 1,
-                                status: 'COMPLETE',
-                                error: 'Unable to get ArchivesSpace record'
+                            is_updated = await METADATA.update_db_record(record.uuid, {
+                                display_record: JSON.stringify(display_record)
                             });
                         }
 
-                    } catch (error) {
-                        LOGGER.module().error('ERROR: [/import/model (update_collection)] (interval) Unable to process collection child records. ' + error.message);
+                        await METADATA.update_metadata_queue({
+                            uri: record.uri
+                        }, {
+                            status: 'RECORD_UPDATED',
+                            is_updated: 1
+                        });
+
+                        await REINDEX_BACKEND_TASK.index_record(display_record);
+
+                        if (display_record.is_published === 1) {
+                            await REINDEX_FRONTEND_TASK.index_record(display_record);
+                        }
+
+                        await METADATA.update_metadata_queue({
+                            uri: record.uri
+                        }, {
+                            status: 'COMPLETE',
+                            is_indexed: 1,
+                            is_complete: 1
+                        });
+
+                    } else {
+
+                        LOGGER.module().error('ERROR: [/import/model (update_collection)] (interval) Unable to get ArchivesSpace record and processes it.');
+
+                        await METADATA.update_metadata_queue({
+                            uri: record.uri
+                        }, {
+                            is_complete: 1,
+                            status: 'COMPLETE',
+                            error: 'Unable to get ArchivesSpace record'
+                        });
                     }
+
+                    //} catch (error) {
+                    //    LOGGER.module().error('ERROR: [/import/model (update_collection)] (interval) Unable to process collection child records. ' + error.message);
+                    //}
 
                 }, 10000);
             }

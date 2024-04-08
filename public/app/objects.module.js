@@ -388,11 +388,11 @@ const objectsModule = (function () {
             add_collection_link;
 
         if (q === null && is_member_of_collection === null || is_member_of_collection === configModule.getRootPid()) {
-            add_collection_link = '<a href="/dashboard/collections/add?is_member_of_collection=' + configModule.getRootPid() + '"><i class="fa fa-plus"></i>&nbsp;Add top-level collection</a>';
+            // add_collection_link = '<a href="/dashboard/collections/add?is_member_of_collection=' + configModule.getRootPid() + '"><i class="fa fa-plus"></i>&nbsp;Add top-level collection</a>';
             domModule.html('#collection-name', 'Collections');
             domModule.html('#total-records', '<p>Total Collections: ' + total_records + '</p>');
         } else if (q === null && is_member_of_collection !== null && is_member_of_collection !== configModule.getRootPid()) {
-            add_collection_link = '<a href="/dashboard/collections/add?is_member_of_collection=' + is_member_of_collection + '"><i class="fa fa-plus"></i>&nbsp;Add sub-collection</a>';
+            // add_collection_link = '<a href="/dashboard/collections/add?is_member_of_collection=' + is_member_of_collection + '"><i class="fa fa-plus"></i>&nbsp;Add sub-collection</a>';
             if (total_records.length !== 0) {
                 domModule.html('#total-records', '<p>Total Objects: ' + total_records + '</p>');
             } else {
@@ -401,10 +401,10 @@ const objectsModule = (function () {
         } else if (q !== null) {
             domModule.html('#searched-for', '<p>You searched for: <em><strong>' + q + '</strong></em></p>');
             domModule.html('#total-records', '<p>Total Search Results: ' + total_records + '</p>');
-            add_collection_link = '';
+            // add_collection_link = '';
         }
 
-        domModule.html('#add-collection-link', add_collection_link);
+        // domModule.html('#add-collection-link', add_collection_link);
 
         if (total_records === 0) {
             html = '<div class="alert alert-info"><strong><i class="fa fa-info-circle"></i>&nbsp; No records found.</strong></div>';
