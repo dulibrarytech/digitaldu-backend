@@ -453,7 +453,8 @@ const objectsModule = (function () {
         let obj = {};
         obj.sip_uuid = pid;
 
-        let url = api + endpoints.import_metadata_object,
+        // let url = api + endpoints.import_metadata_object,
+        let url = api + endpoints.import_metadata + '/' + pid,
             token = userModule.getUserToken(),
             request = new Request(url, {
                 method: 'PUT',
