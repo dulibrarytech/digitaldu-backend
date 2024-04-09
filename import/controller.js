@@ -21,6 +21,23 @@
 const MODEL = require('../import/model');
 const SERVICE = require('../import/service');
 
+exports.update_metadata = function (req, res) {
+
+    if (req.params.uuid === undefined) {
+        res.status(400).send({
+            message: 'Bad Request.'
+        });
+
+        return false;
+    }
+
+    const uuid = req.params.uuid;
+
+    MODEL.update_metadata(uuid, function(data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
 exports.update_collection = function(req, res) {
 
     if (req.params.collection_uuid === undefined) {
@@ -37,42 +54,3 @@ exports.update_collection = function(req, res) {
         res.status(data.status).send(data.data);
     });
 };
-
-/*
-exports.get_session_token = function(req, res) {
-    SERVICE.get_session_token(req, function(data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.destroy_session_token = function(req, res) {
-    SERVICE.destroy_session_token(req, function(data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.update_collection_metadata_record = function(req, res) {
-    MODEL.update_collection_metadata_record(req, function(data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.update_object_metadata_record = function(req, res) {
-    MODEL.update_object_metadata_record(req, function(data) {
-        res.status(data.status).send(data);
-    });
-};
-
-exports.update_single_metadata_record = function(req, res) {
-    MODEL.update_single_metadata_record(req, function(data) {
-        res.status(data.status).send(data);
-    });
-};
-
-exports.batch_update_metadata = function(req, res) {
-     MODEL.batch_update_metadata(req, function(data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
- */

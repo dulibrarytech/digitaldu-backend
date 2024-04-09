@@ -29,8 +29,8 @@ module.exports = function (app) {
     // /api/v2/import/metadata/:collection_uuid/record/object_uuid
     // global update
     // /api/v2/import/metadata/
-    app.route('/api/v2/import/metadata/:collection_uuid')
-    .put(TOKEN.verify, CONTROLLER.update_collection);
+    app.route('/api/v2/import/metadata/:uuid')
+    .put(TOKEN.verify, CONTROLLER.update_metadata);
 
     /*
     app.route('/api/v2/import/metadata/update')

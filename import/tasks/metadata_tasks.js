@@ -51,7 +51,7 @@ const Metadata_tasks = class {
     }
 
     /**
-     *
+     * Destroys session
      * @param token
      * @return {Promise<void>}
      */
@@ -130,15 +130,16 @@ const Metadata_tasks = class {
     }
 
     /**
-     * Gets child record(s) for collection update
+     * Gets queue record for metadata update
      */
-    async get_child_record() {
+    async get_queue_record(batch_uuid) {
 
         try {
 
             const data = await this.DB_QUEUE(this.TABLES.repo.metadata_update_queue)
             .select('uuid', 'uri')
             .where({
+                batch_uuid: batch_uuid,
                 is_complete: 0
             })
             .limit(1);
@@ -150,7 +151,7 @@ const Metadata_tasks = class {
             return data[0];
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/import/tasks (get_child_record)] unable to get child record ' + error.message);
+            LOGGER.module().error('ERROR: [/import/tasks (get_queue_record)] unable to get queue record ' + error.message);
         }
     }
 
