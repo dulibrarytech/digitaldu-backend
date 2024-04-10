@@ -513,14 +513,9 @@ async function publish_records (PUBLISH_RECORD_TASK, ADMIN_RECORD_TASK, uuid, ty
  */
 exports.get_recent_ingests = function (callback) {
 
-    // fiscal year
-    // SELECT count(id) FROM tbl_objects WHERE object_type = 'object' AND is_active = 1 AND created BETWEEN '2021-07-01' AND LAST_DAY('2022-06-30');
-    //.whereRaw('DATE(created) BETWEEN NOW() - INTERVAL 30 DAY AND NOW()')
-    // .whereRaw('created BETWEEN \'2022-07-01\' AND LAST_DAY(\'2023-06-30\')')
     try {
 
         (async function () {
-
 
             let records = await DB(DB_TABLES.repo.repo_records)
             .select('id','is_member_of_collection', 'pid', 'mods','uri','mime_type', 'is_published', 'created')

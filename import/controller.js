@@ -18,8 +18,7 @@
 
 'use strict';
 
-const MODEL = require('../import/model');
-const SERVICE = require('../import/service');
+const MODEL = require('../import/model');;
 
 exports.update_metadata = function (req, res) {
 
@@ -34,23 +33,6 @@ exports.update_metadata = function (req, res) {
     const uuid = req.params.uuid;
 
     MODEL.update_metadata(uuid, function(data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.update_collection = function(req, res) {
-
-    if (req.params.collection_uuid === undefined) {
-        res.status(400).send({
-            message: 'Bad Request.'
-        });
-
-        return false;
-    }
-
-    const uuid = req.params.collection_uuid;
-
-    MODEL.update_collection(uuid, function(data) {
         res.status(data.status).send(data.data);
     });
 };

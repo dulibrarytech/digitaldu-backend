@@ -27,8 +27,8 @@ exports.reindex = function (req, res) {
 };
 
 exports.index_record = function (req, res) {
-    const pid = req.params.pid;
-    MODEL.index_record(function (data) {
+    const uuid = req.params.pid;
+    MODEL.index_record(uuid, function (data) {
         res.status(data.status).send(data);
     });
 };

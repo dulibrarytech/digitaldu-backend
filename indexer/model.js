@@ -160,3 +160,11 @@ exports.reindex = function (callback) {
         LOGGER.module().error('ERROR: [/indexer/model (reindex)] reindex failed. ' + error.message);
     }
 };
+
+/** TODO:
+ * indexes record
+ * @param uuid
+ */
+exports.index_record = function (uuid) {
+
+};
