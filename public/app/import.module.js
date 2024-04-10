@@ -43,7 +43,6 @@ const importModule = (function () {
             let mods = JSON.parse(data[i].mods);
             let title = mods.title;
             let identifier = mods.identifiers[0].identifier;
-            let display_record = JSON.parse(data[i].display_record);
             let token = userModule.getUserToken();
 
             html += '<td width="10%" ' + alignTd + '>' + id + '</td>';
@@ -52,15 +51,15 @@ const importModule = (function () {
 
                 let compound = '';
 
-                if (display_record.is_compound === 1) {
+                if (mods.is_compound === true) {
                     compound = '&nbsp;&nbsp;<i class="fa fa-cubes"></i>';
                 }
 
                 html += '<td ' + alignTd + '><a href="' + api + endpoints.repo_object_viewer + '?uuid=' + DOMPurify.sanitize(data[i].sip_uuid) + '&t=' + token + '" target="_blank">' + DOMPurify.sanitize(title) + compound + '</a></td>';
             }
 
-            if (data[i].mods_id !== null) {
-                html += '<td width="15%" ' + alignTd + '><a href="' + configModule.getASpace() + configModule.getUriPath() + DOMPurify.sanitize(data[i].mods_id) + '" target="_blank">' + identifier + '</a></i></td>';
+            if (data[i].uri !== null) {
+                html += '<td width="15%" ' + alignTd + '><a href="' + configModule.getASpace() + DOMPurify.sanitize(data[i].uri) + '" target="_blank">' + identifier + '</a></i></td>';
             }
 
             html += '<td width="15%" ' + alignTd + '>' + DOMPurify.sanitize(moment(data[i].created).tz('America/Denver').format('MM-DD-YYYY, h:mm:ss a')) + '</td>';

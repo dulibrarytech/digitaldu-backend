@@ -523,7 +523,7 @@ exports.get_recent_ingests = function (callback) {
 
 
             let records = await DB(DB_TABLES.repo.repo_records)
-            .select('id','is_member_of_collection', 'pid', 'handle', 'mods', 'display_record','mime_type', 'is_published', 'created')
+            .select('id','is_member_of_collection', 'pid', 'handle', 'mods','uri','mime_type', 'is_published', 'created')
             .where({
                 is_active: 1,
                 object_type: 'object'
@@ -560,78 +560,13 @@ exports.get_recent_ingests = function (callback) {
                 record.collection_title = metadata.title;
                 response.push(record);
 
-            }, 4);
+            }, 0);
 
         })();
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/import/model module (get_recent_ingests)] unable to get recently ingested records ' + error.message);
     }
-
-    /*
-  let result = await DB(DB_TABLES.repo.repo_records)
-  .select('id','is_member_of_collection', 'pid', 'handle', 'mods_id', 'mods', 'display_record', 'thumbnail', 'file_name', 'mime_type', 'is_published', 'created')
-  .where({
-      is_active: 1,
-      is_complete: 1,
-      object_type: 'object'
-  })
-  .limit(1000)
-  .orderBy('id', 'desc');
-
-
-  .then(function (data) {
-      // console.log('imports', data[0].is_member_of_collection);
-      callback({
-          status: 200,
-          message: 'Complete records.',
-          data: data
-      });
-
-      return false;
-      let response = [];
-
-      // Get collection names
-      let timer = setInterval(function () {
-
-          if (data.length === 0) {
-              clearInterval(timer);
-
-              callback({
-                  status: 200,
-                  message: 'Complete records.',
-                  data: response
-              });
-
-              return false;
-          }
-
-          let record = data.pop();
-
-          DB(REPO_OBJECTS)
-          .select('mods')
-          .where({
-              pid: record.is_member_of_collection,
-              object_type: 'collection'
-          })
-          .then(function (collection_obj) {
-              let mods = JSON.parse(collection_obj[0].mods);
-              record.collection_title = mods.title;
-              response.push(record);
-          })
-          .catch(function (error) {
-              LOGGER.module().error('ERROR: [/import/model module (get_import_complete)] unable to get completed import records ' + error);
-          });
-
-      }, 5);
-
-      return null;
-  })
-  .catch(function (error) {
-      LOGGER.module().fatal('ERROR: [/import/model module (get_import_complete)] unable to get imported records ' + error);
-  });
-
-   */
 };
 
 /**
