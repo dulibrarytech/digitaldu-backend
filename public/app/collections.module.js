@@ -295,9 +295,8 @@ const collectionsModule = (function () {
     };
 
     /**
-     * Updates collection metadata
+     * Updates collection record and child records metadata
      * @param pid
-     * @returns {boolean}
      */
     obj.updateCollectionMetadata = function(pid) {
 

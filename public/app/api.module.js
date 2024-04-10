@@ -38,26 +38,13 @@ const apiModule = (function () {
             repo_object_viewer: '/api/admin/v1/repo/object/viewer',  // renders viewer non-images
             repo_publish: '/api/v2/repo/publish', // /api/admin/v1/repo/publish
             repo_unpublish: '/api/v2/repo/suppress', // /api/admin/v1/repo/unpublish
+            repo_ingests: '/api/v2/repo/ingests', // '/api/admin/v1/import/complete'
             repo_object_unpublished: '/api/admin/v1/repo/object/unpublished',
             repo_transcript: '/api/admin/v1/repo/object/transcript',
             search: '/api/v2/search', // /api/admin/v1/search
             import_metadata: '/api/v2/import/metadata', //'/api/admin/v1/import/metadata/collection',
-            stats: '/api/admin/v1/stats'
-            // import_metadata_object: '/api/admin/v1/import/metadata/single',  // /api/admin/v1/import/metadata/object
-           //  import_queue_objects: '/api/admin/v1/import/queue_objects',
-            // import_list: '/api/admin/v1/import/list',
-            // import_complete: '/api/admin/v1/import/complete',
-            // import_poll_transfer_status: '/api/admin/v1/import/poll/transfer_status',
-            // import_poll_ingest_status: '/api/admin/v1/import/poll/ingest_status',
-            // import_poll_import_status: '/api/admin/v1/import/poll/import_status',
-            // import_poll_fail_queue: '/api/admin/v1/import/poll/fail_queue',
-            // qa_list: '/api/v1/qa/list-ready',
-            // qa_run: '/api/v1/qa/run-qa',
-            // qa_check_metadata: '/api/v1/qa/check-metadata',
-            // qa_check_collection: '/api/v1/qa/check-collection',
-            // qa_move_to_ingest: '/api/v1/qa/move-to-ingest',
-            // qa_move_to_sftp: '/api/v1/qa/move-to-sftp',
-            // qa_upload_status: '/api/v1/qa/upload-status',
+            stats: '/api/admin/v1/stats',
+
         };
     };
 

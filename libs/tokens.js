@@ -18,10 +18,10 @@
 
 'use strict';
 
-const CONFIG = require('../config/config'),
-    JWT = require('jsonwebtoken'),
-    LOGGER = require('../libs/log4'),
-    VALIDATOR = require('validator');
+const CONFIG = require('../config/config');
+const JWT = require('jsonwebtoken');
+const LOGGER = require('../libs/log4');
+const VALIDATOR = require('validator');
 
 /**
  * Creates session token
@@ -57,10 +57,8 @@ exports.verify = function (req, res, next) {
         JWT.verify(token, CONFIG.tokenSecret, function (error, decoded) {
 
             if (error) {
-                console.log('SSO test');
                 LOGGER.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify token ' + error.message);
                 res.redirect(CONFIG.ssoUrl + '?app_url=' + CONFIG.ssoResponseUrl);
-                // res.redirect(CONFIG.host + 'login');
                 return false;
             }
 

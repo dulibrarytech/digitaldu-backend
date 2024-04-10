@@ -25,3 +25,10 @@ exports.reindex = function (req, res) {
         res.status(data.status).send(data);
     });
 };
+
+exports.index_record = function (req, res) {
+    const pid = req.params.pid;
+    MODEL.index_record(function (data) {
+        res.status(data.status).send(data);
+    });
+};

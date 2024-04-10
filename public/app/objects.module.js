@@ -231,7 +231,7 @@ const objectsModule = (function () {
         httpModule.req(request, callback);
     };
 
-    /**
+    /** TODO
      * Gets unpublished records
      */
     obj.getUnPublishedObjects = function () {
@@ -316,7 +316,7 @@ const objectsModule = (function () {
         httpModule.req(request, callback);
     };
 
-    /**
+    /** TODO
      * Publishes all unpublished objects in a collection
      */
     obj.publishAllObjects = function () {

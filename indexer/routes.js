@@ -25,4 +25,7 @@ module.exports = function (app) {
 
     app.route('/api/v2/indexer/reindex')
     .post(TOKEN.verify, CONTROLLER.reindex);
+
+    app.route('/api/v2/indexer/index/:pid')
+    .post(TOKEN.verify, CONTROLLER.index_record);
 };

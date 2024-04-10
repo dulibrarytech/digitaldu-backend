@@ -32,11 +32,14 @@ module.exports = function (app) {
     app.route('/api/v2/repo/publish')
     .post(TOKEN.verify, CONTROLLER.publish);
 
-    app.route('/api/v2/repo/suppress')
-    .post(TOKEN.verify, CONTROLLER.suppress);
+    app.route('/api/v2/repo/records')
+    .get(TOKEN.verify, CONTROLLER.get_records);
+
+    app.route('/api/v2/repo/ingests')
+    .get(TOKEN.verify, CONTROLLER.get_recent_ingests);
 
     app.route('/api/admin/v1/repo/object')
-    // .get(TOKEN.verify, CONTROLLER.get_display_record)
+    .get(TOKEN.verify, CONTROLLER.get_display_record)
     // .post(TOKEN.verify, CONTROLLER.create_collection_object) // TODO remove
     .delete(TOKEN.verify, CONTROLLER.delete_object);
 

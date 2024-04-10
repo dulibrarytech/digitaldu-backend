@@ -139,6 +139,12 @@ exports.suppress = function (req, res) {
     });
 };
 
+exports.get_recent_ingests = function (req, res) {
+    MODEL.get_recent_ingests(function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
 exports.get_display_record = function (req, res) {
     MODEL.get_display_record(req, function (data) {
         res.status(data.status).send(data.data);
