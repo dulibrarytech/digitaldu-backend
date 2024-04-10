@@ -61,16 +61,6 @@ const configModule = (function () {
     };
 
     /**
-     * Returns archivesspace uri path
-     * @returns {string}
-     */
-    /*
-    obj.getUriPath = function() {
-        // return '/repositories/2';
-    };
-     */
-
-    /**
      * Returns archivsspace public url
      */
     obj.getASpace = function() {

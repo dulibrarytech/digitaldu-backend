@@ -523,7 +523,7 @@ exports.get_recent_ingests = function (callback) {
 
 
             let records = await DB(DB_TABLES.repo.repo_records)
-            .select('id','is_member_of_collection', 'pid', 'handle', 'mods','uri','mime_type', 'is_published', 'created')
+            .select('id','is_member_of_collection', 'pid', 'mods','uri','mime_type', 'is_published', 'created')
             .where({
                 is_active: 1,
                 object_type: 'object'
