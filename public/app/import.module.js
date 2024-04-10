@@ -55,7 +55,7 @@ const importModule = (function () {
                     compound = '&nbsp;&nbsp;<i class="fa fa-cubes"></i>';
                 }
 
-                html += '<td ' + alignTd + '><a href="' + api + endpoints.repo_object_viewer + '?uuid=' + DOMPurify.sanitize(data[i].sip_uuid) + '&t=' + token + '" target="_blank">' + DOMPurify.sanitize(title) + compound + '</a></td>';
+                html += '<td ' + alignTd + '><a href="' + api + endpoints.repo_object_viewer + '?uuid=' + DOMPurify.sanitize(data[i].pid) + '&t=' + token + '" target="_blank">' + DOMPurify.sanitize(title) + compound + '</a></td>';
             }
 
             if (data[i].uri !== null) {
