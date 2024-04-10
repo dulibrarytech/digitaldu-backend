@@ -27,15 +27,57 @@ const HANDLES = require('../libs/handles');
 const MODS = require('../libs/display-record');
 const ARCHIVEMATICA = require('../libs/archivematica');
 const SERVICE = require('.//service');
-const LOGGER = require('../libs/log4');
 const CACHE = require('../libs/cache');
-// const DB = require('../config/db')();
-// const REPO_OBJECTS = 'tbl_objects';
-//
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
 const ES_TASKS = require('../libs/elasticsearch');
 const INDEXER_TASKS = require('../indexer/tasks/indexer_index_tasks');
+const LOGGER = require('../libs/log4');
+
+/**
+ * Suppress records
+ * @param uuid
+ * @param type
+ * @param callback
+ */
+exports.suppress = function (uuid, type, callback) {
+
+    try {
+
+        (async function () {
+
+            const ES = new ES_TASKS();
+            const OBJ = ES.get_es();
+            const SUPPRESS_PUBLIC_RECORD_TASK = new INDEXER_TASKS(DB, DB_TABLES, OBJ.es_client, OBJ.es_config.elasticsearch_index_front);
+            const SUPPRESS_ADMIN_RECORD_TASK = new INDEXER_TASKS(DB, DB_TABLES, OBJ.es_client, OBJ.es_config.elasticsearch_index_back);
+
+            if (type === 'object') {
+
+                let is_suppressed = await suppress_record(SUPPRESS_PUBLIC_RECORD_TASK, SUPPRESS_ADMIN_RECORD_TASK, uuid, type);
+
+                if (is_suppressed === true) {
+                    callback(true);
+                } else {
+                    callback(false);
+                }
+
+            } else if (type === 'collection') {
+
+                let is_suppressed = await suppress_records(SUPPRESS_PUBLIC_RECORD_TASK, SUPPRESS_ADMIN_RECORD_TASK, uuid, type);
+
+                if (is_suppressed === true) {
+                    callback(true);
+                } else {
+                    callback(false);
+                }
+            }
+
+        })();
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/repository/model module (suppress)] suppress failed. ' + error.message);
+    }
+};
 
 /**
  * Suppresses single record
@@ -228,12 +270,12 @@ async function suppress_records (SUPPRESS_PUBLIC_RECORD_TASK, SUPPRESS_ADMIN_REC
 }
 
 /**
- * Suppress records
+ * Publishes records
  * @param uuid
  * @param type
  * @param callback
  */
-exports.suppress = function (uuid, type, callback) {
+exports.publish = function (uuid, type, callback) {
 
     try {
 
@@ -241,14 +283,24 @@ exports.suppress = function (uuid, type, callback) {
 
             const ES = new ES_TASKS();
             const OBJ = ES.get_es();
-            const SUPPRESS_PUBLIC_RECORD_TASK = new INDEXER_TASKS(DB, DB_TABLES, OBJ.es_client, OBJ.es_config.elasticsearch_index_front);
-            const SUPPRESS_ADMIN_RECORD_TASK = new INDEXER_TASKS(DB, DB_TABLES, OBJ.es_client, OBJ.es_config.elasticsearch_index_back);
+            const PUBLISH_RECORD_TASK = new INDEXER_TASKS(DB, DB_TABLES, OBJ.es_client, OBJ.es_config.elasticsearch_index_front);
+            const ADMIN_RECORD_TASK = new INDEXER_TASKS(DB, DB_TABLES, OBJ.es_client, OBJ.es_config.elasticsearch_index_back);
 
             if (type === 'object') {
 
-                let is_suppressed = await suppress_record(SUPPRESS_PUBLIC_RECORD_TASK, SUPPRESS_ADMIN_RECORD_TASK, uuid, type);
+                // TODO: check if collection is published
+                /*
+                let indexed_admin_record = await ADMIN_RECORD_TASK.get_indexed_record(uuid);
+                console.log(indexed_admin_record.is);
+                if (indexed_admin_record.is_published === 0) {
+                    callback(false);
+                    return false;
+                }
+                 */
 
-                if (is_suppressed === true) {
+                let is_published = await publish_record(PUBLISH_RECORD_TASK, ADMIN_RECORD_TASK, uuid, type);
+
+                if (is_published === true) {
                     callback(true);
                 } else {
                     callback(false);
@@ -256,9 +308,9 @@ exports.suppress = function (uuid, type, callback) {
 
             } else if (type === 'collection') {
 
-                let is_suppressed = await suppress_records(SUPPRESS_PUBLIC_RECORD_TASK, SUPPRESS_ADMIN_RECORD_TASK, uuid, type);
+                let is_published = await publish_records(PUBLISH_RECORD_TASK, ADMIN_RECORD_TASK, uuid, type);
 
-                if (is_suppressed === true) {
+                if (is_published === true) {
                     callback(true);
                 } else {
                     callback(false);
@@ -268,7 +320,7 @@ exports.suppress = function (uuid, type, callback) {
         })();
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/repository/model module (suppress)] suppress failed. ' + error.message);
+        LOGGER.module().error('ERROR: [/repository/model module (publish)] publish failed. ' + error.message);
     }
 };
 
@@ -456,61 +508,6 @@ async function publish_records (PUBLISH_RECORD_TASK, ADMIN_RECORD_TASK, uuid, ty
 }
 
 /**
- * Publishes records
- * @param uuid
- * @param type
- * @param callback
- */
-exports.publish = function (uuid, type, callback) {
-
-    try {
-
-        (async function () {
-
-            const ES = new ES_TASKS();
-            const OBJ = ES.get_es();
-            const PUBLISH_RECORD_TASK = new INDEXER_TASKS(DB, DB_TABLES, OBJ.es_client, OBJ.es_config.elasticsearch_index_front);
-            const ADMIN_RECORD_TASK = new INDEXER_TASKS(DB, DB_TABLES, OBJ.es_client, OBJ.es_config.elasticsearch_index_back);
-
-            if (type === 'object') {
-
-                // TODO: check if collection is published
-                /*
-                let indexed_admin_record = await ADMIN_RECORD_TASK.get_indexed_record(uuid);
-                console.log(indexed_admin_record.is);
-                if (indexed_admin_record.is_published === 0) {
-                    callback(false);
-                    return false;
-                }
-                 */
-
-                let is_published = await publish_record(PUBLISH_RECORD_TASK, ADMIN_RECORD_TASK, uuid, type);
-
-                if (is_published === true) {
-                    callback(true);
-                } else {
-                    callback(false);
-                }
-
-            } else if (type === 'collection') {
-
-                let is_published = await publish_records(PUBLISH_RECORD_TASK, ADMIN_RECORD_TASK, uuid, type);
-
-                if (is_published === true) {
-                    callback(true);
-                } else {
-                    callback(false);
-                }
-            }
-
-        })();
-
-    } catch (error) {
-        LOGGER.module().error('ERROR: [/repository/model module (publish)] publish failed. ' + error.message);
-    }
-};
-
-/**
  * Gets object display record
  * @param req
  * @param callback
@@ -666,7 +663,7 @@ exports.update_thumbnail = function (req, callback) {
     });
 };
 
-/**
+/** TODO: refactor
  * Creates repository collection (admin dashboard)
  * @param req
  * @param callback
@@ -904,110 +901,6 @@ exports.create_collection_object = function (req, callback) {
                 data: [{'pid': results.pid}]
             });
         }
-    });
-};
-
-/**
- * Recreates display record
- * @param req
- * @param callback
- */
-exports.reset_display_record = function (req, callback) {
-
-    if (req.body.pid === undefined) {
-
-        callback({
-            status: 400,
-            message: 'Bad request.'
-        });
-
-        return false;
-    }
-
-    function create_display_record(callback) {
-
-        let obj = {};
-        let sip_uuid = req.body.pid;
-
-        MODS.get_display_record_data(sip_uuid, function (record) {
-
-            MODS.create_display_record(record, function (display_record) {
-
-                let recordObj = JSON.parse(display_record);
-                let where_obj = {
-                    is_member_of_collection: recordObj.is_member_of_collection,
-                    pid: recordObj.pid,
-                    is_active: 1
-                };
-
-                MODS.update_display_record(where_obj, display_record, function (result) {
-                    obj.sip_uuid = recordObj.pid;
-                    obj.is_published = recordObj.is_published;
-                    callback(null, obj);
-                });
-            });
-        });
-    }
-
-    function admin_index(obj, callback) {
-
-        // update admin index
-        index(obj.sip_uuid, function (result) {
-
-            if (result.error === true) {
-                LOGGER.module().error('ERROR: [/repository/model module (reset_display_record/admin_index)] indexer error.');
-                obj.admin_index = false;
-                callback(null, obj);
-                return false;
-            }
-
-            obj.admin_index = true;
-            callback(null, obj);
-            return false;
-        });
-    }
-
-    function public_index(obj, callback) {
-
-        if (obj.is_published === 1) {
-
-            // update public index
-            index(obj.sip_uuid, function (result) {
-
-                if (result.error === true) {
-                    LOGGER.module().error('ERROR: [/repository/model module (reset_display_record/admin_index)] indexer error.');
-                    obj.public_index = false;
-                    callback(null, obj);
-                    return false;
-                }
-
-                obj.public_index = true;
-                callback(null, obj);
-                return false;
-            });
-
-        } else {
-            obj.public_index = false;
-            callback(null, obj);
-        }
-    }
-
-    ASYNC.waterfall([
-        create_display_record,
-        admin_index,
-        public_index
-    ], function (error, results) {
-
-        if (error) {
-            LOGGER.module().error('ERROR: [/repository/model module (reset_display_record/async.waterfall)] ' + error);
-        }
-
-        LOGGER.module().info('INFO: [/repository/model module (reset_display_record/async.waterfall)] display record reset');
-
-        callback({
-            status: 201,
-            message: 'Display record(s) updated.'
-        });
     });
 };
 
@@ -1274,3 +1167,109 @@ exports.save_transcript = function (req, callback) {
         throw 'FATAL: [/repository/model module (add_transcript)] Unable to save transcript ' + error;
     });
 };
+
+/** TODO remove
+ * Recreates display record
+ * @param req
+ * @param callback
+ */
+/*
+exports.reset_display_record = function (req, callback) {
+
+    if (req.body.pid === undefined) {
+
+        callback({
+            status: 400,
+            message: 'Bad request.'
+        });
+
+        return false;
+    }
+
+    function create_display_record(callback) {
+
+        let obj = {};
+        let sip_uuid = req.body.pid;
+
+        MODS.get_display_record_data(sip_uuid, function (record) {
+
+            MODS.create_display_record(record, function (display_record) {
+
+                let recordObj = JSON.parse(display_record);
+                let where_obj = {
+                    is_member_of_collection: recordObj.is_member_of_collection,
+                    pid: recordObj.pid,
+                    is_active: 1
+                };
+
+                MODS.update_display_record(where_obj, display_record, function (result) {
+                    obj.sip_uuid = recordObj.pid;
+                    obj.is_published = recordObj.is_published;
+                    callback(null, obj);
+                });
+            });
+        });
+    }
+
+    function admin_index(obj, callback) {
+
+        // update admin index
+        index(obj.sip_uuid, function (result) {
+
+            if (result.error === true) {
+                LOGGER.module().error('ERROR: [/repository/model module (reset_display_record/admin_index)] indexer error.');
+                obj.admin_index = false;
+                callback(null, obj);
+                return false;
+            }
+
+            obj.admin_index = true;
+            callback(null, obj);
+            return false;
+        });
+    }
+
+    function public_index(obj, callback) {
+
+        if (obj.is_published === 1) {
+
+            // update public index
+            index(obj.sip_uuid, function (result) {
+
+                if (result.error === true) {
+                    LOGGER.module().error('ERROR: [/repository/model module (reset_display_record/admin_index)] indexer error.');
+                    obj.public_index = false;
+                    callback(null, obj);
+                    return false;
+                }
+
+                obj.public_index = true;
+                callback(null, obj);
+                return false;
+            });
+
+        } else {
+            obj.public_index = false;
+            callback(null, obj);
+        }
+    }
+
+    ASYNC.waterfall([
+        create_display_record,
+        admin_index,
+        public_index
+    ], function (error, results) {
+
+        if (error) {
+            LOGGER.module().error('ERROR: [/repository/model module (reset_display_record/async.waterfall)] ' + error);
+        }
+
+        LOGGER.module().info('INFO: [/repository/model module (reset_display_record/async.waterfall)] display record reset');
+
+        callback({
+            status: 201,
+            message: 'Display record(s) updated.'
+        });
+    });
+};
+*/

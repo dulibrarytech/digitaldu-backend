@@ -325,10 +325,8 @@ const collectionsModule = (function () {
                 domModule.html('#update-' + pid, '<em><i class="fa fa-exclamation-circle"></i> In progress. *Update may take several hours to complete.');
 
                 setTimeout(function () {
-                    // objectsModule.getObjects();
-                    // location.hash = '#' + pid;
                     domModule.html('#update-' + pid, '');
-                }, 5000);
+                }, 10000);
 
 
             } else if (response.status === 401) {

@@ -157,12 +157,6 @@ exports.update_thumbnail = function (req, res) {
     });
 };
 
-exports.reset_display_record = function (req, res) {
-    MODEL.reset_display_record(req, function (data) {
-        res.status(data.status).send(data);
-    });
-};
-
 exports.delete_object = function (req, res) {
     MODEL.delete_object(req, function (data) {
         res.status(data.status).send(data.data);
@@ -229,3 +223,11 @@ exports.get_unpublished_admin_objects = function (req, res) {
         res.status(data.status).send(data.data);
     });
 };
+
+/*
+exports.reset_display_record = function (req, res) {
+    MODEL.reset_display_record(req, function (data) {
+        res.status(data.status).send(data);
+    });
+};
+*/

@@ -453,7 +453,6 @@ const objectsModule = (function () {
         let obj = {};
         obj.sip_uuid = pid;
 
-        // let url = api + endpoints.import_metadata_object,
         let url = api + endpoints.import_metadata + '/' + pid,
             token = userModule.getUserToken(),
             request = new Request(url, {
@@ -469,7 +468,11 @@ const objectsModule = (function () {
         const callback = function (response) {
 
             if (response.status === 201) {
-                domModule.html('#update-' + pid, '<i class="fa fa-code"></i> Update Metadata');
+
+                setTimeout(() => {
+                    domModule.html('#update-' + pid, '<i class="fa fa-code"></i> Update Metadata');
+                }, 10000);
+
             } else if (response.status === 401) {
 
                 response.json().then(function (response) {

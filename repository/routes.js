@@ -36,8 +36,8 @@ module.exports = function (app) {
     .post(TOKEN.verify, CONTROLLER.suppress);
 
     app.route('/api/admin/v1/repo/object')
-    .get(TOKEN.verify, CONTROLLER.get_display_record)
-    .post(TOKEN.verify, CONTROLLER.create_collection_object)
+    // .get(TOKEN.verify, CONTROLLER.get_display_record)
+    // .post(TOKEN.verify, CONTROLLER.create_collection_object) // TODO remove
     .delete(TOKEN.verify, CONTROLLER.delete_object);
 
     // gets thumbnails from duracloud
@@ -61,8 +61,10 @@ module.exports = function (app) {
     app.route('/api/admin/v1/repo/object/transcript')
     .put(TOKEN.verify, CONTROLLER.save_transcript);
 
-    app.route('/api/admin/v1/repo/metadata/reset')
+    /*
+    app.route('/api/admin/v1/repo/metadata/reset') // TODO remove
     .post(TOKEN.verify, CONTROLLER.reset_display_record);
+    */
 
     app.route('/api/admin/v1/repo/ping/services')
     .get(TOKEN.verify, CONTROLLER.ping);

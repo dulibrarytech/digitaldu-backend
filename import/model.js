@@ -18,7 +18,6 @@
 
 'use strict';
 
-const VALIDATOR = require('validator');
 const DB = require('../config/db_config')();
 const DB_QUEUE = require('../config/dbqueue_config')();
 const DB_TABLES = require('../config/db_tables_config')();

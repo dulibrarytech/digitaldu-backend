@@ -18,10 +18,8 @@
 
 'use strict';
 
-const HTTP = require('axios');
 const ARCHIVESSPACE = require('../../libs/archivesspace');
 const ARCHIVESSPACE_CONFIG = require('../../config/archivesspace_config')();
-
 const LOGGER = require('../../libs/log4');
 
 /**
@@ -67,7 +65,7 @@ const Metadata_tasks = class {
     }
 
     /**
-     * Gets collection record from DB
+     * Gets DB record
      * @param uuid
      */
     async get_db_record(uuid) {
@@ -86,7 +84,7 @@ const Metadata_tasks = class {
     }
 
     /**
-     * Updates db record
+     * Updates DB record
      * @param uuid
      * @param record
      */
@@ -130,32 +128,6 @@ const Metadata_tasks = class {
     }
 
     /**
-     * Gets queue record for metadata update
-     */
-    async get_queue_record(batch_uuid) {
-
-        try {
-
-            const data = await this.DB_QUEUE(this.TABLES.repo.metadata_update_queue)
-            .select('uuid', 'uri')
-            .where({
-                batch_uuid: batch_uuid,
-                is_complete: 0
-            })
-            .limit(1);
-
-            if (data === undefined || data.length === 0) {
-                return 0;
-            }
-
-            return data[0];
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/import/tasks (get_queue_record)] unable to get queue record ' + error.message);
-        }
-    }
-
-    /**
      * Gets metadata
      * @param uri
      * @param token
@@ -181,7 +153,6 @@ const Metadata_tasks = class {
     /**
      * Queues metadata for updates
      * @param data
-     * @return {Promise<boolean>}
      */
     async queue_metadata(data) {
 
@@ -196,22 +167,49 @@ const Metadata_tasks = class {
             });
 
             if (result.length !== 1) {
-                LOGGER.module().info('INFO: [/import/tasks (queue_metadata)] Unable to queue records.');
+                LOGGER.module().info('INFO: [/import/tasks (queue_metadata)] Unable to batch queue records.');
                 return false;
             } else {
-                LOGGER.module().info('INFO: [/import/tasks (queue_metadata)] ' + result.length + ' records added to queue.');
+                LOGGER.module().info('INFO: [/import/tasks (queue_metadata)] ' + result.length + ' batch added to queue.');
                 return true;
             }
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/import/tasks (queue_metadata)] Unable to queue packages ' + error.message);
+            LOGGER.module().error('ERROR: [/import/tasks (queue_metadata)] Unable to queue batch ' + error.message);
         }
     }
 
     /**
-     *
-     * @param where_obj (uri)
-     * @param data
+     * Gets queue record for metadata update
+     * @param batch_uuid
+     */
+    async get_queue_record(batch_uuid) {
+
+        try {
+
+            const data = await this.DB_QUEUE(this.TABLES.repo.metadata_update_queue)
+            .select('uuid', 'uri')
+            .where({
+                batch_uuid: batch_uuid,
+                is_complete: 0
+            })
+            .limit(1);
+
+            if (data === undefined || data.length === 0) {
+                return 0;
+            }
+
+            return data[0];
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/import/tasks (get_queue_record)] unable to get queue record ' + error.message);
+        }
+    }
+
+    /**
+     * Updates metadata queue
+     * @param where_obj ({uri})
+     * @param data ({status, is_updated, is_indexed, is_complete})
      */
     async update_metadata_queue(where_obj, data) {
 
@@ -220,15 +218,14 @@ const Metadata_tasks = class {
             await this.DB_QUEUE(this.TABLES.repo.metadata_update_queue)
             .where(where_obj)
             .update(data);
-            LOGGER.module().info('INFO: [/ingester/tasks (update_ingest_queue)] Queue updated');
+            LOGGER.module().info('INFO: [/import/tasks (update_metadata_queue)] Queue updated');
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/ingester/tasks (update_ingest_queue)] unable to update ingest queue ' + error.message);
+            LOGGER.module().error('ERROR: [/import/tasks (update_metadata_queue)] Unable to update ingest queue ' + error.message);
             return false;
         }
     }
-
 };
 
 module.exports = Metadata_tasks;
