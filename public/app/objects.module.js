@@ -92,6 +92,21 @@ const objectsModule = (function () {
         httpModule.req(request, callback);
     };
 
+    /** TODO
+     * Publishes
+     * @param is_member_of_collection
+     * @param pid
+     */
+    obj.publish_ingested_records = function (is_member_of_collection, pid) { // collection pid
+        console.log('collection uuid ', is_member_of_collection);
+        console.log('uuid ', pid);
+        // window.alert('Would you like to publish all newly ingested records that belong to this collection?');
+
+        const ingested_records = window.localStorage.getItem('ingested_to_be_published');
+        const records = JSON.parse(ingested_records);
+        console.log(records);
+    };
+
     /**
      * Publishes admin objects
      * @param pid

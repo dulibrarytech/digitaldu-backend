@@ -30,6 +30,7 @@ const importModule = (function () {
      */
     const renderCompleteRecords = function (data) {
 
+        let ingested_to_be_published = [];
         let html = '',
             alignTd = 'style="text-align: center; vertical-align: middle"';
 
@@ -45,9 +46,9 @@ const importModule = (function () {
             let identifier = mods.identifiers[0].identifier;
             let token = userModule.getUserToken();
 
-            html += '<td width="10%" ' + alignTd + '>' + id + '</td>';
+            html += '<td width="5%" ' + alignTd + '>' + id + '</td>';
 
-            if (data[i].sip_uuid !== null) {
+            if (data[i].pid !== undefined) {
 
                 let compound = '';
 
@@ -55,33 +56,52 @@ const importModule = (function () {
                     compound = '&nbsp;&nbsp;<i class="fa fa-cubes"></i>';
                 }
 
-                html += '<td ' + alignTd + '><a href="' + api + endpoints.repo_object_viewer + '?uuid=' + DOMPurify.sanitize(data[i].pid) + '&t=' + token + '" target="_blank">' + DOMPurify.sanitize(title) + compound + '</a></td>';
+                html += '<td width="25%" ' + alignTd + '>';
+                html += '<a href="' + api + endpoints.repo_object_viewer + '?uuid=' + DOMPurify.sanitize(data[i].pid) + '&t=' + token + '" target="_blank">' + DOMPurify.sanitize(title) + compound + '</a>';
+                html += '<br><small>' + data[i].collection_title + '</small>';
+                html += '</td>';
             }
 
             if (data[i].uri !== null) {
                 html += '<td width="15%" ' + alignTd + '><a href="' + configModule.getASpace() + DOMPurify.sanitize(data[i].uri) + '" target="_blank">' + identifier + '</a></i></td>';
             }
 
-            html += '<td width="15%" ' + alignTd + '>' + DOMPurify.sanitize(moment(data[i].created).tz('America/Denver').format('MM-DD-YYYY, h:mm:ss a')) + '</td>';
+            // html += '<td width="15%" ' + alignTd + '>' + DOMPurify.sanitize(moment(data[i].created).tz('America/Denver').format('MM-DD-YYYY, h:mm:ss a')) + '</td>';
 
             if (data[i].is_published === 0) {
-                html += '<td id="publish-import-' + data[i].pid + '" width="15%" ' + alignTd + '><a href="#" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(data[i].sip_uuid) + '\', \'object\'); return false;" title="Publish record"><i class="fa fa-cloud-upload"></i><br><small>Unpublished</small></a></td>';
-                html += '<td width="15%"' + alignTd + '><a href="/dashboard/object/delete?pid=' +  DOMPurify.sanitize(data[i].pid) + '"><i class="fa fa-trash"></i><br>Delete</a></td>';
+
+                html += '<td id="publish-import-' + data[i].pid + '" width="5%" ' + alignTd + ' title="Unpublished"><i style="color: red" class="fa fa-cloud-upload"></i><br><small>Unpublished</small></td>';
+                html += '<td id="publish-import-' + data[i].pid + '" width="15%" ' + alignTd + '>';
+                html += '<a class="btn btn-primary" role="button" href="#" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(data[i].sip_uuid) + '\', \'object\'); return false;" title="Publish ingested record"><i class="fa fa-cloud-upload"></i> <small>One</small></a>'; // <br><small>Unpublished</small>
+                html += '&nbsp;&nbsp;|&nbsp;&nbsp;<a class="btn btn-info" role="button" href="#" onclick="objectsModule.publish_ingested_records(\'' + DOMPurify.sanitize(data[i].is_member_of_collection) + '\', \'' + DOMPurify.sanitize(data[i].pid) + '\'); return false;" title="Publish all ingested records in this collection"><i class="fa fa-cloud-upload"></i> <small>All</small></a>';
+                html += '&nbsp;&nbsp;|&nbsp;&nbsp;<a class="btn btn-danger" role="button" title="Delete" href="/dashboard/object/delete?pid=' + DOMPurify.sanitize(data[i].pid) + '"><i class="fa fa-trash"></i></a>'; // <br>Delete
+                html += '</td>';
+
+                let ingested = {};
+                ingested.collection = data[i].is_member_of_collection;
+                ingested.object = data[i].pid;
+                ingested_to_be_published.push(ingested);
+
             } else if (data[i].is_published === 1) {
                 html += '<td id="publish-import-' + data[i].pid + '" width="5%" ' + alignTd + ' title="Published"><i class="fa fa-cloud"></i><br><small>Published</small></td>';
-                html += '<td width="15%"' + alignTd + '><i class="fa fa-trash"></i><br><em>Delete</em></td>';
+                html += '<td width="15%"' + alignTd + '><i class="fa fa-check"></i>Complete</td>'; // <br><em>Delete</em>
             }
 
             html += '</tr>';
         }
 
+        ingested_to_be_published.sort((a, b) => a.collection.localeCompare(b.collection));
+        console.log('sorted ', ingested_to_be_published);
+        window.localStorage.setItem('ingested_to_be_published', JSON.stringify(ingested_to_be_published));
+
+        domModule.html('#unpublished-records', ingested_to_be_published.length);
         domModule.html('#complete-records', html);
         domModule.html('#message', null);
         domModule.html('.loading', null);
 
         $('#completed-imports-table').DataTable({
             'pageLength': 25,
-            'order': [[ 0, 'desc' ]]
+            'order': [[0, 'desc']]
         });
 
         document.querySelector('#completed-imports-table-th-head').style.visibility = 'visible';
@@ -136,7 +156,8 @@ const importModule = (function () {
         httpModule.req(request, callback);
     };
 
-    obj.init = function () {};
+    obj.init = function () {
+    };
 
     return obj;
 

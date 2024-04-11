@@ -32,6 +32,9 @@ module.exports = function (app) {
     app.route('/api/v2/repo/publish')
     .post(TOKEN.verify, CONTROLLER.publish);
 
+    app.route('/api/v2/repo/suppress')
+    .post(TOKEN.verify, CONTROLLER.suppress);
+
     app.route('/api/v2/repo/records')
     .get(TOKEN.verify, CONTROLLER.get_records);
 
