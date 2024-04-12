@@ -20,12 +20,13 @@
             <div class="">
                 <div class="page-title">
                     <div class="title_left">
-                        <h3> <!--Completed Import Records--></h3>
+                        <h3></h3>
                     </div>
                 </div>
                 <div class="clearfix"></div>
                 <div class="row">
-                    <div class="col-md-12">
+                    <div id="message" class="alert alert-info"><i class="fa fa-info-circle"></i> Loading...</div>
+                    <div id="recent-ingests" class="col-md-12"  style="visibility: hidden">
                         <div class="row"><div id="ping"></div></div>
                         <div class="x_panel" style="min-height: 700px">
                             <div class="x_title">
@@ -34,7 +35,6 @@
                                 <div class="clearfix"></div>
                             </div>
                             <div class="x_content">
-                                <p class="loading"><strong><em>Loading...</em></strong></p>
                                 <div id="legend">
                                     <p>
                                         <!--
@@ -49,10 +49,8 @@
                                         <br>
                                     </p>
                                 </div>
-                                <div id="message"></div>
-                                <div id="responses"></div>
                                 <table id="completed-imports-table" class="table table-striped table-bordered">
-                                    <thead id="completed-imports-table-th-head" style="visibility: hidden">
+                                    <thead id="completed-imports-table-th-head">
                                     <tr>
                                         <th style="text-align: center; vertical-align: middle; width: 10%">ID</th>
                                         <th style="text-align: center; vertical-align: middle; width: 30%">Object</th>
@@ -62,9 +60,8 @@
                                         <th style="text-align: center; vertical-align: middle">Actions</th>
                                     </tr>
                                     </thead>
-                                    <tbody id="complete-records" style="visibility: hidden"></tbody>
+                                    <tbody id="complete-records"></tbody>
                                 </table>
-
                             </div>
                         </div>
                     </div>
@@ -93,7 +90,7 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.js"></script>
     <script>
         importModule.getCompleteImportRecords();
-        helperModule.onLoadVisibility('#complete-records', 500);
+        // helperModule.onLoadVisibility('#complete-records', 500);
     </script>
 </body>
 </html>

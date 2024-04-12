@@ -96,15 +96,16 @@ const importModule = (function () {
 
         domModule.html('#unpublished-records', ingested_to_be_published.length);
         domModule.html('#complete-records', html);
-        domModule.html('#message', null);
-        domModule.html('.loading', null);
+        // domModule.html('#message', '');
+        // domModule.html('.loading', null);
 
         $('#completed-imports-table').DataTable({
             'pageLength': 25,
             'order': [[0, 'desc']]
         });
 
-        document.querySelector('#completed-imports-table-th-head').style.visibility = 'visible';
+        document.querySelector('#message').remove();
+        document.querySelector('#recent-ingests').style.visibility = 'visible';
     };
 
     /**
@@ -131,9 +132,9 @@ const importModule = (function () {
 
                     if (data.length === 0) {
 
-                        domModule.empty('#completed-imports-table');
+                        // domModule.empty('#completed-imports-table');
                         domModule.html('#responses', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No imports have been processed today.</div>');
-                        domModule.html('.loading', null);
+                        // domModule.html('.loading', null);
 
                     } else {
                         renderCompleteRecords(data);
