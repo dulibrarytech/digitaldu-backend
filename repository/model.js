@@ -591,7 +591,7 @@ exports.get_unpublished_records = function (callback) {
             for (let i=0;i<collections.length;i++) {
 
                 let metadata = JSON.parse(collections[i].mods);
-                obj.collection_uuid = metadata.pid;
+                obj.collection_uuid = collections[i].pid;
                 obj.collection_title = metadata.title;
 
                 if (collections[i].is_published === 0) {
