@@ -150,11 +150,12 @@ const objectsModule = (function () {
                         domModule.html('#status-unpublished-' + pid, published);
                         domModule.id('status-unpublished-' + pid, 'status-published-' + pid);
                     } else {
-                        // handles DOM changes on completed import page
+                        // handles DOM changes on completed unpublished records page
                         let status = '<small>Publishing...</small>';
                         domModule.html('#publish-import-' + pid, status);
                         published = '<i class="fa fa-cloud"></i>';
                         domModule.html('#publish-import-' + pid, published);
+                        location.reload();
                     }
 
                 }, 5000);
@@ -246,17 +247,13 @@ const objectsModule = (function () {
         httpModule.req(request, callback);
     };
 
-    /** TODO
+    /**
      * Gets unpublished records
      */
     obj.getUnPublishedObjects = function () {
 
-        let pid = helperModule.getParameterByName('pid'),
-            token = userModule.getUserToken();
-
-        collectionsModule.getCollectionName(pid);
-
-        let url = api + endpoints.repo_object_unpublished + '?pid=' + pid,
+        let token = userModule.getUserToken();
+        let url = api + endpoints.repo_object_unpublished,
             request = new Request(url, {
                 method: 'GET',
                 mode: 'cors',
@@ -277,7 +274,7 @@ const objectsModule = (function () {
                     if (data.length === 0) {
                         domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No records found.</div>');
                     } else {
-                        objectsModule.renderDisplayRecords(data);
+                        renderUnpublishedRecords(data);
                     }
                 });
 
@@ -287,6 +284,57 @@ const objectsModule = (function () {
         };
 
         httpModule.req(request, callback);
+    };
+
+    /**
+     * Renders unpublished records
+     * @param data
+     */
+    const renderUnpublishedRecords = function (data) {
+
+        let html = '';
+        let alignTd = 'style="text-align: center; vertical-align: top; font-size:15px"';
+        let token = userModule.getUserToken();
+
+        data.sort((a, b) => a.collection_title.localeCompare(b.collection_title));
+
+        for (let i=0;i<data.length;i++) {
+            console.log(data[i].collection_uuid);
+            html += '<tr>';
+            html += '<td width="25%" ' + alignTd + '>';
+            html += '<h3>' + data[i].collection_title + '</h3>';
+            html += '<a href="#" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(data[i].collection_uuid) + '\', \'collection\'); return false;" class="btn btn-primary" data-title="Publish all records in this collection" title="Publish all records in this collection" data-toggle="tooltip" data-placement="bottom"> <i class="fa fa-cloud-upload"></i></a>';
+            html += '</td>';
+            html += '<table class="table table-striped table-bordered table-hover">';
+
+            for (let j=0;j<data[i].child_records.length;j++) {
+
+                let metadata = JSON.parse(data[i].child_records[j].mods);
+                let object_link = `<a href="${api}${endpoints.repo_object_viewer}?uuid=${data[i].child_records[j].pid}&t=${token}" target="_blank" data-title="View object" title="View object" data-toggle="tooltip" data-placement="bottom">${metadata.title}</a>`;
+                let compound = '';
+
+                if (metadata.is_compound === true) {
+                    compound = '&nbsp;&nbsp;<i class="fa fa-cubes"></i>';
+                }
+
+                html += '<tr>';
+                html += '<td style="text-align: right; vertical-align: center;width: 80%;font-size: 15px">';
+                html += `<small id="publish-import-${data[i].child_records[j].pid}"></small>&nbsp;&nbsp;${compound} ${object_link}&nbsp;&nbsp;`;
+                html += `<br><small><em>Ingested on ${DOMPurify.sanitize(moment(data[i].child_records[j].created).tz('America/Denver').format('MM-DD-YYYY, h:mm:ss a'))}</em></small>`;
+                html += '</td>';
+                html += '<td style="width:20%;text-align: center"><a href="#" data-title="Publish record" title="Publish record" data-toggle="tooltip" data-placement="left" class="btn btn-primary" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(data[i].child_records[j].pid) + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i></a>&nbsp;|&nbsp;<a class="btn btn-danger" role="button" data-title="Delete record" title="Delete record" data-toggle="tooltip" data-placement="right" title="Delete" href="/dashboard/object/delete?pid=' + DOMPurify.sanitize(data[i].pid) + '"><i class="fa fa-trash"></i></a></td>';
+                html += '</tr>';
+            }
+
+            html += '</table>';
+            html += '</td>';
+            html += '</tr>';
+        }
+
+        domModule.html('#unpublished-records', html);
+        document.querySelector('#message').remove();
+        document.querySelector('#unpublished').style.visibility = 'visible';
+        $('[data-toggle="tooltip"]').tooltip();
     };
 
     /**

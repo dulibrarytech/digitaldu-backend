@@ -145,6 +145,12 @@ exports.get_recent_ingests = function (req, res) {
     });
 };
 
+exports.get_unpublished_records = function (req, res) {
+    MODEL.get_unpublished_records(function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
 exports.get_display_record = function (req, res) {
     MODEL.get_display_record(req, function (data) {
         res.status(data.status).send(data.data);
@@ -223,17 +229,3 @@ exports.get_thumbnail = function (req, res) {
         }
     });
 };
-
-exports.get_unpublished_admin_objects = function (req, res) {
-    SERVICE.get_unpublished_admin_objects(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-/*
-exports.reset_display_record = function (req, res) {
-    MODEL.reset_display_record(req, function (data) {
-        res.status(data.status).send(data);
-    });
-};
-*/

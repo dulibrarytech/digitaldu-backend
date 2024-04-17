@@ -41,6 +41,9 @@ module.exports = function (app) {
     app.route('/api/v2/repo/ingests')
     .get(TOKEN.verify, CONTROLLER.get_recent_ingests);
 
+    app.route('/api/v2/repo/unpublished')
+    .get(TOKEN.verify, CONTROLLER.get_unpublished_records);
+
     app.route('/api/admin/v1/repo/object')
     .get(TOKEN.verify, CONTROLLER.get_display_record)
     // .post(TOKEN.verify, CONTROLLER.create_collection_object) // TODO remove
@@ -61,16 +64,8 @@ module.exports = function (app) {
     app.route('/api/admin/v1/repo/object/viewer')
     .get(TOKEN.verify, CONTROLLER.get_viewer);
 
-    app.route('/api/admin/v1/repo/object/unpublished')
-    .get(TOKEN.verify, CONTROLLER.get_unpublished_admin_objects);
-
     app.route('/api/admin/v1/repo/object/transcript')
     .put(TOKEN.verify, CONTROLLER.save_transcript);
-
-    /*
-    app.route('/api/admin/v1/repo/metadata/reset') // TODO remove
-    .post(TOKEN.verify, CONTROLLER.reset_display_record);
-    */
 
     app.route('/api/admin/v1/repo/ping/services')
     .get(TOKEN.verify, CONTROLLER.ping);

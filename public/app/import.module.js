@@ -72,15 +72,17 @@ const importModule = (function () {
 
                 html += '<td id="publish-import-' + data[i].pid + '" width="5%" ' + alignTd + ' title="Unpublished"><i style="color: red" class="fa fa-cloud-upload"></i><br><small>Unpublished</small></td>';
                 html += '<td id="publish-import-' + data[i].pid + '" width="15%" ' + alignTd + '>';
-                html += '<a class="btn btn-primary" role="button" href="#" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(data[i].sip_uuid) + '\', \'object\'); return false;" title="Publish ingested record"><i class="fa fa-cloud-upload"></i> <small>One</small></a>'; // <br><small>Unpublished</small>
-                html += '&nbsp;&nbsp;|&nbsp;&nbsp;<a class="btn btn-info" role="button" href="#" onclick="objectsModule.publish_ingested_records(\'' + DOMPurify.sanitize(data[i].is_member_of_collection) + '\', \'' + DOMPurify.sanitize(data[i].pid) + '\'); return false;" title="Publish all ingested records in this collection"><i class="fa fa-cloud-upload"></i> <small>All</small></a>';
+                html += '<a class="btn btn-primary" role="button" href="#" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(data[i].pid) + '\', \'object\'); return false;" title="Publish ingested record"><i class="fa fa-cloud-upload"></i> <small>Publish</small></a>'; // <br><small>Unpublished</small>
                 html += '&nbsp;&nbsp;|&nbsp;&nbsp;<a class="btn btn-danger" role="button" title="Delete" href="/dashboard/object/delete?pid=' + DOMPurify.sanitize(data[i].pid) + '"><i class="fa fa-trash"></i></a>'; // <br>Delete
                 html += '</td>';
 
+                /*
                 let ingested = {};
                 ingested.collection = data[i].is_member_of_collection;
                 ingested.object = data[i].pid;
                 ingested_to_be_published.push(ingested);
+
+                 */
 
             } else if (data[i].is_published === 1) {
                 html += '<td id="publish-import-' + data[i].pid + '" width="5%" ' + alignTd + ' title="Published"><i class="fa fa-cloud"></i><br><small>Published</small></td>';
@@ -96,8 +98,6 @@ const importModule = (function () {
 
         domModule.html('#unpublished-records', ingested_to_be_published.length);
         domModule.html('#complete-records', html);
-        // domModule.html('#message', '');
-        // domModule.html('.loading', null);
 
         $('#completed-imports-table').DataTable({
             'pageLength': 25,

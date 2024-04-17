@@ -39,12 +39,11 @@ const apiModule = (function () {
             repo_publish: '/api/v2/repo/publish', // /api/admin/v1/repo/publish
             repo_unpublish: '/api/v2/repo/suppress', // /api/admin/v1/repo/unpublish
             repo_ingests: '/api/v2/repo/ingests', // '/api/admin/v1/import/complete'
-            repo_object_unpublished: '/api/admin/v1/repo/object/unpublished',
+            repo_object_unpublished: '/api/v2/repo/unpublished',
             repo_transcript: '/api/admin/v1/repo/object/transcript',
             search: '/api/v2/search', // /api/admin/v1/search
             import_metadata: '/api/v2/import/metadata', //'/api/admin/v1/import/metadata/collection',
-            stats: '/api/admin/v1/stats',
-
+            stats: '/api/admin/v1/stats'
         };
     };
 

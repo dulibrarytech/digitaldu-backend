@@ -158,7 +158,6 @@ async function suppress_records (SUPPRESS_PUBLIC_RECORD_TASK, SUPPRESS_ADMIN_REC
 
     if (is_suppressed === false) {
         LOGGER.module().error('ERROR: [/repository/model module (suppress)] unable to suppress records.');
-        // return false;
     }
 
     LOGGER.module().info('INFO: [/repository/model module (suppress)] collection record suppressed.');
@@ -333,51 +332,57 @@ exports.publish = function (uuid, type, callback) {
  */
 async function publish_record (PUBLISH_RECORD_TASK, ADMIN_RECORD_TASK, uuid, type) {
 
-    let db_record = await DB(DB_TABLES.repo.repo_records)
-    .select('display_record')
-    .where({
-        pid: uuid,
-        is_active: 1
-    });
+    try {
 
-    let record = JSON.parse(db_record[0].display_record);
-    record.is_published = 1;
+        let db_record = await DB(DB_TABLES.repo.repo_records)
+        .select('display_record')
+        .where({
+            pid: uuid,
+            is_active: 1
+        });
 
-    let result = await DB(DB_TABLES.repo.repo_records)
-    .where({
-        pid: uuid,
-        is_active: 1
-    })
-    .update({
-        is_published: 1,
-        display_record: JSON.stringify(record)
-    });
+        let record = JSON.parse(db_record[0].display_record);
+        record.is_published = 1;
 
-    if (result === 1) {
+        let result = await DB(DB_TABLES.repo.repo_records)
+        .where({
+            pid: uuid,
+            is_active: 1
+        })
+        .update({
+            is_published: 1,
+            display_record: JSON.stringify(record)
+        });
 
-        let indexed_admin_record = await ADMIN_RECORD_TASK.get_indexed_record(uuid);
-        indexed_admin_record.is_published = 1;
-        let is_admin_indexed = await ADMIN_RECORD_TASK.index_record(indexed_admin_record);
+        if (result === 1) {
 
-        if (is_admin_indexed === true) {
-            LOGGER.module().info('INFO: [/repository/model module (publish)] admin record indexed.');
+            let indexed_admin_record = await ADMIN_RECORD_TASK.get_indexed_record(uuid);
+            indexed_admin_record.is_published = 1;
+            let is_admin_indexed = await ADMIN_RECORD_TASK.index_record(indexed_admin_record);
+
+            if (is_admin_indexed === true) {
+                LOGGER.module().info('INFO: [/repository/model module (publish)] admin record indexed.');
+            } else {
+                LOGGER.module().error('ERROR: [/repository/model module (publish)] unable to index admin record.');
+            }
+
+            let is_published = await PUBLISH_RECORD_TASK.index_record(indexed_admin_record);
+
+            if (is_published === true) {
+                LOGGER.module().info('INFO: [/repository/model module (publish)] record published.');
+                return true;
+            } else {
+                LOGGER.module().error('ERROR: [/repository/model module (publish)] unable to publish record.');
+                return false;
+            }
+
         } else {
-            LOGGER.module().error('ERROR: [/repository/model module (publish)] unable to index admin record.');
-        }
-
-        let is_published = await PUBLISH_RECORD_TASK.index_record(indexed_admin_record);
-
-        if (is_published === true) {
-            LOGGER.module().info('INFO: [/repository/model module (publish)] record published.');
-            return true;
-        } else {
-            LOGGER.module().error('ERROR: [/repository/model module (publish)] unable to publish record.');
+            LOGGER.module().error('ERROR: [/repository/model module (publish)] unable to update db.');
             return false;
         }
 
-    } else {
-        LOGGER.module().error('ERROR: [/repository/model module (publish)] unable to update db.');
-        return false;
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/repository/model module (publish)] unable to publish record. ' + error.message);
     }
 }
 
@@ -507,7 +512,7 @@ async function publish_records (PUBLISH_RECORD_TASK, ADMIN_RECORD_TASK, uuid, ty
     }
 }
 
-/**
+/** TODO: deprecate
  * Gets the most recent ingested records
  * @param callback
  */
@@ -561,6 +566,67 @@ exports.get_recent_ingests = function (callback) {
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/import/model module (get_recent_ingests)] unable to get recently ingested records ' + error.message);
+    }
+};
+
+/**
+ * Gets all active unpublished records
+ * @param callback
+ */
+exports.get_unpublished_records = function (callback) {
+
+    try {
+
+        (async function () {
+
+            let unpublished = [];
+            let obj = {};
+            let collections = await DB(DB_TABLES.repo.repo_records)
+            .select('id','pid', 'mods', 'is_published')
+            .where({
+                is_active: 1,
+                object_type: 'collection'
+            });
+
+            for (let i=0;i<collections.length;i++) {
+
+                let metadata = JSON.parse(collections[i].mods);
+                obj.collection_uuid = metadata.pid;
+                obj.collection_title = metadata.title;
+
+                if (collections[i].is_published === 0) {
+                    obj.collection_status = 'unpublished';
+                } else if (collections[i].is_published === 1) {
+                    obj.collection_status = 'published';
+                }
+
+                let child_records = await DB(DB_TABLES.repo.repo_records)
+                .select('id','pid', 'mods', 'is_published', 'created')
+                .where({
+                    is_member_of_collection: collections[i].pid,
+                    is_active: 1,
+                    is_published: 0
+                });
+
+                if (child_records.length > 0) {
+                    obj.child_records = child_records;
+                    unpublished.push(obj);
+                    obj = {};
+                } else {
+                    obj = {};
+                }
+            }
+
+            callback({
+                status: 200,
+                message: 'Unpublished records.',
+                data: unpublished
+            });
+
+        })();
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/import/model module (get_unpublished_records)] unable to get unpublished records ' + error.message);
     }
 };
 

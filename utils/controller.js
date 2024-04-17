@@ -28,6 +28,20 @@ exports.default = function (req, res) {
     });
 };
 
+exports.restore_compound_parts = function (req, res) {
+
+    if (req.params.uuid === undefined) {
+        // TODO: bad request
+        return false;
+    }
+
+    const uuid = req.params.uuid;
+
+    UTILS.restore_compound_parts(uuid, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
 exports.convert = function (req, res) {
     CONVERT.convert(req, function (data) {
         res.status(data.status).send(data.data);
@@ -36,24 +50,6 @@ exports.convert = function (req, res) {
 
 exports.remove_cached_image = function (req, res) {
     CONVERT.remove_cached_image(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.reindex = function (req, res) {
-    UTILS.reindex(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.reindex_backend = function (req, res) {
-    UTILS.reindex_backend(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
-exports.reindex_frontend = function (req, res) {
-    UTILS.reindex_frontend(req, function (data) {
         res.status(data.status).send(data.data);
     });
 };
