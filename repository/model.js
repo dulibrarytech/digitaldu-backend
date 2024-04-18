@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2024 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ const CACHE = require('../libs/cache');
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
 const ES_TASKS = require('../libs/elasticsearch');
+const REPOSITORY_TASKS = require('../repository/tasks/repository_tasks');
 const INDEXER_TASKS = require('../indexer/tasks/indexer_index_tasks');
 const LOGGER = require('../libs/log4');
 
@@ -50,7 +51,7 @@ exports.suppress = function (uuid, type, callback) {
             const OBJ = ES.get_es();
             const SUPPRESS_PUBLIC_RECORD_TASK = new INDEXER_TASKS(DB, DB_TABLES, OBJ.es_client, OBJ.es_config.elasticsearch_index_front);
             const SUPPRESS_ADMIN_RECORD_TASK = new INDEXER_TASKS(DB, DB_TABLES, OBJ.es_client, OBJ.es_config.elasticsearch_index_back);
-
+            console.log('TYPE ', type);
             if (type === 'object') {
 
                 let is_suppressed = await suppress_record(SUPPRESS_PUBLIC_RECORD_TASK, SUPPRESS_ADMIN_RECORD_TASK, uuid, type);
@@ -90,6 +91,7 @@ async function suppress_record (SUPPRESS_PUBLIC_RECORD_TASK, SUPPRESS_ADMIN_RECO
 
     try {
 
+        const REPO_TASKS = new REPOSITORY_TASKS(DB, DB_TABLES);
         let is_suppressed = await SUPPRESS_PUBLIC_RECORD_TASK.delete_record(uuid);
 
         if (is_suppressed === false) {
@@ -99,27 +101,10 @@ async function suppress_record (SUPPRESS_PUBLIC_RECORD_TASK, SUPPRESS_ADMIN_RECO
 
         LOGGER.module().info('INFO: [/repository/model module (suppress)] record suppressed.');
 
-        let db_record = await DB(DB_TABLES.repo.repo_records)
-        .select('display_record')
-        .where({
-            pid: uuid,
-            object_type: type,
-            is_active: 1
-        });
-
+        const db_record = await REPO_TASKS.get_record(uuid, type, null);
         let record = JSON.parse(db_record[0].display_record);
         record.is_published = 0;
-
-        let result = await DB(DB_TABLES.repo.repo_records)
-        .where({
-            pid: uuid,
-            object_type: type,
-            is_active: 1
-        })
-        .update({
-            is_published: 0,
-            display_record: JSON.stringify(record)
-        });
+        const result = await REPO_TASKS.update_record(uuid, type, record, 0);
 
         if (result === 1) {
 
@@ -154,6 +139,7 @@ async function suppress_record (SUPPRESS_PUBLIC_RECORD_TASK, SUPPRESS_ADMIN_RECO
  */
 async function suppress_records (SUPPRESS_PUBLIC_RECORD_TASK, SUPPRESS_ADMIN_RECORD_TASK, uuid, type) {
 
+    const REPO_TASKS = new REPOSITORY_TASKS(DB, DB_TABLES);
     let is_suppressed = await SUPPRESS_PUBLIC_RECORD_TASK.delete_record(uuid);
 
     if (is_suppressed === false) {
@@ -162,27 +148,10 @@ async function suppress_records (SUPPRESS_PUBLIC_RECORD_TASK, SUPPRESS_ADMIN_REC
 
     LOGGER.module().info('INFO: [/repository/model module (suppress)] collection record suppressed.');
 
-    let db_record = await DB(DB_TABLES.repo.repo_records)
-    .select('display_record')
-    .where({
-        pid: uuid,
-        object_type: type,
-        is_active: 1
-    });
-
+    const db_record = await REPO_TASKS.get_record(uuid, type, null);
     let record = JSON.parse(db_record[0].display_record);
     record.is_published = 0;
-
-    let result = await DB(DB_TABLES.repo.repo_records)
-    .where({
-        pid: uuid,
-        object_type: type,
-        is_active: 1
-    })
-    .update({
-        is_published: 0,
-        display_record: JSON.stringify(record)
-    });
+    const result = await REPO_TASKS.update_record(uuid, type, record, 0);
 
     if (result === 1) {
 
@@ -197,26 +166,11 @@ async function suppress_records (SUPPRESS_PUBLIC_RECORD_TASK, SUPPRESS_ADMIN_REC
         }
 
         // process child records
-        // set all child records to is_publish 0
-        let result = await DB(DB_TABLES.repo.repo_records)
-        .where({
-            is_member_of_collection: uuid,
-            is_active: 1
-        })
-        .update({
-            is_published: 0
-        });
-
+        const result = await REPO_TASKS.update_child_records(uuid,'suppress');
         LOGGER.module().info('INFO: [/repository/model module (suppress)] updated ' + result + ' records');
 
         // get child records
-        let db_records = await DB(DB_TABLES.repo.repo_records)
-        .select('display_record')
-        .where({
-            is_member_of_collection: uuid,
-            is_active: 1
-        });
-
+        const db_records = await REPO_TASKS.get_child_records(uuid, 'suppress');
         let index_timer = setInterval(async () => {
 
             if (db_records.length === 0 ) {
@@ -231,23 +185,13 @@ async function suppress_records (SUPPRESS_PUBLIC_RECORD_TASK, SUPPRESS_ADMIN_REC
             LOGGER.module().info('INFO: [/repository/model module (suppress)] suppressing record ' + record.pid);
             is_suppressed = await SUPPRESS_PUBLIC_RECORD_TASK.delete_record(record.pid);
             record.is_published = 0;
-
-            // update db
-            let result = await DB(DB_TABLES.repo.repo_records)
-            .where({
-                is_member_of_collection: uuid,
-                pid: record.pid,
-                is_active: 1
-            })
-            .update({
-                is_published: 0,
-                display_record: JSON.stringify(record)
-            });
+            const result = REPO_TASKS.update_child_record(uuid, record.pid, record, 0);
 
             LOGGER.module().info('INFO: [/repository/model module (suppress)] updated ' + result + ' record');
 
             let indexed_admin_record = await SUPPRESS_ADMIN_RECORD_TASK.get_indexed_record(record.pid);
             indexed_admin_record.is_published = 0;
+
             let is_indexed = await SUPPRESS_ADMIN_RECORD_TASK.index_record(indexed_admin_record);
 
             if (is_indexed === true) {
@@ -334,25 +278,11 @@ async function publish_record (PUBLISH_RECORD_TASK, ADMIN_RECORD_TASK, uuid, typ
 
     try {
 
-        let db_record = await DB(DB_TABLES.repo.repo_records)
-        .select('display_record')
-        .where({
-            pid: uuid,
-            is_active: 1
-        });
-
+        const REPO_TASKS = new REPOSITORY_TASKS(DB, DB_TABLES);
+        const db_record = await REPO_TASKS.get_record(uuid, type, 0);
         let record = JSON.parse(db_record[0].display_record);
         record.is_published = 1;
-
-        let result = await DB(DB_TABLES.repo.repo_records)
-        .where({
-            pid: uuid,
-            is_active: 1
-        })
-        .update({
-            is_published: 1,
-            display_record: JSON.stringify(record)
-        });
+        const result = await REPO_TASKS.update_record(uuid, type, record, 1);
 
         if (result === 1) {
 
@@ -397,27 +327,11 @@ async function publish_records (PUBLISH_RECORD_TASK, ADMIN_RECORD_TASK, uuid, ty
 
     try {
 
-        let db_record = await DB(DB_TABLES.repo.repo_records)
-        .select('display_record')
-        .where({
-            pid: uuid,
-            object_type: type,
-            is_active: 1
-        });
-
+        const REPO_TASKS = new REPOSITORY_TASKS(DB, DB_TABLES);
+        const db_record = await REPO_TASKS.get_record(uuid, type, 0);
         let record = JSON.parse(db_record[0].display_record);
         record.is_published = 1;
-
-        let result = await DB(DB_TABLES.repo.repo_records)
-        .where({
-            pid: uuid,
-            object_type: type,
-            is_active: 1
-        })
-        .update({
-            is_published: 1,
-            display_record: JSON.stringify(record)
-        });
+        const result = await REPO_TASKS.update_record(uuid, type, record, 1);
 
         if (result === 1) {
 
@@ -433,26 +347,13 @@ async function publish_records (PUBLISH_RECORD_TASK, ADMIN_RECORD_TASK, uuid, ty
 
             LOGGER.module().info('INFO: [/repository/model module (publish)] collection record published.');
 
+            // get unpublished child records
+            const db_records = await REPO_TASKS.get_child_records(uuid, 'publish');
+
             // process child records
-            // set all child records to is_publish 1
-            let result = await DB(DB_TABLES.repo.repo_records)
-            .where({
-                is_member_of_collection: uuid,
-                is_active: 1
-            })
-            .update({
-                is_published: 1
-            });
+            const result = await REPO_TASKS.update_child_records(uuid,'publish');
 
             LOGGER.module().info('INFO: [/repository/model module (publish)] updated ' + result + ' records');
-
-            // get child records
-            let db_records = await DB(DB_TABLES.repo.repo_records)
-            .select('display_record')
-            .where({
-                is_member_of_collection: uuid,
-                is_active: 1
-            });
 
             let index_timer = setInterval(async () => {
 
@@ -469,16 +370,7 @@ async function publish_records (PUBLISH_RECORD_TASK, ADMIN_RECORD_TASK, uuid, ty
                 LOGGER.module().info('INFO: [/repository/model module (publish)] publishing child record ' + record.pid);
 
                 // update db
-                let result = await DB(DB_TABLES.repo.repo_records)
-                .where({
-                    is_member_of_collection: uuid,
-                    pid: record.pid,
-                    is_active: 1
-                })
-                .update({
-                    is_published: 1,
-                    display_record: JSON.stringify(record)
-                });
+                const result = REPO_TASKS.update_child_record(uuid, record.pid, record, 1);
 
                 if (result.length === 1) {
                     LOGGER.module().info('INFO: [/repository/model module (publish)] updated ' + result + ' child record');
@@ -502,72 +394,15 @@ async function publish_records (PUBLISH_RECORD_TASK, ADMIN_RECORD_TASK, uuid, ty
                     LOGGER.module().info('INFO: [/repository/model module (publish)] child record published ' + record.pid);
                 }
 
-            }, 500);
+            }, 450);
 
             return true;
         }
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/repository/model module (publish)] unable to publish collection record(s).');
+        LOGGER.module().error('ERROR: [/repository/model module (publish)] unable to publish collection record(s). ' + error.message);
     }
 }
-
-/** TODO: deprecate
- * Gets the most recent ingested records
- * @param callback
- */
-exports.get_recent_ingests = function (callback) {
-
-    try {
-
-        (async function () {
-
-            let records = await DB(DB_TABLES.repo.repo_records)
-            .select('id','is_member_of_collection', 'pid', 'mods','uri','mime_type', 'is_published', 'created')
-            .where({
-                is_active: 1,
-                object_type: 'object'
-            })
-            .limit(1000)
-            .orderBy('id', 'desc');
-
-            let response = [];
-            let timer = setInterval(async () => {
-
-                if (records.length === 0) {
-
-                    clearInterval(timer);
-
-                    callback({
-                        status: 200,
-                        message: 'Complete records.',
-                        data: response
-                    });
-
-                    return false;
-                }
-
-                let record = records.pop();
-
-                let collection_record = await DB(DB_TABLES.repo.repo_records)
-                .select('mods')
-                .where({
-                    pid: record.is_member_of_collection,
-                    object_type: 'collection'
-                });
-
-                let metadata = JSON.parse(collection_record[0].mods);
-                record.collection_title = metadata.title;
-                response.push(record);
-
-            }, 0);
-
-        })();
-
-    } catch (error) {
-        LOGGER.module().error('ERROR: [/import/model module (get_recent_ingests)] unable to get recently ingested records ' + error.message);
-    }
-};
 
 /**
  * Gets all active unpublished records
@@ -786,7 +621,7 @@ exports.update_thumbnail = function (req, callback) {
     });
 };
 
-/** TODO: refactor
+/** TODO: refactor/deprecate?
  * Creates repository collection (admin dashboard)
  * @param req
  * @param callback
@@ -1025,6 +860,63 @@ exports.create_collection_object = function (req, callback) {
             });
         }
     });
+};
+
+/** TODO: deprecate
+ * Gets the most recent ingested records
+ * @param callback
+ */
+exports.get_recent_ingests = function (callback) {
+
+    try {
+
+        (async function () {
+
+            let records = await DB(DB_TABLES.repo.repo_records)
+            .select('id','is_member_of_collection', 'pid', 'mods','uri','mime_type', 'is_published', 'created')
+            .where({
+                is_active: 1,
+                object_type: 'object'
+            })
+            .limit(1000)
+            .orderBy('id', 'desc');
+
+            let response = [];
+            let timer = setInterval(async () => {
+
+                if (records.length === 0) {
+
+                    clearInterval(timer);
+
+                    callback({
+                        status: 200,
+                        message: 'Complete records.',
+                        data: response
+                    });
+
+                    return false;
+                }
+
+                let record = records.pop();
+
+                let collection_record = await DB(DB_TABLES.repo.repo_records)
+                .select('mods')
+                .where({
+                    pid: record.is_member_of_collection,
+                    object_type: 'collection'
+                });
+
+                let metadata = JSON.parse(collection_record[0].mods);
+                record.collection_title = metadata.title;
+                response.push(record);
+
+            }, 0);
+
+        })();
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/import/model module (get_recent_ingests)] unable to get recently ingested records ' + error.message);
+    }
 };
 
 /**

@@ -92,21 +92,6 @@ const objectsModule = (function () {
         httpModule.req(request, callback);
     };
 
-    /** TODO
-     * Publishes
-     * @param is_member_of_collection
-     * @param pid
-     */
-    obj.publish_ingested_records = function (is_member_of_collection, pid) { // collection pid
-        console.log('collection uuid ', is_member_of_collection);
-        console.log('uuid ', pid);
-        // window.alert('Would you like to publish all newly ingested records that belong to this collection?');
-
-        const ingested_records = window.localStorage.getItem('ingested_to_be_published');
-        const records = JSON.parse(ingested_records);
-        console.log(records);
-    };
-
     /**
      * Publishes admin objects
      * @param pid
@@ -299,7 +284,7 @@ const objectsModule = (function () {
         data.sort((a, b) => a.collection_title.localeCompare(b.collection_title));
 
         for (let i=0;i<data.length;i++) {
-            console.log(data[i].collection_uuid);
+
             html += '<tr>';
             html += '<td width="25%" ' + alignTd + '>';
             html += '<h3>' + data[i].collection_title + '</h3>';
@@ -322,7 +307,10 @@ const objectsModule = (function () {
                 html += `<small id="publish-import-${data[i].child_records[j].pid}"></small>&nbsp;&nbsp;${compound} ${object_link}&nbsp;&nbsp;`;
                 html += `<br><small><em>Ingested on ${DOMPurify.sanitize(moment(data[i].child_records[j].created).tz('America/Denver').format('MM-DD-YYYY, h:mm:ss a'))}</em></small>`;
                 html += '</td>';
-                html += '<td style="width:20%;text-align: center"><a href="#" data-title="Publish record" title="Publish record" data-toggle="tooltip" data-placement="left" class="btn btn-primary" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(data[i].child_records[j].pid) + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i></a>&nbsp;|&nbsp;<a class="btn btn-danger" role="button" data-title="Delete record" title="Delete record" data-toggle="tooltip" data-placement="right" title="Delete" href="/dashboard/object/delete?pid=' + DOMPurify.sanitize(data[i].pid) + '"><i class="fa fa-trash"></i></a></td>';
+                html += '<td style="width:20%;text-align: center">';
+                html += '<a href="#" data-title="Publish record" title="Publish record" data-toggle="tooltip" data-placement="left" class="btn btn-primary" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(data[i].child_records[j].pid) + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i></a>&nbsp;|&nbsp;';
+                html += '<a class="btn btn-danger" role="button" data-title="Delete record" title="Delete record" data-toggle="tooltip" data-placement="right" title="Delete" href="/dashboard/object/delete?pid=' + DOMPurify.sanitize(data[i].child_records[j].pid) + '"><i class="fa fa-trash"></i></a>';
+                html += '</td>';
                 html += '</tr>';
             }
 

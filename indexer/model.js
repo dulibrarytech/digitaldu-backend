@@ -147,7 +147,7 @@ exports.reindex = function (callback) {
                     LOGGER.module().error('ERROR: [/indexer/model (reindex)] reindex HALTED.');
                 }
 
-            }, 350);
+            }, 375);
 
             callback({
                 status: 200,
