@@ -55,7 +55,7 @@ const userModule = (function () {
                 actives += '<td>Active</td>';
                 actives += '<td>';
                 actives += '&nbsp;';
-                actives += '<a class="btn btn-xs btn-default" href="/dashboard/users/edit?id=' + DOMPurify.sanitize(user.id) + '" title="Edit User"><i class="fa fa-edit"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;';
+                actives += '<a class="btn btn-xs btn-default" href="/repo/dashboard/users/edit?id=' + DOMPurify.sanitize(user.id) + '" title="Edit User"><i class="fa fa-edit"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;';
                 actives += '</td>';
                 actives += '</tr>';
 
@@ -77,8 +77,8 @@ const userModule = (function () {
             inactives += '<td style="background: red;color: white">Inactive</td>';
             inactives += '<td>';
             inactives += '&nbsp;';
-            inactives += '<a class="btn btn-xs btn-default" href="/dashboard/users/edit?id=' + DOMPurify.sanitize(user.id) + '" title="Edit User"><i class="fa fa-edit"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;';
-            inactives += '<a class="btn btn-xs btn-danger" href="/dashboard/users/delete?id=' + DOMPurify.sanitize(user.id) + '" title="Delete User"><i class="fa fa-times"></i></a>';
+            inactives += '<a class="btn btn-xs btn-default" href="/repo/dashboard/users/edit?id=' + DOMPurify.sanitize(user.id) + '" title="Edit User"><i class="fa fa-edit"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;';
+            inactives += '<a class="btn btn-xs btn-danger" href="/repo/dashboard/users/delete?id=' + DOMPurify.sanitize(user.id) + '" title="Delete User"><i class="fa fa-times"></i></a>';
             inactives += '</td>';
             inactives += '</tr>';
         }
@@ -100,7 +100,7 @@ const userModule = (function () {
             domModule.html('#user-update-form', null);
             helperModule.renderError('Unable to get profile data.');
             setTimeout(function () {
-                window.location.replace('/dashboard/users');
+                window.location.replace('/repo/dashboard/users');
             }, 3000);
             return false;
         }
@@ -158,7 +158,7 @@ const userModule = (function () {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                 setTimeout(function () {
-                    window.location.replace('/login');
+                    window.location.replace('/repo/login');
                 }, 4000);
 
             } else {
@@ -201,7 +201,7 @@ const userModule = (function () {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                 setTimeout(function () {
-                    window.location.replace('/login');
+                    window.location.replace('/repo/login');
                 }, 4000);
 
             } else {
@@ -248,7 +248,7 @@ const userModule = (function () {
                  helperModule.renderError('Unable to get user profile data.');
 
                  setTimeout(function () {
-                    window.location.replace('/login');
+                    window.location.replace('/repo/login');
                  }, 5000);
             }
 
@@ -402,7 +402,7 @@ const userModule = (function () {
                 domModule.hide('#user-update-form');
                 setTimeout(function () {
                     domModule.html('#message', null);
-                    window.location.replace('/dashboard/users');
+                    window.location.replace('/repo/dashboard/users');
                 }, 3000);
 
                 return false;
@@ -414,7 +414,7 @@ const userModule = (function () {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
-                        window.location.replace('/login');
+                        window.location.replace('/repo/login');
                     }, 3000);
                 });
 
@@ -453,7 +453,7 @@ const userModule = (function () {
                 domModule.html('#message', '<div class="alert alert-success">User deleted</div>');
                 setTimeout(function () {
                     domModule.html('#message', null);
-                    window.location.replace('/dashboard/users');
+                    window.location.replace('/repo/dashboard/users');
                 }, 3000);
 
                 return false;
@@ -465,7 +465,7 @@ const userModule = (function () {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
-                        window.location.replace('/login');
+                        window.location.replace('/repo/login');
                     }, 3000);
                 });
 
@@ -516,11 +516,11 @@ const userModule = (function () {
         if (data !== null && data.token === null) {
 
             setTimeout(function () {
-                window.location.replace('/login');
+                window.location.replace('/repo/login');
             }, 0);
 
         } else if (data === null) {
-            window.location.replace('/login');
+            window.location.replace('/repo/login');
         } else {
             return DOMPurify.sanitize(data.token);
         }
@@ -566,7 +566,7 @@ const userModule = (function () {
 
                 } else {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to retrieve user profile.');
-                    window.location.replace('/login');
+                    window.location.replace('/repo/login');
                 }
             };
 
@@ -583,7 +583,7 @@ const userModule = (function () {
     obj.sessionExpired = function () {
         window.sessionStorage.removeItem('repo_user');
         setTimeout(function () {
-            window.location.replace('/login');
+            window.location.replace('/repo/login');
         }, 500);
     };
 

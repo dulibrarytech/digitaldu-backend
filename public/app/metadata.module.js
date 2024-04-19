@@ -20,6 +20,7 @@ const metadataModule = (function () {
 
     'use strict';
 
+    const app_path = configModule.get_app_path();
     const api = configModule.getApi();
     const endpoints = apiModule.endpoints();
     let obj = {};
@@ -124,7 +125,7 @@ const metadataModule = (function () {
             }
 
             // menu += '<p><a href="' + api + '/dashboard/objects/unpublished?pid=' + DOMPurify.sanitize(record.pid) + '&unpublished"><i class="fa fa-info-circle"></i>&nbsp;Unpublished objects</a></p>';
-            menu += '<p><a href="' + api + '/dashboard/object/thumbnail?pid=' + DOMPurify.sanitize(record.pid) + '"><i class="fa fa-edit"></i>&nbsp;Change Thumbnail</a></p>';
+            menu += '<p><a href="' + api + app_path + '/dashboard/object/thumbnail?pid=' + DOMPurify.sanitize(record.pid) + '"><i class="fa fa-edit"></i>&nbsp;Change Thumbnail</a></p>';
             menu += '<p><a id="update-' + record.pid + '" title="Updates all records in this collection" href="#' + record.pid + '" onclick="collectionsModule.updateCollectionMetadata(\'' + DOMPurify.sanitize(record.pid) + '\', \'collection\'); return false;"><i class="fa fa-code"></i>&nbsp;Update Metadata</a></p>';
         }
 
@@ -159,14 +160,14 @@ const metadataModule = (function () {
                 menu += '<div id="status-unpublished-' + record.pid + '">';
                 menu += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
                 menu += '<p><a id="publish-' + record.pid + '" href="#' + record.pid + '" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(record.pid) + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i>&nbsp;Publish</a></p>';
-                menu += '<p><a href="/dashboard/object/delete?pid=' +  DOMPurify.sanitize(record.pid) + '"><i class="fa fa-trash"></i>&nbsp;Delete</a></p>';
+                menu += '<p><a href="' + app_path + '/dashboard/object/delete?pid=' +  DOMPurify.sanitize(record.pid) + '"><i class="fa fa-trash"></i>&nbsp;Delete</a></p>';
                 menu += '</div>';
             }
 
             menu += '<p><a id="update-' + record.pid + '" href="#' + record.pid + '" onclick="objectsModule.updateMetadata(\'' + DOMPurify.sanitize(record.pid) + '\', \'object\'); return false;"><i class="fa fa-code"></i>&nbsp;Update Metadata</a></p>';
 
             if (record.transcript_search !== undefined) {
-                menu += '<p><a id="transcript-' + record.pid + '" href="/dashboard/transcript?mode=view&sip_uuid=' + DOMPurify.sanitize(record.pid) + '"><i class="fa fa-file-o"></i>&nbsp;View Transcript</a></p>';
+                menu += '<p><a id="transcript-' + record.pid + '" href="' + app_path + '/dashboard/transcript?mode=view&sip_uuid=' + DOMPurify.sanitize(record.pid) + '"><i class="fa fa-file-o"></i>&nbsp;View Transcript</a></p>';
             } else {
                 // menu += '<p><a id="transcript-' + record.pid + '" href="/dashboard/transcript?mode=add&sip_uuid=' + DOMPurify.sanitize(record.pid) + '"><i class="fa fa-file-o"></i>&nbsp;Add Transcript</a></p>';
             }
@@ -185,7 +186,7 @@ const metadataModule = (function () {
         let title = '';
 
         if (record.display_record.title !== undefined && record.object_type === 'collection') {
-            title += '<h4><a href="' + api + '/dashboard/objects/?pid=' + DOMPurify.sanitize(record.pid) + '">' + DOMPurify.sanitize(record.display_record.title) + '</a></h4>';
+            title += '<h4><a href="' + api + app_path + '/dashboard/objects/?pid=' + DOMPurify.sanitize(record.pid) + '">' + DOMPurify.sanitize(record.display_record.title) + '</a></h4>';
         } else if (record.object_type === 'object') {
             title += '<h4>' + DOMPurify.sanitize(record.display_record.title) + '</h4>';
         } else {

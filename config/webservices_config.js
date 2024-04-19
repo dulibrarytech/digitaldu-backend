@@ -29,7 +29,7 @@ const WEBSERVICES_CONFIG = {
     // TODO: image convert service
 };
 
-module.exports = () => {
+module.exports = function () {
     const HELPER_TASK = new HELPER();
     return HELPER_TASK.check_config(WEBSERVICES_CONFIG);
 };

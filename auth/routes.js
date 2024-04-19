@@ -18,17 +18,18 @@
 
 'use strict';
 
+const CONFIG = require('../config/app_config')();
 const CONTROLLER = require('../auth/controller');
 const TOKENS = require('../libs/tokens');
 
 module.exports = function (app) {
 
-    app.route('/login')
+    app.route(`${CONFIG.app_path}/login`)
     .get(TOKENS.verify);
 
-    app.route('/sso')
+    app.route(`${CONFIG.app_path}/sso`)
     .post(CONTROLLER.sso);
 
-    app.route('/logout')
+    app.route(`${CONFIG.app_path}/logout`)
     .get(CONTROLLER.logout);
 };

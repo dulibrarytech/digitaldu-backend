@@ -18,20 +18,21 @@
 
 'use strict';
 
-const API = require('../api/controller'),
-    TOKEN = require('../libs/tokens');
+const CONFIG = require('../config/app_config')();
+const API = require('../api/controller');
+const TOKEN = require('../libs/tokens');
 
 module.exports = function (app) {
 
-    app.route('/api/v1')
+    app.route(`${CONFIG.app_path}/api/v1`)
         .get(TOKEN.verify, API.default);
 
-    app.route('/api/v1/uuids')
+    app.route(`${CONFIG.app_path}/api/v1/uuids`)
         .get(TOKEN.verify, API.get_uuids);
 
-    app.route('/api/v1/records')
+    app.route(`${CONFIG.app_path}/api/v1/records`)
         .get(TOKEN.verify, API.get_records);
 
-    app.route('/api/v1/images')
+    app.route(`${CONFIG.app_path}/api/v1/images`)
         .get(TOKEN.verify, API.get_images);
 };

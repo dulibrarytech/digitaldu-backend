@@ -23,13 +23,16 @@ const UTILS = require('../utils/controller'),
 
 module.exports = function (app) {
 
+    /*
     app.route('/')
     .get(UTILS.default);
+    */
 
     app.get('/robots.txt', function (req, res) {
         res.type('text/plain');
         res.send('User-agent: *\nDisallow: /');
     });
+
 
     app.route('/api/v1/utils/convert')
     .get(UTILS.convert);
@@ -37,8 +40,10 @@ module.exports = function (app) {
     app.route('/api/v1/utils/clear_image_cache')
     .get(UTILS.remove_cached_image);
 
+    /*
     app.route('/api/v1/utils/restore-compound-parts/:uuid')
     .post(UTILS.restore_compound_parts);
+    */
 
     /*
     app.route('/api/admin/v1/utils/reindex')

@@ -18,55 +18,61 @@
 
 'use strict';
 
+const CONFIG = require('../config/app_config')();
 const CONTROLLER = require('../repository/controller');
 const TOKEN = require('../libs/tokens');
 
 module.exports = function (app) {
 
-    app.route('/')
+    app.get(`${CONFIG.app_path}/robots.txt`, function (req, res) {
+        res.type('text/plain');
+        res.send('User-agent: *\nDisallow: /');
+    });
+
+    app.route(`${CONFIG.app_path}`)
     .post(TOKEN.verify, CONTROLLER.default);
 
-    app.route('/api/v2/repo/records')
+    app.route(`${CONFIG.app_path}/api/v2/repo/records`)
     .get(TOKEN.verify, CONTROLLER.get_records);
 
-    app.route('/api/v2/repo/publish')
+    app.route(`${CONFIG.app_path}/api/v2/repo/publish`)
     .post(TOKEN.verify, CONTROLLER.publish);
 
-    app.route('/api/v2/repo/suppress')
+    app.route(`${CONFIG.app_path}/api/v2/repo/suppress`)
     .post(TOKEN.verify, CONTROLLER.suppress);
 
-    app.route('/api/v2/repo/records')
+    app.route(`${CONFIG.app_path}/api/v2/repo/records`)
     .get(TOKEN.verify, CONTROLLER.get_records);
 
-    app.route('/api/v2/repo/ingests')
+    app.route(`${CONFIG.app_path}/api/v2/repo/ingests`)
     .get(TOKEN.verify, CONTROLLER.get_recent_ingests);
 
-    app.route('/api/v2/repo/unpublished')
+    app.route(`${CONFIG.app_path}/api/v2/repo/unpublished`)
     .get(TOKEN.verify, CONTROLLER.get_unpublished_records);
 
-    app.route('/api/admin/v1/repo/object')
+    app.route(`${CONFIG.app_path}/api/admin/v1/repo/object`)
     .get(TOKEN.verify, CONTROLLER.get_display_record)
     // .post(TOKEN.verify, CONTROLLER.create_collection_object) // TODO remove
     .delete(TOKEN.verify, CONTROLLER.delete_object);
 
     // gets thumbnails from duracloud
-    app.route('/api/admin/v1/repo/object/thumbnail')
+    app.route(`${CONFIG.app_path}/api/admin/v1/repo/object/thumbnail`)
     .get(TOKEN.verify, CONTROLLER.get_thumbnail)
     .post(TOKEN.verify, CONTROLLER.update_thumbnail);
 
     // gets thumbnails from TN service
-    app.route('/api/admin/v1/repo/object/tn')
+    app.route(`${CONFIG.app_path}/api/admin/v1/repo/object/tn`)
     .get(TOKEN.verify, CONTROLLER.get_tn);
 
-    app.route('/api/admin/v1/repo/object/image')
+    app.route(`${CONFIG.app_path}/api/admin/v1/repo/object/image`)
     .get(TOKEN.verify, CONTROLLER.get_image);
 
-    app.route('/api/admin/v1/repo/object/viewer')
+    app.route(`${CONFIG.app_path}/api/admin/v1/repo/object/viewer`)
     .get(TOKEN.verify, CONTROLLER.get_viewer);
 
-    app.route('/api/admin/v1/repo/object/transcript')
+    app.route(`${CONFIG.app_path}/api/admin/v1/repo/object/transcript`)
     .put(TOKEN.verify, CONTROLLER.save_transcript);
 
-    app.route('/api/admin/v1/repo/ping/services')
+    app.route(`${CONFIG.app_path}/api/admin/v1/repo/ping/services`)
     .get(TOKEN.verify, CONTROLLER.ping);
 };

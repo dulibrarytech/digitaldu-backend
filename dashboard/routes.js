@@ -18,56 +18,57 @@
 
 'use strict';
 
+const CONFIG = require('../config/app_config')();
 const DASHBOARD = require('../dashboard/controller');
 
 module.exports = function (app) {
 
-    app.route('/dashboard/home')
+    app.route(`${CONFIG.app_path}/dashboard/home`)
         .get(DASHBOARD.get_dashboard_home);
 
-    app.route('/dashboard/collections/add')
+    app.route(`${CONFIG.app_path}/dashboard/collections/add`)
         .get(DASHBOARD.get_dashboard_collection_add_form);
 
-    app.route('/dashboard/objects')
+    app.route(`${CONFIG.app_path}/dashboard/objects`)
         .get(DASHBOARD.get_dashboard_objects);
 
-    app.route('/dashboard/objects/unpublished')
+    app.route(`${CONFIG.app_path}/dashboard/objects/unpublished`)
         .get(DASHBOARD.get_dashboard_unpublished_objects);
 
-    app.route('/dashboard/objects/search')
+    app.route(`${CONFIG.app_path}/dashboard/objects/search`)
         .get(DASHBOARD.get_dashboard_search);
 
-    app.route('/dashboard/object/thumbnail')
+    app.route(`${CONFIG.app_path}/dashboard/object/thumbnail`)
         .get(DASHBOARD.update_dashboard_thumbnail);
 
-    app.route('/dashboard/object/thumbnail/upload')
+    app.route(`${CONFIG.app_path}/dashboard/object/thumbnail/upload`)
         .get(DASHBOARD.get_dashboard_upload);
 
-    app.route('/dashboard/object/delete')
+    app.route(`${CONFIG.app_path}/dashboard/object/delete`)
         .get(DASHBOARD.delete_dashboard_object);
 
-    app.route('/dashboard/ingest')
+    app.route(`${CONFIG.app_path}/dashboard/ingest`)
         .get(DASHBOARD.get_dashboard_import);
 
-    app.route('/dashboard/ingest/status')
+    app.route(`${CONFIG.app_path}/dashboard/ingest/status`)
         .get(DASHBOARD.get_dashboard_import_status);
 
-    app.route('/dashboard/import/complete')
+    app.route(`${CONFIG.app_path}/dashboard/import/complete`)
         .get(DASHBOARD.get_dashboard_import_complete);
 
-    app.route('/dashboard/users')
+    app.route(`${CONFIG.app_path}/dashboard/users`)
         .get(DASHBOARD.get_dashboard_users);
 
-    app.route('/dashboard/users/edit')
+    app.route(`${CONFIG.app_path}/dashboard/users/edit`)
         .get(DASHBOARD.get_dashboard_user_edit_form);
 
-    app.route('/dashboard/users/add')
+    app.route(`${CONFIG.app_path}/dashboard/users/add`)
         .get(DASHBOARD.get_dashboard_user_add_form);
 
-    app.route('/dashboard/users/delete')
+    app.route(`${CONFIG.app_path}/dashboard/users/delete`)
         .get(DASHBOARD.get_dashboard_user_delete_form);
 
-    app.route('/dashboard/qa')
+    app.route(`${CONFIG.app_path}/dashboard/qa`)
         .get(DASHBOARD.get_dashboard_qa);
 
     app.route('/dashboard/transcript')

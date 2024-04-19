@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2024 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,15 +18,16 @@
 
 'use strict';
 
-const CONFIG = require('../config/app_config')();
-const CONTROLLER = require('../indexer/controller');
-const TOKEN = require('../libs/tokens');
+const HELPER = require('../libs/helper');
+const TOKEN_CONFIG = {
+    token_issuer: process.env.TOKEN_ISSUER,
+    token_algo: process.env.TOKEN_ALGO,
+    token_expires: process.env.TOKEN_EXPIRES,
+    token_secret: process.env.TOKEN_SECRET,
+    api_key: process.env.API_KEY
+};
 
-module.exports = function (app) {
-
-    app.route(`${CONFIG.app_path}/api/v2/indexer/reindex`)
-    .post(TOKEN.verify, CONTROLLER.reindex);
-
-    app.route(`${CONFIG.app_path}/api/v2/indexer/index/:pid`)
-    .post(TOKEN.verify, CONTROLLER.index_record);
+module.exports = function () {
+    const HELPER_TASK = new HELPER();
+    return HELPER_TASK.check_config(TOKEN_CONFIG);
 };

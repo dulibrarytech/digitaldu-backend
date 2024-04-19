@@ -21,12 +21,13 @@
 const HELPER = require('../libs/helper');
 const APP_CONFIG = {
     host: process.env.HOST,
+    app_path: process.env.APP_PATH,
     app_name: process.env.APP_NAME,
     app_version: process.env.APP_VERSION,
     organization: process.env.ORGANIZATION,
     app_host: process.env.APP_HOST,
     app_port: process.env.APP_PORT,
-    api_url: process.env.API_URL
+    api_url: process.env.API_URL,
 };
 
 module.exports = function () {

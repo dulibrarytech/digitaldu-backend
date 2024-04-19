@@ -18,12 +18,13 @@
 
 'use strict';
 
+const CONFIG = require('../config/app_config')();
 const CONTROLLER = require('../import/controller');
 const TOKEN = require('../libs/tokens');
 
 module.exports = function (app) {
 
-    app.route('/api/v2/import/metadata/:uuid')
+    app.route(`${CONFIG.app_path}/api/v2/import/metadata/:uuid`)
     .put(TOKEN.verify, CONTROLLER.update_metadata);
 
 };

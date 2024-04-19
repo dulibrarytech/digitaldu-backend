@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2024 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,12 +18,13 @@
 
 'use strict';
 
+const CONFIG = require('../config/app_config')();
 const CONTROLLER = require('../search/controller');
 const TOKEN = require('../libs/tokens');
 
 module.exports = function (app) {
 
-    app.route('/api/v2/search')
+    app.route(`${CONFIG.app_path}/api/v2/search`)
     .get(TOKEN.verify, CONTROLLER.get_search_results);
 
 };

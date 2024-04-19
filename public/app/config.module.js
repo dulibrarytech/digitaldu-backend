@@ -22,6 +22,10 @@ const configModule = (function () {
 
     let obj = {};
 
+    obj.get_app_path = function () {
+        return '/repo';
+    };
+
     /**
      * Resolves repo api url
      * @returns {string}

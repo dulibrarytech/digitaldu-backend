@@ -18,6 +18,8 @@
 
 'use strict';
 
+const TOKEN_CONFIG = require('../config/token_config')();
+const WEBSERVICES_CONFIG = require('../config/webservices_config')();
 const CONFIG = require('../config/config');
 const JWT = require('jsonwebtoken');
 const LOGGER = require('../libs/log4');
@@ -26,18 +28,17 @@ const VALIDATOR = require('validator');
 /**
  * Creates session token
  * @param username
- * @returns {*}
  */
 exports.create = function (username) {
 
     let tokenData = {
         sub: username,
-        iss: CONFIG.tokenIssuer
+        iss: TOKEN_CONFIG.token_issuer
     };
 
-    return JWT.sign(tokenData, CONFIG.tokenSecret, {
-        algorithm: CONFIG.tokenAlgo,
-        expiresIn: CONFIG.tokenExpires
+    return JWT.sign(tokenData, TOKEN_CONFIG.token_secret, {
+        algorithm: TOKEN_CONFIG.token_algo,
+        expiresIn: TOKEN_CONFIG.token_expires
     });
 };
 
@@ -54,11 +55,12 @@ exports.verify = function (req, res, next) {
 
     if (token !== undefined && VALIDATOR.isJWT(token)) {
 
-        JWT.verify(token, CONFIG.tokenSecret, function (error, decoded) {
+        JWT.verify(token, TOKEN_CONFIG.token_secret, function (error, decoded) {
 
             if (error) {
                 LOGGER.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify token ' + error.message);
-                res.redirect(CONFIG.ssoUrl + '?app_url=' + CONFIG.ssoResponseUrl);
+                res.redirect(WEBSERVICES_CONFIG.sso_url + '?app_url=' + WEBSERVICES_CONFIG.sso_response_url);
+                // res.redirect(CONFIG.ssoUrl + '?app_url=' + CONFIG.ssoResponseUrl);
                 return false;
             }
 
@@ -89,6 +91,7 @@ exports.verify = function (req, res, next) {
     } else {
 
         LOGGER.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify api key');
-        res.redirect(CONFIG.ssoUrl + '?app_url=' + CONFIG.ssoResponseUrl);
+        res.redirect(WEBSERVICES_CONFIG.sso_url + '?app_url=' + WEBSERVICES_CONFIG.sso_response_url);
+        // res.redirect(CONFIG.ssoUrl + '?app_url=' + CONFIG.ssoResponseUrl);
     }
 };

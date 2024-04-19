@@ -18,7 +18,8 @@
 
 'use strict';
 
-const CONFIG = require('../config/config');
+const APP_CONFIG = require('../config/app_config')();
+const WEBSERVICES_CONFIG = require('../config/webservices_config')();
 const TOKEN = require('../libs/tokens');
 const MODEL = require('../users/model');
 const CACHE = require('../libs/cache');
@@ -52,12 +53,11 @@ exports.sso = function (req, res) {
         return false;
     }
 
-    const APP_PATH = ''; // TODO
     const USERNAME = req.body.employeeID;
     const SSO_HOST = req.body.HTTP_HOST;
     delete req.body;
 
-    if (SSO_HOST === CONFIG.ssoHost) {
+    if (SSO_HOST === WEBSERVICES_CONFIG.sso_host) {
 
         let token = TOKEN.create(USERNAME);
         token = encodeURIComponent(token);
@@ -65,7 +65,7 @@ exports.sso = function (req, res) {
         MODEL.check_auth_user(USERNAME, (result) => {
 
             if (result.auth === true) {
-                res.redirect(APP_PATH + '/dashboard/home?t=' + token + '&id=' + parseInt(result.data));
+                res.redirect(APP_CONFIG.app_path + '/dashboard/home?t=' + token + '&id=' + parseInt(result.data));
             } else {
                 res.status(403).send({
                     message: 'You do not have access to this resource.'
@@ -83,10 +83,10 @@ exports.sso = function (req, res) {
 exports.logout = (req, res) => {
     CACHE.clear_cache();
     res.render('logout', {
-        host: CONFIG.host,
-        appname: CONFIG.appName,
-        appversion: CONFIG.appVersion,
-        organization: CONFIG.organization,
-        redirect: CONFIG.ssoLogoutUrl
+        host: APP_CONFIG.host,
+        appname: APP_CONFIG.appname,
+        appversion: APP_CONFIG.app_version,
+        organization: APP_CONFIG.organization,
+        redirect: WEBSERVICES_CONFIG.sso_logout_url
     });
 };

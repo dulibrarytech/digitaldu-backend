@@ -18,12 +18,13 @@
 
 'use strict';
 
-const CONFIG = require('../config/config'),
-    MULTER = require('multer'),
-    HTTP = require('../libs/http'),
-    LOGGER = require('../libs/log4'),
-    TOKEN = require('../libs/tokens'),
-    LIMIT = 500000; // ~500kb
+const CONFIG = require('../config/config');
+const APP_CONFIG = require('../config/app_config')();
+const MULTER = require('multer');
+const HTTP = require('../libs/http');
+const LOGGER = require('../libs/log4');
+const TOKEN = require('../libs/tokens');
+const LIMIT = 500000; // ~500kb
 
 module.exports = function (app) {
 
@@ -49,7 +50,7 @@ module.exports = function (app) {
 
     let upload = MULTER({ storage: storage, fileFilter: FILTER, limits: { fileSize: LIMIT} });
 
-    app.post('/repo/tn/upload', TOKEN.verify, upload.single('tn'), function (req, res) {
+    app.post(`${APP_CONFIG.app_path}/tn/upload`, TOKEN.verify, upload.single('tn'), function (req, res) {
 
         let pid = req.body.sip_uuid;
         let message;
@@ -108,7 +109,7 @@ module.exports = function (app) {
             };
 
             let response = await HTTP.post({
-                endpoint: '/api/admin/v1/repo/object/thumbnail',
+                endpoint: `${APP_CONFIG.app_path}/api/admin/v1/repo/object/thumbnail`,
                 data: data
             });
 

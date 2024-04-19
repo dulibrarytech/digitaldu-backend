@@ -28,7 +28,7 @@ const XSS = require('../libs/dom');
 const CACHE = require('../libs/cache');
 const DIRS = require('../libs/directories');
 const CORS = require('cors');
-const CONFIG = require('../config/config');
+const APP_CONFIG = require('../config/app_config')();
 
 module.exports = function() {
 
@@ -50,8 +50,8 @@ module.exports = function() {
     APP.use(BODYPARSER.json());
     APP.use(METHODOVERRIDE());
     APP.use(HELMET());
-
-    APP.use(EXPRESS.static('./public'));
+    APP.use(APP_CONFIG.app_path + '/static', EXPRESS.static('./public'));
+    // APP.use(EXPRESS.static('./public'));
     APP.use(XSS.sanitize_req_query);
     APP.use(XSS.sanitize_req_body);
     APP.use(XSS.validate_uuid);
@@ -61,7 +61,7 @@ module.exports = function() {
 
     const CORS_OPTIONS = function (req, callback) {
 
-        const ALLOW = ['https://' + CONFIG.host, 'http://localhost'];
+        const ALLOW = ['https://' + APP_CONFIG.host, 'http://localhost'];
         let cors_options;
 
         if (ALLOW.indexOf(req.header('Origin')) !== -1) {

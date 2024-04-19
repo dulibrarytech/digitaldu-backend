@@ -30,8 +30,8 @@ const homeModule = (function () {
             userModule.renderUserName();
         }
 
-        history.replaceState({}, '', '/dashboard/home');
-        history.pushState({}, '', '/dashboard/home');
+        history.replaceState({}, '', '/repo/dashboard/home');
+        history.pushState({}, '', '/repo/dashboard/home');
 
         setTimeout(function() {
             statsModule.getStats();
