@@ -71,9 +71,9 @@ module.exports = function (app) {
     app.route(`${CONFIG.app_path}/dashboard/qa`)
         .get(DASHBOARD.get_dashboard_qa);
 
-    app.route('/dashboard/transcript')
+    app.route(`${CONFIG.app_path}/dashboard/transcript`)
         .get(DASHBOARD.get_dashboard_transcript);
 
-    app.route('/dashboard/viewer')
+    app.route(`${CONFIG.app_path}/dashboard/viewer`)
         .get(DASHBOARD.get_dashboard_viewer);
 };

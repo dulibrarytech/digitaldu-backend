@@ -80,8 +80,18 @@ exports.sso = function (req, res) {
     }
 };
 
-exports.logout = (req, res) => {
-    CACHE.clear_cache();
+exports.get_auth_landing = function (req, res) {
+    res.render('auth-landing', {
+        host: APP_CONFIG.host,
+        appname: APP_CONFIG.appname,
+        appversion: APP_CONFIG.app_version,
+        organization: APP_CONFIG.organization,
+        redirect: WEBSERVICES_CONFIG.sso_logout_url
+    });
+};
+
+exports.logout = function (req, res) {
+    // CACHE.clear_cache();
     res.render('logout', {
         host: APP_CONFIG.host,
         appname: APP_CONFIG.appname,

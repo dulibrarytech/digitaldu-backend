@@ -24,6 +24,9 @@ const TOKENS = require('../libs/tokens');
 
 module.exports = function (app) {
 
+    app.route(`${CONFIG.app_path}`)
+    .get(CONTROLLER.get_auth_landing);
+
     app.route(`${CONFIG.app_path}/login`)
     .get(TOKENS.verify);
 
