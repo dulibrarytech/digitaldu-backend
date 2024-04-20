@@ -266,7 +266,7 @@ const Stats_tasks = class {
         try {
 
             let total = await ARCHIVEMATICA.get_dip_storage_usage();
-            return total;
+            return parseInt(total);
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/stats/stats_tasks (get_dip_storage_usage)] unable to get dip storage total ' + error.message);
@@ -282,7 +282,7 @@ const Stats_tasks = class {
         try {
 
             let total = await ARCHIVEMATICA.get_aip_storage_usage();
-            return total;
+            return parseInt(total);
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/stats/stats_tasks (get_dip_storage_usage)] unable to get aip storage total ' + error.message);
