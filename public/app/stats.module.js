@@ -63,7 +63,6 @@ const statsModule = (function () {
         );
 
         let total_duracloud_usage = (data.dip_storage_usage + data.aip_storage_usage);
-
         domModule.html('#total-published-collections', DOMPurify.sanitize(data.total_published_collections.toLocaleString('en')));
         domModule.html('#total-collections', DOMPurify.sanitize(data.total_collections.toLocaleString('en')));
         domModule.html('#total-published-objects', DOMPurify.sanitize(data.total_published_objects.toLocaleString('en')));
@@ -72,9 +71,9 @@ const statsModule = (function () {
         domModule.html('#total-pdfs', DOMPurify.sanitize(data.total_pdfs.toLocaleString('en')));
         domModule.html('#total-audio', DOMPurify.sanitize(data.total_audio.toLocaleString('en')));
         domModule.html('#total-video', DOMPurify.sanitize(data.total_video.toLocaleString('en')));
-        domModule.html('#total-dip-usage', DOMPurify.sanitize(helperModule.format_package_size(data.dip_storage_usage)));
-        domModule.html('#total-aip-usage', DOMPurify.sanitize(helperModule.format_package_size(data.aip_storage_usage)));
-        domModule.html('#total-dc-usage', DOMPurify.sanitize(helperModule.format_package_size(total_duracloud_usage)));
+        domModule.html('#total-dip-usage', DOMPurify.sanitize(helperModule.format_package_size(parseInt(data.dip_storage_usage))));
+        domModule.html('#total-aip-usage', DOMPurify.sanitize(helperModule.format_package_size(parseInt(data.aip_storage_usage))));
+        domModule.html('#total-dc-usage', DOMPurify.sanitize(helperModule.format_package_size(parseInt(total_duracloud_usage))));
         domModule.html('#total-fiscal-year-ingests', DOMPurify.sanitize(data.total_fiscal_year_ingests.toLocaleString('en')));
 
         // clear loading... messages
