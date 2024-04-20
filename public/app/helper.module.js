@@ -88,7 +88,8 @@ const helperModule = (function () {
 
     /**
      * Resolves repo thumbnails
-     * @param pid
+     * @param tn
+     * @param mime_type
      * @returns {string}
      */
     obj.getTn = function (tn, mime_type) {

@@ -32,7 +32,7 @@ const configModule = (function () {
      */
     obj.getApi = function () {
 
-        let api = 'http://localhost:8000';
+        let api = 'http://localhost';
 
         if (document.domain !== 'localhost') {
             api = location.protocol + '//' + document.domain + ':' + location.port;
@@ -47,8 +47,8 @@ const configModule = (function () {
      */
     obj.getTnUrls = function () {
         return {
-            duracloud: '/api/admin/v1/repo/object/thumbnail',
-            discovery: '/api/admin/v1/repo/object/tn',
+            duracloud: configModule.get_app_path() + '/api/admin/v1/repo/object/thumbnail',
+            discovery: configModule.get_app_path() + '/api/admin/v1/repo/object/tn',
             default: configModule.getApi() + '/images/media.jpg',
             default_pdf: configModule.getApi() + '/images/pdf-tn.png',
             default_audio: configModule.getApi() + '/images/audio-tn.png',

@@ -18,6 +18,7 @@
 
 'use strict';
 
+const APP_CONFIG = require('../config/app_config')();
 const TOKEN_CONFIG = require('../config/token_config')();
 const WEBSERVICES_CONFIG = require('../config/webservices_config')();
 const CONFIG = require('../config/config');
@@ -60,7 +61,6 @@ exports.verify = function (req, res, next) {
             if (error) {
                 LOGGER.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify token ' + error.message);
                 res.redirect(WEBSERVICES_CONFIG.sso_url + '?app_url=' + WEBSERVICES_CONFIG.sso_response_url);
-                // res.redirect(CONFIG.ssoUrl + '?app_url=' + CONFIG.ssoResponseUrl);
                 return false;
             }
 
@@ -92,6 +92,5 @@ exports.verify = function (req, res, next) {
 
         LOGGER.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify api key');
         res.redirect(WEBSERVICES_CONFIG.sso_url + '?app_url=' + WEBSERVICES_CONFIG.sso_response_url);
-        // res.redirect(CONFIG.ssoUrl + '?app_url=' + CONFIG.ssoResponseUrl);
     }
 };
