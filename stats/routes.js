@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2024 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ const STATS = require('../stats/controller');
 const TOKEN = require('../libs/tokens');
 
 module.exports = function (app) {
-
-    app.route(`${CONFIG.app_path}/api/admin/v1/stats`)
+    app.route(`${CONFIG.app_path}/api/v2/stats`)
         .get(TOKEN.verify, STATS.get_stats);
 };

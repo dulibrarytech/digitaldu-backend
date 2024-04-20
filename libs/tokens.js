@@ -18,7 +18,6 @@
 
 'use strict';
 
-const APP_CONFIG = require('../config/app_config')();
 const TOKEN_CONFIG = require('../config/token_config')();
 const WEBSERVICES_CONFIG = require('../config/webservices_config')();
 const CONFIG = require('../config/config');

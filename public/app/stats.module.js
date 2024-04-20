@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2024 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -75,7 +75,7 @@ const statsModule = (function () {
         domModule.html('#total-dip-usage', DOMPurify.sanitize(helperModule.format_package_size(data.dip_storage_usage)));
         domModule.html('#total-aip-usage', DOMPurify.sanitize(helperModule.format_package_size(data.aip_storage_usage)));
         domModule.html('#total-dc-usage', DOMPurify.sanitize(helperModule.format_package_size(total_duracloud_usage)));
-        domModule.html('#total-daily-ingests', DOMPurify.sanitize(data.total_daily_ingests.toLocaleString('en')));
+        domModule.html('#total-fiscal-year-ingests', DOMPurify.sanitize(data.total_fiscal_year_ingests.toLocaleString('en')));
 
         // clear loading... messages
         domModule.html('#loading-published-collection-total', null);
@@ -90,7 +90,7 @@ const statsModule = (function () {
         domModule.html('#loading-aip-usage', null);
         domModule.html('#loading-dc-usage', null);
         domModule.html('#loading-ingests-per-year', null);
-        domModule.html('#loading-ingests-per-day', null);
+        domModule.html('#loading-fiscal-year-ingests', null);
     };
 
     /**
@@ -138,12 +138,8 @@ const statsModule = (function () {
         httpModule.req(request, callback);
     };
 
-    obj.init = function () {
-        // obj.getStats();
-    };
+    obj.init = function () {};
 
     return obj;
 
 }());
-
-// statsModule.init();

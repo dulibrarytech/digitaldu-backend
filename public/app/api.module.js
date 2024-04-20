@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2024 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -31,20 +31,20 @@ const apiModule = (function () {
             authenticate: app + '/api/authenticate',
             users: app + '/api/admin/v1/users',
             repo_object: app + '/api/admin/v1/repo/object',
-            repo_objects: app + '/api/v2/repo/records', // /api/admin/v1/repo/objects
-            repo_object_thumbnail: app + '/api/admin/v1/repo/object/thumbnail', // gets thumbnails from duracloud
-            repo_object_tn: app + '/api/admin/v1/repo/object/tn', // gets thumbnails from local TN service
-            repo_object_image: app + '/api/admin/v1/repo/object/image', // gets images from image server
+            repo_objects: app + '/api/v2/repo/records',
+            repo_object_thumbnail: app + '/api/admin/v1/repo/object/thumbnail',
+            repo_object_tn: app + '/api/admin/v1/repo/object/tn',
+            repo_object_image: app + '/api/admin/v1/repo/object/image',
             repo_ping_services: app + '/api/admin/v1/repo/ping/services',
-            repo_object_viewer: app + '/api/admin/v1/repo/object/viewer',  // renders viewer non-images
-            repo_publish: app + '/api/v2/repo/publish', // /api/admin/v1/repo/publish
-            repo_unpublish: app + '/api/v2/repo/suppress', // /api/admin/v1/repo/unpublish
-            repo_ingests: app + '/api/v2/repo/ingests', // '/api/admin/v1/import/complete'
+            repo_object_viewer: app + '/api/admin/v1/repo/object/viewer',
+            repo_publish: app + '/api/v2/repo/publish',
+            repo_unpublish: app + '/api/v2/repo/suppress',
+            repo_ingests: app + '/api/v2/repo/ingests',
             repo_object_unpublished: app + '/api/v2/repo/unpublished',
             repo_transcript: app + '/api/admin/v1/repo/object/transcript',
-            search: app + '/api/v2/search', // /api/admin/v1/search
-            import_metadata: app + '/api/v2/import/metadata', //'/api/admin/v1/import/metadata/collection',
-            stats: app + '/api/admin/v1/stats'
+            search: app + '/api/v2/search',
+            import_metadata: app + '/api/v2/import/metadata',
+            stats: app + '/api/v2/stats'
         };
     };
 

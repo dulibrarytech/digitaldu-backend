@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2024 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@
 
 'use strict';
 
-const STATS = require('../stats/model'),
-    CACHE = require('../libs/cache');
+const STATS = require('../stats/model');
+const CACHE = require('../libs/cache');
 
 exports.get_stats = function (req, res) {
 
@@ -28,7 +28,7 @@ exports.get_stats = function (req, res) {
     if (cache) {
         res.send(cache);
     } else {
-        STATS.get_stats(req, function (data) {
+        STATS.get_stats(function (data) {
             res.status(data.status).send(data.data);
         });
     }

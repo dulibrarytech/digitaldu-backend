@@ -20,7 +20,7 @@
 
 const CONFIG = require('../config/config');
 const ARCHIVEMATICA = require('../libs/archivematica');
-const ARCHIVESSPACE = require('../libs/archivespace');
+const ARCHIVESSPACE = require('../libs/archivesspace');
 const DURACLOUD = require('../libs/duracloud');
 const HTTP = require('axios');
 const LOGGER = require('../libs/log4');
