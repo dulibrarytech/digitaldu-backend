@@ -32,8 +32,7 @@ const ARCHIVEMATICA_CONFIG = {
     archivematica_storage_aip_uuid: process.env.ARCHIVEMATICA_AIP_UUID,
     archivematica_user_id: process.env.ARCHIVEMATICA_USERID,
     archivematica_user_email: process.env.ARCHIVEMATICA_USER_EMAIL,
-    archivematica_pipeline: process.env.ARCHIVEMATICA_PIPELINE,
-    archivematica_sftp_remote_path: process.env.SFTP_REMOTE_PATH
+    archivematica_pipeline: process.env.ARCHIVEMATICA_PIPELINE
 };
 
 module.exports = function () {
