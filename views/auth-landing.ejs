@@ -1,20 +1,17 @@
 <%- include('partials/header.ejs'); %>
 <body class="login">
 <div class="login_wrapper">
-    <div class="animate form login_form">
-        <section class="login_content">
-            <div id="message"></div>
-            <form id="login-form" action="/repo/login" method="get">
-                <div>
-                    <button id="login-button" class="btn btn-default submit" type="submit">Authenticate <i class="fa fa-sign-in"></i></button>
-                </div>
+    <div class="form">
+        <section>
+            <form>
+                <a href="/repo/login" class="btn btn-primary" type="button">Authenticate <i class="fa fa-sign-in"></i></a>
                 <div class="clearfix"></div>
                 <div class="separator">
                     <div class="clearfix"></div>
                     <br/>
                     <div>
                         <h1><i class="fa fa-archive"></i> Digital DU</h1>
-                        <p>©<span id="cdate"></span> University of Denver <br>University Libraries</p>
+                        <p>University of Denver <br>University Libraries</p>
                     </div>
                 </div>
             </form>
@@ -22,11 +19,5 @@
     </div>
 </div>
 <script>window.sessionStorage.clear();</script>
-<!--
-<script src="/repo/static/app/helper.module.js"></script>
-<script>
-    helperModule.getCurrentYear();
-</script>
--->
 </body>
 </html>
