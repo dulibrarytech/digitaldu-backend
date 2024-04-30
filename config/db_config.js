@@ -32,5 +32,5 @@ const DB = require('knex')({
 });
 
 module.exports = function () {
-  return DB;
+    return DB;
 };

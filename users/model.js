@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2024 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,91 +18,70 @@
 
 'use strict';
 
+const USER_TASKS = require('../users/tasks/user_tasks');
+const DB = require('../config/db_config')();
+const DB_TABLES = require('../config/db_tables_config')();
 const LOGGER = require('../libs/log4');
-const DB =require('../config/db')();
-const USERS = 'tbl_users';
 
 /**
  * Gets all users
- * @param req
  * @param callback
- * @returns {boolean}
  */
-exports.get_users = function (req, callback) {
+exports.get_users = function (callback) {
 
-    if (req.query.id !== undefined && req.query.id.length !== 0) {
+    try {
 
-        get_user(req, function (user) {
-            callback(user);
-        });
+        (async function () {
 
-        return false;
-    }
+            const USER_TASK = new USER_TASKS(DB, DB_TABLES);
+            const users = await USER_TASK.get_users();
 
-    DB(USERS)
-        .select(
-        'tbl_users.id',
-        'tbl_users.du_id',
-        'tbl_users.email',
-        'tbl_users.first_name',
-        'tbl_users.last_name',
-        'tbl_users.is_active',
-        'tbl_users.created'
-    )
-        .then(function (data) {
             callback({
                 status: 200,
-                data: data,
+                data: users,
                 message: 'Users retrieved.'
             });
-        })
-        .catch(function (error) {
-            LOGGER.module().error('ERROR: [/users/model module (get_users)] unable to get users ' + error.message);
-        });
+
+        })();
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/users/model (get_users)] unable to get users ' + error.message);
+    }
 };
 
 /**
  * Gets one user
- * @param req
+ * @param id
  * @param callback
  */
-const get_user = function (req, callback) {
+exports.get_user = function (id, callback) {
 
-    let id = req.query.id;
+    try {
 
-    if (id === undefined || id.length === 0) {
+        (async function () {
 
-        callback({
-            status: 400,
-            message: 'Bad Request.'
-        });
-    }
+            const USER_TASK = new USER_TASKS(DB, DB_TABLES);
+            const user = await USER_TASK.get_user(id);
 
-    DB(USERS)
-        .select('id', 'du_id', 'email', 'first_name', 'last_name', 'is_active', 'created')
-        .where({
-            id: id
-        })
-        .then(function (data) {
-
-            if (data.length === 1 && data[0].id === parseInt(id)) {
+            if (user.length === 1 && user[0].id === parseInt(id)) {
                 callback({
                     status: 200,
-                    data: data,
+                    data: user,
                     message: 'User retrieved.'
                 });
             } else {
                 callback({
                     status: 200,
-                    data: data,
-                    message: 'User retrieved.'
+                    data: [],
+                    message: 'Unable to get user.'
                 });
             }
 
-        })
-        .catch(function (error) {
-            LOGGER.module().error('ERROR: [/users/model module (get_user)] unable to get user ' + error.message);
-        });
+        })();
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/users/model (get_user)] unable to get user by id ' + error.message);
+    }
 };
 
 /**
@@ -112,18 +91,17 @@ const get_user = function (req, callback) {
  */
 exports.check_auth_user = function (username, callback) {
 
-    DB(USERS)
-        .select('id', 'du_id')
-        .where({
-            du_id: username,
-            is_active: 1
-        })
-        .then(function (data) {
+    try {
 
-            if (data.length === 1 && data[0].du_id === username) {
+        (async function () {
+
+            const USER_TASK = new USER_TASKS(DB, DB_TABLES);
+            const auth_check = await USER_TASK.check_auth_user(username);
+
+            if (auth_check.length === 1 && auth_check[0].du_id === username) {
                 callback({
                     auth: true,
-                    data: data[0].id
+                    data: auth_check[0].id
                 });
             } else {
                 callback({
@@ -131,10 +109,12 @@ exports.check_auth_user = function (username, callback) {
                     data: []
                 });
             }
-        })
-        .catch(function (error) {
-            LOGGER.module().error('ERROR: [/users/model module (check_auth_user)] unable to check auth ' + error.message);
-        });
+
+        })();
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/users/model (get_user)] unable to get user by id ' + error.message);
+    }
 };
 
 /**
@@ -144,154 +124,129 @@ exports.check_auth_user = function (username, callback) {
  */
 exports.get_auth_user_data = function (username, callback) {
 
-    DB(USERS)
-        .select('id', 'du_id', 'email', 'first_name', 'last_name')
-        .where({
-            du_id: username,
-            is_active: 1
-        })
-        .then(function (data) {
+    try {
 
-            if (data.length === 1) {
+        (async function () {
+
+            const USER_TASK = new USER_TASKS(DB, DB_TABLES);
+            const auth_data = await USER_TASK.get_auth_user_data(username);
+
+            if (auth_data.length === 1) {
                 callback({
-                    data: data
+                    data: auth_data
                 });
             } else {
                 callback({
                     data: []
                 });
             }
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/users/model module (get_auth_user_data)] unable to get user data ' + error);
-            throw 'FATAL: [/users/model module (get_auth_user_data)] unable to get user data ' + error;
-        });
+
+        })();
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/users/model module (get_auth_user_data)] unable to get user data ' + error.message);
+    }
 };
 
 /**
  * Updates user data
- * @param req
+ * @param id
+ * @param user
  * @param callback
  */
-exports.update_user = function (req, callback) {
+exports.update_user = function (id, user, callback) {
 
-    let User = req.body,
-        id = User.id;
+    try {
 
-    if (id.length === 0) {
+        (async function () {
 
-        callback({
-            status: 400,
-            message: 'Bad Request.'
-        });
+            const USER_TASK = new USER_TASKS(DB, DB_TABLES);
+            const is_updated = await USER_TASK.update_user(id, user);
+
+            if (is_updated === 1) {
+                callback({
+                    status: 201,
+                    message: 'User updated.'
+                });
+            } else {
+                callback({
+                    status: 200,
+                    message: 'Unable to update user record.'
+                });
+            }
+
+        })();
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/users/model module (update_user)] unable to update user record ' + error.message);
     }
-
-    delete User.id;
-
-    DB(USERS)
-        .where({
-            id: id
-        })
-        .update({
-            email: User.email,
-            first_name: User.first_name,
-            last_name: User.last_name,
-            is_active: User.is_active
-        })
-        .then(function (data) {
-
-            callback({
-                status: 201,
-                message: 'User updated.'
-            });
-
-            return null;
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/users/model module (update_user)] unable to update user record ' + error);
-            throw 'FATAL: [/users/model module (update_user)] unable to update user record ' + error;
-        });
 };
 
 /**
  * Saves user data
- * @param req
+ * @param user
  * @param callback
  */
-exports.save_user = function (req, callback) {
+exports.save_user = function (user, callback) {
 
-    let userObj = req.body;
+    try {
 
-    DB(USERS)
-        .count('du_id as du_id')
-        .where('du_id', userObj.du_id)
-        .then(function (data) {
+        (async function () {
 
-            if (data[0].du_id === 1) {
+            const USER_TASK = new USER_TASKS(DB, DB_TABLES);
+            const is_saved = await USER_TASK.save_user(user);
+
+            if (is_saved === false) {
                 callback({
                     status: 200,
                     message: 'User is already in the system.'
                 });
-
-                return false;
+            } else {
+                callback({
+                    status: 201,
+                    message: 'User record saved'
+                });
             }
 
-            userObj.email = userObj.email.toLowerCase();
+        })();
 
-            DB(USERS)
-                .insert(userObj)
-                .then(function (data) {
-                    callback({
-                        status: 201,
-                        message: 'User created.'
-                    });
-                })
-                .catch(function (error) {
-                    LOGGER.module().error('FATAL: [/users/model module (save_user)] unable to get user data ' + error);
-                    throw 'FATAL: [/users/model module (save_user)] unable to get user data ' + error;
-                });
-        })
-        .catch(function (error) {
-            LOGGER.module().error('FATAL: [/users/model module (save_user)] unable to save user data ' + error);
-            throw 'FATAL: [/users/model module (save_user)] unable to save user data ' + error;
-        });
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/users/model (save_user)] unable to save user data ' + error.message);
+    }
+
 
     return false;
 };
 
 /**
  * Deletes user data
- * @param req
+ * @param id
  * @param callback
  */
-exports.delete_user = function (req, callback) {
+exports.delete_user = function (id, callback) {
 
-    let id = req.query.id;
+    try {
 
-    if (id === undefined || id.length === 0) {
+        (async function () {
 
-        callback({
-            status: 400,
-            message: 'Bad Request.'
-        });
+            const USER_TASK = new USER_TASKS(DB, DB_TABLES);
+            const is_deleted = await USER_TASK.delete_user(id);
+
+            if (is_deleted === false) {
+                callback({
+                    status: 200,
+                    message: 'Unable to delete user.'
+                });
+            } else {
+                callback({
+                    status: 204,
+                    message: 'User deleted.'
+                });
+            }
+
+        })();
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/users/model module (delete_user)] unable to delete user record ' + error.message);
     }
-
-    DB(USERS)
-        .where({
-            id: id
-        })
-        .del()
-        .then(function (data) {
-
-            callback({
-                status: 204,
-                message: 'User deleted.'
-            });
-
-            return null;
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/users/model module (delete_user)] unable to delete user record ' + error);
-            throw 'FATAL: [/users/model module (update_user)] unable to delete user record ' + error;
-        });
 };

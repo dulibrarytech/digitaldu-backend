@@ -18,7 +18,7 @@
 
 'use strict';
 
-const USERS = require('../users/model');
+const MODEL = require('../users/model');
 const CACHE = require('../libs/cache');
 
 /**
@@ -33,7 +33,19 @@ exports.get_users = function (req, res) {
     if (cache) {
         res.send(cache);
     } else {
-        USERS.get_users(req, function (data) {
+
+        if (req.query.id !== undefined && req.query.id.length !== 0) {
+
+            const id = req.query.id;
+
+            MODEL.get_user(id, function (data) {
+                res.status(data.status).send(data.data);
+            });
+
+            return false;
+        }
+
+        MODEL.get_users(function (data) {
             res.status(data.status).send(data.data);
         });
     }
@@ -45,20 +57,19 @@ exports.get_users = function (req, res) {
  * @param res
  */
 exports.update_user = function (req, res) {
-    CACHE.clear_cache();
-    USERS.update_user(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
 
-/**
- * Deletes user
- * @param req
- * @param res
- */
-exports.delete_user = function (req, res) {
     CACHE.clear_cache();
-    USERS.delete_user(req, function (data) {
+
+    const user = req.body;
+    const id = user.id;
+
+    if (id.length === 0) {
+        res.status(400).send('Bad Request.');
+    }
+
+    delete user.id;
+
+    MODEL.update_user(id, user, function (data) {
         res.status(data.status).send(data.data);
     });
 };
@@ -69,8 +80,37 @@ exports.delete_user = function (req, res) {
  * @param res
  */
 exports.save_user = function (req, res) {
+
+    if (req.body === undefined) {
+        res.status(400).send('Bad Request.');
+        return false;
+    }
+
     CACHE.clear_cache();
-    USERS.save_user(req, function (data) {
+
+    let user = req.body;
+
+    MODEL.save_user(user, function (data) {
+        res.status(data.status).send(data.data);
+    });
+};
+
+/**
+ * Deletes user
+ * @param req
+ * @param res
+ */
+exports.delete_user = function (req, res) {
+
+    let id = req.query.id;
+
+    if (id === undefined || id.length === 0) {
+        res.status(400).send('Bad Request.');
+        return false;
+    }
+
+    CACHE.clear_cache();
+    MODEL.delete_user(id, function (data) {
         res.status(data.status).send(data.data);
     });
 };

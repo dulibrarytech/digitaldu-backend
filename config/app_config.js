@@ -28,6 +28,7 @@ const APP_CONFIG = {
     app_host: process.env.APP_HOST,
     app_port: process.env.APP_PORT,
     api_url: process.env.API_URL,
+    api_key: process.env.API_KEY
 };
 
 module.exports = function () {

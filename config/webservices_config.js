@@ -20,13 +20,15 @@
 
 const HELPER = require("../libs/helper");
 const WEBSERVICES_CONFIG = {
-    // TODO
     sso_host: process.env.SSO_HOST,
     sso_url: process.env.SSO_URL,
     sso_response_url: process.env.SSO_RESPONSE_URL,
-    sso_logout_url: process.env.SSO_LOGOUT_URL
-    // TODO: ingest service
-    // TODO: image convert service
+    sso_logout_url: process.env.SSO_LOGOUT_URL,
+    tn_service: process.env.TN_SERVICE,
+    tn_service_api_key: process.env.TN_SERVICE_API_KEY,
+    convert_service: process.env.CONVERT_SERVICE,
+    convert_service_api_key: process.env.CONVERT_SERVICE_API_KEY,
+    ingest_service: process.env.INGEST_SERVICE_HOST
 };
 
 module.exports = function () {
