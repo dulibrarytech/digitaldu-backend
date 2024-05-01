@@ -26,8 +26,6 @@ const WEBSERVICES_CONFIG = {
     sso_logout_url: process.env.SSO_LOGOUT_URL,
     tn_service: process.env.TN_SERVICE,
     tn_service_api_key: process.env.TN_SERVICE_API_KEY,
-    convert_service: process.env.CONVERT_SERVICE,
-    convert_service_api_key: process.env.CONVERT_SERVICE_API_KEY,
     ingest_service: process.env.INGEST_SERVICE_HOST
 };
 
