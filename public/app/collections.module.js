@@ -117,7 +117,7 @@ const collectionsModule = (function () {
         }
 
         domModule.html('#message', '');
-        console.log(api + endpoints.repo_object_thumbnail);
+
         let token = userModule.getUserToken();
         let url = api + endpoints.repo_object_thumbnail,
             request = new Request(url, {
@@ -166,7 +166,7 @@ const collectionsModule = (function () {
     obj.setToUploadMenuItem = function () {
 
         let pid = helperModule.getParameterByName('pid');
-        let menu_item = '<a href="/dashboard/object/thumbnail/upload?pid=' + pid + '"><i class="fa fa-plus"></i>&nbsp;Upload custom thumbnail</a>';
+        let menu_item = '<a href="/repo/dashboard/object/thumbnail/upload?pid=' + pid + '"><i class="fa fa-plus"></i>&nbsp;Upload custom thumbnail</a>';
         domModule.html('#to-upload-menu-item', menu_item);
     };
 
