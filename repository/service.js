@@ -18,9 +18,10 @@
 
 'use strict';
 
+const WEBSERVICES_CONFIG = require('../config/webservices_config')();
+const DURACLOUD_CONFIG = require('../config/duracloud_config')();
 const ARCHIVEMATICA = require('../libs/archivematica');
 const ARCHIVESSPACE = require('../libs/archivesspace');
-const DURACLOUD = require('../libs/duracloud');
 const HTTP = require('axios');
 const LOGGER = require('../libs/log4');
 const CACHE = require('../libs/cache');
@@ -28,6 +29,8 @@ const ASYNC = require('async');
 const VALIDATOR = require('validator');
 const ES_TASKS = require('../libs/elasticsearch');
 const SEARCH_TASKS = require('../search/tasks/search_tasks');
+const DURACLOUD = require('../libs/duracloud');
+const PATH = require("path");
 
 /**
  * Gets objects by collection
@@ -66,7 +69,7 @@ exports.get_records = function (pid, search, callback) {
         }
     };
 
-    (async function() {
+    (async function () {
 
         const SEARCH_RESULTS = await TASK.search_records(search);
 
@@ -76,6 +79,171 @@ exports.get_records = function (pid, search, callback) {
         });
 
     })();
+};
+
+/**
+ * Gets thumbnail from DuraCloud service
+ * @param tn
+ * @param callback
+ * @returns {boolean}
+ */
+exports.get_dc_thumbnail = function (tn, callback) {
+
+    try {
+
+        (async function() {
+
+            const DURACLOUD_LIB = new DURACLOUD(DURACLOUD_CONFIG, {});
+            const response = await DURACLOUD_LIB.get_thumbnail(tn);
+
+            if (response === undefined) {
+                callback({
+                    error: true
+                });
+            } else {
+                callback(response);
+            }
+
+        })();
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/repository/service module (get_dc_thumbnail)] Unable to get thumbnail from DuraCloud. Request failed: ' + error.message);
+    }
+};
+
+/**
+ * Gets thumbnail from TN service
+ * @param uuid
+ * @param callback
+ */
+exports.get_tn = function (uuid, callback) {
+
+    try {
+
+        (async function() {
+
+            let endpoint = WEBSERVICES_CONFIG.tn_service + 'datastream/' + uuid + '/tn?key=' + WEBSERVICES_CONFIG.tn_service_api_key;
+            let response = await HTTP.get(endpoint, {
+                timeout: 45000,
+                responseType: 'arraybuffer',
+                /*
+                headers: {
+                    'x-api-key': CONFIG.tnServiceApiKey
+                }*/
+            });
+
+            if (response.status === 200) {
+                CACHE.cache_tn(uuid, response.data);
+                callback({
+                    error: false,
+                    status: 200,
+                    data: response.data
+                });
+            }
+
+            return false;
+
+        })();
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/repository/service module (get_tn)] Unable to get thumbnail from TN service. Request failed: ' + error.message);
+    }
+};
+
+/**
+ * Gets image from image server
+ * @param req
+ * @param callback
+ */
+exports.get_image = function (req, callback) {
+
+    let is_bad_request = false;
+
+    if (req.query.sip_uuid === undefined || req.query.sip_uuid.length === 0) {
+        is_bad_request = true;
+    } else if (req.query.full_path === undefined || req.query.full_path.length === 0) {
+        is_bad_request = true;
+    } else if (req.query.object_name === undefined || req.query.object_name.length === 0) {
+        is_bad_request = true;
+    } else if (req.query.mime_type === undefined || req.query.mime_type.length === 0) {
+        is_bad_request = true;
+    }
+
+    if (is_bad_request === true) {
+
+        callback({
+            status: 400,
+            message: 'Bad request.'
+        });
+
+        return false;
+    }
+
+    let object_data = {
+        sip_uuid: req.query.sip_uuid,
+        full_path: VALIDATOR.unescape(req.query.full_path),
+        object_name: req.query.object_name,
+        mime_type: VALIDATOR.unescape(req.query.mime_type)
+    };
+
+    (async () => {
+
+        try {
+
+            let endpoint = CONFIG.convertService + '/repository/v1/image?filename=' + object_data.object_name + '&api_key=' + CONFIG.convertServiceApiKey;
+            let response = await HTTP.get(endpoint, {
+                timeout: 45000,
+                responseType: 'arraybuffer'
+            });
+
+            if (response.status === 200) {
+                callback({
+                    error: false,
+                    status: 200,
+                    data: response.data
+                });
+            }
+
+            return false;
+
+        } catch (error) {
+
+            LOGGER.module().error('ERROR: [/repository/service module (get_image)] Unable to get image: ' + error);
+            LOGGER.module().info('INFO: [/repository/service module (get_image)] Sending data to image convert service');
+            // create missing file
+            setTimeout(function () {
+                DURACLOUD.convert_service(object_data);
+            }, 5000);
+        }
+
+    })();
+};
+
+/**
+ * Gets object viewer for non-images
+ * @param req
+ * @param callback
+ */
+exports.get_viewer = function (req, callback) {
+
+    let uuid = req.query.uuid;
+
+    if (uuid === undefined || uuid.length === 0) {
+
+        callback({
+            status: 400,
+            message: 'Bad request.'
+        });
+
+        return false;
+    }
+
+    let apiUrl = CONFIG.tnService + 'viewer/' + uuid + '?key=' + CONFIG.tnServiceApiKey;
+
+    callback({
+        status: 200,
+        data: apiUrl
+    });
 };
 
 /**
@@ -240,196 +408,23 @@ exports.ping_services = function (req, callback) {
 };
 
 /**
- * Gets thumbnail
- * @param req
- * @param callback
- * @returns {boolean}
- */
-exports.get_thumbnail = function (req, callback) {
-
-    let tn = VALIDATOR.unescape(req.query.tn);
-
-    if (tn === undefined || tn.length === 0) {
-
-        callback({
-            status: 400,
-            message: 'Bad request.'
-        });
-
-        return false;
-    }
-
-    DURACLOUD.get_thumbnail(tn, function (response) {
-        callback(response);
-    });
-};
-
-/**
- * Gets thumbnail from TN service
- * @param req
+ * Gets mods record
+ * @param obj
  * @param callback
  */
-exports.get_tn = function (req, callback) {
+exports.get_mods = function (obj, callback) {
 
-    let uuid = req.query.uuid;
+    ARCHIVESSPACE.get_mods(obj.mods_id, obj.session, function (result) {
 
-    if (req.query.type !== undefined) {
-        let type = VALIDATOR.unescape(req.query.type);
-    }
-
-    if (uuid === undefined || uuid.length === 0) {
-
-        callback({
-            status: 400,
-            message: 'Bad request.'
-        });
-
-        return false;
-    }
-
-    (async () => {
-
-        let missing_tn = '/images/image-tn.png';
-
-        try {
-
-            let endpoint = CONFIG.tnService + 'datastream/' + uuid + '/tn?key=' + CONFIG.tnServiceApiKey;
-            let response = await HTTP.get(endpoint, {
-                timeout: 45000,
-                responseType: 'arraybuffer',
-                headers: {
-                    'x-api-key': CONFIG.tnServiceApiKey
-                }
-            });
-
-            if (response.status !== 200) {
-
-                LOGGER.module().error('ERROR: [/repository/service module (get_tn)] Unable to get thumbnail from TN service.');
-
-                callback({
-                    error: true,
-                    status: 200,
-                    data: missing_tn
-                });
-
-            } else if (response.status === 200) {
-                CACHE.cache_tn(uuid, response.data);
-                callback({
-                    error: false,
-                    status: 200,
-                    data: response.data
-                });
-            }
-
-            return false;
-
-        } catch (error) {
-
-            LOGGER.module().error('ERROR: [/repository/service module (get_tn)] Unable to get thumbnail from TN service. Request failed: ' + error);
-
-            callback({
-                error: true,
-                status: 200,
-                data: missing_tn
-            });
+        if (result.error === false) {
+            obj.error = result.error;
+            obj.mods = JSON.stringify(result.mods.data);
+        } else {
+            obj.error = result.error;
+            obj.mods = null;
         }
 
-    })();
-};
-
-/**
- * Gets image from image server
- * @param req
- * @param callback
- */
-exports.get_image = function (req, callback) {
-
-    let is_bad_request = false;
-
-    if (req.query.sip_uuid === undefined || req.query.sip_uuid.length === 0) {
-        is_bad_request = true;
-    } else if (req.query.full_path === undefined || req.query.full_path.length === 0) {
-        is_bad_request = true;
-    } else if (req.query.object_name === undefined || req.query.object_name.length === 0) {
-        is_bad_request = true;
-    } else if (req.query.mime_type === undefined || req.query.mime_type.length === 0) {
-        is_bad_request = true;
-    }
-
-    if (is_bad_request === true) {
-
-        callback({
-            status: 400,
-            message: 'Bad request.'
-        });
-
-        return false;
-    }
-
-    let object_data = {
-        sip_uuid: req.query.sip_uuid,
-        full_path: VALIDATOR.unescape(req.query.full_path),
-        object_name: req.query.object_name,
-        mime_type: VALIDATOR.unescape(req.query.mime_type)
-    };
-
-    (async () => {
-
-        try {
-
-            let endpoint = CONFIG.convertService + '/repository/v1/image?filename=' + object_data.object_name + '&api_key=' + CONFIG.convertServiceApiKey;
-            let response = await HTTP.get(endpoint, {
-                timeout: 45000,
-                responseType: 'arraybuffer'
-            });
-
-            if (response.status === 200) {
-                callback({
-                    error: false,
-                    status: 200,
-                    data: response.data
-                });
-            }
-
-            return false;
-
-        } catch (error) {
-
-            LOGGER.module().error('ERROR: [/repository/service module (get_image)] Unable to get image: ' + error);
-            LOGGER.module().info('INFO: [/repository/service module (get_image)] Sending data to image convert service');
-            // create missing file
-            setTimeout(function() {
-                DURACLOUD.convert_service(object_data);
-            }, 5000);
-        }
-
-    })();
-};
-
-/**
- * Gets object viewer for non-images
- * @param req
- * @param callback
- */
-exports.get_viewer = function (req, callback) {
-
-    let uuid = req.query.uuid;
-
-    if (uuid === undefined || uuid.length === 0) {
-
-        callback({
-            status: 400,
-            message: 'Bad request.'
-        });
-
-        return false;
-    }
-
-    let apiUrl = CONFIG.tnService + 'viewer/' + uuid + '?key=' + CONFIG.tnServiceApiKey;
-
-    callback({
-        status: 200,
-        data: apiUrl
+        callback(obj);
     });
 };
 
@@ -496,24 +491,3 @@ exports.get_unpublished_admin_objects = function (req, callback) {
     });
 };
 */
-
-/**
- * Gets mods record
- * @param obj
- * @param callback
- */
-exports.get_mods = function (obj, callback) {
-
-    ARCHIVESSPACE.get_mods(obj.mods_id, obj.session, function (result) {
-
-        if (result.error === false) {
-            obj.error = result.error;
-            obj.mods = JSON.stringify(result.mods.data);
-        } else {
-            obj.error = result.error;
-            obj.mods = null;
-        }
-
-        callback(obj);
-    });
-};

@@ -56,11 +56,12 @@ module.exports = function (app) {
     .delete(TOKEN.verify, CONTROLLER.delete_object);
 
     app.route(`${CONFIG.app_path}/api/v2/repo/object/thumbnail`)
-    .get(TOKEN.verify, CONTROLLER.get_thumbnail) // gets thumbnails from DuraCloud
     .post(TOKEN.verify, CONTROLLER.update_thumbnail);
 
-    // gets thumbnails from TN service
-    app.route(`${CONFIG.app_path}/api/admin/v1/repo/object/tn`)
+    app.route(`${CONFIG.app_path}/api/v2/repo/object/tn-dc`)
+    .get(TOKEN.verify, CONTROLLER.get_dc_thumbnail); // gets thumbnails from DuraCloud
+
+    app.route(`${CONFIG.app_path}/api/v2/repo/object/tn-service`) // gets thumbnails from TN service
     .get(TOKEN.verify, CONTROLLER.get_tn);
 
     app.route(`${CONFIG.app_path}/api/admin/v1/repo/object/image`)

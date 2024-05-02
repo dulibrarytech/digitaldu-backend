@@ -66,7 +66,7 @@ exports.verify = function (req, res, next) {
             next();
         });
 
-    } else if (key !== undefined && key === CONFIG.apiKey)  {
+    } else if (key !== undefined && key === TOKEN_CONFIG.api_key)  {
 
         let api_key = key;
 

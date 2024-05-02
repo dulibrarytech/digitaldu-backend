@@ -211,7 +211,7 @@ const Duracloud = class {
             }
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/libs/duracloud lib (get_thumbnail)] Unable to get duracloud thumbnail ' + error.message);
+            LOGGER.module().error('ERROR: [/libs/duracloud lib (get_thumbnail)] Unable to get duracloud thumbnail (' + tn + ') ' + error.message);
         }
     };
 

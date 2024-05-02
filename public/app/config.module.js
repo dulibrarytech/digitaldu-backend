@@ -47,8 +47,10 @@ const configModule = (function () {
      */
     obj.getTnUrls = function () {
         return {
-            duracloud: configModule.get_app_path() + '/api/admin/v1/repo/object/thumbnail',
-            discovery: configModule.get_app_path() + '/api/admin/v1/repo/object/tn',
+            // duracloud: configModule.get_app_path() + '/api/admin/v1/repo/object/thumbnail',
+            // discovery: configModule.get_app_path() + '/api/admin/v1/repo/object/tn-service',
+            duracloud: configModule.get_app_path() + '/api/v2/repo/object/tn-dc',
+            discovery: configModule.get_app_path() + '/api/v2/repo/object/tn-service',
             default: configModule.getApi() + '/images/media.jpg',
             default_pdf: configModule.getApi() + '/images/pdf-tn.png',
             default_audio: configModule.getApi() + '/images/audio-tn.png',

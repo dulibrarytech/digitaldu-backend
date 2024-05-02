@@ -430,7 +430,6 @@ const metadataModule = (function () {
                     break;
                 } else {
                     parts += '<li>' + DOMPurify.sanitize(record.display_record.parts[i].title) + ' ( ' + DOMPurify.sanitize(record.display_record.parts[i].type) + ' ) order: ' + DOMPurify.sanitize(record.display_record.parts[i].order);
-
                     let tn = helperModule.getTn(DOMPurify.sanitize(record.display_record.parts[i].thumbnail), '');
                     parts += '<br><img src="' + tn + '" width="100px" height="100px"></li>';
                 }

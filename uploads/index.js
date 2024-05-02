@@ -20,10 +20,9 @@
 
 const APP_CONFIG = require('../config/app_config')();
 const MULTER = require('multer');
-const HTTP = require('axios');
 const TOKEN = require('../libs/tokens');
 const LIMIT = 500000; // ~500kb
-const UPLOAD_TASKS = require('../uploads/tasks/upload_thumbnail_tasks');
+const THUMBNAIL_TASKS = require('../repository/tasks/thumbnail_tasks');
 const LOGGER = require('../libs/log4');
 
 module.exports = function (app) {
@@ -101,33 +100,13 @@ module.exports = function (app) {
             return false;
         }
 
-        // TODO refactor - remove http call
-        // ============================
-
         (async function() {
 
-            let thumbnail_url = 'https://' + req.headers.host + '/tn/' + pid + '.jpg';
-            const THUMBNAIL_TASKS = new UPLOAD_TASKS(pid, thumbnail_url);
-            let is_updated = await THUMBNAIL_TASKS.update_thumbnail();
-            console.log(is_updated);
+            const thumbnail_url = 'https://' + req.headers.host + '/tn/' + pid + '.jpg';
+            const TASK = new THUMBNAIL_TASKS(pid, thumbnail_url);
+            const is_updated = await TASK.update_thumbnail();
 
-            /*
-            let data = {
-                'pid': pid,
-                'thumbnail_url':  'https://' + req.headers.host + '/tn/' + pid + '.jpg'
-            };
-
-             */
-
-            /*
-            let response = await HTTP.post({
-                endpoint: `${APP_CONFIG.app_path}/api/v2/repo/object/thumbnail`,
-                data: data
-            });
-             */
-
-            // TODO: is_updated
-            if (response.error === true) {
+            if (is_updated === false) {
 
                 LOGGER.module().error('ERROR: [ Unable to update collection thumbnail.');
 
@@ -157,6 +136,5 @@ module.exports = function (app) {
             }
 
         })();
-        // ============================
     });
 };

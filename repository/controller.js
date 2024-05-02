@@ -164,13 +164,16 @@ exports.create_collection_object = function (req, res) {
 };
 
 exports.update_thumbnail = function (req, res) {
-    MODEL.update_thumbnail(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
 
-exports.delete_object = function (req, res) {
-    MODEL.delete_object(req, function (data) {
+    if (req.body.pid === undefined || req.body.pid.length === 0) {
+        res.status(400).send('Bad request');
+        return false;
+    }
+
+    const pid = req.body.pid;
+    const thumbnail = req.body.thumbnail_url;
+
+    MODEL.update_thumbnail(pid, thumbnail, function (data) {
         res.status(data.status).send(data.data);
     });
 };
@@ -182,7 +185,19 @@ exports.get_tn = function (req, res) {
     if (cache) {
         res.sendFile(cache);
     } else {
-        SERVICE.get_tn(req, function (data) {
+
+        let uuid = req.query.uuid;
+
+        if (req.query.type !== undefined) {
+            let type = VALIDATOR.unescape(req.query.type);
+        }
+
+        if (uuid === undefined || uuid.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        SERVICE.get_tn(uuid, function (data) {
             if (data.error === true) {
                 res.sendFile(PATH.join(__dirname, '../public', data.data));
             } else {
@@ -190,6 +205,12 @@ exports.get_tn = function (req, res) {
             }
         });
     }
+};
+
+exports.delete_object = function (req, res) {
+    MODEL.delete_object(req, function (data) {
+        res.status(data.status).send(data.data);
+    });
 };
 
 exports.get_image = function (req, res) {
@@ -217,13 +238,22 @@ exports.ping = function (req, res) {
     });
 };
 
-exports.get_thumbnail = function (req, res) {
-    SERVICE.get_thumbnail(req, function (data) {
+exports.get_dc_thumbnail = function (req, res) {
 
+    const tn = VALIDATOR.unescape(req.query.tn);
+
+    if (tn === undefined || tn.length === 0) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    SERVICE.get_dc_thumbnail(tn, function (data) {
+
+        const missing_tn = '/images/image-tn.png';
         res.set('Content-Type', 'image/jpeg');
 
         if (data.error !== undefined && data.error === true) {
-            res.sendFile(PATH.join(__dirname, '../public', data.data));
+            res.sendFile(PATH.join(__dirname, '../public', missing_tn));
         } else {
             res.end(data, 'binary');
         }

@@ -29,6 +29,7 @@ const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
 const ES_TASKS = require('../libs/elasticsearch');
 const REPOSITORY_TASKS = require('../repository/tasks/repository_tasks');
+const THUMBNAIL_TASKS = require('../repository/tasks/thumbnail_tasks');
 const INDEXER_TASKS = require('../indexer/tasks/indexer_index_tasks');
 const LOGGER = require('../libs/log4');
 
@@ -496,126 +497,41 @@ exports.get_display_record = function (req, callback) {
     });
 };
 
-/** TODO: refactor/deprecate - moved to upload task
+/**
  * Updates thumbnail
- * @param req
+ * @param pid
+ * @param thumbnail
  * @param callback
  */
-exports.update_thumbnail = function (req, callback) {
+exports.update_thumbnail = function (pid, thumbnail, callback) {
 
-    if (req.body.pid === undefined || req.body.pid.length === 0) {
+    try {
 
-        callback({
-            status: 400,
-            message: 'Bad request'
-        });
+        (async function() {
 
-        return false;
-    }
+            const TASK = new THUMBNAIL_TASKS(pid, thumbnail);
+            const is_updated = await TASK.update_thumbnail();
 
-    let pid = req.body.pid;
-    let thumbnail = req.body.thumbnail_url;
-    let obj = {};
-    obj.pid = pid;
-    obj.thumbnail = thumbnail;
-
-    DB(REPO_OBJECTS)
-    .where({
-        pid: obj.pid,
-        is_active: 1
-    })
-    .update({
-        thumbnail: obj.thumbnail
-    })
-    .then(function (data) {
-
-        // Get existing record from repository
-        MODS.get_display_record_data(obj.pid, function (recordObj) {
-
-            MODS.create_display_record(recordObj, function (result) {
-
-                let tmp = JSON.parse(result);
-
-                if (tmp.is_compound === 1 && tmp.object_type !== 'collection') {
-
-                    let currentRecord = JSON.parse(data[0].display_record),
-                        currentCompoundParts = currentRecord.display_record.parts;
-
-                    delete tmp.display_record.parts;
-                    delete tmp.compound;
-
-                    if (currentCompoundParts !== undefined) {
-                        tmp.display_record.parts = currentCompoundParts;
-                        tmp.compound = currentCompoundParts;
-                    }
-
-                    obj.display_record = JSON.stringify(tmp);
-
-                } else if (tmp.is_compound === 0 || tmp.object_type === 'collection') {
-                    obj.display_record = result;
-                }
-
-                let where_obj = {
-                    is_member_of_collection: recordObj.is_member_of_collection,
-                    pid: recordObj.pid,
-                    is_active: 1
-                };
-
-                MODS.update_display_record(where_obj, obj.display_record, function (result) {
-
-                    index(recordObj.sip_uuid, function (result) {
-
-                        if (result.error === true) {
-                            LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail.');
-
-                            callback({
-                                error: true,
-                                error_message: 'ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail.'
-                            });
-
-                            return false;
-                        }
-
-                        if (recordObj.is_published === 1) {
-
-                            // wait to make sure updated admin record is ready
-                            setTimeout(function () {
-
-                                let match_phrase = {
-                                    'pid': recordObj.sip_uuid
-                                };
-
-                                reindex(match_phrase, function (result) {
-
-                                    if (result.error === true) {
-                                        LOGGER.module().error('ERROR: [/repository/model module (update_thumbnail)] unable to update thumbnail ' + response.error);
-                                    }
-
-                                    return false;
-                                });
-
-                                CACHE.clear_cache();
-
-                            }, 7000);
-                        }
-
-                        return false;
-                    });
+            if (is_updated === false) {
+                callback({
+                    status: 200,
+                    message: 'Unable to update thumbnail'
                 });
-            });
-        });
+            } else {
 
-        callback({
-            status: 201,
-            message: 'Thumbnail updated.'
-        });
+                CACHE.clear_cache();
 
-        return null;
-    })
-    .catch(function (error) {
-        LOGGER.module().fatal('FATAL: [/repository/model module (update_thumbnail)] unable to update mods records ' + error);
-        throw 'FATAL: [/repository/model module (update_thumbnail)] unable to update mods records ' + error;
-    });
+                callback({
+                    status: 201,
+                    message: 'Thumbnail updated.'
+                });
+            }
+
+        })();
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/repository/model (update_thumbnail)] unable to update thumbnail ' + error.message);
+    }
 };
 
 /**
