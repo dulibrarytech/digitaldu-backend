@@ -58,14 +58,19 @@ const metadataModule = (function () {
         let token = userModule.getUserToken();
 
         if (record.object_type === 'collection') {
+            // console.log(record.thumbnail);
+            console.log(record.thumbnail);
+            console.log('indexOf ', record.thumbnail.indexOf('https://'));
 
             if (record.thumbnail === undefined || record.thumbnail === null) {
                 tn = api + endpoints.repo_object_tn + '?uuid=' + DOMPurify.sanitize(record.pid) + '&type=' + DOMPurify.sanitize(record.mime_type) + '&t=' + token;
-            } else if (record.thumbnail.search('http://') === 0 || record.thumbnail.search('https://') === 0) {
+            } else if (record.thumbnail.indexOf('http://') === 0 || record.thumbnail.indexOf('https://') === 0) {
                 tn = DOMPurify.sanitize(record.thumbnail.replace('http://', 'https://'));
             } else {
                 tn = api + endpoints.repo_object_tn + '?uuid=' + DOMPurify.sanitize(record.thumbnail) + '&type=' + DOMPurify.sanitize(record.mime_type) + '&t=' + token;
             }
+
+            console.log(tn);
 
         } else if(record.object_type === 'object' && tn.length !== 0) {
             tn = api + endpoints.repo_object_tn + '?uuid=' + DOMPurify.sanitize(record.pid) + '&type=' + DOMPurify.sanitize(record.mime_type) + '&t=' + token;

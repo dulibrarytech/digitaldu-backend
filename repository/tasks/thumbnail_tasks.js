@@ -20,8 +20,8 @@ const DB = require('../../config/db_config')();
 const DB_TABLES = require('../../config/db_tables_config')();
 const ES_TASKS = require('../../libs/elasticsearch');
 const INDEX_TASKS = require('../../indexer/tasks/indexer_index_tasks');
+const VALIDATOR = require('validator');
 const LOGGER = require('../../libs/log4');
-const INDEXER_TASKS = require("../../indexer/tasks/indexer_index_tasks");
 
 /**
  * Object contains upload thumbnail tasks
@@ -54,11 +54,11 @@ const Thumbnail_tasks = class {
 
                 let record = await this.get_index_record();
                 let index_record = JSON.parse(record[0].display_record);
-                index_record.thumbnail = this.thumbnail;
+                index_record.thumbnail = VALIDATOR.unescape(this.thumbnail);
                 let is_updated = await this.update_index_record(index_record);
-                console.log(index_record);
+
                 if (is_updated === 1) {
-                    // await this.reindex_record(index_record);
+                    await this.reindex_record();
                 }
 
             } else {
@@ -111,18 +111,19 @@ const Thumbnail_tasks = class {
 
     /**
      * Reindexes record
-     * @param index_record
      */
-    async reindex_record(index_record) {
+    async reindex_record() {
 
         const ES = new ES_TASKS();
         const OBJ = ES.get_es();
         const TASK_BACKEND = new INDEX_TASKS(DB, DB_TABLES, OBJ.es_client, OBJ.es_config.elasticsearch_index_back);
-        await TASK_BACKEND.index_record(index_record);
+        let indexed_record = await TASK_BACKEND.get_indexed_record(this.uuid);
+        indexed_record.thumbnail = VALIDATOR.unescape(this.thumbnail);
+        await TASK_BACKEND.index_record(indexed_record);
 
-        if (index_record.is_published === 1) {
+        if (indexed_record.is_published === 1) {
             const TASK_FRONTEND = new INDEX_TASKS(DB, DB_TABLES, OBJ.es_client, OBJ.es_config.elasticsearch_index_front);
-            await TASK_FRONTEND.index_record(index_record);
+            await TASK_FRONTEND.index_record(indexed_record);
         }
     }
 };
