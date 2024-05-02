@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2024 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,13 +18,13 @@
 
 'use strict';
 
-const CONFIG = require('../config/config');
 const APP_CONFIG = require('../config/app_config')();
 const MULTER = require('multer');
-const HTTP = require('../libs/http');
-const LOGGER = require('../libs/log4');
+const HTTP = require('axios');
 const TOKEN = require('../libs/tokens');
 const LIMIT = 500000; // ~500kb
+const UPLOAD_TASKS = require('../uploads/tasks/upload_thumbnail_tasks');
+const LOGGER = require('../libs/log4');
 
 module.exports = function (app) {
 
@@ -40,7 +40,7 @@ module.exports = function (app) {
 
     let storage = MULTER.diskStorage({
         destination: function (req, file, callback) {
-            callback(null, CONFIG.tnUploadPath);
+            callback(null, APP_CONFIG.tn_upload_path);
         },
         filename: function (req, file, callback) {
             let sip_uuid = req.body.sip_uuid;
@@ -60,10 +60,10 @@ module.exports = function (app) {
             error = true;
             message = 'Upload failed.';
             res.render('dashboard-upload', {
-                host: CONFIG.host,
-                appname: CONFIG.appName,
-                organization: CONFIG.organization,
-                appversion: CONFIG.appVersion,
+                host: APP_CONFIG.host,
+                app_name: APP_CONFIG.app_name,
+                app_version: APP_CONFIG.app_version,
+                organization: APP_CONFIG.organization,
                 message: message,
                 error: error
             });
@@ -75,10 +75,10 @@ module.exports = function (app) {
             error = true;
             message = 'Upload failed. Only .jpg files are accepted.';
             res.render('dashboard-upload', {
-                host: CONFIG.host,
-                appname: CONFIG.appName,
-                organization: CONFIG.organization,
-                appversion: CONFIG.appVersion,
+                host: APP_CONFIG.host,
+                app_name: APP_CONFIG.app_name,
+                app_version: APP_CONFIG.app_version,
+                organization: APP_CONFIG.organization,
                 message: message,
                 error: error
             });
@@ -90,10 +90,10 @@ module.exports = function (app) {
             error = true;
             message = 'Upload failed. The file is too big.';
             res.render('dashboard-upload', {
-                host: CONFIG.host,
-                appname: CONFIG.appName,
-                organization: CONFIG.organization,
-                appversion: CONFIG.appVersion,
+                host: APP_CONFIG.host,
+                app_name: APP_CONFIG.app_name,
+                app_version: APP_CONFIG.app_version,
+                organization: APP_CONFIG.organization,
                 message: message,
                 error: error
             });
@@ -101,27 +101,41 @@ module.exports = function (app) {
             return false;
         }
 
-        (async () => {
+        // TODO refactor - remove http call
+        // ============================
 
+        (async function() {
+
+            let thumbnail_url = 'https://' + req.headers.host + '/tn/' + pid + '.jpg';
+            const THUMBNAIL_TASKS = new UPLOAD_TASKS(pid, thumbnail_url);
+            let is_updated = await THUMBNAIL_TASKS.update_thumbnail();
+            console.log(is_updated);
+
+            /*
             let data = {
                 'pid': pid,
                 'thumbnail_url':  'https://' + req.headers.host + '/tn/' + pid + '.jpg'
             };
 
+             */
+
+            /*
             let response = await HTTP.post({
-                endpoint: `${APP_CONFIG.app_path}/api/admin/v1/repo/object/thumbnail`,
+                endpoint: `${APP_CONFIG.app_path}/api/v2/repo/object/thumbnail`,
                 data: data
             });
+             */
 
+            // TODO: is_updated
             if (response.error === true) {
 
                 LOGGER.module().error('ERROR: [ Unable to update collection thumbnail.');
 
                 res.render('dashboard-upload', {
-                    host: CONFIG.host,
-                    appname: CONFIG.appName,
-                    organization: CONFIG.organization,
-                    appversion: CONFIG.appVersion,
+                    host: APP_CONFIG.host,
+                    app_name: APP_CONFIG.app_name,
+                    app_version: APP_CONFIG.app_version,
+                    organization: APP_CONFIG.organization,
                     message: 'File was uploaded, but the record update failed.',
                     error: true
                 });
@@ -133,15 +147,16 @@ module.exports = function (app) {
                 LOGGER.module().info('INFO: Thumbnail updated');
 
                 res.render('dashboard-upload', {
-                    host: CONFIG.host,
-                    appname: CONFIG.appName,
-                    organization: CONFIG.organization,
-                    appversion: CONFIG.appVersion,
+                    host: APP_CONFIG.host,
+                    app_name: APP_CONFIG.app_name,
+                    app_version: APP_CONFIG.app_version,
+                    organization: APP_CONFIG.organization,
                     message: 'Thumbnail Updated.',
                     error: false
                 });
             }
 
         })();
+        // ============================
     });
 };

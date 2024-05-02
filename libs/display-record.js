@@ -16,10 +16,11 @@
 
  */
 
-const DB = require('../config/db')(),
-    VALIDATOR = require('validator'),
-    REPO_OBJECTS = 'tbl_objects',
-    LOGGER = require("../libs/log4");
+const DB = require('../config/db_config')();
+const DB_TABLES = require('../config/db_tables_config')();
+const VALIDATOR = require('validator');
+
+const LOGGER = require("../libs/log4");
 
 /**
  * Gets display record to render in UI
@@ -36,7 +37,7 @@ exports.get_db_display_record_data = function (pid, callback) {
         return false;
     }
 
-    DB(REPO_OBJECTS)
+    DB(DB_TABLES.repo.repo_records)
         .select('display_record')
         .where({
             pid: pid,
@@ -71,7 +72,7 @@ exports.get_index_display_record_data = function (sip_uuid, callback) {
 
     setTimeout(function() {
 
-        DB(REPO_OBJECTS)
+        DB(DB_TABLES.repo.repo_records)
             .select('*')
             .where({
                 sip_uuid: sip_uuid,
@@ -155,7 +156,7 @@ exports.get_index_display_record_data = function (sip_uuid, callback) {
  */
 exports.get_display_record_data = function (sip_uuid, callback) {
 
-    DB(REPO_OBJECTS)
+    DB(DB_TABLES.repo.repo_records)
         .select('*')
         .where({
             sip_uuid: sip_uuid,
@@ -302,7 +303,7 @@ exports.create_display_record = function (obj, callback) {
  */
 exports.update_display_record = function (obj, display_record, callback) {
 
-    DB(REPO_OBJECTS)
+    DB(DB_TABLES.repo.repo_records)
         .where(obj)
         .update({
             display_record: display_record

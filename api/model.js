@@ -18,11 +18,11 @@
 
 'use strict';
 
-const ASYNC = require('async'),
-    LOGGER = require('../libs/log4'),
-    DB = require('../config/db')(),
-    REPO_OBJECTS = 'tbl_objects',
-    VALIDATOR = require('validator');
+const ASYNC = require('async');
+const LOGGER = require('../libs/log4');
+const DB = require('../config/db_config')();
+const DB_TABLES = require('../config/db_tables_config')();
+const VALIDATOR = require('validator');
 
 // http://localhost:8000/api/v1/uuids?start=2019-08-20&end=2019-09-18
 // http://localhost:8000/api/v1/uuids?uri=/repositories/2/archival_objects/112120
@@ -57,7 +57,7 @@ exports.get_records = function (req, callback) {
         where.sip_uuid = sip_uuid
     }
 
-    DB(REPO_OBJECTS)
+    DB(DB_TABLES.repo.repo_records)
         .select('sip_uuid', 'handle', 'uri', 'object_type', 'mods', 'display_record')
         .where(where)
         .then(function (data) {
@@ -109,7 +109,7 @@ exports.get_uuids = function (req, callback) {
 
             sql = '(created BETWEEN ? AND ?)';
 
-            DB(REPO_OBJECTS)
+            DB(DB_TABLES.repo.repo_records)
                 .select('sip_uuid', 'handle', 'uri', 'object_type')
                 .where({
                     object_type: 'collection',
@@ -136,7 +136,7 @@ exports.get_uuids = function (req, callback) {
 
             sql = 'DATE(created) = ?';
 
-            DB(REPO_OBJECTS)
+            DB(DB_TABLES.repo.repo_records)
                 .select('sip_uuid', 'handle', 'uri', 'object_type')
                 .where({
                     object_type: 'collection',
@@ -161,7 +161,7 @@ exports.get_uuids = function (req, callback) {
 
             //--- gets records by current date ---//
 
-            DB(REPO_OBJECTS)
+            DB(DB_TABLES.repo.repo_records)
                 .select('sip_uuid', 'handle', 'uri', 'object_type')
                 .where({
                     object_type: 'collection',
@@ -211,7 +211,7 @@ exports.get_uuids = function (req, callback) {
                 params.is_member_of_collection = record.sip_uuid;
             }
 
-            DB(REPO_OBJECTS)
+            DB(DB_TABLES.repo.repo_records)
                 .select('sip_uuid', 'handle', 'uri', 'object_type')
                 .where(params)
                 .then(function (objects) {
@@ -237,7 +237,7 @@ exports.get_uuids = function (req, callback) {
     //--- return single object based on Archivespace uri ---//
     if (uri !== undefined && uri.length !== 0) {
 
-        DB(REPO_OBJECTS)
+        DB(DB_TABLES.repo.repo_records)
             .select('sip_uuid', 'handle', 'uri', 'object_type')
             .where({
                 uri: uri,

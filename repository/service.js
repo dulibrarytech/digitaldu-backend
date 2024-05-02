@@ -18,7 +18,6 @@
 
 'use strict';
 
-const CONFIG = require('../config/config');
 const ARCHIVEMATICA = require('../libs/archivematica');
 const ARCHIVESSPACE = require('../libs/archivesspace');
 const DURACLOUD = require('../libs/duracloud');
@@ -120,6 +119,7 @@ exports.ping_services = function (req, callback) {
         });
     }
 
+    /*
     function ping_handle_server(obj, callback) {
 
         (async () => {
@@ -150,6 +150,9 @@ exports.ping_services = function (req, callback) {
         })();
     }
 
+     */
+
+    /*
     function ping_convert_service(obj, callback) {
 
         (async () => {
@@ -179,7 +182,9 @@ exports.ping_services = function (req, callback) {
 
         })();
     }
+    */
 
+    /*
     function ping_transcript_service(obj, callback) {
 
         (async () => {
@@ -209,15 +214,16 @@ exports.ping_services = function (req, callback) {
 
         })();
     }
+    */
 
     ASYNC.waterfall([
         ping_archivematica,
         ping_archivematica_storage,
         ping_archivesspace,
         ping_duracloud,
-        ping_handle_server,
-        ping_convert_service,
-        ping_transcript_service
+        // ping_handle_server,
+        // ping_convert_service,
+        // ping_transcript_service
     ], function (error, results) {
 
         if (error) {
@@ -427,84 +433,12 @@ exports.get_viewer = function (req, callback) {
     });
 };
 
-/**
- * Gets objects by collection
- * @param req
- * @param callback
- */
-/*
-exports.get_admin_objects = function (req, callback) {
-
-    if (req.query.pid === undefined || req.query.pid.length === 0) {
-
-        callback({
-            status: 400,
-            message: 'Bad request.'
-        });
-
-        return false;
-    }
-
-    let is_member_of_collection = req.query.pid,
-        page = req.query.page,
-        total_on_page = 10,
-        sort = 'title.keyword:asc';
-
-    if (req.query.total_on_page !== undefined) {
-        total_on_page = req.query.total_on_page;
-    }
-
-    if (req.query.sort !== undefined) {
-        sort = req.query.sort;
-    }
-
-    if (page === undefined) {
-        page = 0;
-    } else {
-        page = (page - 1) * total_on_page;
-    }
-
-    let query = {
-        'query': {
-            'bool': {
-                'must': {
-                    'match': {
-                        'is_member_of_collection.keyword': is_member_of_collection
-                    }
-                }
-            }
-        }
-    };
-
-    CLIENT.search({
-        from: page,
-        size: total_on_page,
-        index: CONFIG.elasticSearchBackIndex,
-        sort: sort,
-        body: query
-    }).then(function (body) {
-
-        callback({
-            status: 200,
-            data: body.hits
-        });
-    }, function (error) {
-
-        LOGGER.module().error('ERROR: [/repository/service/ module (get_admin_objects)] Request to Elasticsearch failed: ' + error);
-
-        callback({
-            status: 500,
-            data: error
-        });
-    });
-};
-*/
-
-/**
+/** TODO: DEPRECATE
  * Gets unpublished objects by collection
  * @param req
  * @param callback
  */
+/*
 exports.get_unpublished_admin_objects = function (req, callback) {
 
     if (req.query.pid === undefined || req.query.pid.length === 0) {
@@ -561,6 +495,7 @@ exports.get_unpublished_admin_objects = function (req, callback) {
         });
     });
 };
+*/
 
 /**
  * Gets mods record

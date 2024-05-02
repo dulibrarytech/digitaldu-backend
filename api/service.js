@@ -18,11 +18,11 @@
 
 'use strict';
 
-const CONFIG = require("../config/config"),
-    HTTP = require("axios"),
-    LOGGER = require('../libs/log4');
+// const CONFIG = require("../config/config");
+const HTTP = require("axios");
+const LOGGER = require('../libs/log4');
 
-/**
+/** TODO: Deprecate
  * Gets repository images by sip_uuid
  * @param req
  * @param callback

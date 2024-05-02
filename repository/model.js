@@ -18,15 +18,12 @@
 
 'use strict';
 
-const CONFIG = require('../config/config');
-const HTTP = require('../libs/http');
 const ASYNC = require('async');
 const UUID = require('node-uuid'); // TODO: replace with create uuid in helper
 const VALIDATOR = require('validator');
-const HANDLES = require('../libs/handles');
 const MODS = require('../libs/display-record');
 const ARCHIVEMATICA = require('../libs/archivematica');
-const SERVICE = require('.//service');
+const SERVICE = require('../repository/service');
 const CACHE = require('../libs/cache');
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
@@ -51,7 +48,7 @@ exports.suppress = function (uuid, type, callback) {
             const OBJ = ES.get_es();
             const SUPPRESS_PUBLIC_RECORD_TASK = new INDEXER_TASKS(DB, DB_TABLES, OBJ.es_client, OBJ.es_config.elasticsearch_index_front);
             const SUPPRESS_ADMIN_RECORD_TASK = new INDEXER_TASKS(DB, DB_TABLES, OBJ.es_client, OBJ.es_config.elasticsearch_index_back);
-            console.log('TYPE ', type);
+
             if (type === 'object') {
 
                 let is_suppressed = await suppress_record(SUPPRESS_PUBLIC_RECORD_TASK, SUPPRESS_ADMIN_RECORD_TASK, uuid, type);
@@ -499,7 +496,7 @@ exports.get_display_record = function (req, callback) {
     });
 };
 
-/**
+/** TODO: refactor/deprecate - moved to upload task
  * Updates thumbnail
  * @param req
  * @param callback
@@ -618,6 +615,327 @@ exports.update_thumbnail = function (req, callback) {
     .catch(function (error) {
         LOGGER.module().fatal('FATAL: [/repository/model module (update_thumbnail)] unable to update mods records ' + error);
         throw 'FATAL: [/repository/model module (update_thumbnail)] unable to update mods records ' + error;
+    });
+};
+
+/**
+ * Deletes repository object (DB, Index, and creates archivematica delete request)
+ * @param req
+ * @param callback
+ */
+exports.delete_object = function (req, callback) {
+
+    let pid = req.body.pid;
+    let delete_reason = req.body.delete_reason;
+
+    function check_if_published(callback) {
+
+        let obj = {};
+        obj.pid = pid;
+        obj.delete_reason = delete_reason;
+
+        DB(REPO_OBJECTS)
+        .count('is_published as is_published')
+        .where({
+            pid: obj.pid,
+            is_active: 1,
+            is_published: 1
+        })
+        .then(function (data) {
+            // delete only if object is not published
+            if (data[0].is_published === 0) {
+                obj.is_published = false;
+            } else {
+                obj.is_published = true;
+            }
+
+            callback(null, obj);
+        })
+        .catch(function (error) {
+            LOGGER.module().fatal('FATAL: [/repository/model module (delete_object/check_if_published)] Unable to delete record ' + error);
+            throw 'FATAL: [/repository/model module (delete_object/check_if_published)] Unable to delete record ' + error;
+        });
+    }
+
+    function delete_record(obj, callback) {
+
+        if (obj.is_published === true) {
+            callback(null, obj);
+            return false;
+        }
+
+        DB(REPO_OBJECTS)
+        .where({
+            pid: obj.pid
+        })
+        .update({
+            is_active: 0
+        })
+        .then(function (data) {
+
+            if (data === 1) {
+                callback(null, obj);
+            }
+        })
+        .catch(function (error) {
+            LOGGER.module().fatal('FATAL: [/repository/model module (delete_object)] unable to delete record ' + error);
+            throw 'FATAL: [/repository/model module (delete_object)] unable to delete record ' + error;
+        });
+    }
+
+    function unindex_record(obj, callback) {
+
+        if (obj.is_published === true) {
+            callback(null, obj);
+            return false;
+        }
+
+        unindex(obj.pid, function (result) {
+
+            if (result.error === true) {
+                LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/unindex_objects)] unable to remove published record from index.');
+                obj.status = 'failed';
+                callback(null, obj);
+                return false;
+            }
+
+            callback(null, obj);
+        });
+    }
+
+    function delete_aip_request(obj, callback) {
+
+        if (obj.is_published === true) {
+            callback(null, obj);
+            return false;
+        }
+
+        ARCHIVEMATICA.delete_aip_request(obj, function (result) {
+
+            if (result.error === false) {
+
+                let json = JSON.parse(result.data);
+                obj.delete_id = json.id;
+
+                DB(REPO_OBJECTS)
+                .where({
+                    pid: obj.pid
+                })
+                .update({
+                    delete_id: obj.delete_id
+                })
+                .then(function (data) {
+
+                    if (data === 1) {
+                        LOGGER.module().info('INFO: [/repository/model module (delete_object/delete_aip_request)] delete id ' + obj.delete_id + ' saved');
+                        callback(null, obj);
+                    }
+                })
+                .catch(function (error) {
+                    LOGGER.module().fatal('FATAL: [/repository/model module (delete_object)] unable to save delete id ' + error);
+                    throw 'FATAL: [/repository/model module (delete_object)] unable to save delete id ' + error;
+                });
+
+            } else {
+                LOGGER.module().error('ERROR: [/repository/model module (delete_object/delete_aip_request)] unable to create delete aip request');
+                obj.delete_id = false;
+            }
+        });
+    }
+
+    ASYNC.waterfall([
+        check_if_published,
+        delete_record,
+        unindex_record,
+        delete_aip_request
+    ], function (error, results) {
+
+        if (error) {
+            LOGGER.module().error('ERROR: [/repository/model module (delete_object/async.waterfall)] ' + error);
+        }
+
+        // delete link only appears when record is unpublished
+        if (results.is_published === true) {
+
+            LOGGER.module().error('ERROR: [/repository/model module (delete_object/async.waterfall)] Cannot delete published object. ');
+            return false;
+        }
+
+        LOGGER.module().info('INFO: [/repository/model module (delete_object/async.waterfall)] object deleted.');
+    });
+
+    callback({
+        status: 204,
+        message: 'Delete object.'
+    });
+};
+
+/** TODO: deprecate
+ * Gets the most recent ingested records
+ * @param callback
+ */
+exports.get_recent_ingests = function (callback) {
+
+    try {
+
+        (async function () {
+
+            let records = await DB(DB_TABLES.repo.repo_records)
+            .select('id','is_member_of_collection', 'pid', 'mods','uri','mime_type', 'is_published', 'created')
+            .where({
+                is_active: 1,
+                object_type: 'object'
+            })
+            .limit(1000)
+            .orderBy('id', 'desc');
+
+            let response = [];
+            let timer = setInterval(async () => {
+
+                if (records.length === 0) {
+
+                    clearInterval(timer);
+
+                    callback({
+                        status: 200,
+                        message: 'Complete records.',
+                        data: response
+                    });
+
+                    return false;
+                }
+
+                let record = records.pop();
+
+                let collection_record = await DB(DB_TABLES.repo.repo_records)
+                .select('mods')
+                .where({
+                    pid: record.is_member_of_collection,
+                    object_type: 'collection'
+                });
+
+                let metadata = JSON.parse(collection_record[0].mods);
+                record.collection_title = metadata.title;
+                response.push(record);
+
+            }, 0);
+
+        })();
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/import/model module (get_recent_ingests)] unable to get recently ingested records ' + error.message);
+    }
+};
+
+/** TODO: deprecate
+ * Adds transcript to existing record and re-indexes
+ * @param req
+ * @param callback
+ */
+exports.save_transcript = function (req, callback) {
+
+    let sip_uuid = req.body.sip_uuid;
+    let transcript = req.body.transcript;
+
+    if (sip_uuid === undefined || transcript === undefined) {
+
+        callback({
+            status: 400,
+            message: 'Bad Request.'
+        });
+    }
+
+    DB(REPO_OBJECTS)
+    .where({
+        pid: sip_uuid
+    })
+    .update({
+        transcript: transcript
+    })
+    .then(function (data) {
+
+        if (data === 1) {
+
+            LOGGER.module().info('INFO: [/repository/model module (add_transcript)] Transcript saved to DB');
+
+            MODS.get_db_display_record_data(sip_uuid, function (data) {
+
+                let record = JSON.parse(data[0].display_record);
+                record.transcript = transcript;
+
+                let where_obj = {
+                    sip_uuid: sip_uuid,
+                    is_active: 1
+                };
+
+                MODS.update_display_record(where_obj, JSON.stringify(record), function (result) {
+
+                    (async () => {
+
+                        let data = {
+                            'sip_uuid': sip_uuid,
+                            'fragment': {
+                                doc: {
+                                    transcript: transcript
+                                }
+                            }
+                        };
+
+                        let response = await HTTP.put({
+                            endpoint: '/api/admin/v1/indexer/update_fragment',
+                            data: data
+                        });
+
+                        let result = {};
+
+                        if (response.error === true) {
+                            LOGGER.module().error('ERROR: [/repository/model module (update_fragment)] unable to update transcript.');
+                            result.error = true;
+                        } else if (response.data.status === 201) {
+                            result.error = false;
+                        }
+
+                        if (result.error === false) {
+
+                            if (record.is_published === 1) {
+
+                                let match_phrase = {
+                                    'pid': sip_uuid
+                                };
+
+                                setTimeout(function () {
+
+                                    // moves updated record to public index if already published
+                                    reindex(match_phrase, function (result) {
+
+                                        if (result.error === true) {
+                                            LOGGER.module().error('ERROR: [/repository/model module (save_transcript)] unable to copy record to public index.');
+                                        }
+                                    });
+
+                                }, 3000);
+                            }
+
+                            callback({
+                                status: 201,
+                                message: 'Transcript Saved.'
+                            });
+
+                        } else if (result.error === true) {
+                            callback({
+                                status: 200,
+                                message: 'Transcript not Saved.'
+                            });
+                        }
+
+                    })();
+                });
+            });
+        }
+    })
+    .catch(function (error) {
+        LOGGER.module().fatal('FATAL: [/repository/model module (add_transcript)] Unable to save transcript ' + error);
+        throw 'FATAL: [/repository/model module (add_transcript)] Unable to save transcript ' + error;
     });
 };
 
@@ -861,430 +1179,3 @@ exports.create_collection_object = function (req, callback) {
         }
     });
 };
-
-/** TODO: deprecate
- * Gets the most recent ingested records
- * @param callback
- */
-exports.get_recent_ingests = function (callback) {
-
-    try {
-
-        (async function () {
-
-            let records = await DB(DB_TABLES.repo.repo_records)
-            .select('id','is_member_of_collection', 'pid', 'mods','uri','mime_type', 'is_published', 'created')
-            .where({
-                is_active: 1,
-                object_type: 'object'
-            })
-            .limit(1000)
-            .orderBy('id', 'desc');
-
-            let response = [];
-            let timer = setInterval(async () => {
-
-                if (records.length === 0) {
-
-                    clearInterval(timer);
-
-                    callback({
-                        status: 200,
-                        message: 'Complete records.',
-                        data: response
-                    });
-
-                    return false;
-                }
-
-                let record = records.pop();
-
-                let collection_record = await DB(DB_TABLES.repo.repo_records)
-                .select('mods')
-                .where({
-                    pid: record.is_member_of_collection,
-                    object_type: 'collection'
-                });
-
-                let metadata = JSON.parse(collection_record[0].mods);
-                record.collection_title = metadata.title;
-                response.push(record);
-
-            }, 0);
-
-        })();
-
-    } catch (error) {
-        LOGGER.module().error('ERROR: [/import/model module (get_recent_ingests)] unable to get recently ingested records ' + error.message);
-    }
-};
-
-/**
- * Deletes repository object (DB, Index, and creates archivematica delete request)
- * @param req
- * @param callback
- */
-exports.delete_object = function (req, callback) {
-
-    let pid = req.body.pid;
-    let delete_reason = req.body.delete_reason;
-
-    function check_if_published(callback) {
-
-        let obj = {};
-        obj.pid = pid;
-        obj.delete_reason = delete_reason;
-
-        DB(REPO_OBJECTS)
-        .count('is_published as is_published')
-        .where({
-            pid: obj.pid,
-            is_active: 1,
-            is_published: 1
-        })
-        .then(function (data) {
-            // delete only if object is not published
-            if (data[0].is_published === 0) {
-                obj.is_published = false;
-            } else {
-                obj.is_published = true;
-            }
-
-            callback(null, obj);
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/repository/model module (delete_object/check_if_published)] Unable to delete record ' + error);
-            throw 'FATAL: [/repository/model module (delete_object/check_if_published)] Unable to delete record ' + error;
-        });
-    }
-
-    function delete_record(obj, callback) {
-
-        if (obj.is_published === true) {
-            callback(null, obj);
-            return false;
-        }
-
-        DB(REPO_OBJECTS)
-        .where({
-            pid: obj.pid
-        })
-        .update({
-            is_active: 0
-        })
-        .then(function (data) {
-
-            if (data === 1) {
-                callback(null, obj);
-            }
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/repository/model module (delete_object)] unable to delete record ' + error);
-            throw 'FATAL: [/repository/model module (delete_object)] unable to delete record ' + error;
-        });
-    }
-
-    function unindex_record(obj, callback) {
-
-        if (obj.is_published === true) {
-            callback(null, obj);
-            return false;
-        }
-
-        unindex(obj.pid, function (result) {
-
-            if (result.error === true) {
-                LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/unindex_objects)] unable to remove published record from index.');
-                obj.status = 'failed';
-                callback(null, obj);
-                return false;
-            }
-
-            callback(null, obj);
-        });
-    }
-
-    function delete_aip_request(obj, callback) {
-
-        if (obj.is_published === true) {
-            callback(null, obj);
-            return false;
-        }
-
-        ARCHIVEMATICA.delete_aip_request(obj, function (result) {
-
-            if (result.error === false) {
-
-                let json = JSON.parse(result.data);
-                obj.delete_id = json.id;
-
-                DB(REPO_OBJECTS)
-                .where({
-                    pid: obj.pid
-                })
-                .update({
-                    delete_id: obj.delete_id
-                })
-                .then(function (data) {
-
-                    if (data === 1) {
-                        LOGGER.module().info('INFO: [/repository/model module (delete_object/delete_aip_request)] delete id ' + obj.delete_id + ' saved');
-                        callback(null, obj);
-                    }
-                })
-                .catch(function (error) {
-                    LOGGER.module().fatal('FATAL: [/repository/model module (delete_object)] unable to save delete id ' + error);
-                    throw 'FATAL: [/repository/model module (delete_object)] unable to save delete id ' + error;
-                });
-
-            } else {
-                LOGGER.module().error('ERROR: [/repository/model module (delete_object/delete_aip_request)] unable to create delete aip request');
-                obj.delete_id = false;
-            }
-        });
-    }
-
-    ASYNC.waterfall([
-        check_if_published,
-        delete_record,
-        unindex_record,
-        delete_aip_request
-    ], function (error, results) {
-
-        if (error) {
-            LOGGER.module().error('ERROR: [/repository/model module (delete_object/async.waterfall)] ' + error);
-        }
-
-        // delete link only appears when record is unpublished
-        if (results.is_published === true) {
-
-            LOGGER.module().error('ERROR: [/repository/model module (delete_object/async.waterfall)] Cannot delete published object. ');
-            return false;
-        }
-
-        LOGGER.module().info('INFO: [/repository/model module (delete_object/async.waterfall)] object deleted.');
-    });
-
-    callback({
-        status: 204,
-        message: 'Delete object.'
-    });
-};
-
-/**
- * Adds transcript to existing record and re-indexes
- * @param req
- * @param callback
- */
-exports.save_transcript = function (req, callback) {
-
-    let sip_uuid = req.body.sip_uuid;
-    let transcript = req.body.transcript;
-
-    if (sip_uuid === undefined || transcript === undefined) {
-
-        callback({
-            status: 400,
-            message: 'Bad Request.'
-        });
-    }
-
-    DB(REPO_OBJECTS)
-    .where({
-        pid: sip_uuid
-    })
-    .update({
-        transcript: transcript
-    })
-    .then(function (data) {
-
-        if (data === 1) {
-
-            LOGGER.module().info('INFO: [/repository/model module (add_transcript)] Transcript saved to DB');
-
-            MODS.get_db_display_record_data(sip_uuid, function (data) {
-
-                let record = JSON.parse(data[0].display_record);
-                record.transcript = transcript;
-
-                let where_obj = {
-                    sip_uuid: sip_uuid,
-                    is_active: 1
-                };
-
-                MODS.update_display_record(where_obj, JSON.stringify(record), function (result) {
-
-                    (async () => {
-
-                        let data = {
-                            'sip_uuid': sip_uuid,
-                            'fragment': {
-                                doc: {
-                                    transcript: transcript
-                                }
-                            }
-                        };
-
-                        let response = await HTTP.put({
-                            endpoint: '/api/admin/v1/indexer/update_fragment',
-                            data: data
-                        });
-
-                        let result = {};
-
-                        if (response.error === true) {
-                            LOGGER.module().error('ERROR: [/repository/model module (update_fragment)] unable to update transcript.');
-                            result.error = true;
-                        } else if (response.data.status === 201) {
-                            result.error = false;
-                        }
-
-                        if (result.error === false) {
-
-                            if (record.is_published === 1) {
-
-                                let match_phrase = {
-                                    'pid': sip_uuid
-                                };
-
-                                setTimeout(function () {
-
-                                    // moves updated record to public index if already published
-                                    reindex(match_phrase, function (result) {
-
-                                        if (result.error === true) {
-                                            LOGGER.module().error('ERROR: [/repository/model module (save_transcript)] unable to copy record to public index.');
-                                        }
-                                    });
-
-                                }, 3000);
-                            }
-
-                            callback({
-                                status: 201,
-                                message: 'Transcript Saved.'
-                            });
-
-                        } else if (result.error === true) {
-                            callback({
-                                status: 200,
-                                message: 'Transcript not Saved.'
-                            });
-                        }
-
-                    })();
-                });
-            });
-        }
-    })
-    .catch(function (error) {
-        LOGGER.module().fatal('FATAL: [/repository/model module (add_transcript)] Unable to save transcript ' + error);
-        throw 'FATAL: [/repository/model module (add_transcript)] Unable to save transcript ' + error;
-    });
-};
-
-/** TODO remove
- * Recreates display record
- * @param req
- * @param callback
- */
-/*
-exports.reset_display_record = function (req, callback) {
-
-    if (req.body.pid === undefined) {
-
-        callback({
-            status: 400,
-            message: 'Bad request.'
-        });
-
-        return false;
-    }
-
-    function create_display_record(callback) {
-
-        let obj = {};
-        let sip_uuid = req.body.pid;
-
-        MODS.get_display_record_data(sip_uuid, function (record) {
-
-            MODS.create_display_record(record, function (display_record) {
-
-                let recordObj = JSON.parse(display_record);
-                let where_obj = {
-                    is_member_of_collection: recordObj.is_member_of_collection,
-                    pid: recordObj.pid,
-                    is_active: 1
-                };
-
-                MODS.update_display_record(where_obj, display_record, function (result) {
-                    obj.sip_uuid = recordObj.pid;
-                    obj.is_published = recordObj.is_published;
-                    callback(null, obj);
-                });
-            });
-        });
-    }
-
-    function admin_index(obj, callback) {
-
-        // update admin index
-        index(obj.sip_uuid, function (result) {
-
-            if (result.error === true) {
-                LOGGER.module().error('ERROR: [/repository/model module (reset_display_record/admin_index)] indexer error.');
-                obj.admin_index = false;
-                callback(null, obj);
-                return false;
-            }
-
-            obj.admin_index = true;
-            callback(null, obj);
-            return false;
-        });
-    }
-
-    function public_index(obj, callback) {
-
-        if (obj.is_published === 1) {
-
-            // update public index
-            index(obj.sip_uuid, function (result) {
-
-                if (result.error === true) {
-                    LOGGER.module().error('ERROR: [/repository/model module (reset_display_record/admin_index)] indexer error.');
-                    obj.public_index = false;
-                    callback(null, obj);
-                    return false;
-                }
-
-                obj.public_index = true;
-                callback(null, obj);
-                return false;
-            });
-
-        } else {
-            obj.public_index = false;
-            callback(null, obj);
-        }
-    }
-
-    ASYNC.waterfall([
-        create_display_record,
-        admin_index,
-        public_index
-    ], function (error, results) {
-
-        if (error) {
-            LOGGER.module().error('ERROR: [/repository/model module (reset_display_record/async.waterfall)] ' + error);
-        }
-
-        LOGGER.module().info('INFO: [/repository/model module (reset_display_record/async.waterfall)] display record reset');
-
-        callback({
-            status: 201,
-            message: 'Display record(s) updated.'
-        });
-    });
-};
-*/

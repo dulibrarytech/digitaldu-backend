@@ -20,7 +20,6 @@
 
 const TOKEN_CONFIG = require('../config/token_config')();
 const WEBSERVICES_CONFIG = require('../config/webservices_config')();
-const CONFIG = require('../config/config');
 const JWT = require('jsonwebtoken');
 const LOGGER = require('../libs/log4');
 const VALIDATOR = require('validator');

@@ -55,9 +55,8 @@ module.exports = function (app) {
     // .post(TOKEN.verify, CONTROLLER.create_collection_object) // TODO remove
     .delete(TOKEN.verify, CONTROLLER.delete_object);
 
-    // gets thumbnails from duracloud
-    app.route(`${CONFIG.app_path}/api/admin/v1/repo/object/thumbnail`)
-    .get(TOKEN.verify, CONTROLLER.get_thumbnail)
+    app.route(`${CONFIG.app_path}/api/v2/repo/object/thumbnail`)
+    .get(TOKEN.verify, CONTROLLER.get_thumbnail) // gets thumbnails from DuraCloud
     .post(TOKEN.verify, CONTROLLER.update_thumbnail);
 
     // gets thumbnails from TN service

@@ -24,7 +24,12 @@ const httpModule = (function () {
 
     obj.req = function (request, callback) {
         fetch(request).then(callback).catch(function (error) {
+
             helperModule.renderError('Error: (Request/Response error has occurred. ' + DOMPurify.sanitize(error));
+
+            if (error.message === 'Failed to fetch' ) {
+                window.location.replace('/repo');
+            }
         });
     };
 
