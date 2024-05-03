@@ -158,7 +158,7 @@ const userModule = (function () {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                 setTimeout(function () {
-                    window.location.replace('/repo/login');
+                    window.location.replace('/repo');
                 }, 4000);
 
             } else {
@@ -201,7 +201,7 @@ const userModule = (function () {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                 setTimeout(function () {
-                    window.location.replace('/repo/login');
+                    window.location.replace('/repo');
                 }, 4000);
 
             } else {
@@ -248,7 +248,7 @@ const userModule = (function () {
                  helperModule.renderError('Unable to get user profile data.');
 
                  setTimeout(function () {
-                    window.location.replace('/repo/login');
+                    window.location.replace('/repo');
                  }, 5000);
             }
 
@@ -344,7 +344,7 @@ const userModule = (function () {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
-                        window.location.replace('/login');
+                        window.location.replace('/repo');
                     }, 4000);
                 });
 
@@ -414,7 +414,7 @@ const userModule = (function () {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
-                        window.location.replace('/repo/login');
+                        window.location.replace('/repo');
                     }, 3000);
                 });
 
@@ -465,7 +465,7 @@ const userModule = (function () {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
-                        window.location.replace('/repo/login');
+                        window.location.replace('/repo');
                     }, 3000);
                 });
 
@@ -516,11 +516,11 @@ const userModule = (function () {
         if (data !== null && data.token === null) {
 
             setTimeout(function () {
-                window.location.replace('/repo/login');
+                window.location.replace('/repo');
             }, 0);
 
         } else if (data === null) {
-            window.location.replace('/repo/login');
+            window.location.replace('/repo');
         } else {
             return DOMPurify.sanitize(data.token);
         }
@@ -561,12 +561,12 @@ const userModule = (function () {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
-                        window.location.replace('/login');
+                        window.location.replace('/repo');
                     }, 3000);
 
                 } else {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to retrieve user profile.');
-                    window.location.replace('/repo/login');
+                    window.location.replace('/repo');
                 }
             };
 
@@ -583,7 +583,7 @@ const userModule = (function () {
     obj.sessionExpired = function () {
         window.sessionStorage.removeItem('repo_user');
         setTimeout(function () {
-            window.location.replace('/repo/login');
+            window.location.replace('/repo');
         }, 500);
     };
 

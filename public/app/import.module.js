@@ -146,7 +146,7 @@ const importModule = (function () {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                 setTimeout(function () {
-                    window.location.replace('/login');
+                    window.location.replace('/repo');
                 }, 4000);
 
             } else {

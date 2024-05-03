@@ -35,11 +35,11 @@ const authModule = (function () {
         if (data !== null && data.token === null) {
 
             setTimeout(function () {
-                window.location.replace('/login');
+                window.location.replace('/repo');
             }, 0);
 
         } else if (data === null) {
-            window.location.replace('/login');
+            window.location.replace('/repo');
         } else {
             return DOMPurify.sanitize(data.token);
         }
@@ -76,12 +76,12 @@ const authModule = (function () {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
-                        window.location.replace('/login');
+                        window.location.replace('/repo');
                     }, 3000);
 
                 } else {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to retrieve user profile.');
-                    window.location.replace('/login');
+                    window.location.replace('/repo');
                 }
 
             })();
@@ -99,7 +99,7 @@ const authModule = (function () {
         obj.reset();
 
         setTimeout(function () {
-            window.location.replace('/login');
+            window.location.replace('/repo');
         }, 500);
     };
 

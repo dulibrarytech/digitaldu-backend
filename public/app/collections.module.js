@@ -82,7 +82,7 @@ const collectionsModule = (function () {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                 setTimeout(function () {
-                    window.location.replace('/repo/login');
+                    window.location.replace('/repo');
                 }, 4000);
 
             } else {
@@ -148,7 +148,7 @@ const collectionsModule = (function () {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
-                        window.location.replace('/repo/login');
+                        window.location.replace('/repo');
                     }, 4000);
                 });
 
@@ -260,7 +260,7 @@ const collectionsModule = (function () {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
-                        window.location.replace('/login');
+                        window.location.replace('/repo');
                     }, 4000);
                 });
 
@@ -322,7 +322,7 @@ const collectionsModule = (function () {
 
             if (response.status === 201) {
 
-                domModule.html('#update-' + pid, '<em><i class="fa fa-exclamation-circle"></i> In progress. *Update may take several hours to complete.');
+                domModule.html('#update-' + pid, '<em><i class="fa fa-exclamation-circle"></i> Update may take several hours to complete.');
 
                 setTimeout(function () {
                     domModule.html('#update-' + pid, '');
@@ -336,7 +336,7 @@ const collectionsModule = (function () {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
-                        window.location.replace('/login');
+                        window.location.replace('/repo');
                     }, 4000);
                 });
 

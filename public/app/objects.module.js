@@ -80,7 +80,7 @@ const objectsModule = (function () {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
-                        window.location.replace('/login');
+                        window.location.replace('/repo');
                     }, 4000);
                 });
 
@@ -161,7 +161,7 @@ const objectsModule = (function () {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
-                        window.location.replace('/login');
+                        window.location.replace('/repo');
                     }, 4000);
                 });
 
@@ -207,7 +207,7 @@ const objectsModule = (function () {
                     domModule.html('#unpublish-' + pid, null);
                     let unpublished = '';
                     unpublished += '<p><small style="background: red; padding: 3px; color: white">Not published</small></p>';
-                    unpublished += '<p><a href="/dashboard/object/delete?pid=' +  DOMPurify.sanitize(pid) + '"><i class="fa fa-trash"></i>&nbsp;Delete</a></p>';
+                    unpublished += '<p><a href="/repo/dashboard/object/delete?pid=' +  DOMPurify.sanitize(pid) + '"><i class="fa fa-trash"></i>&nbsp;Delete</a></p>';
                     domModule.html('#status-published-' + pid, unpublished);
                     domModule.id('status-published-' + pid, 'status-unpublished-' + pid);
                 }, 5000);
@@ -220,7 +220,7 @@ const objectsModule = (function () {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
-                        window.location.replace('/login');
+                        window.location.replace('/repo');
                     }, 4000);
                 });
 
@@ -412,7 +412,7 @@ const objectsModule = (function () {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
-                        window.location.replace('/login');
+                        window.location.replace('/repo');
                     }, 4000);
                 });
 
@@ -531,7 +531,7 @@ const objectsModule = (function () {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
-                        window.location.replace('/login');
+                        window.location.replace('/repo');
                     }, 4000);
                 });
 
@@ -578,7 +578,7 @@ const objectsModule = (function () {
 
                     setTimeout(function() {
                         domModule.html('#message', null);
-                        window.location.replace('/dashboard/objects');
+                        window.location.replace('/repo/dashboard/objects');
                     }, 5000);
 
                 }, 10000);
@@ -590,7 +590,7 @@ const objectsModule = (function () {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
-                        window.location.replace('/login');
+                        window.location.replace('/repo');
                     }, 4000);
                 });
 
@@ -707,7 +707,7 @@ const objectsModule = (function () {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
-                        window.location.replace('/login');
+                        window.location.replace('/repo');
                     }, 4000);
                 });
 
@@ -719,7 +719,7 @@ const objectsModule = (function () {
         httpModule.req(request, callback);
     };
 
-    /**
+    /** TODO: refactor
      * Save transcript to record
      * @returns {boolean}
      */
@@ -767,7 +767,7 @@ const objectsModule = (function () {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
-                        window.location.replace('/login');
+                        window.location.replace('/repo');
                     }, 4000);
                 });
 
@@ -891,7 +891,7 @@ const objectsModule = (function () {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
-                        window.location.replace('/login');
+                        window.location.replace('/repo');
                     }, 4000);
                 });
 
