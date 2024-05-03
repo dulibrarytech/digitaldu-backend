@@ -32,12 +32,12 @@ const apiModule = (function () {
             users: app + '/api/admin/v1/users',
             repo_object: app + '/api/admin/v1/repo/object',
             repo_objects: app + '/api/v2/repo/records',
-            repo_object_thumbnail: app + '/api/v2/repo/object/thumbnail', // updates thumbnail
-            repo_object_tn_dc: app + '/api/v2/repo/object/tn-dc', // gets thumbnails from DuraCloud
-            repo_object_tn: app + '/api/v2/repo/object/tn-service', // gets thumbnails from TN-SERVICE
+            repo_object_thumbnail: app + '/api/v2/repo/object/thumbnail',
+            repo_object_tn_dc: app + '/api/v2/repo/object/tn-dc',
+            repo_object_tn: app + '/api/v2/repo/object/tn-service',
             repo_object_image: app + '/api/admin/v1/repo/object/image',
             repo_ping_services: app + '/api/admin/v1/repo/ping/services',
-            repo_object_viewer: app + '/api/admin/v1/repo/object/viewer',
+            repo_object_viewer: app + '/api/v2/repo/object/viewer',
             repo_publish: app + '/api/v2/repo/publish',
             repo_unpublish: app + '/api/v2/repo/suppress',
             repo_ingests: app + '/api/v2/repo/ingests',

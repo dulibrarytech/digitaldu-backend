@@ -207,12 +207,6 @@ exports.get_tn = function (req, res) {
     }
 };
 
-exports.delete_object = function (req, res) {
-    MODEL.delete_object(req, function (data) {
-        res.status(data.status).send(data.data);
-    });
-};
-
 exports.get_image = function (req, res) {
     SERVICE.get_image(req, function (data) {
         res.set('Content-Type', 'image/jpeg');
@@ -221,7 +215,15 @@ exports.get_image = function (req, res) {
 };
 
 exports.get_viewer = function (req, res) {
-    SERVICE.get_viewer(req, function (data) {
+
+    if (req.query.uuid === undefined || req.query.uuid.length === 0) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    const uuid = req.query.uuid;
+
+    SERVICE.get_viewer(uuid, function (data) {
         res.redirect(data.data);
     });
 };
@@ -257,5 +259,11 @@ exports.get_dc_thumbnail = function (req, res) {
         } else {
             res.end(data, 'binary');
         }
+    });
+};
+
+exports.delete_object = function (req, res) {
+    MODEL.delete_object(req, function (data) {
+        res.status(data.status).send(data.data);
     });
 };

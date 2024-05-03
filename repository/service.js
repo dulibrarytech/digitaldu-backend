@@ -221,24 +221,12 @@ exports.get_image = function (req, callback) {
 
 /**
  * Gets object viewer for non-images
- * @param req
+ * @param uuid
  * @param callback
  */
-exports.get_viewer = function (req, callback) {
+exports.get_viewer = function (uuid, callback) {
 
-    let uuid = req.query.uuid;
-
-    if (uuid === undefined || uuid.length === 0) {
-
-        callback({
-            status: 400,
-            message: 'Bad request.'
-        });
-
-        return false;
-    }
-
-    let apiUrl = CONFIG.tnService + 'viewer/' + uuid + '?key=' + CONFIG.tnServiceApiKey;
+    let apiUrl = WEBSERVICES_CONFIG.tn_service + 'viewer/' + uuid + '?key=' + WEBSERVICES_CONFIG.tn_service_api_key;
 
     callback({
         status: 200,

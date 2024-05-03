@@ -59,15 +59,15 @@ module.exports = function (app) {
     .post(TOKEN.verify, CONTROLLER.update_thumbnail);
 
     app.route(`${CONFIG.app_path}/api/v2/repo/object/tn-dc`)
-    .get(TOKEN.verify, CONTROLLER.get_dc_thumbnail); // gets thumbnails from DuraCloud
+    .get(TOKEN.verify, CONTROLLER.get_dc_thumbnail);
 
-    app.route(`${CONFIG.app_path}/api/v2/repo/object/tn-service`) // gets thumbnails from TN service
+    app.route(`${CONFIG.app_path}/api/v2/repo/object/tn-service`)
     .get(TOKEN.verify, CONTROLLER.get_tn);
 
     app.route(`${CONFIG.app_path}/api/admin/v1/repo/object/image`)
     .get(TOKEN.verify, CONTROLLER.get_image);
 
-    app.route(`${CONFIG.app_path}/api/admin/v1/repo/object/viewer`)
+    app.route(`${CONFIG.app_path}/api/v2/repo/object/viewer`)
     .get(TOKEN.verify, CONTROLLER.get_viewer);
 
     app.route(`${CONFIG.app_path}/api/admin/v1/repo/object/transcript`)

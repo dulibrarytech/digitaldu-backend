@@ -780,7 +780,7 @@ const objectsModule = (function () {
         httpModule.req(request, callback);
     };
 
-    /**
+    /** TODO: deprecate
      * Gets image data to retrieve from image server
      */
     obj.getImageData = function () {
