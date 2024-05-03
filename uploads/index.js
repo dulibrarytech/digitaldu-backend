@@ -104,8 +104,7 @@ module.exports = function (app) {
 
         (async function() {
 
-            const thumbnail_url = 'https://' + req.headers.host + '/repo/static/tn/' + pid + '.jpg';
-            console.log('URL ', thumbnail_url);
+            const thumbnail_url = req.protocol + '://' + req.headers.host + '/repo/static/tn/' + pid + '.jpg';
             const TASK = new THUMBNAIL_TASKS(pid, thumbnail_url);
             const is_updated = await TASK.update_thumbnail();
 

@@ -201,7 +201,7 @@ const collectionsModule = (function () {
 
             setTimeout(function() {
                 window.location.replace(redirect);
-            }, 5000);
+            }, 3000);
         }
     };
 
