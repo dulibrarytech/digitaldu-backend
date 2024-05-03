@@ -56,6 +56,7 @@ module.exports = function (app) {
         let error = false;
 
         if (req.file === undefined) {
+
             error = true;
             message = 'Upload failed.';
             res.render('dashboard-upload', {
@@ -71,6 +72,7 @@ module.exports = function (app) {
         }
 
         if (req.file.mimetype === undefined || req.file.mimetype !== 'image/jpeg') {
+
             error = true;
             message = 'Upload failed. Only .jpg files are accepted.';
             res.render('dashboard-upload', {
@@ -102,7 +104,8 @@ module.exports = function (app) {
 
         (async function() {
 
-            const thumbnail_url = 'https://' + req.headers.host + '/tn/' + pid + '.jpg';
+            const thumbnail_url = 'https://' + req.headers.host + '/repo/static/tn/' + pid + '.jpg';
+            console.log('URL ', thumbnail_url);
             const TASK = new THUMBNAIL_TASKS(pid, thumbnail_url);
             const is_updated = await TASK.update_thumbnail();
 

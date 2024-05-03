@@ -82,7 +82,7 @@ const collectionsModule = (function () {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                 setTimeout(function () {
-                    window.location.replace('/login');
+                    window.location.replace('/repo/login');
                 }, 4000);
 
             } else {
@@ -148,7 +148,7 @@ const collectionsModule = (function () {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
-                        window.location.replace('/login');
+                        window.location.replace('/repo/login');
                     }, 4000);
                 });
 
@@ -191,12 +191,12 @@ const collectionsModule = (function () {
 
         let t = helperModule.getParameterByName('t');
         let pid = helperModule.getParameterByName('pid');
-        let tn = location.protocol + '//' + document.domain + ':' + location.port + '/tn/' + pid + '.jpg';
-        let redirect = location.protocol + '//' + document.domain + ':' + location.port + '/dashboard/object/thumbnail/upload?pid=' + pid;
+        let tn = location.protocol + '//' + document.domain + ':' + location.port + '/repo/static/tn/' + pid + '.jpg';
+        let redirect = location.protocol + '//' + document.domain + ':' + location.port + '/repo/dashboard/object/thumbnail/upload?pid=' + pid;
 
         if (t !== null) {
 
-            let html = '<img src="' + tn + '" alt="thumbnail">';
+            let html = '<img src="' + tn + '" width="400" height="400" alt="thumbnail">';
             domModule.html('#collection-thumbnail-upload-form', html);
 
             setTimeout(function() {
