@@ -66,7 +66,7 @@ const objectsModule = (function () {
 
                     if (data.length === 0) {
                         domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> No records found.</div>');
-                    } else if (data.msg !== undefined) {
+                    } else if (data === false) {
                         domModule.html('#message', '<div class="alert alert-info"><i class="fa fa-exclamation-circle"></i> Index is not available.</div>');
                     } else {
                         objectsModule.renderDisplayRecords(data);
