@@ -33,6 +33,9 @@ module.exports = function (app) {
     app.route(`${CONFIG.app_path}/sso`)
     .post(CONTROLLER.sso);
 
+    // app.route(`${CONFIG.app_path}/refresh_token`)
+    // .get(CONTROLLER.refresh_token);
+
     app.route(`${CONFIG.app_path}/logout`)
     .get(CONTROLLER.logout);
 };

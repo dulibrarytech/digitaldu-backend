@@ -24,6 +24,7 @@ const TOKEN_CONFIG = {
     token_algo: process.env.TOKEN_ALGO,
     token_expires: process.env.TOKEN_EXPIRES,
     token_secret: process.env.TOKEN_SECRET,
+    refresh_token_secret: process.env.REFRESH_TOKEN_SECRET,
     api_key: process.env.API_KEY
 };
 

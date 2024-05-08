@@ -30,16 +30,33 @@ const VALIDATOR = require('validator');
  */
 exports.create = function (username) {
 
-    let tokenData = {
-        sub: username,
-        iss: TOKEN_CONFIG.token_issuer
-    };
+    try {
 
-    return JWT.sign(tokenData, TOKEN_CONFIG.token_secret, {
-        algorithm: TOKEN_CONFIG.token_algo,
-        expiresIn: TOKEN_CONFIG.token_expires
-    });
+        let token_data = {
+            sub: username,
+            iss: TOKEN_CONFIG.token_issuer
+        };
+
+        return JWT.sign(token_data, TOKEN_CONFIG.token_secret, {
+            algorithm: TOKEN_CONFIG.token_algo,
+            expiresIn: TOKEN_CONFIG.token_expires
+        });
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/libs/tokens lib (create)] unable to create token ' + error.message);
+    }
 };
+
+/**
+ * Creates refresh token
+ * @param username
+ */
+exports.refresh_token = function (username) {
+
+    return JWT.sign(token_data, TOKEN_CONFIG.refresh_token_secret, {
+        algorithm: TOKEN_CONFIG.token_algo
+    });
+}
 
 /**
  * Verifies session token
