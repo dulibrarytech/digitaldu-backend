@@ -30,7 +30,6 @@ const VALIDATOR = require('validator');
 const ES_TASKS = require('../libs/elasticsearch');
 const SEARCH_TASKS = require('../search/tasks/search_tasks');
 const DURACLOUD = require('../libs/duracloud');
-const PATH = require("path");
 
 /**
  * Gets objects by collection
