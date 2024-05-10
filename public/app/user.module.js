@@ -607,6 +607,7 @@ const userModule = (function () {
     obj.saveToken = function () {
 
         let token = helperModule.getParameterByName('t');
+        let refresh_token = helperModule.getParameterByName('rt');
 
         if (token !== null) {
 
@@ -615,6 +616,15 @@ const userModule = (function () {
             };
 
             window.sessionStorage.setItem('repo_token', JSON.stringify(data));
+        }
+
+        if (refresh_token !== null) {
+
+            let data = {
+                token: DOMPurify.sanitize(refresh_token)
+            };
+
+            window.sessionStorage.setItem('repo_refresh_token', JSON.stringify(data));
         }
     };
 
@@ -628,6 +638,7 @@ const userModule = (function () {
     /**
      * Creates request used to authenticates users
      */
+    /*
     const authenticate = function () {
 
         document.querySelector('#login-button').disabled = true;
@@ -682,10 +693,12 @@ const userModule = (function () {
 
         httpModule.req(request, callback);
     };
+    */
 
     /**
      * Enable validation on login form
      */
+    /*
     obj.loginFormValidation = function () {
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -696,6 +709,8 @@ const userModule = (function () {
             });
         });
     };
+
+     */
 
     obj.init = function () {
         obj.renderUserName();

@@ -91,6 +91,40 @@ const authModule = (function () {
         }
     };
 
+    obj.refresh_token = function () {
+
+        const user = JSON.parse(window.sessionStorage.getItem('repo_user'));
+        const token = window.sessionStorage.getItem('repo_refresh_token'); // userModule.getUserToken();
+
+        let url = api + '/repo/token?id=' + user.uid,
+            request = new Request(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                mode: 'cors'
+            });
+
+        const callback = function (response) {
+
+            if (response.status === 201) {
+
+                response.json().then(function (data) {
+                    window.sessionStorage.setItem('repo_token', JSON.stringify(data));
+                    location.reload();
+                });
+
+                return false;
+
+            } else {
+                helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to refresh token.');
+            }
+        };
+
+        httpModule.req(request, callback);
+    };
+
     /**
      * Destroys session data and redirects user to login
      */
@@ -101,53 +135,6 @@ const authModule = (function () {
         setTimeout(function () {
             window.location.replace('/repo');
         }, 500);
-    };
-
-    /**
-     * Checks if user data is in session storage
-     * @returns {boolean}
-     */
-    obj.checkUserAuthData = function () {
-
-        let data = window.sessionStorage.getItem('repo_user');
-
-        if (data !== null) {
-            return true;
-        }
-
-        return false;
-    };
-
-    /**
-     * Saves user profile data to session storage
-     * @param data
-     */
-    obj.saveUserAuthData = function (data) {
-
-        let user = {
-            uid: DOMPurify.sanitize(data.user_data.data[0].id),
-            name: DOMPurify.sanitize(data.user_data.data[0].first_name) + ' ' + DOMPurify.sanitize(data.user_data.data[0].last_name)
-        };
-
-        endpointsModule.save_repo_endpoints(data);
-        window.sessionStorage.setItem('repo_user', JSON.stringify(user));
-    };
-
-    /**
-     * Gets session token from URL params
-     */
-    obj.saveToken = function () {
-
-        let token = helperModule.getParameterByName('t');
-
-        if (token !== null) {
-
-            let data = {
-                token: DOMPurify.sanitize(token)
-            };
-
-            window.sessionStorage.setItem('repo_token', JSON.stringify(data));
-        }
     };
 
     /**
@@ -164,4 +151,4 @@ const authModule = (function () {
 
 }());
 
-authModule.init();
+// authModule.init();

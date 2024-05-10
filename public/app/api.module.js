@@ -43,6 +43,7 @@ const apiModule = (function () {
             repo_ingests: app + '/api/v2/repo/ingests',
             repo_object_unpublished: app + '/api/v2/repo/unpublished',
             repo_transcript: app + '/api/admin/v1/repo/object/transcript',
+            repo_refresh_token: app + '/api/v2/repo/token',
             search: app + '/api/v2/search',
             import_metadata: app + '/api/v2/import/metadata',
             stats: app + '/api/v2/stats'

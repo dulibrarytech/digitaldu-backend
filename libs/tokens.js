@@ -21,8 +21,8 @@
 const TOKEN_CONFIG = require('../config/token_config')();
 const WEBSERVICES_CONFIG = require('../config/webservices_config')();
 const JWT = require('jsonwebtoken');
-const LOGGER = require('../libs/log4');
 const VALIDATOR = require('validator');
+const LOGGER = require('../libs/log4');
 
 /**
  * Creates session token
@@ -48,17 +48,6 @@ exports.create = function (username) {
 };
 
 /**
- * Creates refresh token
- * @param username
- */
-exports.refresh_token = function (username) {
-
-    return JWT.sign(token_data, TOKEN_CONFIG.refresh_token_secret, {
-        algorithm: TOKEN_CONFIG.token_algo
-    });
-}
-
-/**
  * Verifies session token
  * @param req
  * @param res
@@ -74,8 +63,13 @@ exports.verify = function (req, res, next) {
         JWT.verify(token, TOKEN_CONFIG.token_secret, function (error, decoded) {
 
             if (error) {
+
                 LOGGER.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify token ' + error.message);
-                res.redirect(WEBSERVICES_CONFIG.sso_url + '?app_url=' + WEBSERVICES_CONFIG.sso_response_url);
+                res.status(403).send({
+                    message: 'Unauthorized request'
+                });
+
+                // res.redirect(WEBSERVICES_CONFIG.sso_url + '?app_url=' + WEBSERVICES_CONFIG.sso_response_url);
                 return false;
             }
 
@@ -109,3 +103,24 @@ exports.verify = function (req, res, next) {
         res.redirect(WEBSERVICES_CONFIG.sso_url + '?app_url=' + WEBSERVICES_CONFIG.sso_response_url);
     }
 };
+
+/**
+ * Creates refresh token
+ */
+exports.refresh_token = function (username) {
+
+    try {
+
+        let token_data = {
+            sub: username,
+            iss: TOKEN_CONFIG.token_issuer
+        };
+
+        return JWT.sign(token_data, TOKEN_CONFIG.refresh_token_secret, {
+            algorithm: TOKEN_CONFIG.token_algo
+        });
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/libs/tokens lib (refresh_token)] unable to create refresh token ' + error.message);
+    }
+}
