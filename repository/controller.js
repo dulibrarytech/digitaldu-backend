@@ -32,32 +32,38 @@ exports.default = function (req, res) {
 
 exports.get_records = function (req, res) {
 
-    let cache = CACHE.get_cache(req);
+    try {
 
-    if (cache) {
-        res.send(cache);
-    } else {
+        let cache = CACHE.get_cache(req);
 
-        if (req.query.pid === undefined || req.query.pid.length === 0) {
+        if (cache) {
+            res.send(cache);
+        } else {
 
-            res.status(400).send({
-                status: 400,
-                message: 'Bad request.'
+            if (req.query.pid === undefined || req.query.pid.length === 0) {
+
+                res.status(400).send({
+                    status: 400,
+                    message: 'Bad request.'
+                });
+
+                return false;
+            }
+
+            const pid = req.query.pid;
+            const total_on_page = 10;
+            let search = {};
+            search.from = req.query.page;
+            search.size = total_on_page;
+
+            SERVICE.get_records(pid, search, function (data) {
+                CACHE.cache_request(req, data.data);
+                res.status(data.status).send(data.data);
             });
-
-            return false;
         }
 
-        const pid = req.query.pid;
-        const total_on_page = 10;
-        let search = {};
-        search.from = req.query.page;
-        search.size = total_on_page;
-
-        SERVICE.get_records(pid, search, function (data) {
-            CACHE.cache_request(req, data.data);
-            res.status(data.status).send(data.data);
-        });
+    } catch (error) {
+        console.log(error.message);
     }
 };
 
@@ -198,8 +204,11 @@ exports.get_tn = function (req, res) {
         }
 
         SERVICE.get_tn(uuid, function (data) {
+
             if (data.error === true) {
-                res.sendFile(PATH.join(__dirname, '../public', data.data));
+                const missing_tn = '/images/image-tn.png';
+                res.set('Content-Type', 'image/png');
+                res.sendFile(PATH.join(__dirname, '../public', missing_tn));
             } else {
                 res.status(data.status).end(data.data, 'binary');
             }

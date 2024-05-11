@@ -112,10 +112,9 @@ exports.refresh_token = function (req, res) {
 
             if (hrt === dbrt) {
 
-                const token = TOKEN.create(result[0].du_id);
-
+                // VALIDATOR.isJWT();
                 res.status(201).send({
-                    token: token
+                    token: TOKEN.create(result[0].du_id)
                 });
 
             } else {

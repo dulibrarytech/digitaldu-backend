@@ -121,7 +121,7 @@ const statsModule = (function () {
                     }
                 });
 
-            } /*else if (response.status === 401) {
+            } else if (response.status === 401) {
 
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
@@ -129,9 +129,7 @@ const statsModule = (function () {
                     window.location.replace('/repo');
                 }, 4000);
 
-            }*/ else if (response.status === 403) {
-                // helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to retrieve repository statistics.');
-                console.log('refresh');
+            } else if (response.status === 403) {
                 authModule.refresh_token();
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to retrieve repository statistics.');

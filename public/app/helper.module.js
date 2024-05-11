@@ -159,6 +159,8 @@ const helperModule = (function () {
                     window.location.replace('/login');
                 }, 4000);
 
+            } else if (response.status === 403) {
+                authModule.refresh_token();
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '. Unable to ping services.');
             }

@@ -91,10 +91,13 @@ const authModule = (function () {
         }
     };
 
+    /**
+     * Refresh access token
+     */
     obj.refresh_token = function () {
 
         const user = JSON.parse(window.sessionStorage.getItem('repo_user'));
-        const token = window.sessionStorage.getItem('repo_refresh_token'); // userModule.getUserToken();
+        const token = window.sessionStorage.getItem('repo_refresh_token');
 
         let url = api + '/repo/token?id=' + user.uid,
             request = new Request(url, {

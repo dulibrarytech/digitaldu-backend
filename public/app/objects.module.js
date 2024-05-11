@@ -84,6 +84,8 @@ const objectsModule = (function () {
                     }, 4000);
                 });
 
+            } else if (response.status === 403) {
+                authModule.refresh_token();
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to get objects.');
             }
@@ -165,6 +167,8 @@ const objectsModule = (function () {
                     }, 4000);
                 });
 
+            } else if (response.status === 403) {
+                authModule.refresh_token();
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to publish object(s).');
             }
@@ -263,6 +267,8 @@ const objectsModule = (function () {
                     }
                 });
 
+            } else if (response.status === 403) {
+                authModule.refresh_token();
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to get unpublished records.');
             }
@@ -359,6 +365,8 @@ const objectsModule = (function () {
                     objectsModule.renderDisplayRecords(data);
                 });
 
+            } else if (response.status === 403) {
+                authModule.refresh_token();
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '. Unable to get incomplete records.');
             }
@@ -416,6 +424,8 @@ const objectsModule = (function () {
                     }, 4000);
                 });
 
+            } else if (response.status === 403) {
+                authModule.refresh_token();
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to publish object(s).');
             }
@@ -535,6 +545,8 @@ const objectsModule = (function () {
                     }, 4000);
                 });
 
+            } else if (response.status === 403) {
+                authModule.refresh_token();
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to update metadata.');
             }
@@ -594,6 +606,8 @@ const objectsModule = (function () {
                     }, 4000);
                 });
 
+            } else if (response.status === 403) {
+                authModule.refresh_token();
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to delete object.');
             }
@@ -711,6 +725,8 @@ const objectsModule = (function () {
                     }, 4000);
                 });
 
+            } else if (response.status === 403) {
+                authModule.refresh_token();
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to get objects.');
             }

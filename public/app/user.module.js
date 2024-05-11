@@ -161,6 +161,8 @@ const userModule = (function () {
                     window.location.replace('/repo');
                 }, 4000);
 
+            } else if (response.status === 403) {
+                authModule.refresh_token();
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to retrieve users.');
             }
@@ -204,6 +206,8 @@ const userModule = (function () {
                     window.location.replace('/repo');
                 }, 4000);
 
+            } else if (response.status === 403) {
+                authModule.refresh_token();
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to retrieve users.');
             }
@@ -365,6 +369,8 @@ const userModule = (function () {
                         // domModule.html('#message', null);
                     }, 3000);
                 });
+            } else if (response.status === 403) {
+                authModule.refresh_token();
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to add user.');
             }
@@ -418,6 +424,8 @@ const userModule = (function () {
                     }, 3000);
                 });
 
+            } else if (response.status === 403) {
+                authModule.refresh_token();
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to update user.');
             }
@@ -469,6 +477,8 @@ const userModule = (function () {
                     }, 3000);
                 });
 
+            } else if (response.status === 403) {
+                authModule.refresh_token();
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to delete user.');
             }

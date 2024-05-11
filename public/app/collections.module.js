@@ -273,6 +273,8 @@ const collectionsModule = (function () {
                     domModule.html('#message', null);
                 }, 5000);
 
+            } else if (response.status === 403) {
+                authModule.refresh_token();
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to add collection.');
             }
@@ -340,6 +342,8 @@ const collectionsModule = (function () {
                     }, 4000);
                 });
 
+            } else if (response.status === 403) {
+                authModule.refresh_token();
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to update collection metadata.');
                 window.scrollTo({ top: 0, behavior: 'smooth' });

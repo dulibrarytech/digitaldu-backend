@@ -90,7 +90,7 @@ exports.get_dc_thumbnail = function (tn, callback) {
 
     try {
 
-        (async function() {
+        (async function () {
 
             const DURACLOUD_LIB = new DURACLOUD(DURACLOUD_CONFIG, {});
             const response = await DURACLOUD_LIB.get_thumbnail(tn);
@@ -117,18 +117,13 @@ exports.get_dc_thumbnail = function (tn, callback) {
  */
 exports.get_tn = function (uuid, callback) {
 
-    try {
+    (async function () {
 
-        (async function() {
-
+        try {
             let endpoint = WEBSERVICES_CONFIG.tn_service + 'datastream/' + uuid + '/tn?key=' + WEBSERVICES_CONFIG.tn_service_api_key;
             let response = await HTTP.get(endpoint, {
                 timeout: 45000,
-                responseType: 'arraybuffer',
-                /*
-                headers: {
-                    'x-api-key': CONFIG.tnServiceApiKey
-                }*/
+                responseType: 'arraybuffer'
             });
 
             if (response.status === 200) {
@@ -142,11 +137,15 @@ exports.get_tn = function (uuid, callback) {
 
             return false;
 
-        })();
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/repository/service module (get_tn)] Unable to get thumbnail from TN service. Request failed: ' + error.message);
 
-    } catch (error) {
-        LOGGER.module().error('ERROR: [/repository/service module (get_tn)] Unable to get thumbnail from TN service. Request failed: ' + error.message);
-    }
+            callback({
+                error: true,
+                status: 200
+            });
+        }
+    })();
 };
 
 /**

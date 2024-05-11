@@ -149,6 +149,8 @@ const importModule = (function () {
                     window.location.replace('/repo');
                 }, 4000);
 
+            } else if (response.status === 403) {
+                authModule.refresh_token();
             } else {
                 helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to get complete records.');
             }
