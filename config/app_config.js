@@ -29,7 +29,8 @@ const APP_CONFIG = {
     app_port: process.env.APP_PORT,
     api_url: process.env.API_URL,
     api_key: process.env.API_KEY,
-    tn_upload_path: process.env.TN_UPLOAD_PATH
+    tn_upload_path: process.env.TN_UPLOAD_PATH,
+    cors: process.env.CORS
 };
 
 module.exports = function () {

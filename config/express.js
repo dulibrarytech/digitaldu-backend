@@ -51,7 +51,6 @@ module.exports = function() {
     APP.use(METHODOVERRIDE());
     APP.use(HELMET());
     APP.use(APP_CONFIG.app_path + '/static', EXPRESS.static('./public'));
-    // APP.use(EXPRESS.static('./public'));
     APP.use(XSS.sanitize_req_query);
     APP.use(XSS.sanitize_req_body);
     APP.use(XSS.validate_uuid);
@@ -61,7 +60,7 @@ module.exports = function() {
 
     const CORS_OPTIONS = function (req, callback) {
 
-        const ALLOW = ['https://' + APP_CONFIG.host, 'http://localhost'];
+        const ALLOW = APP_CONFIG.cors;
         let cors_options;
 
         if (ALLOW.indexOf(req.header('Origin')) !== -1) {
