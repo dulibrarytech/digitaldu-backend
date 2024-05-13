@@ -49,7 +49,11 @@ module.exports = function() {
     }));
     APP.use(BODYPARSER.json());
     APP.use(METHODOVERRIDE());
-    APP.use(HELMET());
+    APP.use(HELMET({
+        contentSecurityPolicy: false,
+        crossOriginResourcePolicy: false,
+        xPoweredBy: false
+    }));
     APP.use(APP_CONFIG.app_path + '/static', EXPRESS.static('./public'));
     APP.use(XSS.sanitize_req_query);
     APP.use(XSS.sanitize_req_body);

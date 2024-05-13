@@ -153,5 +153,3 @@ const authModule = (function () {
     return obj;
 
 }());
-
-// authModule.init();
