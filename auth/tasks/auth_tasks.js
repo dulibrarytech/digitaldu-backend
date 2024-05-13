@@ -56,19 +56,19 @@ const Auth_tasks = class {
 
     /**
      * Deletes refresh token
-     * @param token
+     * @param id
      */
-    async delete_token(token) {
+    async delete_token(id) {
 
         try {
 
             return await this.DB(this.DB_TABLES.repo.repo_user_records)
             .where({
-                token: 0,
+                id: id,
                 is_active: 1
             })
             .update({
-                token: token
+                token: 0
             });
 
         } catch (error) {

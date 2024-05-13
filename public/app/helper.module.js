@@ -51,6 +51,16 @@ const helperModule = (function () {
     };
 
     /**
+     * Clears session
+     */
+    const logout = function () {
+        setTimeout(() => {
+            const user = JSON.parse(window.sessionStorage.getItem('repo_user'));
+            document.querySelector('#logout').setAttribute('href', '/repo/logout?uid=' + user.uid);
+        }, 5000);
+    };
+
+    /**
      * Gets url parameter
      * @param name
      * @param url
@@ -360,6 +370,7 @@ const helperModule = (function () {
 
     obj.init = function () {
         npProgress();
+        logout();
     };
 
     return obj;

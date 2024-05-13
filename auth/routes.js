@@ -32,7 +32,7 @@ module.exports = function (app) {
 
     app.route(`${CONFIG.app_path}/sso`)
     .post(CONTROLLER.sso);
-    console.log(`${CONFIG.app_path}/token`);
+
     app.route(`${CONFIG.app_path}/token`)
     .post(CONTROLLER.refresh_token);
 

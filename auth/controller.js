@@ -30,7 +30,7 @@ const LOGGER = require('../libs/log4');
 
 exports.sso = function (req, res) {
 
-   try {
+    try {
 
         if (req.body.employeeID === undefined || req.body.HTTP_HOST === undefined) {
 
@@ -98,9 +98,9 @@ exports.sso = function (req, res) {
 
 exports.refresh_token = function (req, res) {
 
-    try {
+    (async function () {
 
-        (async function () {
+        try {
 
             const uid = req.query.id;
             const token = req.headers['x-access-token'];
@@ -112,7 +112,7 @@ exports.refresh_token = function (req, res) {
 
             if (hrt === dbrt) {
 
-                // VALIDATOR.isJWT();
+                // TODO: VALIDATOR.isJWT();
                 res.status(201).send({
                     token: TOKEN.create(result[0].du_id)
                 });
@@ -121,11 +121,11 @@ exports.refresh_token = function (req, res) {
                 res.status(401).send({});
             }
 
-        })();
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/auth/controller (refresh_token)] Unable to refresh token. ' + error.message);
+        }
 
-    } catch (error) {
-        LOGGER.module().error('ERROR: [/auth/controller (refresh_token)] Unable to refresh token. ' + error.message);
-    }
+    })();
 };
 
 exports.get_auth_landing = function (req, res) {
@@ -140,14 +140,36 @@ exports.get_auth_landing = function (req, res) {
 
 exports.logout = function (req, res) {
 
-    // TODO: get refresh token from req
-    // TODO: remove token from user table
+    if (req.query.uid === undefined) {
+        res.status(400).send('Bad Request.');
+        return false;
+    }
 
-    res.render('logout', {
-        host: APP_CONFIG.host,
-        appname: APP_CONFIG.appname,
-        appversion: APP_CONFIG.app_version,
-        organization: APP_CONFIG.organization,
-        redirect: WEBSERVICES_CONFIG.sso_logout_url
-    });
+    (async function () {
+
+        try {
+
+            const uid = req.query.uid;
+            const TASK = new AUTH_TASKS(DB, DB_TABLES);
+            const is_deleted = await TASK.delete_token(uid);
+
+            if (is_deleted === 1) {
+                LOGGER.module().info('INFO: [/auth/controller (logout)] Token deleted. ');
+            } else {
+                LOGGER.module().error('ERROR: [/auth/controller (logout)] Unable to delete token. ');
+            }
+
+            res.render('logout', {
+                host: APP_CONFIG.host,
+                appname: APP_CONFIG.appname,
+                appversion: APP_CONFIG.app_version,
+                organization: APP_CONFIG.organization,
+                redirect: WEBSERVICES_CONFIG.sso_logout_url
+            });
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/auth/controller (logout)] Unable to logout. ' + error.message);
+        }
+
+    })();
 };
