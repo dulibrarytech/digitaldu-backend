@@ -57,7 +57,7 @@ const helperModule = (function () {
         setTimeout(() => {
             const user = JSON.parse(window.sessionStorage.getItem('repo_user'));
             document.querySelector('#logout').setAttribute('href', '/repo/logout?uid=' + user.uid);
-        }, 5000);
+        }, 250);
     };
 
     /**
