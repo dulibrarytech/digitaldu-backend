@@ -130,6 +130,7 @@ const Indexer_index_tasks = class {
             .whereNot({
                 display_record: null
             })
+            .orderBy('id', 'desc')
             .limit(1);
 
         } catch (error) {
@@ -179,7 +180,7 @@ const Indexer_index_tasks = class {
             .update({
                 is_indexed: 1
             });
-
+            console.log('update status ', result);
             if (result === 1) {
                 return true;
             } else {

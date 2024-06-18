@@ -47,7 +47,7 @@ exports.get_records = function (pid, search, callback) {
     search.index = OBJ.es_config.elasticsearch_index_back;
 
     if (search.sort === undefined) {
-        search.sort = 'title.keyword:asc';
+        search.sort = ['object_type.keyword', 'title.keyword'];
     }
 
     if (search.from === undefined) {

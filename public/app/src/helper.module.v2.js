@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2024 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ const helperModule = (function () {
 
     'use strict';
 
-    const api = configModule.getApi();
+    const api = configModule.get_api();
     const endpoints = apiModule.endpoints();
     let obj = {};
 
@@ -28,7 +28,8 @@ const helperModule = (function () {
      * Renders error message
      * @param message
      */
-    obj.renderError = function (message) {
+    obj.render_error = function (message) {
+        // TODO: deprecate domModule
         domModule.html('#message', '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + DOMPurify.sanitize(message) + '</div>');
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return false;
@@ -37,7 +38,7 @@ const helperModule = (function () {
     /**
      * Renders progress bar and spinner when pages load
      */
-    const npProgress = function () {
+    const np_progress = function () {
 
         if (typeof NProgress != 'undefined') {
             $(document).ready(function () {
@@ -66,7 +67,7 @@ const helperModule = (function () {
      * @param url
      * @returns {*}
      */
-    obj.getParameterByName = function (name, url) {
+    obj.get_parameter_by_name = function (name, url) {
 
         if (!url) {
             url = window.location.href;
@@ -88,7 +89,7 @@ const helperModule = (function () {
         return decodeURIComponent(DOMPurify.sanitize(results[2].replace(/\+/g, " ")));
     };
 
-    /**
+    /** TODO: Deprecate
      * Gets current year
      */
     obj.getCurrentYear = function () {
@@ -96,13 +97,12 @@ const helperModule = (function () {
         domModule.html('#cdate', DOMPurify.sanitize(cdate));
     };
 
-    /**
+    /** TODO: see get thumbnail urls in config module
      * Resolves repo thumbnails
      * @param tn
      * @param mime_type
-     * @returns {string}
      */
-    obj.getTn = function (tn, mime_type) {
+    obj.get_thumbnail = function (tn, mime_type) {
 
         let tnObj = configModule.getTnUrls();
         let token = userModule.getUserToken();
@@ -125,7 +125,7 @@ const helperModule = (function () {
         }
     };
 
-    /**
+    /** TODO: move to ingest service
      * Checks availability of third-party systems (Archivesspace/Archivematica)
      */
     obj.ping = function () {
@@ -322,7 +322,7 @@ const helperModule = (function () {
     /**
      * checks file size before upload
      */
-    obj.checkFileSize = function () {
+    obj.check_file_size = function () {
 
         const file = document.querySelector('#file');
 
@@ -340,7 +340,7 @@ const helperModule = (function () {
      * @param selector
      * @param timeout
      */
-    obj.onLoadVisibility = function (selector, timeout) {
+    obj.on_load_visibility = function (selector, timeout) {
 
         document.addEventListener("DOMContentLoaded", function() {
 
@@ -369,7 +369,7 @@ const helperModule = (function () {
     }
 
     obj.init = function () {
-        npProgress();
+        np_progress();
         logout();
     };
 

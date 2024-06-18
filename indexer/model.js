@@ -76,6 +76,7 @@ exports.reindex = function (callback) {
 
                 let backend_index_record = await REINDEX_BACKEND_TASK.get_index_record(backend_records[0].pid);
                 backend_index_record = JSON.parse(backend_index_record.display_record);
+                backend_index_record.title = decodeURI(backend_index_record.title);
 
                 LOGGER.module().info('INFO: [/indexer/model (reindex)] Record TITLE: ' + backend_index_record.display_record.title);
                 LOGGER.module().info('INFO: [/indexer/model (reindex)] indexing ' + backend_index_record.object_type + ' record ' + backend_index_record.pid);
@@ -144,10 +145,11 @@ exports.reindex = function (callback) {
                 let is_status_updated = await REINDEX_BACKEND_TASK.update_indexing_status(backend_index_record.pid);
 
                 if (is_status_updated === false) {
-                    LOGGER.module().error('ERROR: [/indexer/model (reindex)] reindex HALTED.');
+                    clearInterval(index_timer);
+                    LOGGER.module().error('ERROR: [/indexer/model (reindex)] reindex HALTED. Unable to update status');
                 }
 
-            }, 375);
+            }, 500);
 
             callback({
                 status: 200,
