@@ -97,3 +97,4 @@ test
 *.sql
 public/tn/*.*
 public/tn_cache/*.*
+.github/*.*

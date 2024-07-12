@@ -123,4 +123,4 @@ exports.refresh_token = function (username) {
     } catch (error) {
         LOGGER.module().error('ERROR: [/libs/tokens lib (refresh_token)] unable to create refresh token ' + error.message);
     }
-}
+};

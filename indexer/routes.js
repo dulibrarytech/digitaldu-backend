@@ -27,6 +27,9 @@ module.exports = function (app) {
     app.route(`${CONFIG.app_path}/api/v2/indexer/reindex`)
     .post(TOKEN.verify, CONTROLLER.reindex);
 
-    app.route(`${CONFIG.app_path}/api/v2/indexer/index/:pid`)
-    .post(TOKEN.verify, CONTROLLER.index_record);
+    app.route(`${CONFIG.app_path}/api/v2/indexer/reindex/:pid/object`)
+    .post(TOKEN.verify, CONTROLLER.index_object_record);
+
+    app.route(`${CONFIG.app_path}/api/v2/indexer/reindex/:pid/collection`)
+    .post(TOKEN.verify, CONTROLLER.index_collection_record);
 };

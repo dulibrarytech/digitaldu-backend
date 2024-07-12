@@ -26,7 +26,14 @@ exports.reindex = function (req, res) {
     });
 };
 
-exports.index_record = function (req, res) {
+exports.index_object_record = function (req, res) {
+    const uuid = req.params.pid;
+    MODEL.index_record(uuid, function (data) {
+        res.status(data.status).send(data);
+    });
+};
+
+exports.index_collection_record = function (req, res) {
     const uuid = req.params.pid;
     MODEL.index_record(uuid, function (data) {
         res.status(data.status).send(data);
