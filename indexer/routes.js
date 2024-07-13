@@ -27,9 +27,10 @@ module.exports = function (app) {
     app.route(`${CONFIG.app_path}/api/v2/indexer/reindex`)
     .post(TOKEN.verify, CONTROLLER.reindex);
 
-    app.route(`${CONFIG.app_path}/api/v2/indexer/reindex/:pid/object`)
+    app.route(`${CONFIG.app_path}/api/v2/indexer/reindex/:collection_uuid/collection`)
+    .post(TOKEN.verify, CONTROLLER.index_collection);
+
+    app.route(`${CONFIG.app_path}/api/v2/indexer/reindex/:uuid/object`)
     .post(TOKEN.verify, CONTROLLER.index_object_record);
 
-    app.route(`${CONFIG.app_path}/api/v2/indexer/reindex/:pid/collection`)
-    .post(TOKEN.verify, CONTROLLER.index_collection_record);
 };

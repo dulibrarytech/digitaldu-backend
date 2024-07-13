@@ -163,10 +163,75 @@ exports.reindex = function (callback) {
     }
 };
 
-/** TODO:
- * indexes record
+/**
+ * indexes records by collection
  * @param uuid
+ * @param callback
  */
-exports.index_record = function (uuid) {
+exports.index_collection = function (uuid, callback) {
 
+    try {
+
+        (async function () {
+
+            const ES = new ES_TASKS();
+            const OBJ = ES.get_es();
+            const REINDEX_BACKEND_TASK = new INDEXER_TASKS(DB, DB_TABLES.repo.repo_records, OBJ.es_client, OBJ.es_config.elasticsearch_index_back);
+            const REINDEX_FRONTEND_TASK = new INDEXER_TASKS(DB, DB_TABLES.repo.repo_records, OBJ.es_client, OBJ.es_config.elasticsearch_index_front);
+            await REINDEX_BACKEND_TASK.reset_indexed_flags();
+
+            let index_timer = setInterval(async () => {
+
+                const backend_records = await REINDEX_BACKEND_TASK.get_collection_records(DB_TABLES, uuid);
+
+                console.log(backend_records.length + ' record queried');
+
+                if (backend_records.length === 0) {
+                    clearInterval(index_timer);
+                    CACHE.clear_cache();
+                    LOGGER.module().info('INFO: [/indexer/model (index_collection)] collection reindex complete.');
+                    return false;
+                }
+
+                let backend_index_record = await REINDEX_BACKEND_TASK.get_index_record(backend_records[0].pid);
+                backend_index_record = JSON.parse(backend_index_record.display_record);
+                backend_index_record.title = decodeURI(backend_index_record.title);
+
+                LOGGER.module().info('INFO: [/indexer/model (reindex)] Record TITLE: ' + backend_index_record.display_record.title);
+                LOGGER.module().info('INFO: [/indexer/model (reindex)] indexing ' + backend_index_record.object_type + ' record ' + backend_index_record.pid);
+
+                let is_indexed = await REINDEX_BACKEND_TASK.index_record(backend_index_record);
+
+                if (is_indexed === true) {
+                    LOGGER.module().info('INFO: [/indexer/model (index_collection)] ' + backend_index_record.object_type + ' record ' + backend_index_record.pid + ' indexed (admin)');
+                }
+
+                if (backend_index_record.is_published === 1) {
+
+                    let is_published = await REINDEX_FRONTEND_TASK.index_record(backend_index_record);
+
+                    if (is_published === true) {
+                        LOGGER.module().info('INFO: [/indexer/model (index_collection)] ' + backend_index_record.object_type + ' record ' + backend_index_record.pid + ' published.');
+                    }
+                }
+
+                let is_status_updated = await REINDEX_BACKEND_TASK.update_indexing_status(backend_records[0].pid);
+
+                if (is_status_updated === false) {
+                    clearInterval(index_timer);
+                    LOGGER.module().error('ERROR: [/indexer/model (index_collection)] Collection reindex HALTED. Unable to update status');
+                }
+
+            }, 500);
+
+            callback({
+                status: 200,
+                message: 'Reindexing collection records'
+            });
+
+        })();
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/indexer/model (reindex)] reindex failed. ' + error.message);
+    }
 };

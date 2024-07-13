@@ -26,15 +26,15 @@ exports.reindex = function (req, res) {
     });
 };
 
-exports.index_object_record = function (req, res) {
-    const uuid = req.params.pid;
-    MODEL.index_record(uuid, function (data) {
+exports.index_collection = function (req, res) {
+    const uuid = req.params.collection_uuid;
+    MODEL.index_collection(uuid, function (data) {
         res.status(data.status).send(data);
     });
 };
 
-exports.index_collection_record = function (req, res) {
-    const uuid = req.params.pid;
+exports.index_object_record = function (req, res) {
+    const uuid = req.params.uuid;
     MODEL.index_record(uuid, function (data) {
         res.status(data.status).send(data);
     });
