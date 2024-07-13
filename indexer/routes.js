@@ -31,6 +31,6 @@ module.exports = function (app) {
     .post(TOKEN.verify, CONTROLLER.index_collection);
 
     app.route(`${CONFIG.app_path}/api/v2/indexer/reindex/:uuid/object`)
-    .post(TOKEN.verify, CONTROLLER.index_object_record);
+    .post(TOKEN.verify, CONTROLLER.index_object);
 
 };

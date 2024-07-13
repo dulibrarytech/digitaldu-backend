@@ -139,6 +139,33 @@ const Indexer_index_tasks = class {
     }
 
     /**
+     * Gets DB record for indexing
+     * @param DB_TABLES
+     * @param uuid
+     */
+    async get_object_record(DB_TABLES, uuid) {
+
+        try {
+
+            return await this.DB(DB_TABLES.repo.repo_records)
+            .select('pid')
+            .where({
+                pid: uuid,
+                is_indexed: 0,
+                is_active: 1
+            })
+            .whereNot({
+                display_record: null
+            })
+            .orderBy('id', 'desc')
+            .limit(1);
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (get_record)] unable to get record for indexing ' + error.message);
+        }
+    }
+
+    /**
      * Gets DB record for single record index
      * @param uuid
      */
