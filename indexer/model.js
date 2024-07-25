@@ -48,14 +48,22 @@ exports.reindex = function (callback) {
             if (is_backend_exists === true) {
                 await INDEXER_UTILS_BACKEND_TASK.delete_index();
                 await INDEXER_UTILS_BACKEND_TASK.create_index();
-                await INDEXER_UTILS_BACKEND_TASK.create_mappings();
+                await INDEXER_UTILS_BACKEND_TASK.create_mappings(OBJ.es_config.elasticsearch_index_front);
+                LOGGER.module().info('INFO: [/indexer/model (reindex)] backend index created.');
+            } else {
+                await INDEXER_UTILS_BACKEND_TASK.create_index();
+                await INDEXER_UTILS_BACKEND_TASK.create_mappings(OBJ.es_config.elasticsearch_index_front);
                 LOGGER.module().info('INFO: [/indexer/model (reindex)] backend index created.');
             }
 
             if (is_frontend_exists === true) {
                 await INDEXER_UTILS_FRONTEND_TASK.delete_index();
                 await INDEXER_UTILS_FRONTEND_TASK.create_index();
-                await INDEXER_UTILS_FRONTEND_TASK.create_mappings();
+                await INDEXER_UTILS_FRONTEND_TASK.create_mappings(OBJ.es_config.elasticsearch_index_front);
+                LOGGER.module().info('INFO: [/indexer/model (reindex)] frontend index created.');
+            } else {
+                await INDEXER_UTILS_FRONTEND_TASK.create_index();
+                await INDEXER_UTILS_BACKEND_TASK.create_mappings(OBJ.es_config.elasticsearch_index_front);
                 LOGGER.module().info('INFO: [/indexer/model (reindex)] frontend index created.');
             }
 

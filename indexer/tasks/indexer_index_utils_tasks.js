@@ -92,8 +92,9 @@ const Indexer_index_utils_tasks = class {
 
     /**
      * Creates ES index mappings
+     * @param index
      */
-    async create_mappings() {
+    async create_mappings(index) {
 
         try {
 
@@ -103,7 +104,7 @@ const Indexer_index_utils_tasks = class {
                 };
 
             const response = await this.CLIENT.indices.putMapping({
-                index: this.INDEX_NAME,
+                index: index, //this.INDEX_NAME,
                 body: body
             });
 
