@@ -32,7 +32,6 @@ const Indexer_index_utils_tasks = class {
     constructor(CLIENT, INDEX_NAME) {
         this.CLIENT = CLIENT;
         this.INDEX_NAME = INDEX_NAME;
-        console.log('index name ', this.INDEX_NAME);
     }
 
     /**
