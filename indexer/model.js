@@ -48,11 +48,11 @@ exports.reindex = function (callback) {
             if (is_backend_exists === true) {
                 await INDEXER_UTILS_BACKEND_TASK.delete_index();
                 await INDEXER_UTILS_BACKEND_TASK.create_index();
-                await INDEXER_UTILS_BACKEND_TASK.create_mappings(OBJ.es_config.elasticsearch_index_front);
+                await INDEXER_UTILS_BACKEND_TASK.create_mappings(OBJ.es_config.elasticsearch_index_back);
                 LOGGER.module().info('INFO: [/indexer/model (reindex)] backend index created.');
             } else {
                 await INDEXER_UTILS_BACKEND_TASK.create_index();
-                await INDEXER_UTILS_BACKEND_TASK.create_mappings(OBJ.es_config.elasticsearch_index_front);
+                await INDEXER_UTILS_BACKEND_TASK.create_mappings(OBJ.es_config.elasticsearch_index_back);
                 LOGGER.module().info('INFO: [/indexer/model (reindex)] backend index created.');
             }
 
