@@ -317,7 +317,7 @@ const objectsModule = (function () {
                 html += '</td>';
                 html += '<td style="width:20%;text-align: center">';
                 html += '<a href="#" data-title="Publish record" title="Publish record" data-toggle="tooltip" data-placement="left" class="btn btn-primary" onclick="objectsModule.publishObject(\'' + DOMPurify.sanitize(data[i].child_records[j].pid) + '\', \'object\'); return false;"><i class="fa fa-cloud-upload"></i></a>&nbsp;|&nbsp;';
-                html += '<a class="btn btn-danger" role="button" data-title="Delete record" title="Delete record" data-toggle="tooltip" data-placement="right" title="Delete" href="/dashboard/object/delete?pid=' + DOMPurify.sanitize(data[i].child_records[j].pid) + '"><i class="fa fa-trash"></i></a>';
+                html += '<a class="btn btn-danger" role="button" data-title="Delete record" title="Delete record" data-toggle="tooltip" data-placement="right" title="Delete" href="/repo/dashboard/object/delete?pid=' + DOMPurify.sanitize(data[i].child_records[j].pid) + '"><i class="fa fa-trash"></i></a>';
                 html += '</td>';
                 html += '</tr>';
             }

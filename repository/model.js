@@ -22,6 +22,7 @@ const ASYNC = require('async');
 const UUID = require('node-uuid'); // TODO: replace with create uuid in helper
 const VALIDATOR = require('validator');
 const MODS = require('../libs/display-record');
+const ARCHIVEMATICA_CONFIG = require('../config/archivematica_config')();
 const ARCHIVEMATICA = require('../libs/archivematica');
 const SERVICE = require('../repository/service');
 const CACHE = require('../libs/cache');
@@ -541,149 +542,72 @@ exports.update_thumbnail = function (pid, thumbnail, callback) {
  */
 exports.delete_object = function (req, callback) {
 
-    let pid = req.body.pid;
-    let delete_reason = req.body.delete_reason;
+    (async function () {
 
-    function check_if_published(callback) {
+        let obj = {}
+        obj.uuid = req.body.pid;
+        obj.delete_reason = req.body.delete_reason;
 
-        let obj = {};
-        obj.pid = pid;
-        obj.delete_reason = delete_reason;
+        const ARCHIVEMATICA_TASKS = new ARCHIVEMATICA(ARCHIVEMATICA_CONFIG);
+        const is_aip_deleted = await ARCHIVEMATICA_TASKS.delete_aip_request(obj);
+        const data = JSON.parse(is_aip_deleted.data);
 
-        DB(REPO_OBJECTS)
+        LOGGER.module().info('INFO: [/repository/model module (delete_object)] ' + data.message + ' id=' + data.id);
+
+        const result = await DB(DB_TABLES.repo.repo_records)
         .count('is_published as is_published')
         .where({
-            pid: obj.pid,
+            pid: obj.uuid,
             is_active: 1,
             is_published: 1
-        })
-        .then(function (data) {
-            // delete only if object is not published
-            if (data[0].is_published === 0) {
-                obj.is_published = false;
-            } else {
-                obj.is_published = true;
-            }
-
-            callback(null, obj);
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/repository/model module (delete_object/check_if_published)] Unable to delete record ' + error);
-            throw 'FATAL: [/repository/model module (delete_object/check_if_published)] Unable to delete record ' + error;
         });
-    }
 
-    function delete_record(obj, callback) {
+        if (result[0].is_published === 0) {
+            obj.is_published = false;
+        } else {
 
-        if (obj.is_published === true) {
-            callback(null, obj);
+            obj.is_published = true;
+
+            LOGGER.module().error('ERROR: [/repository/model module (delete_object/async.waterfall)] Cannot delete published object.');
+
+            callback({
+                status: 200,
+                message: 'Cannot delete published object.'
+            });
+
             return false;
         }
 
-        DB(REPO_OBJECTS)
+        const is_updated = await DB(DB_TABLES.repo.repo_records)
         .where({
-            pid: obj.pid
+            pid: obj.uuid
         })
         .update({
+            delete_id: data.id,
             is_active: 0
         })
-        .then(function (data) {
 
-            if (data === 1) {
-                callback(null, obj);
-            }
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('FATAL: [/repository/model module (delete_object)] unable to delete record ' + error);
-            throw 'FATAL: [/repository/model module (delete_object)] unable to delete record ' + error;
+        if (is_updated !== 1) {
+            LOGGER.module().error('ERROR: [/repository/model module (delete_object)] Unable to flag record as deleted.');
+        }
+
+        const ES = new ES_TASKS();
+        const OBJ = ES.get_es();
+        const INDEXER_TASK = new INDEXER_TASKS(DB, DB_TABLES.repo.repo_records, OBJ.es_client, OBJ.es_config.elasticsearch_index_back);
+        const is_index_record_deleted = await INDEXER_TASK.delete_record(obj.uuid);
+
+        if (is_index_record_deleted === false) {
+            LOGGER.module().error('ERROR: [/repository/model module (delete_object)] Unable to delete record from index.');
+        }
+
+        callback({
+            status: 204,
+            message: 'Delete object.'
         });
-    }
 
-    function unindex_record(obj, callback) {
+    })();
 
-        if (obj.is_published === true) {
-            callback(null, obj);
-            return false;
-        }
-
-        unindex(obj.pid, function (result) {
-
-            if (result.error === true) {
-                LOGGER.module().error('ERROR: [/repository/model module (unpublish_objects/unindex_objects)] unable to remove published record from index.');
-                obj.status = 'failed';
-                callback(null, obj);
-                return false;
-            }
-
-            callback(null, obj);
-        });
-    }
-
-    function delete_aip_request(obj, callback) {
-
-        if (obj.is_published === true) {
-            callback(null, obj);
-            return false;
-        }
-
-        ARCHIVEMATICA.delete_aip_request(obj, function (result) {
-
-            if (result.error === false) {
-
-                let json = JSON.parse(result.data);
-                obj.delete_id = json.id;
-
-                DB(REPO_OBJECTS)
-                .where({
-                    pid: obj.pid
-                })
-                .update({
-                    delete_id: obj.delete_id
-                })
-                .then(function (data) {
-
-                    if (data === 1) {
-                        LOGGER.module().info('INFO: [/repository/model module (delete_object/delete_aip_request)] delete id ' + obj.delete_id + ' saved');
-                        callback(null, obj);
-                    }
-                })
-                .catch(function (error) {
-                    LOGGER.module().fatal('FATAL: [/repository/model module (delete_object)] unable to save delete id ' + error);
-                    throw 'FATAL: [/repository/model module (delete_object)] unable to save delete id ' + error;
-                });
-
-            } else {
-                LOGGER.module().error('ERROR: [/repository/model module (delete_object/delete_aip_request)] unable to create delete aip request');
-                obj.delete_id = false;
-            }
-        });
-    }
-
-    ASYNC.waterfall([
-        check_if_published,
-        delete_record,
-        unindex_record,
-        delete_aip_request
-    ], function (error, results) {
-
-        if (error) {
-            LOGGER.module().error('ERROR: [/repository/model module (delete_object/async.waterfall)] ' + error);
-        }
-
-        // delete link only appears when record is unpublished
-        if (results.is_published === true) {
-
-            LOGGER.module().error('ERROR: [/repository/model module (delete_object/async.waterfall)] Cannot delete published object. ');
-            return false;
-        }
-
-        LOGGER.module().info('INFO: [/repository/model module (delete_object/async.waterfall)] object deleted.');
-    });
-
-    callback({
-        status: 204,
-        message: 'Delete object.'
-    });
+    return false;
 };
 
 /** TODO: deprecate
@@ -761,7 +685,7 @@ exports.save_transcript = function (req, callback) {
         });
     }
 
-    DB(REPO_OBJECTS)
+    DB(DB_TABLES.repo.repo_records)
     .where({
         pid: sip_uuid
     })
@@ -879,7 +803,7 @@ exports.create_collection_object = function (req, callback) {
 
         let obj = {};
 
-        DB(REPO_OBJECTS)
+        DB(DB_TABLES.repo.repo_records)
         .count('uri as uri')
         .where('uri', VALIDATOR.unescape(data.uri))
         .then(function (result) {
@@ -1031,7 +955,7 @@ exports.create_collection_object = function (req, callback) {
         record.sip_uuid = obj.sip_uuid;
         record.display_record = obj.display_record;
 
-        DB(REPO_OBJECTS)
+        DB(DB_TABLES.repo.repo_records)
         .insert(record)
         .then(function (data) {
             callback(null, obj);
